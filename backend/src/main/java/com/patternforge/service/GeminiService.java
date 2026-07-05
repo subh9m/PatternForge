@@ -111,7 +111,7 @@ public class GeminiService {
                     + "}"
                     + "}";
 
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + key;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -197,7 +197,7 @@ public class GeminiService {
                     + "}"
                     + "}";
 
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + key;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
