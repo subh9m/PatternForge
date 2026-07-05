@@ -1,0 +1,7 @@
+/* Reset any default App styling to allow index.css utilities to handle layouts */
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
