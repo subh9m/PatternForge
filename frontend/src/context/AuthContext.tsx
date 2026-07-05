@@ -23,18 +23,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initAuth = async () => {
-      let token = localStorage.getItem('token');
+      const token = localStorage.getItem('token');
       if (!token) {
-        localStorage.setItem('token', 'demo-user-id');
-        token = 'demo-user-id';
+        setUser(null);
+        setLoading(false);
+        return;
       }
       try {
         const data = await api.get<{ username: string; userId: string; email: string }>('/auth/me');
         setUser({ username: data.username, userId: data.userId, email: data.email });
       } catch (e) {
         console.error("Session restoration failed", e);
-        localStorage.setItem('token', 'demo-user-id');
-        setUser({ username: 'subham', userId: 'demo-user-id', email: 'subham@gmail.com' });
+        localStorage.removeItem('token');
+        setUser(null);
       }
       setLoading(false);
     };

@@ -238,7 +238,7 @@ function calculateUserStreak(userId: string): number {
 }
 
 // Dynamic Mock Router Engine
-const mockRouter = async (method: 'GET' | 'POST' | 'PUT', url: string, body?: any): Promise<any> => {
+export const _mockRouter = async (method: 'GET' | 'POST' | 'PUT', url: string, body?: any): Promise<any> => {
   // Add a small artificial network latency (50ms) to feel realistic
   await new Promise(resolve => setTimeout(resolve, 50));
 
@@ -982,7 +982,7 @@ getSyncFileHandle().then(handle => {
   }
 }).catch(() => {});
 
-async function autoSaveToSyncFile() {
+export async function _autoSaveToSyncFile() {
   if (!activeFileHandle || isWriting) return;
   
   try {
@@ -1009,21 +1009,96 @@ async function autoSaveToSyncFile() {
   }
 }
 
+const BASE_URL = 'http://localhost:8081';
+
 export const api = {
   get: async <T>(endpoint: string): Promise<T> => {
-    return mockRouter('GET', `/api${endpoint}`) as Promise<T>;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${BASE_URL}/api${endpoint}`, {
+      method: 'GET',
+      headers,
+    });
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      if (unauthorizedListener) unauthorizedListener();
+      throw new Error('Session expired or unauthorized');
+    }
+    if (!response.ok) {
+      const errorMsg = await response.text();
+      throw new Error(errorMsg || `GET request failed with status ${response.status}`);
+    }
+    const contentType = response.headers.get('Content-Type');
+    if (contentType && contentType.includes('application/json')) {
+      return response.json() as Promise<T>;
+    } else {
+      return response.text() as unknown as Promise<T>;
+    }
   },
 
   post: async <T>(endpoint: string, body: any): Promise<T> => {
-    const res = await mockRouter('POST', `/api${endpoint}`, body) as Promise<T>;
-    autoSaveToSyncFile();
-    return res;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${BASE_URL}/api${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      if (unauthorizedListener) unauthorizedListener();
+      throw new Error('Session expired or unauthorized');
+    }
+    if (!response.ok) {
+      const errorMsg = await response.text();
+      throw new Error(errorMsg || `POST request failed with status ${response.status}`);
+    }
+    const contentType = response.headers.get('Content-Type');
+    if (contentType && contentType.includes('application/json')) {
+      return response.json() as Promise<T>;
+    } else {
+      return response.text() as unknown as Promise<T>;
+    }
   },
 
   put: async <T>(endpoint: string, body: any): Promise<T> => {
-    const res = await mockRouter('PUT', `/api${endpoint}`, body) as Promise<T>;
-    autoSaveToSyncFile();
-    return res;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${BASE_URL}/api${endpoint}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(body),
+    });
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      if (unauthorizedListener) unauthorizedListener();
+      throw new Error('Session expired or unauthorized');
+    }
+    if (!response.ok) {
+      const errorMsg = await response.text();
+      throw new Error(errorMsg || `PUT request failed with status ${response.status}`);
+    }
+    const contentType = response.headers.get('Content-Type');
+    if (contentType && contentType.includes('application/json')) {
+      return response.json() as Promise<T>;
+    } else {
+      return response.text() as unknown as Promise<T>;
+    }
   },
 
   // Exported helpers for Settings View integration
