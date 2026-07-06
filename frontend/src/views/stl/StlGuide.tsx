@@ -9,7 +9,7 @@ interface StlGuideProps {
 
 const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeView, setActiveView] = useState<'cpp' | 'java'>('cpp');
+  const [activeView, setActiveView] = useState<'cpp' | 'java' | 'sql'>('cpp');
   
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
@@ -74,6 +74,16 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
               }`}
             >
               Java Collections
+            </button>
+            <button
+              onClick={() => setActiveView('sql')}
+              className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth cursor-pointer ${
+                activeView === 'sql'
+                  ? 'border border-text-primary text-text-primary bg-surface/40'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              SQL Reference
             </button>
           </nav>
 

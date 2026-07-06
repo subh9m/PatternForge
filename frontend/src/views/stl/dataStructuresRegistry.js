@@ -902,3 +902,204 @@ public synchronized StringBuffer append(String str) {
     ]
   }
 ];
+
+export const sqlConcepts = [
+  {
+    id: "sql_ddl",
+    num: "CMD.1",
+    title: "Data Definition Language (DDL)",
+    desc: "Used to define, create, alter, or drop the structure of relational database schema objects (databases, tables, columns, indexes).",
+    declaration: `-- 1. Creating a table with constraints\nCREATE TABLE employees (\n    employee_id SERIAL PRIMARY KEY,\n    first_name VARCHAR(50) NOT NULL,\n    email VARCHAR(100) UNIQUE,\n    salary NUMERIC(10, 2) CHECK (salary > 0),\n    hire_date DATE DEFAULT CURRENT_DATE\n);\n\n-- 2. Modifying table structure (adding a column)\nALTER TABLE employees ADD COLUMN department VARCHAR(50);\n\n-- 3. Truncating all data in a table (fast wipe, preserves schema)\nTRUNCATE TABLE employees;`,
+    internalImplementation: `-- Detailed DDL Schema Setup and Cleanup Pipeline:\nBEGIN;\n\nCREATE TABLE IF NOT EXISTS departments (\n    dept_id INT PRIMARY KEY,\n    dept_name VARCHAR(50) UNIQUE\n);\n\nCREATE TABLE IF NOT EXISTS employees (\n    emp_id INT PRIMARY KEY,\n    name VARCHAR(50),\n    dept_id INT REFERENCES departments(dept_id)\n);\n\n-- Modify constraints\nALTER TABLE employees ADD CONSTRAINT fk_dept FOREIGN KEY (dept_id) REFERENCES departments(dept_id);\n\n-- Cleanup statement\nDROP TABLE IF EXISTS employees;\nDROP TABLE IF EXISTS departments;\n\nCOMMIT;`,
+    methods: [
+      { method: "CREATE", syntax: "CREATE TABLE tablename (...)", params: "table_name, columns, types", output: "DB Schema", complexity: "O(1) metadata", desc: "Creates a new table, view, index, or schema." },
+      { method: "ALTER", syntax: "ALTER TABLE tablename ADD col type", params: "table_name, alterations", output: "DB Schema", complexity: "O(n) row size", desc: "Modifies an existing table's structure or constraints." },
+      { method: "DROP", syntax: "DROP TABLE tablename", params: "table_name", output: "void", complexity: "O(1)", desc: "Completely removes a table, index, or view from the database." },
+      { method: "TRUNCATE", syntax: "TRUNCATE TABLE tablename", params: "table_name", output: "void", complexity: "O(1)", desc: "Deletes all rows in a table instantly, bypassing individual row logging." }
+    ]
+  },
+  {
+    id: "sql_dml",
+    num: "CMD.2",
+    title: "Data Manipulation Language (DML)",
+    desc: "Used to manage and manipulate the actual data rows stored inside existing table schemas.",
+    declaration: `-- 1. Inserting records into a table\nINSERT INTO employees (emp_id, name, department) \nVALUES (101, 'Alex Mercer', 'R&D');\n\n-- 2. Updating values under criteria\nUPDATE employees \nSET department = 'Engineering' \nWHERE emp_id = 101;\n\n-- 3. Deleting filtered records\nDELETE FROM employees \nWHERE department = 'Engineering';`,
+    internalImplementation: `-- Detailed transaction demonstrating inserts, updates, and conditional deletes:\nBEGIN;\n\nINSERT INTO employees (emp_id, name, department) VALUES\n(1, 'John Doe', 'Engineering'),\n(2, 'Jane Smith', 'Sales');\n\nUPDATE employees\nSET department = 'DevOps'\nWHERE name = 'John Doe';\n\nDELETE FROM employees\nWHERE department = 'Sales';\n\nCOMMIT;`,
+    methods: [
+      { method: "INSERT", syntax: "INSERT INTO tablename (cols) VALUES (vals)", params: "columns, literal values", output: "row_count", complexity: "O(1)", desc: "Adds new records to a table." },
+      { method: "UPDATE", syntax: "UPDATE tablename SET col=val WHERE cond", params: "columns, values, filters", output: "row_count", complexity: "O(n) search", desc: "Modifies existing data values inside a table." },
+      { method: "DELETE", syntax: "DELETE FROM tablename WHERE cond", params: "filters", output: "row_count", complexity: "O(n) search", desc: "Removes specific rows from a table." }
+    ]
+  },
+  {
+    id: "sql_dql",
+    num: "CMD.3",
+    title: "Data Query Language (DQL)",
+    desc: "Used to retrieve data from tables. Consists solely of the SELECT statement.",
+    declaration: `-- Standard retrieve query\nSELECT first_name, salary \nFROM employees \nWHERE salary > 50000;`,
+    internalImplementation: `-- Comprehensive DQL query structure:\nSELECT \n    department_id,\n    COUNT(employee_id) AS employees_count,\n    AVG(salary) AS average_salary\nFROM employees\nWHERE hire_date > '2020-01-01'\nGROUP BY department_id\nHAVING AVG(salary) > 60000\nORDER BY average_salary DESC;`,
+    methods: [
+      { method: "SELECT", syntax: "SELECT cols FROM tablename WHERE cond", params: "columns, tables, filters", output: "resultSet", complexity: "O(n) scan", desc: "Retrieves rows from one or more tables." }
+    ]
+  },
+  {
+    id: "sql_dcl",
+    num: "CMD.4",
+    title: "Data Control Language (DCL)",
+    desc: "Used to control user access privileges, security permissions, and database roles.",
+    declaration: `-- 1. Granting read access on a table to a specific user\nGRANT SELECT ON employees TO report_viewer;\n\n-- 2. Revoking write access permissions from a database user\nREVOKE INSERT, UPDATE, DELETE ON employees FROM external_client;`,
+    internalImplementation: `-- Setting up schema permissions for role separation:\nCREATE ROLE analyst_role;\nGRANT SELECT ON ALL TABLES IN SCHEMA public TO analyst_role;\n\nCREATE USER dev_user WITH PASSWORD 'Letmedie@69';\nGRANT analyst_role TO dev_user;\n\nREVOKE INSERT ON employees FROM analyst_role;`,
+    methods: [
+      { method: "GRANT", syntax: "GRANT privilege ON object TO grantee", params: "privileges, db_objects, users", output: "success", complexity: "O(1)", desc: "Grants specific database access privileges to roles/users." },
+      { method: "REVOKE", syntax: "REVOKE privilege ON object FROM grantee", params: "privileges, db_objects, users", output: "success", complexity: "O(1)", desc: "Revokes specific database access privileges from roles/users." }
+    ]
+  },
+  {
+    id: "sql_tcl",
+    num: "CMD.5",
+    title: "Transaction Control Language (TCL)",
+    desc: "Used to manage execution checkpoints and transaction states to maintain ACID compliance.",
+    declaration: `-- Beginning transaction flow\nBEGIN TRANSACTION;\n\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nSAVEPOINT transfer_initiated;\n\nUPDATE accounts SET balance = balance + 100 WHERE id = 2;\n-- If error occurs: ROLLBACK TO transfer_initiated;\n\nCOMMIT;`,
+    internalImplementation: `-- Transaction demonstrating savepoint rollback control:\nBEGIN;\n\nINSERT INTO audit_log (log_time, action) VALUES (NOW(), 'Transaction started');\nSAVEPOINT check1;\n\nUPDATE inventory SET qty = qty - 5 WHERE item_id = 99;\n-- If validation fails (e.g. negative quantity):\n-- ROLLBACK TO check1;\n\nCOMMIT;`,
+    methods: [
+      { method: "COMMIT", syntax: "COMMIT;", params: "—", output: "success", complexity: "O(1)", desc: "Saves all changes made in the current transaction permanently to the database." },
+      { method: "ROLLBACK", syntax: "ROLLBACK; or ROLLBACK TO savepoint_name;", params: "optional savepoint", output: "success", complexity: "O(1)", desc: "Undoes all changes since the transaction started or since the designated savepoint." },
+      { method: "SAVEPOINT", syntax: "SAVEPOINT savepoint_name;", params: "name", output: "success", complexity: "O(1)", desc: "Creates a checkpoint within a transaction to rollback to." }
+    ]
+  },
+  {
+    id: "sql_filter_basics",
+    num: "SQL.101",
+    title: "Lesson 101-103: SELECT, FROM, WHERE Filtering",
+    desc: "Retrieve and filter database rows based on scalar matching criteria.",
+    declaration: `-- Syntax:\nSELECT column_name FROM table_name WHERE condition;`,
+    internalImplementation: `-- Retrieve names and salaries of employees in R&D making over $70K\nSELECT first_name, last_name, salary\nFROM employees\nWHERE department = 'R&D'\n  AND salary > 70000;`,
+    methods: [
+      { method: "SELECT", syntax: "SELECT col1, col2", params: "columns", output: "ResultSet", complexity: "O(1) per row", desc: "Defines the columns to retrieve." },
+      { method: "FROM", syntax: "FROM table_name", params: "table", output: "Table rows", complexity: "O(1)", desc: "Specifies target table for matching." },
+      { method: "WHERE", syntax: "WHERE column = value", params: "logical condition", output: "Boolean", complexity: "O(n) table scan", desc: "Filters rows dynamically based on condition criteria." }
+    ]
+  },
+  {
+    id: "sql_logical_ops",
+    num: "SQL.104",
+    title: "Lesson 104-106: Logical Operators & Ranges (AND, OR, NOT, BETWEEN, IN)",
+    desc: "Combines multiple search criteria and filters data within lists or ranges.",
+    declaration: `-- Syntax:\nSELECT cols FROM table WHERE col BETWEEN low AND high AND col2 IN (v1, v2);`,
+    internalImplementation: `-- Retrieve products in price range and specific categorizations\nSELECT product_id, name, price, stock\nFROM products\nWHERE price BETWEEN 10.00 AND 50.00\n  AND category_id IN (2, 4, 7)\n  AND NOT discontinued;`,
+    methods: [
+      { method: "AND", syntax: "cond1 AND cond2", params: "conditions", output: "Boolean", complexity: "O(1)", desc: "Evaluates true only if both expressions are true." },
+      { method: "OR", syntax: "cond1 OR cond2", params: "conditions", output: "Boolean", complexity: "O(1)", desc: "Evaluates true if at least one expression is true." },
+      { method: "NOT", syntax: "NOT condition", params: "condition", output: "Boolean", complexity: "O(1)", desc: "Inverts the truth value of the evaluation." },
+      { method: "BETWEEN", syntax: "col BETWEEN low AND high", params: "boundaries", output: "Boolean", complexity: "O(1)", desc: "Filters rows matching inclusive range (low <= val <= high)." },
+      { method: "IN", syntax: "col IN (v1, v2, ...)", params: "values list", output: "Boolean", complexity: "O(m) list size", desc: "Checks if a value exists within a comma-separated list." }
+    ]
+  },
+  {
+    id: "sql_like_order",
+    num: "SQL.107",
+    title: "Lesson 107-109: Pattern Matching & Sorting (LIKE, ORDER BY)",
+    desc: "Performs string wildcard pattern matching and sorts output datasets.",
+    declaration: `-- Syntax:\nSELECT cols FROM table WHERE col LIKE 'pat%' ORDER BY col1 DESC;`,
+    internalImplementation: `-- Retrieve customers with domains ending in gmail.com, sorted by registration date\nSELECT customer_id, email, signup_date\nFROM customers\nWHERE email LIKE '%@gmail.com'\nORDER BY signup_date DESC;`,
+    methods: [
+      { method: "LIKE", syntax: "col LIKE 'pattern'", params: "pattern with wildcards", output: "Boolean", complexity: "O(n) string scan", desc: "Matches strings using wildcards: % (any characters), _ (exactly one character)." },
+      { method: "ORDER BY", syntax: "ORDER BY col1 ASC, col2 DESC", params: "columns, sort flags", output: "Sorted rows", complexity: "O(n log n)", desc: "Sorts query output dataset by columns in ascending (ASC) or descending (DESC) order." }
+    ]
+  },
+  {
+    id: "sql_aggregation",
+    num: "SQL.201",
+    title: "Lesson 201-204: Aggregation & Grouping (SUM, AVG, GROUP BY, HAVING)",
+    desc: "Transitions from scalar evaluations to group-level analytics and summary metrics.",
+    declaration: `-- Syntax:\nSELECT col, AVG(col2) FROM table GROUP BY col HAVING AVG(col2) > limit;`,
+    internalImplementation: `-- Calculate average sales per department exceeding $50,000 threshold\nSELECT department_id, AVG(sales_amount) as avg_sales, COUNT(employee_id) as emp_count\nFROM sales\nGROUP BY department_id\nHAVING AVG(sales_amount) > 50000.00;`,
+    methods: [
+      { method: "SUM()", syntax: "SUM(col)", params: "numeric column", output: "Numeric", complexity: "O(n)", desc: "Calculates the summation of a column's values." },
+      { method: "AVG()", syntax: "AVG(col)", params: "numeric column", output: "Numeric", complexity: "O(n)", desc: "Calculates the arithmetic mean." },
+      { method: "COUNT()", syntax: "COUNT(col) or COUNT(*)", params: "column or wildcard", output: "Integer", complexity: "O(n)", desc: "Counts non-null elements or rows." },
+      { method: "GROUP BY", syntax: "GROUP BY col1, col2", params: "columns", output: "Summary rows", complexity: "O(n) sorting/hashing", desc: "Groups rows sharing identical values into summary structures." },
+      { method: "HAVING", syntax: "HAVING aggregate_cond", params: "aggregate filter", output: "Boolean", complexity: "O(n)", desc: "Filters grouped datasets based on aggregate evaluation criteria (runs after GROUP BY)." }
+    ]
+  },
+  {
+    id: "sql_math",
+    num: "SQL.205",
+    title: "Lesson 205-208: Uniqueness & Mathematical Functions",
+    desc: "Wipes out duplicates, resolves float division, and applies algebraic rounding.",
+    declaration: `-- Syntax:\nSELECT DISTINCT col1, CEIL(col2::FLOAT / col3) FROM table;`,
+    internalImplementation: `-- Calculate unique profit margins rounding up to integers\nSELECT DISTINCT order_id, CEIL((revenue - cost)::FLOAT / revenue * 100) AS profit_margin\nFROM order_details;`,
+    methods: [
+      { method: "DISTINCT", syntax: "SELECT DISTINCT col1", params: "columns", output: "Unique rows", complexity: "O(n log n)", desc: "Filters out duplicate records from a query result set." },
+      { method: "CEIL()", syntax: "CEIL(num)", params: "numeric", output: "Integer", complexity: "O(1)", desc: "Rounds a value up to the nearest whole integer." },
+      { method: "FLOOR()", syntax: "FLOOR(num)", params: "numeric", output: "Integer", complexity: "O(1)", desc: "Rounds a value down to the nearest whole integer." },
+      { method: "ROUND()", syntax: "ROUND(num, decimals)", params: "numeric, scale", output: "Numeric", complexity: "O(1)", desc: "Rounds a number to a designated decimal precision." }
+    ]
+  },
+  {
+    id: "sql_null_case",
+    num: "SQL.209",
+    title: "Lesson 209-210: Nulls & Conditional Case Logic",
+    desc: "Evaluates missing fields and implements procedural logical paths.",
+    declaration: `-- Syntax:\nSELECT CASE WHEN cond THEN outcome ELSE default_outcome END FROM table WHERE col IS NULL;`,
+    internalImplementation: `-- Map score brackets to grades and catch missing submissions\nSELECT student_id,\n       CASE \n           WHEN score >= 90 THEN 'A'\n           WHEN score >= 80 THEN 'B'\n           WHEN score IS NULL THEN 'MISSING_SUBMISSION'\n           ELSE 'C'\n       END AS final_grade\nFROM grades;`,
+    methods: [
+      { method: "IS NULL", syntax: "col IS NULL", params: "column", output: "Boolean", complexity: "O(1)", desc: "Evaluates true if a database field has no assigned value." },
+      { method: "IS NOT NULL", syntax: "col IS NOT NULL", params: "column", output: "Boolean", complexity: "O(1)", desc: "Evaluates true if a database field contains an assigned value." },
+      { method: "CASE", syntax: "CASE WHEN c1 THEN o1 ELSE o2 END", params: "conditional branches", output: "Scalar", complexity: "O(1) per branch", desc: "Implements if-then-else logical checks inside SQL queries." }
+    ]
+  },
+  {
+    id: "sql_joins_dates",
+    num: "SQL.211",
+    title: "Lesson 211-212: Multi-Table Joins & Date Parsing",
+    desc: "Combines attributes across tables and extracts precise chronological periods.",
+    declaration: `-- Syntax:\nSELECT t1.col, t2.col FROM t1 LEFT JOIN t2 ON t1.id = t2.t1_id;`,
+    internalImplementation: `-- Retrieve customer order counts registered during June 2026\nSELECT c.customer_name, COUNT(o.order_id) AS order_count\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nWHERE EXTRACT(YEAR FROM o.order_date) = 2026\n  AND EXTRACT(MONTH FROM o.order_date) = 6\nGROUP BY c.customer_name;`,
+    methods: [
+      { method: "INNER JOIN", syntax: "t1 INNER JOIN t2 ON t1.id = t2.id", params: "joining key", output: "Joined rows", complexity: "O(n + m) hash join", desc: "Returns records only when matching keys exist in both tables." },
+      { method: "LEFT JOIN", syntax: "t1 LEFT JOIN t2 ON t1.id = t2.id", params: "joining key", output: "Joined rows", complexity: "O(n + m)", desc: "Returns all records from the left table and matching rows from the right table (nulls if missing)." },
+      { method: "EXTRACT()", syntax: "EXTRACT(MONTH FROM date)", params: "date field", output: "Integer", complexity: "O(1)", desc: "Extracts structural fields (year, month, day) from a timestamp." }
+    ]
+  },
+  {
+    id: "sql_ctes_windows",
+    num: "SQL.301",
+    title: "Lesson 301-303: CTEs & Window Functions",
+    desc: "Constructs modular named datasets and evaluates window frame slices.",
+    declaration: `-- Syntax:\nWITH cte AS (SELECT col FROM t) SELECT SUM(col) OVER(PARTITION BY col) FROM cte;`,
+    internalImplementation: `-- Find employees earning more than their department's average salary\nWITH DeptAverage AS (\n    SELECT department_id, AVG(salary) AS avg_sal\n    FROM employees\n    GROUP BY department_id\n)\nSELECT e.first_name, e.salary, d.avg_sal\nFROM employees e\nINNER JOIN DeptAverage d ON e.department_id = d.department_id\nWHERE e.salary > d.avg_sal;`,
+    methods: [
+      { method: "WITH (CTE)", syntax: "WITH name AS (SELECT ...)", params: "nested query", output: "Temporary table", complexity: "O(1) catalog mapping", desc: "Declares a Common Table Expression for modular code organization." },
+      { method: "OVER()", syntax: "FUNC() OVER(PARTITION BY col)", params: "window criteria", output: "Computed metrics", complexity: "O(n log n) sorting", desc: "Defines a window partition context for row-level aggregate checks without grouping." }
+    ]
+  },
+  {
+    id: "sql_ranking_position",
+    num: "SQL.304",
+    title: "Lesson 304-306: Ranking, Positioning & Self-Joins",
+    desc: "Classifies records inside partition slots and scans surrounding records.",
+    declaration: `-- Syntax:\nSELECT col, DENSE_RANK() OVER(ORDER BY col DESC), LEAD(col) OVER(...) FROM table;`,
+    internalImplementation: `-- List employee salary ranks and fetch salaries of the next higher earner\nSELECT first_name, salary,\n       DENSE_RANK() OVER(ORDER BY salary DESC) AS sal_rank,\n       LEAD(salary, 1) OVER(ORDER BY salary DESC) AS next_higher_salary\nFROM employees;`,
+    methods: [
+      { method: "DENSE_RANK()", syntax: "DENSE_RANK() OVER(...)", params: "window ordering", output: "Integer rank", complexity: "O(n log n)", desc: "Assigns ranks to tie values consecutively without creating sequential index gaps." },
+      { method: "ROW_NUMBER()", syntax: "ROW_NUMBER() OVER(...)", params: "window ordering", output: "Integer count", complexity: "O(n log n)", desc: "Assigns a unique incremented integer rank to each row in a partition." },
+      { method: "LEAD()", syntax: "LEAD(col, offset)", params: "column, index_offset", output: "Scalar", complexity: "O(1)", desc: "Retrieves value from a subsequent row within the partition." },
+      { method: "LAG()", syntax: "LAG(col, offset)", params: "column, index_offset", output: "Scalar", complexity: "O(1)", desc: "Retrieves value from a preceding row within the partition." }
+    ]
+  },
+  {
+    id: "sql_advanced_review",
+    num: "SQL.307",
+    title: "Lesson 307-312: Set Operations, Pivoting & Pipeline Execution",
+    desc: "Merges queries vertically, rotates records into columns, and reviews RDBMS pipelines.",
+    declaration: `-- Syntax:\nSELECT col FROM t1 UNION ALL SELECT col FROM t2;`,
+    internalImplementation: `-- Pivot monthly sales logs into dynamic column variables\nSELECT product_id,\n       SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 1 THEN amount ELSE 0 END) AS sales_jan,\n       SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 2 THEN amount ELSE 0 END) AS sales_feb\nFROM sales\nGROUP BY product_id;`,
+    methods: [
+      { method: "UNION", syntax: "q1 UNION q2", params: "select queries", output: "Unique stacked rows", complexity: "O(n log n)", desc: "Combines result sets vertically, sorting and removing duplicate rows." },
+      { method: "UNION ALL", syntax: "q1 UNION ALL q2", params: "select queries", output: "Stacked rows", complexity: "O(n)", desc: "Appends result sets vertically directly, preserving duplicate rows." },
+      { method: "PIVOTING", syntax: "SUM(CASE WHEN type = 'A' THEN val ELSE 0 END)", params: "pivoting logic", output: "Aggregated columns", complexity: "O(n)", desc: "Rotates row-level records horizontally into distinct column fields." }
+    ]
+  }
+];
+

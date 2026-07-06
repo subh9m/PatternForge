@@ -101,10 +101,10 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
                 <BookOpen className="h-5 w-5" />
               </div>
               <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
-                STL Reference
+                STL & SQL Reference
               </h2>
               <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
-                Lookup C++ standard library structures and Java collections implementations.
+                Lookup C++ standard templates, Java collections, and relational SQL queries/keywords.
               </p>
             </div>
             <span className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300 transition-smooth flex items-center space-x-1 pt-2">

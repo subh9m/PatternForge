@@ -132,6 +132,47 @@ const JavaNavLinks = () => (
   </nav>
 );
 
+// SQL Links Component
+const SqlNavLinks = () => (
+  <nav className="mt-4 space-y-4 font-mono">
+    <div>
+      <NavHeading>A. SQL COMMAND TYPES</NavHeading>
+      <ul className="space-y-1">
+        <li><NavItem href="#sql_ddl">A.1 DDL Commands</NavItem></li>
+        <li><NavItem href="#sql_dml">A.2 DML Commands</NavItem></li>
+        <li><NavItem href="#sql_dql">A.3 DQL Commands</NavItem></li>
+        <li><NavItem href="#sql_dcl">A.4 DCL Commands</NavItem></li>
+        <li><NavItem href="#sql_tcl">A.5 TCL Commands</NavItem></li>
+      </ul>
+    </div>
+    <div>
+      <NavHeading>B. BASIC SQL</NavHeading>
+      <ul className="space-y-1">
+        <li><NavItem href="#sql_filter_basics">B.1 Basic SELECT & WHERE</NavItem></li>
+        <li><NavItem href="#sql_logical_ops">B.2 Logical Combination</NavItem></li>
+        <li><NavItem href="#sql_like_order">B.3 Patterns & Sorting</NavItem></li>
+      </ul>
+    </div>
+    <div>
+      <NavHeading>C. INTERMEDIATE SQL</NavHeading>
+      <ul className="space-y-1">
+        <li><NavItem href="#sql_aggregation">C.1 Grouping & Aggregates</NavItem></li>
+        <li><NavItem href="#sql_math">C.2 Math & Division</NavItem></li>
+        <li><NavItem href="#sql_null_case">C.3 Nulls & CASE logic</NavItem></li>
+        <li><NavItem href="#sql_joins_dates">C.4 Joins & Dates</NavItem></li>
+      </ul>
+    </div>
+    <div>
+      <NavHeading>D. ADVANCED SQL</NavHeading>
+      <ul className="space-y-1">
+        <li><NavItem href="#sql_ctes_windows">D.1 CTEs & Window Functions</NavItem></li>
+        <li><NavItem href="#sql_ranking_position">D.2 Ranking & Lead/Lag</NavItem></li>
+        <li><NavItem href="#sql_advanced_review">D.3 Set Ops & Pipelines</NavItem></li>
+      </ul>
+    </div>
+  </nav>
+);
+
 export default function Sidebar({ isOpen, activeView }) {
   return (
     <aside
@@ -145,11 +186,17 @@ export default function Sidebar({ isOpen, activeView }) {
         {/* Title */}
         <h2 className="p-4 text-2xl font-medium uppercase tracking-wider 
                        text-gray-900 dark:text-white font-mono">
-          {activeView === 'cpp' ? 'C++ STL' : 'Java Collections'}
+          {activeView === 'cpp' ? 'C++ STL' : activeView === 'java' ? 'Java Collections' : 'SQL Reference'}
         </h2>
         
         {/* Conditionally render navigation links */}
-        {activeView === 'cpp' ? <CppNavLinks /> : <JavaNavLinks />}
+        {activeView === 'cpp' ? (
+          <CppNavLinks />
+        ) : activeView === 'java' ? (
+          <JavaNavLinks />
+        ) : (
+          <SqlNavLinks />
+        )}
       </div>
     </aside>
   );

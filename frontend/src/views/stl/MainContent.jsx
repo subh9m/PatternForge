@@ -1,6 +1,6 @@
 import React from 'react';
 import DataStructureCard from './DataStructureCard';
-import { cppDataStructures, javaDataStructures } from './dataStructuresRegistry';
+import { cppDataStructures, javaDataStructures, sqlConcepts } from './dataStructuresRegistry';
 
 // --- ICONS ---
 const MenuIcon = ({ isOpen }) => (
@@ -34,6 +34,14 @@ const JavaContent = () => (
   </>
 );
 
+const SqlContent = () => (
+  <>
+    {sqlConcepts.map((ds) => (
+      <DataStructureCard key={ds.id} data={ds} />
+    ))}
+  </>
+);
+
 export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleTheme, activeView }) {
   return (
     <main
@@ -59,7 +67,13 @@ export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleT
 
       {/* Content grid */}
       <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8">
-        {activeView === 'cpp' ? <CppContent /> : <JavaContent />}
+        {activeView === 'cpp' ? (
+          <CppContent />
+        ) : activeView === 'java' ? (
+          <JavaContent />
+        ) : (
+          <SqlContent />
+        )}
       </div>
     </main>
   );
