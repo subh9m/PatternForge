@@ -725,7 +725,8 @@ public class ProblemController {
             @PathVariable UUID id,
             Authentication authentication
     ) {
-        User user = userRepository.findByEmail(authentication.getName())
+        UUID userId = (UUID) authentication.getPrincipal();
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         List<ProblemChatMessage> messages = problemChatMessageRepository
@@ -748,7 +749,8 @@ public class ProblemController {
             Authentication authentication,
             @RequestBody Map<String, String> body
     ) {
-        User user = userRepository.findByEmail(authentication.getName())
+        UUID userId = (UUID) authentication.getPrincipal();
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Problem problem = problemRepository.findById(id)
