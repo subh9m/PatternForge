@@ -43,7 +43,7 @@ const ImportVerificationView: React.FC = () => {
     try {
       // Direct raw fetch because API service expects JSON content-type default
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8081/api/problems/import', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/problems/import`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

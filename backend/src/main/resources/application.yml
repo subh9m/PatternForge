@@ -1,11 +1,11 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/patternforge
-    username: postgres
-    password: postgres
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/patternforge}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -21,12 +21,14 @@ spring:
 
 patternforge:
   jwt:
-    secret: 405040148695mu2q9380cg4lt4t94c0f16n7ftab9p0osupersecretkeyforpatternforgeapplication
+    secret: ${JWT_SECRET:405040148695mu2q9380cg4lt4t94c0f16n7ftab9p0osupersecretkeyforpatternforgeapplication}
     expiration-ms: 86400000 # 24 Hours
   pdf:
-    path: C:\Users\rajsh\Downloads\Striver_A2Z_Master_DSA_Database.pdf
+    path: ${PDF_PATH:C:\Users\rajsh\Downloads\Striver_A2Z_Master_DSA_Database.pdf}
   code:
-    temp-dir: C:\Users\rajsh\Desktop\DSAremastered\backend\temp
+    temp-dir: ${CODE_TEMP_DIR:temp}
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}
 
 gemini:
   api-key: ${GEMINI_API_KEY:}
