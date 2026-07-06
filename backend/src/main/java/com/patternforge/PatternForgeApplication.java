@@ -48,11 +48,6 @@ public class PatternForgeApplication {
             System.out.println("DEBUG: Registered Users in PatternForge Database:");
             userRepository.findAll().forEach(user -> {
                 System.out.println(" - Username: " + user.getUsername() + ", Email: " + user.getEmail() + ", ID: " + user.getId());
-                if ("subham".equals(user.getUsername())) {
-                    user.setPassword(passwordEncoder.encode("password123"));
-                    userRepository.save(user);
-                    System.out.println(" ---> Password for user 'subham' has been reset to: password123");
-                }
             });
             System.out.println("==================================================");
         };
