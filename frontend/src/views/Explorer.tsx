@@ -191,7 +191,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by name, master number, or LeetCode id..."
-                className="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-sm"
+                className="w-full glass-input glass-input-search rounded-xl pr-4 py-2.5 text-sm"
               />
             </div>
 

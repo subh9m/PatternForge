@@ -75,6 +75,54 @@ body {
   background-color: var(--surface-color) !important;
 }
 
+/* Light mode specific background and text overrides for dark/grey backgrounds to make them legible */
+:root.light .bg-slate-950,
+:root.light .bg-slate-900,
+:root.light .bg-slate-850,
+:root.light .bg-slate-800,
+:root.light .bg-slate-700,
+:root.light .bg-slate-955,
+:root.light .bg-slate-900\/40,
+:root.light .bg-slate-900\/60,
+:root.light .bg-slate-955\/20,
+:root.light .bg-slate-955\/40,
+:root.light .bg-slate-955\/60 {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+:root.light .bg-slate-955\/20 *,
+:root.light .bg-slate-955\/40 *,
+:root.light .bg-slate-955\/60 * {
+  color: #0f172a !important;
+}
+
+/* Light mode specific inline code contrast adjustments */
+:root.light code {
+  background-color: #e2e8f0 !important;
+  color: #b45309 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Search input override for left padding */
+.glass-input-search {
+  padding-left: 2.75rem !important;
+}
+
+/* Premium Glow Utilities */
+.shadow-glow-blue, .shadow-glow-primary {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.45) !important;
+}
+.shadow-glow-emerald, .shadow-glow-accent {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.45) !important;
+}
+.shadow-glow-amber {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.45) !important;
+}
+.shadow-glow-rose {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.45) !important;
+}
+
 /* Scrollbars - Minimalist Monochrome */
 ::-webkit-scrollbar {
   width: 5px;
@@ -104,12 +152,17 @@ body {
 }
 
 .glass-panel-hover {
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .glass-panel-hover:hover {
-  border-color: var(--border-hover) !important;
-  transform: translateY(-1px);
+  border-color: var(--text-primary) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.18) !important;
+}
+
+:root.light .glass-panel-hover:hover {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.08) !important;
 }
 
 /* Inputs - Boxy Monochrome outline, spacious padding */
