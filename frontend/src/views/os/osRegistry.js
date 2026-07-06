@@ -25,7 +25,7 @@ export const osConcepts = [
         params: "CPU Mode Bit (0=Kernel, 1=User)", 
         output: "Hardware protection, sandbox", 
         complexity: "O(1) register bit check", 
-        desc: "Privilege levels enforced by CPU hardware. Subtopics: 1) User Mode: applications run here, restricted from direct hardware/memory access. 2) Kernel Mode: full access to hardware, physical RAM, and privileged CPU instructions (CLI, STI). Mode switch is triggered via software interrupt/trap.<br/><br/><img src='https://media.geeksforgeeks.org/wp-content/uploads/20220816155928/UserModevsKernelMode.png' alt='User vs Kernel mode' class='max-w-full my-3 rounded-lg border border-gray-200 dark:border-neutral-800 bg-neutral-900/10 p-2' />" 
+        desc: "Privilege levels enforced by CPU hardware. Subtopics: 1) User Mode: applications run here, restricted from direct hardware/memory access. 2) Kernel Mode: full access to hardware, physical RAM, and privileged CPU instructions (CLI, STI). Mode switch is triggered via software interrupt/trap.<br/><br/><img src='/images/usermode_vs_kernelmode.png' alt='User vs Kernel mode' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-950/10 p-2' />" 
       },
       { 
         method: "System Call vs Library Call", 
@@ -41,7 +41,7 @@ export const osConcepts = [
         params: "IPC message passing vs Direct calls", 
         output: "Stability/Modular vs High Performance", 
         complexity: "Microkernel has IPC overhead", 
-        desc: "Subtopics: 1) Monolithic: All services (scheduling, memory, drivers) run inside the kernel address space in Ring 0. Fast but unstable (one driver crash crashes OS). 2) Microkernel: Only core services (IPC, scheduling) run in Ring 0; drivers/file systems run in user space (Ring 3). Highly stable, modular, but slower due to message-passing overhead.<br/><br/><img src='https://media.geeksforgeeks.org/wp-content/uploads/20220816160136/MonolithicvsMicrokernel.png' alt='Monolithic vs Microkernel' class='max-w-full my-3 rounded-lg border border-gray-200 dark:border-neutral-800 bg-neutral-900/10 p-2' />" 
+        desc: "Subtopics: 1) Monolithic: All services (scheduling, memory, drivers) run inside the kernel address space in Ring 0. Fast but unstable (one driver crash crashes OS). 2) Microkernel: Only core services (IPC, scheduling) run in Ring 0; drivers/file systems run in user space (Ring 3). Highly stable, modular, but slower due to message-passing overhead.<br/><br/><img src='/images/monolithic_vs_microkernel.png' alt='Monolithic vs Microkernel' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
       },
       { 
         method: "🔥 Gotcha: Double Fault & Kernel Panic", 
@@ -79,7 +79,7 @@ export const osConcepts = [
         params: "Ready List, Wait Queue, CPU Core", 
         output: "Transition: Ready -> Running -> Waiting", 
         complexity: "O(1) state queue inserts", 
-        desc: "Subtopics: 1) New: Process created. 2) Ready: Waiting in RAM to be assigned to CPU. 3) Running: Instructions executing on CPU. 4) Waiting: Blocked on I/O or event completion. 5) Terminated: Finished. Suspended states (Ready-Suspended, Blocked-Suspended) exist when memory pressure forces pages to swap disk.<br/><br/><img src='https://media.geeksforgeeks.org/wp-content/uploads/20220816160533/ProcessStates.png' alt='Process state transition' class='max-w-full my-3 rounded-lg border border-gray-200 dark:border-neutral-800 bg-neutral-900/10 p-2' />" 
+        desc: "Subtopics: 1) New: Process created. 2) Ready: Waiting in RAM to be assigned to CPU. 3) Running: Instructions executing on CPU. 4) Waiting: Blocked on I/O or event completion. 5) Terminated: Finished. Suspended states (Ready-Suspended, Blocked-Suspended) exist when memory pressure forces pages to swap disk.<br/><br/><img src='/images/process_states_lifecycle.png' alt='Process state transition' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
       },
       { 
         method: "What is Context Switching?", 
@@ -205,7 +205,7 @@ export const osConcepts = [
         params: "Frame slots vs Base-Limit descriptors", 
         output: "Non-contiguous hardware partitions", 
         complexity: "Paging lookup: O(1) index array", 
-        desc: "Subtopics: 1) Paging: Physical memory split into fixed frames; virtual memory split into identical pages. Avoids external fragmentation. 2) Segmentation: Logical division based on compiler modules (code, data, stack). Variable sizes. Prone to external fragmentation, requiring memory compaction.<br/><br/><img src='https://media.geeksforgeeks.org/wp-content/uploads/20230609111812/Paging-in-OS.png' alt='Paging memory mapping schematic' class='max-w-full my-3 rounded-lg border border-gray-200 dark:border-neutral-800 bg-neutral-900/10 p-2' />" 
+        desc: "Subtopics: 1) Paging: Physical memory split into fixed frames; virtual memory split into identical pages. Avoids external fragmentation. 2) Segmentation: Logical division based on compiler modules (code, data, stack). Variable sizes. Prone to external fragmentation, requiring memory compaction.<br/><br/><img src='/images/paging_in_os.png' alt='Paging memory mapping schematic' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
       },
       { 
         method: "Demand Paging & Page Faults", 
@@ -229,7 +229,7 @@ export const osConcepts = [
         params: "Frames count vs total page faults", 
         output: "Increasing frame count increases fault rate", 
         complexity: "FIFO page tracing checks", 
-        desc: "<b>Q: What is Belady's Anomaly? Which page replacement algorithms are immune to it and why?</b><br/><ul><li><b>Belady's Anomaly:</b> The counter-intuitive phenomenon where increasing the number of physical memory frames results in an *increase* in the number of page faults.</li><li><b>Affected Algorithms:</b> FIFO (First-In-First-Out).</li><li><b>Immune Algorithms:</b> LRU (Least Recently Used) and Optimal.</li><li><b>The Stack Property:</b> Immune algorithms satisfy the Stack Property, where the set of pages in memory for $N$ frames is always a subset of the pages in memory for $N+1$ frames. FIFO does not preserve this hierarchy.</li></ul><br/><img src='https://media.geeksforgeeks.org/wp-content/uploads/20230601131011/Beladys-Anomaly-in-FIFO.png' alt='Beladys anomaly diagram' class='max-w-full my-3 rounded-lg border border-gray-200 dark:border-neutral-800 bg-neutral-900/10 p-2' />" 
+        desc: "<b>Q: What is Belady's Anomaly? Which page replacement algorithms are immune to it and why?</b><br/><ul><li><b>Belady's Anomaly:</b> The counter-intuitive phenomenon where increasing the number of physical memory frames results in an *increase* in the number of page faults.</li><li><b>Affected Algorithms:</b> FIFO (First-In-First-Out).</li><li><b>Immune Algorithms:</b> LRU (Least Recently Used) and Optimal.</li><li><b>The Stack Property:</b> Immune algorithms satisfy the Stack Property, where the set of pages in memory for $N$ frames is always a subset of the pages in memory for $N+1$ frames. FIFO does not preserve this hierarchy.</li></ul><br/><img src='/images/beladys_anomaly.png' alt='Beladys anomaly diagram' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
       },
       { 
         method: "🔥 Gotcha: Inverted Page Table Overhead", 
@@ -313,7 +313,7 @@ export const osConcepts = [
         params: "Striping, Mirroring, Parity equations", 
         output: "Fault-tolerance virtual disk arrays", 
         complexity: "Disk read speed scales with drive count", 
-        desc: "Subtopics: 1) RAID 0 (Striping): Spreads blocks across drives. High speed, zero fault tolerance. 2) RAID 1 (Mirroring): Duplicates data. Safe, read-speed scaling, 50% capacity overhead. 3) RAID 5 (Distributed Parity): Stripes data and parity. Tolerates 1 drive loss, requires minimum 3 drives. 4) RAID 6 (Double Parity): Tolerates 2 drive losses, requires minimum 4 drives.<br/><br/><img src='https://media.geeksforgeeks.org/wp-content/uploads/20220816161421/RAIDLevels.png' alt='RAID array levels' class='max-w-full my-3 rounded-lg border border-gray-200 dark:border-neutral-800 bg-neutral-900/10 p-2' />" 
+        desc: "Subtopics: 1) RAID 0 (Striping): Spreads blocks across drives. High speed, zero fault tolerance. 2) RAID 1 (Mirroring): Duplicates data. Safe, read-speed scaling, 50% capacity overhead. 3) RAID 5 (Distributed Parity): Stripes data and parity. Tolerates 1 drive loss, requires minimum 3 drives. 4) RAID 6 (Double Parity): Tolerates 2 drive losses, requires minimum 4 drives.<br/><br/><img src='/images/raid_levels.png' alt='RAID array levels' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
       },
       { 
         method: "What is an Inode?", 
@@ -321,7 +321,7 @@ export const osConcepts = [
         params: "Inode ID, file block pointers", 
         output: "File metadata block mappings", 
         complexity: "Inode lookup: O(1) array seek", 
-        desc: "Subtopics: 1) Inode Contents: Holds file size, permissions, owner UID, timestamps, and data block pointers. Does NOT hold filename. 2) Pointers: Uses direct pointers for small files, and single/double/triple indirect block pointers on disk for large files.<br/><br/><img src='https://media.geeksforgeeks.org/wp-content/uploads/20220816162354/InodeStructure.png' alt='Unix Inode blocks mapping schema' class='max-w-full my-3 rounded-lg border border-gray-200 dark:border-neutral-800 bg-neutral-900/10 p-2' />" 
+        desc: "Subtopics: 1) Inode Contents: Holds file size, permissions, owner UID, timestamps, and data block pointers. Does NOT hold filename. 2) Pointers: Uses direct pointers for small files, and single/double/triple indirect block pointers on disk for large files.<br/><br/><img src='/images/inode_structure.png' alt='Unix Inode blocks mapping schema' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
       },
       { 
         method: "Hard Link vs Soft Link (Symlink)", 
