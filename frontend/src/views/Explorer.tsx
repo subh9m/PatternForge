@@ -133,7 +133,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       
       {/* Sidebar: Topics checklists */}
-      <div className="lg:col-span-1 glass-panel rounded-2xl p-5 h-fit max-h-[85vh] overflow-y-auto">
+      <div className="lg:col-span-1 glass-panel glass-panel-hover rounded-2xl p-5 h-fit max-h-[85vh] overflow-y-auto">
         <h3 className="text-sm font-extrabold text-slate-200 uppercase tracking-wider mb-4 flex items-center space-x-1.5">
           <Grid className="h-4 w-4 text-blue-400" />
           <span>Topic Chapters</span>
@@ -181,7 +181,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
       <div className="lg:col-span-3 space-y-4">
         
         {/* Controls: Search, filter widgets */}
-        <div className="glass-panel rounded-2xl p-5 space-y-4">
+        <div className="glass-panel glass-panel-hover rounded-2xl p-5 space-y-4">
           <div className="flex flex-col md:flex-row gap-3">
             {/* Search Input */}
             <div className="flex-1 relative">
@@ -273,7 +273,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
         </div>
 
         {/* Problems catalog table */}
-        <div className="glass-panel rounded-2xl overflow-hidden">
+        <div className="glass-panel glass-panel-hover rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>

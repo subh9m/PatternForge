@@ -109,7 +109,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
     <div className="space-y-6">
       {/* Welcome Banner / Continue Session */}
       <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between">
-        <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col justify-between">
+        <div className="flex-1 glass-panel glass-panel-hover rounded-2xl p-6 flex flex-col justify-between">
           <div>
             <h1 className="text-2xl font-extrabold text-slate-100 mb-1">Welcome back, Solver!</h1>
             <p className="text-slate-400 text-sm">
@@ -133,7 +133,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
         </div>
 
         {/* Today's Goal Card */}
-        <div className="w-full md:w-80 glass-panel rounded-2xl p-6 flex flex-col justify-between">
+        <div className="w-full md:w-80 glass-panel glass-panel-hover rounded-2xl p-6 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-300">Today's Goal</h3>
             <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
@@ -159,7 +159,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
       {/* Metrics Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Streak */}
-        <div className="glass-panel rounded-2xl p-5 flex items-center space-x-4">
+        <div className="glass-panel glass-panel-hover rounded-2xl p-5 flex items-center space-x-4">
           <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400">
             <Flame className="h-6 w-6 fill-amber-500/20" />
           </div>
@@ -170,7 +170,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
         </div>
 
         {/* Problems Solved */}
-        <div className="glass-panel rounded-2xl p-5 flex items-center space-x-4">
+        <div className="glass-panel glass-panel-hover rounded-2xl p-5 flex items-center space-x-4">
           <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
             <Award className="h-6 w-6" />
           </div>
@@ -181,7 +181,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
         </div>
 
         {/* Approach Accuracy */}
-        <div className="glass-panel rounded-2xl p-5 flex items-center space-x-4">
+        <div className="glass-panel glass-panel-hover rounded-2xl p-5 flex items-center space-x-4">
           <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
             <Brain className="h-6 w-6" />
           </div>
@@ -192,7 +192,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
         </div>
 
         {/* Revisions Queue */}
-        <div className="glass-panel rounded-2xl p-5 flex items-center space-x-4">
+        <div className="glass-panel glass-panel-hover rounded-2xl p-5 flex items-center space-x-4">
           <div className="p-3 bg-red-500/10 rounded-xl text-red-400">
             <AlertCircle className="h-6 w-6" />
           </div>
@@ -204,7 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
       </div>
 
       {/* Randomizer Deck */}
-      <div className="glass-panel rounded-2xl p-6">
+      <div className="glass-panel glass-panel-hover rounded-2xl p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Shuffle className="h-5 w-5 text-blue-400 animate-spin-slow" />
           <h3 className="text-base font-extrabold text-slate-200">Approach Randomizer</h3>
@@ -250,7 +250,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
       </div>
 
       {/* Heatmap Calendar (Pulled out to be full-width) */}
-      <div className="glass-panel rounded-2xl p-6">
+      <div className="glass-panel glass-panel-hover rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div className="flex items-center space-x-2">
             <Calendar className="h-5 w-5 text-text-primary" />
@@ -422,14 +422,14 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
         <div className="lg:col-span-2 space-y-6">
           {/* Strength Analysis */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="glass-panel rounded-2xl p-5 border border-emerald-500/10">
+            <div className="glass-panel glass-panel-hover rounded-2xl p-5 border border-emerald-500/10">
               <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block mb-1">Strongest Pattern</span>
               <h4 className="text-lg font-black text-slate-200">{stats.strongestPattern}</h4>
               <p className="text-xs text-slate-400 mt-2">
                 Highest completion accuracy. Your logic structures in this area are sharp.
               </p>
             </div>
-            <div className="glass-panel rounded-2xl p-5 border border-red-500/10">
+            <div className="glass-panel glass-panel-hover rounded-2xl p-5 border border-red-500/10">
               <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest block mb-1">Weakest Pattern</span>
               <h4 className="text-lg font-black text-slate-200">{stats.weakestPattern}</h4>
               <p className="text-xs text-slate-400 mt-2">
@@ -442,7 +442,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
         {/* Right Side: Revisions List & Recently Solved */}
         <div className="space-y-6">
           {/* Recently Solved */}
-          <div className="glass-panel rounded-2xl p-6">
+          <div className="glass-panel glass-panel-hover rounded-2xl p-6">
             <h3 className="text-base font-extrabold text-slate-200 mb-4 flex items-center justify-between">
               <span>Recently Solved</span>
               <button 
