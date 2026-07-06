@@ -1463,12 +1463,38 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
               {/* TAB 3: SOLUTIONS WORKSPACE */}
               {activeTab === 'solutions' && details && (() => {
-                // Determine current sub-tab details
-                const currentSol = selectedSolutionTab === 'brute' && details.bruteForce
-                  ? details.bruteForce
-                  : selectedSolutionTab === 'better' && details.better
-                  ? details.better
-                  : details.optimal || {
+                const optimalCpp = (details.optimal?.code?.cpp || details.referenceSolutions?.cpp || details.referenceSolution || '').trim();
+                const optimalApproach = (details.optimal?.approach || details.approach || '').trim();
+
+                const bruteCpp = (details.bruteForce?.code?.cpp || '').trim();
+                const bruteApproach = (details.bruteForce?.approach || '').trim();
+
+                const betterCpp = (details.better?.code?.cpp || '').trim();
+                const betterApproach = (details.better?.approach || '').trim();
+
+                // A brute force is distinct if it exists and is different from optimal
+                const hasDistinctBrute = details.bruteForce && 
+                  bruteCpp !== '' && 
+                  bruteCpp !== optimalCpp && 
+                  bruteApproach !== optimalApproach;
+
+                // A better solution is distinct if it exists and is different from both optimal and brute force
+                const hasDistinctBetter = details.better && 
+                  betterCpp !== '' && 
+                  betterCpp !== optimalCpp && 
+                  (!hasDistinctBrute || betterCpp !== bruteCpp) &&
+                  betterApproach !== optimalApproach;
+
+                const activeSubTab = (selectedSolutionTab === 'brute' && hasDistinctBrute)
+                  ? 'brute'
+                  : (selectedSolutionTab === 'better' && hasDistinctBetter)
+                  ? 'better'
+                  : 'optimal';
+
+                const currentSol = (activeSubTab === 'brute' ? details.bruteForce : null)
+                  || (activeSubTab === 'better' ? details.better : null)
+                  || details.optimal
+                  || {
                       approach: details.approach,
                       timeComplexity: details.optimalTimeComplexity,
                       spaceComplexity: details.optimalSpaceComplexity,
@@ -1496,40 +1522,44 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                     </div>
 
                     {/* Sub-Tab Selector for Brute Force, Better, Optimal */}
-                    <div className="flex border-b border-slate-900/60 pb-1 gap-2">
-                      <button
-                        onClick={() => setSelectedSolutionTab('brute')}
-                        className={`px-3 py-1.5 text-[11px] font-extrabold transition-smooth border-b-2 uppercase tracking-wider ${
-                          selectedSolutionTab === 'brute'
-                            ? 'border-red-500 text-red-400'
-                            : 'border-transparent text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        Brute Force
-                      </button>
-                      {details.better && (
+                    {(hasDistinctBrute || hasDistinctBetter) && (
+                      <div className="flex border-b border-slate-900/60 pb-1 gap-2">
+                        {hasDistinctBrute && (
+                          <button
+                            onClick={() => setSelectedSolutionTab('brute')}
+                            className={`px-3 py-1.5 text-[11px] font-extrabold transition-smooth border-b-2 uppercase tracking-wider ${
+                              activeSubTab === 'brute'
+                                ? 'border-red-500 text-red-400'
+                                : 'border-transparent text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            Brute Force
+                          </button>
+                        )}
+                        {hasDistinctBetter && (
+                          <button
+                            onClick={() => setSelectedSolutionTab('better')}
+                            className={`px-3 py-1.5 text-[11px] font-extrabold transition-smooth border-b-2 uppercase tracking-wider ${
+                              activeSubTab === 'better'
+                                ? 'border-amber-500 text-amber-400'
+                                : 'border-transparent text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            Better
+                          </button>
+                        )}
                         <button
-                          onClick={() => setSelectedSolutionTab('better')}
+                          onClick={() => setSelectedSolutionTab('optimal')}
                           className={`px-3 py-1.5 text-[11px] font-extrabold transition-smooth border-b-2 uppercase tracking-wider ${
-                            selectedSolutionTab === 'better'
-                              ? 'border-amber-500 text-amber-400'
+                            activeSubTab === 'optimal'
+                              ? 'border-emerald-500 text-emerald-400'
                               : 'border-transparent text-slate-400 hover:text-slate-200'
                           }`}
                         >
-                          Better
+                          Optimal
                         </button>
-                      )}
-                      <button
-                        onClick={() => setSelectedSolutionTab('optimal')}
-                        className={`px-3 py-1.5 text-[11px] font-extrabold transition-smooth border-b-2 uppercase tracking-wider ${
-                          selectedSolutionTab === 'optimal'
-                            ? 'border-emerald-500 text-emerald-400'
-                            : 'border-transparent text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        Optimal
-                      </button>
-                    </div>
+                      </div>
+                    )}
 
                     {/* Details stats */}
                     <div className="grid grid-cols-2 gap-3 bg-slate-950/40 p-3 rounded-xl border border-slate-900">
