@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Braces, Code, Play } from 'lucide-react';
+import { 
+  departmentsData, 
+  employeesData, 
+  salariesData, 
+  projectsData, 
+  employeeProjectsData, 
+  fullSqlScript 
+} from './sqlSeedData';
+
 
 // Single-pass regex syntax highlighter
 function highlightCode(code) {
@@ -26,15 +35,41 @@ function highlightCode(code) {
   return escaped;
 }
 
+const tableHeaders = {
+  departments: ["dept_id", "dept_name", "location", "budget"],
+  employees: ["emp_id", "first_name", "last_name", "email", "dept_id", "manager_id", "hire_date", "job_title"],
+  salaries: ["salary_id", "emp_id", "amount", "effective_date", "currency"],
+  projects: ["project_id", "project_name", "dept_id", "start_date", "end_date", "status"],
+  employee_projects: ["emp_id", "project_id", "role", "hours_logged"]
+};
+
+const tableDataSources = {
+  departments: departmentsData,
+  employees: employeesData,
+  salaries: salariesData,
+  projects: projectsData,
+  employee_projects: employeeProjectsData
+};
+
 export default function DataStructureCard({ data }) {
   const [showDeclaration, setShowDeclaration] = useState(false);
   const [showInternal, setShowInternal] = useState(false);
   const [selectedQueryIdx, setSelectedQueryIdx] = useState(0);
   const [executed, setExecuted] = useState(false);
+  const [activeFullTable, setActiveFullTable] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFullScriptModal, setShowFullScriptModal] = useState(false);
 
   const handleRunQuery = () => {
     setExecuted(true);
   };
+
+  const filteredRows = activeFullTable ? (tableDataSources[activeFullTable] || []).filter(row => {
+    if (!searchQuery) return true;
+    return Object.values(row).some(val => 
+      val !== null && String(val).toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }) : [];
 
   return (
     <section 
@@ -120,13 +155,32 @@ export default function DataStructureCard({ data }) {
                   
                   {/* Seed Data Tables Section */}
                   <div className="space-y-6">
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider font-mono">Seed Data Entries Reference</h4>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider font-mono">Seed Data Entries Reference</h4>
+                      <button
+                        onClick={() => setShowFullScriptModal(true)}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] font-black uppercase rounded-lg tracking-wider transition-all duration-300 hover:shadow-[0_0_12px_rgba(16,185,129,0.3)] cursor-pointer"
+                      >
+                        Get Full Setup SQL Script
+                      </button>
+                    </div>
                     
-                    {/* 1. Departments Sample Table */}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-light leading-relaxed">
+                      Below are interactive snippets of the tables. <strong className="text-red-500 font-bold">Click on the table headers</strong> to view and search the full table dataset.
+                    </p>
+
+                    {/* 1. Departments Table Hook */}
                     <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
-                      <div className="px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 border-b border-gray-200 dark:border-[#333] flex justify-between items-center">
-                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">TABLE: DEPARTMENTS (8 rows)</span>
-                      </div>
+                      <button
+                        onClick={() => setActiveFullTable('departments')}
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                      >
+                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                          <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
+                          TABLE: DEPARTMENTS (Click to open full table)
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-bold">PK: dept_id · 8 rows</span>
+                      </button>
                       <div className="overflow-x-auto text-[11px] font-mono">
                         <table className="w-full text-left">
                           <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
@@ -138,24 +192,36 @@ export default function DataStructureCard({ data }) {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
-                            <tr><td className="px-4 py-2">1</td><td className="px-4 py-2 font-bold">Engineering</td><td className="px-4 py-2">Bengaluru</td><td className="px-4 py-2 text-emerald-500">5000000.00</td></tr>
-                            <tr><td className="px-4 py-2">2</td><td className="px-4 py-2 font-bold">Sales</td><td className="px-4 py-2">Mumbai</td><td className="px-4 py-2 text-emerald-500">2000000.00</td></tr>
-                            <tr><td className="px-4 py-2">3</td><td className="px-4 py-2 font-bold">Marketing</td><td className="px-4 py-2">Delhi</td><td className="px-4 py-2 text-emerald-500">1200000.00</td></tr>
-                            <tr><td className="px-4 py-2">4</td><td className="px-4 py-2 font-bold">HR</td><td className="px-4 py-2">Bengaluru</td><td className="px-4 py-2 text-emerald-500">800000.00</td></tr>
-                            <tr><td className="px-4 py-2">5</td><td className="px-4 py-2 font-bold">Finance</td><td className="px-4 py-2">Mumbai</td><td className="px-4 py-2 text-emerald-500">1500000.00</td></tr>
-                            <tr><td className="px-4 py-2">6</td><td className="px-4 py-2 font-bold">Customer Support</td><td className="px-4 py-2">Pune</td><td className="px-4 py-2 text-emerald-500">900000.00</td></tr>
-                            <tr><td className="px-4 py-2">7</td><td className="px-4 py-2 font-bold text-gray-400">Legal</td><td className="px-4 py-2">Delhi</td><td className="px-4 py-2 text-emerald-500">600000.00</td></tr>
-                            <tr><td className="px-4 py-2">8</td><td className="px-4 py-2 font-bold text-gray-400">R&D Satellite</td><td className="px-4 py-2">Hyderabad</td><td className="px-4 py-2 text-red-400 font-bold">NULL</td></tr>
+                            {departmentsData.slice(0, 4).map((row, i) => (
+                              <tr key={i}>
+                                <td className="px-4 py-2">{row.dept_id}</td>
+                                <td className="px-4 py-2 font-bold">{row.dept_name}</td>
+                                <td className="px-4 py-2">{row.location}</td>
+                                <td className="px-4 py-2 text-emerald-500">{row.budget ? row.budget.toLocaleString() : "NULL"}</td>
+                              </tr>
+                            ))}
+                            <tr className="bg-gray-50/20 dark:bg-neutral-900/10">
+                              <td colSpan="4" className="text-center px-4 py-1.5 text-[10px] text-red-500 font-semibold uppercase tracking-wider">
+                                + 4 more rows (Click table header to view all)
+                              </td>
+                            </tr>
                           </tbody>
                         </table>
                       </div>
                     </div>
 
-                    {/* 2. Employees Sample Table */}
+                    {/* 2. Employees Table Hook */}
                     <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
-                      <div className="px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 border-b border-gray-200 dark:border-[#333] flex justify-between items-center">
-                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">TABLE: EMPLOYEES (Sample of 40 rows)</span>
-                      </div>
+                      <button
+                        onClick={() => setActiveFullTable('employees')}
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                      >
+                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                          <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
+                          TABLE: EMPLOYEES (Click to open full table)
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-bold">PK: emp_id · 40 rows</span>
+                      </button>
                       <div className="overflow-x-auto text-[11px] font-mono">
                         <table className="w-full text-left">
                           <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
@@ -164,26 +230,41 @@ export default function DataStructureCard({ data }) {
                               <th className="px-4 py-2 font-bold text-gray-500">name</th>
                               <th className="px-4 py-2 font-bold text-gray-500">email</th>
                               <th className="px-4 py-2 font-bold text-gray-500">dept_id</th>
-                              <th className="px-4 py-2 font-bold text-gray-500">manager_id</th>
                               <th className="px-4 py-2 font-bold text-gray-500">job_title</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
-                            <tr><td className="px-4 py-2">1</td><td className="px-4 py-2">Ravi Sharma</td><td className="px-4 py-2">ravi.sharma@np.com</td><td className="px-4 py-2">1</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2 font-bold">VP Engineering</td></tr>
-                            <tr><td className="px-4 py-2">2</td><td className="px-4 py-2">Anita Verma</td><td className="px-4 py-2">anita.verma@np.com</td><td className="px-4 py-2">1</td><td className="px-4 py-2">1</td><td className="px-4 py-2">Engineering Manager</td></tr>
-                            <tr><td className="px-4 py-2">3</td><td className="px-4 py-2">Alex Kim</td><td className="px-4 py-2">alex.kim1@np.com</td><td className="px-4 py-2">1</td><td className="px-4 py-2">2</td><td className="px-4 py-2">Senior Software Engineer</td></tr>
-                            <tr><td className="px-4 py-2">6</td><td className="px-4 py-2">Divya Rao</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2">1</td><td className="px-4 py-2">3</td><td className="px-4 py-2">Junior Engineer</td></tr>
-                            <tr><td className="px-4 py-2">34</td><td className="px-4 py-2">Simran Chadha</td><td className="px-4 py-2">simran.chadha@np.com</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2">Contractor</td></tr>
+                            {employeesData.slice(0, 4).map((row, i) => (
+                              <tr key={i}>
+                                <td className="px-4 py-2">{row.emp_id}</td>
+                                <td className="px-4 py-2 font-bold">{row.first_name} {row.last_name}</td>
+                                <td className="px-4 py-2">{row.email || <span className="text-red-400 font-bold">NULL</span>}</td>
+                                <td className="px-4 py-2">{row.dept_id || <span className="text-red-400 font-bold">NULL</span>}</td>
+                                <td className="px-4 py-2">{row.job_title}</td>
+                              </tr>
+                            ))}
+                            <tr className="bg-gray-50/20 dark:bg-neutral-900/10">
+                              <td colSpan="5" className="text-center px-4 py-1.5 text-[10px] text-red-500 font-semibold uppercase tracking-wider">
+                                + 36 more rows (Click table header to view all)
+                              </td>
+                            </tr>
                           </tbody>
                         </table>
                       </div>
                     </div>
 
-                    {/* 3. Salaries Sample Table */}
+                    {/* 3. Salaries Table Hook */}
                     <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
-                      <div className="px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 border-b border-gray-200 dark:border-[#333] flex justify-between items-center">
-                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">TABLE: SALARIES (Sample of 48 rows)</span>
-                      </div>
+                      <button
+                        onClick={() => setActiveFullTable('salaries')}
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                      >
+                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                          <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
+                          TABLE: SALARIES (Click to open full table)
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-bold">PK: salary_id · 48 rows</span>
+                      </button>
                       <div className="overflow-x-auto text-[11px] font-mono">
                         <table className="w-full text-left">
                           <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
@@ -195,36 +276,99 @@ export default function DataStructureCard({ data }) {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
-                            <tr><td className="px-4 py-2">1</td><td className="px-4 py-2">1</td><td className="px-4 py-2 text-emerald-500">4500000.00</td><td className="px-4 py-2">2015-03-01</td></tr>
-                            <tr><td className="px-4 py-2">2</td><td className="px-4 py-2">1</td><td className="px-4 py-2 text-emerald-500">5200000.00</td><td className="px-4 py-2">2020-01-01 (Raise)</td></tr>
-                            <tr><td className="px-4 py-2">8</td><td className="px-4 py-2">4</td><td className="px-4 py-2 text-emerald-500">1500000.00</td><td className="px-4 py-2">2018-02-20</td></tr>
-                            <tr><td className="px-4 py-2">10</td><td className="px-4 py-2">5</td><td className="px-4 py-2 text-emerald-500">1500000.00</td><td className="px-4 py-2">2019-07-01 (Tie)</td></tr>
+                            {salariesData.slice(0, 4).map((row, i) => (
+                              <tr key={i}>
+                                <td className="px-4 py-2">{row.salary_id}</td>
+                                <td className="px-4 py-2">{row.emp_id}</td>
+                                <td className="px-4 py-2 text-emerald-500 font-semibold">{row.amount.toLocaleString()}</td>
+                                <td className="px-4 py-2">{row.effective_date}</td>
+                              </tr>
+                            ))}
+                            <tr className="bg-gray-50/20 dark:bg-neutral-900/10">
+                              <td colSpan="4" className="text-center px-4 py-1.5 text-[10px] text-red-500 font-semibold uppercase tracking-wider">
+                                + 44 more rows (Click table header to view all)
+                              </td>
+                            </tr>
                           </tbody>
                         </table>
                       </div>
                     </div>
 
-                    {/* 4. Projects Table */}
+                    {/* 4. Projects Table Hook */}
                     <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
-                      <div className="px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 border-b border-gray-200 dark:border-[#333] flex justify-between items-center">
-                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">TABLE: PROJECTS (Sample of 12 rows)</span>
-                      </div>
+                      <button
+                        onClick={() => setActiveFullTable('projects')}
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                      >
+                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                          <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
+                          TABLE: PROJECTS (Click to open full table)
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-bold">PK: project_id · 12 rows</span>
+                      </button>
                       <div className="overflow-x-auto text-[11px] font-mono">
                         <table className="w-full text-left">
                           <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
                             <tr>
                               <th className="px-4 py-2 font-bold text-gray-500">project_id</th>
                               <th className="px-4 py-2 font-bold text-gray-500">project_name</th>
-                              <th className="px-4 py-2 font-bold text-gray-500">dept_id</th>
-                              <th className="px-4 py-2 font-bold text-gray-500">start_date</th>
-                              <th className="px-4 py-2 font-bold text-gray-500">end_date</th>
                               <th className="px-4 py-2 font-bold text-gray-500">status</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
-                            <tr><td className="px-4 py-2">1</td><td className="px-4 py-2 font-bold">Checkout Revamp</td><td className="px-4 py-2">1</td><td className="px-4 py-2">2023-01-01</td><td className="px-4 py-2">2023-08-01</td><td className="px-4 py-2 text-blue-400">Completed</td></tr>
-                            <tr><td className="px-4 py-2">2</td><td className="px-4 py-2 font-bold">Mobile App v2</td><td className="px-4 py-2">1</td><td className="px-4 py-2">2023-06-01</td><td className="px-4 py-2 text-red-400 font-bold">NULL</td><td className="px-4 py-2 text-emerald-450">Active</td></tr>
-                            <tr><td className="px-4 py-2">12</td><td className="px-4 py-2 font-bold">Unassigned Research</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2">2024-01-01</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2 text-yellow-500">Planned</td></tr>
+                            {projectsData.slice(0, 4).map((row, i) => (
+                              <tr key={i}>
+                                <td className="px-4 py-2">{row.project_id}</td>
+                                <td className="px-4 py-2 font-bold">{row.project_name}</td>
+                                <td className="px-4 py-2">{row.status}</td>
+                              </tr>
+                            ))}
+                            <tr className="bg-gray-50/20 dark:bg-neutral-900/10">
+                              <td colSpan="3" className="text-center px-4 py-1.5 text-[10px] text-red-500 font-semibold uppercase tracking-wider">
+                                + 8 more rows (Click table header to view all)
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* 5. Employee Projects Table Hook */}
+                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                      <button
+                        onClick={() => setActiveFullTable('employee_projects')}
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                      >
+                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                          <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
+                          TABLE: EMPLOYEE_PROJECTS (Click to open full table)
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-bold">Bridge Table · 25 rows</span>
+                      </button>
+                      <div className="overflow-x-auto text-[11px] font-mono">
+                        <table className="w-full text-left">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                            <tr>
+                              <th className="px-4 py-2 font-bold text-gray-500">emp_id</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">project_id</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">role</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">hours_logged</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                            {employeeProjectsData.slice(0, 4).map((row, i) => (
+                              <tr key={i}>
+                                <td className="px-4 py-2">{row.emp_id}</td>
+                                <td className="px-4 py-2">{row.project_id}</td>
+                                <td className="px-4 py-2 font-bold">{row.role}</td>
+                                <td className="px-4 py-2 text-indigo-500">{row.hours_logged} hrs</td>
+                              </tr>
+                            ))}
+                            <tr className="bg-gray-50/20 dark:bg-neutral-900/10">
+                              <td colSpan="4" className="text-center px-4 py-1.5 text-[10px] text-red-500 font-semibold uppercase tracking-wider">
+                                + 21 more rows (Click table header to view all)
+                              </td>
+                            </tr>
                           </tbody>
                         </table>
                       </div>
@@ -379,6 +523,117 @@ export default function DataStructureCard({ data }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Table Data Modal */}
+      {activeFullTable && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#333] w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-250 dark:border-[#333] bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase">
+                  Table View: {activeFullTable.toUpperCase()}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-light">
+                  Showing {filteredRows.length} of {tableDataSources[activeFullTable].length} rows.
+                </p>
+              </div>
+              <button 
+                onClick={() => { setActiveFullTable(null); setSearchQuery(""); }}
+                className="px-4 py-2 bg-red-650 hover:bg-red-500 text-white font-mono text-xs font-bold rounded-lg cursor-pointer transition-all duration-200"
+              >
+                Close View
+              </button>
+            </div>
+            
+            {/* Search filter bar */}
+            <div className="p-4 bg-gray-55/20 dark:bg-neutral-950/20 border-b border-gray-200 dark:border-[#333]">
+              <input
+                type="text"
+                placeholder={`Search records in ${activeFullTable}...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white dark:bg-black border border-gray-250 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-4 py-3 rounded-xl focus:outline-none focus:border-red-500"
+              />
+            </div>
+            
+            {/* Table Body Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="bg-gray-100 dark:bg-neutral-900 border-b border-gray-200 dark:border-[#333] sticky top-0">
+                    <tr>
+                      {tableHeaders[activeFullTable].map(header => (
+                        <th key={header} className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-150 dark:divide-neutral-900/50 text-gray-800 dark:text-gray-300">
+                    {filteredRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={tableHeaders[activeFullTable].length} className="px-5 py-8 text-center text-gray-500 italic">
+                          No matching records found.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredRows.map((row, i) => (
+                        <tr key={i} className="hover:bg-red-500/5 dark:hover:bg-red-500/5 even:bg-gray-50/10 dark:even:bg-neutral-900/10">
+                          {tableHeaders[activeFullTable].map(col => {
+                            const val = row[col];
+                            return (
+                              <td key={col} className="px-5 py-3">
+                                {val === null ? (
+                                  <span className="text-red-400 font-bold bg-red-400/5 px-1.5 py-0.5 rounded-sm">NULL</span>
+                                ) : col === 'amount' || col === 'budget' ? (
+                                  <span className="text-emerald-550 dark:text-emerald-450 font-semibold">{Number(val).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                ) : (
+                                  String(val)
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SQL Script View Modal */}
+      {showFullScriptModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#333] w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-250 dark:border-[#333] bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase">
+                  Complete Seed Script (DDL & DML)
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-light">
+                  Copy and paste this script directly into any PostgreSQL/SQLite client to set up the practice database.
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowFullScriptModal(false)}
+                className="px-4 py-2 bg-red-650 hover:bg-red-500 text-white font-mono text-xs font-bold rounded-lg cursor-pointer transition-all duration-200"
+              >
+                Close Script
+              </button>
+            </div>
+            
+            {/* Script body */}
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-950 text-gray-300 font-mono text-[11px] select-all leading-relaxed whitespace-pre-wrap">
+              <code>{fullSqlScript}</code>
+            </div>
+          </div>
         </div>
       )}
     </section>
