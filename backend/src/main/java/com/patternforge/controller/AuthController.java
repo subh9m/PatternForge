@@ -76,13 +76,10 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(request.getUsername());
-        if (userOpt.isEmpty()) {
-            userOpt = userRepository.findByEmailIgnoreCase(request.getUsername()); // allow logging in with email
-        }
+        Optional<User> userOpt = userRepository.findByEmailIgnoreCase(request.getUsername());
 
         if (userOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
-            return ResponseEntity.badRequest().body("Invalid username/email or password.");
+            return ResponseEntity.badRequest().body("Invalid email or password.");
         }
 
         User user = userOpt.get();

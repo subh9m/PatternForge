@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Terminal, ShieldCheck } from 'lucide-react';
+import { Terminal, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 const AuthScreen: React.FC = () => {
   const { login, register } = useAuth();
@@ -8,6 +8,7 @@ const AuthScreen: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +19,10 @@ const AuthScreen: React.FC = () => {
 
     try {
       if (isLogin) {
-        await login(username, password);
+        if (!email.includes('@')) {
+          throw new Error('Please enter a valid email address.');
+        }
+        await login(email, password);
       } else {
         if (!email.includes('@')) {
           throw new Error('Please enter a valid email address.');
@@ -82,21 +86,7 @@ const AuthScreen: React.FC = () => {
               </div>
             )}
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                {isLogin ? 'Username or Email' : 'Username'}
-              </label>
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder={isLogin ? "enter username or email" : "choose a username"}
-                className="w-full glass-input rounded-lg px-4 py-2.5 text-sm"
-              />
-            </div>
-
-            {!isLogin && (
+            {isLogin ? (
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                   Email Address
@@ -110,20 +100,58 @@ const AuthScreen: React.FC = () => {
                   className="w-full glass-input rounded-lg px-4 py-2.5 text-sm"
                 />
               </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="choose a username"
+                    className="w-full glass-input rounded-lg px-4 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full glass-input rounded-lg px-4 py-2.5 text-sm"
+                  />
+                </div>
+              </>
             )}
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full glass-input rounded-lg px-4 py-2.5 text-sm"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full glass-input rounded-lg pl-4 pr-10 py-2.5 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-350 transition-smooth"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <button
