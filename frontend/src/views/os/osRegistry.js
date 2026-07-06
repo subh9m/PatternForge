@@ -44,36 +44,20 @@ export const osConcepts = [
         desc: "Subtopics: 1) Monolithic: All services (scheduling, memory, drivers) run inside the kernel address space in Ring 0. Fast but unstable (one driver crash crashes OS). 2) Microkernel: Only core services (IPC, scheduling) run in Ring 0; drivers/file systems run in user space (Ring 3). Highly stable, modular, but slower due to message-passing overhead.<br/><br/><img src='https://media.geeksforgeeks.org/wp-content/uploads/20220816160136/MonolithicvsMicrokernel.png' alt='Monolithic vs Microkernel' class='max-w-full my-3 rounded-lg border border-gray-200 dark:border-neutral-800 bg-neutral-900/10 p-2' />" 
       },
       { 
-        method: "Real-Time OS (RTOS)", 
-        syntax: "FreeRTOS, VxWorks, QNX", 
-        params: "Hard vs Soft deadline structures", 
-        output: "Deterministic event schedulers", 
-        complexity: "O(1) worst-case response latency", 
-        desc: "Subtopics: 1) Hard RTOS: Missed deadline constitutes total system failure (e.g., pacemakers, anti-lock brakes). 2) Soft RTOS: Deadlines are important but missing them is tolerated with degraded service quality (e.g., media streaming). Requires deterministic preemptive schedulers." 
+        method: "🔥 Gotcha: Double Fault & Kernel Panic", 
+        syntax: "ISR Exception vector 8 (x86)", 
+        params: "Nested kernel exceptions, stack overflow", 
+        output: "Blue Screen / System Halt", 
+        complexity: "Immediate CPU shutdown", 
+        desc: "<b>Q: What happens if a page fault handler itself page faults? Or if a kernel exception occurs inside another handler?</b><br/><ul><li><b>Double Fault:</b> A special CPU trap triggered if the CPU encounters an exception while trying to call an exception handler (nested exceptions).</li><li><b>Triple Fault:</b> If the Double Fault handler itself exceptions, x86 triggers a triple fault, forcing an immediate hardware reset (reboot).</li><li><b>Kernel Panic:</b> If the kernel detects an unrecoverable state in Ring 0 (e.g., dereferencing a null pointer in driver space), it halts the CPU and writes debug logs (panic() or BSOD) to prevent filesystem corruption.</li></ul>" 
       },
       { 
-        method: "SMP vs NUMA Architectures", 
-        syntax: "Symmetric vs Non-Uniform Memory", 
-        params: "Shared central bus vs Local socket buses", 
-        output: "Dual-socket scale-up configurations", 
-        complexity: "NUMA local node access: ~50-80ns", 
-        desc: "Subtopics: 1) SMP: Processors share a single central memory bus and RAM. Access latency is identical. 2) NUMA: System divided into nodes (each with local CPUs and RAM). Accessing local node RAM is extremely fast; accessing remote node RAM over inter-connects (QPI/UPI) is slow, requiring NUMA-aware scheduling." 
-      },
-      { 
-        method: "Interrupt vs Trap vs Exception", 
-        syntax: "Asynchronous vs Synchronous calls", 
-        params: "Hardware pins, trap registers", 
-        output: "Control branch to ISR handler", 
-        complexity: "Save state registers to kernel stack", 
-        desc: "Subtopics: 1) Interrupt: Asynchronous hardware event (e.g., keyboard input, timer tick). 2) Trap: Synchronous software event triggered by instruction (e.g., system call). 3) Exception: Synchronous error event during execution (e.g., divide-by-zero, page fault). Control is routed via the Interrupt Descriptor Table (IDT)." 
-      },
-      { 
-        method: "Spooling vs Buffering", 
-        syntax: "SPOOL vs Temp buffer cache", 
-        params: "Print queues, socket blocks", 
-        output: "Asynchronous device streams spooler", 
-        complexity: "I/O queue disk overhead", 
-        desc: "Subtopics: 1) Spooling: Temporary storage on disk (SPOOL) used to queue data for slow peripherals (e.g., printers), letting the CPU execute other processes. 2) Buffering: Small cache in RAM used to reconcile speed differences between CPU and devices during active data transfers." 
+        method: "🔥 Gotcha: CLI/STI User Privilege Block", 
+        syntax: "Instruction check (IOPL bits)", 
+        params: "EFLAGS register privilege check", 
+        output: "General Protection Fault (GPF)", 
+        complexity: "O(1) instruction bit trap", 
+        desc: "<b>Q: Why are userspace programs strictly blocked from executing instructions like CLI (Clear Interrupt Flag) and STI (Set Interrupt Flag)?</b><br/><ul><li><b>CLI/STI Power:</b> These CPU instructions disable and enable hardware interrupts.</li><li><b>Security Risk:</b> If a user application could disable interrupts, it could freeze the system timer clock. The scheduler would never run, effectively hijacking the CPU indefinitely.</li><li><b>Hardware Enforced Trap:</b> The CPU verifies the current privilege ring (CPL). If CPL &gt; IOPL (User Ring 3 attempting Ring 0 instruction), the CPU immediately triggers a General Protection Fault trap (SIGSEGV in Linux), terminating the process.</li></ul>" 
       }
     ]
   },
@@ -122,20 +106,20 @@ export const osConcepts = [
         desc: "Subtopics: 1) Zombie: Children that finished execution but parent hasn't reaped status via wait(). Remains 'defunct'. Avoided by handling SIGCHLD or double-forking. 2) Orphan: Active children whose parent terminated. Automatically adopted by systemd/init (PID 1) which regularly calls wait() to reap them." 
       },
       { 
-        method: "Inter-Process Communication (IPC)", 
-        syntax: "Shared Memory vs Message Passing", 
-        params: "Pipes, Shared RAM, Sockets, Signals", 
-        output: "Data transmission across page barriers", 
-        complexity: "Shared memory: O(1) read/write access", 
-        desc: "Subtopics: 1) Shared Memory: Processes map a common physical RAM page to their virtual address space. Extremely fast, requires manual locks. 2) Message Passing: Direct kernel buffering (Pipes, Message Queues). Safe, but requires system calls and memory copies. 3) Sockets: Bidirectional network endpoints." 
+        method: "🔥 Gotcha: Double-Forking to Prevent Zombies", 
+        syntax: "fork() -> fork() -> exit()", 
+        params: "Process hierarchy IDs", 
+        output: "Orphaned grandchild process adopted by init", 
+        complexity: "Two context switches overhead", 
+        desc: "<b>Q: Explain the exact mechanism of double-forking to prevent zombie processes.</b><br/><ul><li><b>Step 1:</b> Parent forks child A. Child A immediately forks child B (grandchild) and then immediately calls exit().</li><li><b>Step 2:</b> The parent immediately reaps child A (since child A exits immediately, it spends practically zero time as a zombie).</li><li><b>Step 3:</b> The grandchild (child B) becomes an orphan because its direct parent (child A) is dead.</li><li><b>Step 4:</b> The OS automatically re-parents the grandchild to systemd/init (PID 1). When the grandchild finishes, init automatically wait()s on it, preventing it from ever becoming a zombie.</li></ul>" 
       },
       { 
-        method: "Pipes: Anonymous vs Named (FIFO)", 
-        syntax: "pipe(fd) vs mkfifo(name)", 
-        params: "Read/Write file descriptors", 
-        output: "Unidirectional kernel buffer channel", 
-        complexity: "Buffer queue copy overhead", 
-        desc: "Subtopics: 1) Anonymous Pipe: Created via pipe(fd) syscall. Unidirectional, parent-child process communication only. Exists in kernel memory buffer. 2) Named Pipe (FIFO): Created via mkfifo() syscall. Appears as a file in directory tree. Allows unrelated processes to communicate." 
+        method: "🔥 Gotcha: Shared vs Independent Stack Spaces", 
+        syntax: "pthread_create() stack mapping", 
+        params: "Threads allocated segments in Heap/Data", 
+        output: "Independent thread stacks, shared heaps", 
+        complexity: "O(1) thread memory dereference", 
+        desc: "<b>Q: Since threads share the virtual address space, what keeps thread local variables separate?</b><br/><ul><li><b>Independent Stacks:</b> Every thread is allocated its own stack space inside the process's virtual address space during creation (usually ~2MB to 8MB).</li><li><b>Registration:</b> Thread Control Blocks (TCBs) store the distinct stack pointers (ESP/RSP) of each thread.</li><li><b>No Isolation Protection:</b> Because there is no address separation, Thread A *can* theoretically corrupt the stack of Thread B if it obtains a pointer to it (no compiler or MMU protection exists between threads of the exact same process).</li></ul>" 
       }
     ]
   },
@@ -185,20 +169,20 @@ export const osConcepts = [
         desc: "Subtopics: 1) Time Quantum (Q): If Q is too large, RR degrades to FCFS. If Q is too small, context switch overhead dominates, dropping CPU efficiency. 2) Priority and Fairness: Ensures fair CPU sharing and low response times for interactive applications." 
       },
       { 
-        method: "Starvation vs Aging", 
-        syntax: "Starved queue vs Priority aging scale", 
-        params: "Wait time thresholds", 
-        output: "Gradual priority elevations", 
-        complexity: "O(N) periodic queue scans", 
-        desc: "Subtopics: 1) Starvation: Priority or SJF schedulers run high-priority tasks repeatedly, leaving low-priority processes blocked indefinitely. 2) Aging: Mitigation technique that slowly increments the priority of processes waiting in the ready queue, guaranteeing eventual execution." 
+        method: "🔥 Gotcha: Priority Inversion & Inheritance", 
+        syntax: "Priority Promotion Rule", 
+        params: "Lock ownership state, dynamic priority mapping", 
+        output: "Prevent high priority task starvation", 
+        complexity: "O(1) thread priority upgrade", 
+        desc: "<b>Q: What is priority inversion and how does inheritance solve it?</b><br/><ul><li><b>The Scenario:</b> A Low-priority thread (L) holds a mutex. A High-priority thread (H) arrives and blocks waiting for L's mutex. Suddenly, a Medium-priority thread (M) arrives. Since M has higher priority than L, it preempts L. H remains blocked on L's lock indefinitely, while M runs.</li><li><b>Priority Inversion:</b> Medium-priority M effectively halts High-priority H!</li><li><b>The Solution:</b> Priority Inheritance. When H blocks waiting for L's lock, the kernel temporarily promotes L's priority to match H's priority. This prevents M from preempting L. As soon as L unlocks the mutex, its priority drops back to low.</li></ul>" 
       },
       { 
-        method: "Multi-Level Feedback Queue (MLFQ)", 
-        syntax: "Priority queues + dynamic promotions", 
-        params: "Time quantum scaling levels", 
-        output: "Behavior-aware scheduling queues", 
-        complexity: "O(1) ready queue queries", 
-        desc: "Subtopics: 1) Dynamic Priority: Tasks start at top queue. If they use their entire time slice without blocking, they are demoted to a lower queue. I/O-bound tasks stay at high priority. 2) Prevention of Gaming: Prevents processes from running infinite short bursts to hijack CPU. Low queues have longer quantum lengths." 
+        method: "🔥 Gotcha: Context Switch vs Thread Quantum", 
+        syntax: "Quantum size optimization", 
+        params: "Context switch latency: ~10us, quantum: 10ms", 
+        output: "Optimal scheduler throughput efficiency", 
+        complexity: "Select quantum to cover > 80% burst length", 
+        desc: "<b>Q: How does the OS determine the time quantum in Round Robin scheduling?</b><br/><ul><li><b>Lower Bound:</b> Must be much larger than context switch overhead. If switch latency is 1ms and quantum is 1ms, 50% of CPU time is wasted on scheduling.</li><li><b>Upper Bound:</b> If quantum is too long (e.g. 5 seconds), responsiveness collapses, degrading RR into FCFS.</li><li><b>Heuristic Rule:</b> Around <b>80%</b> of CPU burst lengths in the system should be shorter than the time quantum, ensuring tasks block on I/O rather than timing out.</li></ul>" 
       }
     ]
   },
@@ -240,28 +224,20 @@ export const osConcepts = [
         desc: "Subtopics: 1) Cache hits: Returns physical frame index immediately, bypassing page table read in RAM. 2) TLB misses: Requires a slow page table lookup in main memory, and updates TLB. 3) TLB Shootdown: Multi-core processors must synchronize TLB entries when page mappings change." 
       },
       { 
-        method: "Fragmentation: Internal vs External", 
-        syntax: "Wasted boundary bytes vs scattered free holes", 
-        params: "Fixed page allocation limit vs Dynamic heaps", 
-        output: "Compaction / Paging allocations", 
-        complexity: "Compaction requires copying physical RAM blocks", 
-        desc: "Subtopics: 1) Internal: Memory allocated to a process that is slightly larger than requested (e.g. process requests 3KB, gets 4KB page; 1KB is wasted). 2) External: Total free memory exists to satisfy request, but it is split into non-contiguous blocks, unable to fit process." 
+        method: "🔥 Gotcha: Belady's Anomaly & Stack Property", 
+        syntax: "FIFO page allocation tracking", 
+        params: "Frames count vs total page faults", 
+        output: "Increasing frame count increases fault rate", 
+        complexity: "FIFO page tracing checks", 
+        desc: "<b>Q: What is Belady's Anomaly? Which page replacement algorithms are immune to it and why?</b><br/><ul><li><b>Belady's Anomaly:</b> The counter-intuitive phenomenon where increasing the number of physical memory frames results in an *increase* in the number of page faults.</li><li><b>Affected Algorithms:</b> FIFO (First-In-First-Out).</li><li><b>Immune Algorithms:</b> LRU (Least Recently Used) and Optimal.</li><li><b>The Stack Property:</b> Immune algorithms satisfy the Stack Property, where the set of pages in memory for $N$ frames is always a subset of the pages in memory for $N+1$ frames. FIFO does not preserve this hierarchy.</li></ul><br/><img src='https://media.geeksforgeeks.org/wp-content/uploads/20230601131011/Beladys-Anomaly-in-FIFO.png' alt='Beladys anomaly diagram' class='max-w-full my-3 rounded-lg border border-gray-200 dark:border-neutral-800 bg-neutral-900/10 p-2' />" 
       },
       { 
-        method: "Thrashing Working Set Model", 
-        syntax: "Page fault loop swap in/out", 
-        params: "Total physical frames allocation limits", 
-        output: "Swapping disk I/O bottleneck freezes", 
-        complexity: "CPU utilization collapses to ~0%", 
-        desc: "Subtopics: 1) Swapping overhead: When physical RAM is full, the OS repeatedly evicts and fetches pages for active processes. 2) Working Set Model: Tracks the active pages referenced by a process in a window. If sum of all working sets exceeds physical RAM, thrashing occurs. Resolved by suspending processes." 
-      },
-      { 
-        method: "Copy-On-Write (COW)", 
-        syntax: "fork() share memory page table", 
-        params: "Read-only page protection flags", 
-        output: "Duplicated private page copy on write", 
-        complexity: "O(1) clone creation, O(page_size) write copy", 
-        desc: "Subtopics: 1) Page Sharing: Child process shares parent's pages immediately after fork(). Pages marked Read-Only. 2) Write Fault: If either process attempts to write, a page fault trap triggers. The kernel copies the physical frame, maps it to the writing process as write-accessible, and resumes." 
+        method: "🔥 Gotcha: Inverted Page Table Overhead", 
+        syntax: "Hashed table search key", 
+        params: "Logical Page Number + PID hashing", 
+        output: "Single global page table translation", 
+        complexity: "Lookup: O(1) hash check, O(N) chain search", 
+        desc: "<b>Q: Why does an Inverted Page Table solve memory overhead, and what is its main drawback?</b><br/><ul><li><b>Overhead Solution:</b> Standard page tables require one table *per process*, consuming massive RAM on 64-bit systems. Inverted page tables have exactly *one entry per physical frame* in the system, massively reducing memory overhead.</li><li><b>The Drawback:</b> Searching. Instead of direct indexing (which is $O(1)$), we must search the table matching both virtual address and PID. This requires hardware hashing, which can suffer from collision chain latency. Also, sharing memory pages becomes difficult.</li></ul>" 
       }
     ]
   },
@@ -302,28 +278,20 @@ export const osConcepts = [
         desc: "Subtopics: 1) Ownership: Mutex has a strict ownership contract. Only the thread that locked the mutex can unlock it. Semaphores have no owner (Thread A can call wait(), Thread B can call signal()). 2) Locking: Mutex is used for mutual exclusion. Semaphore is used for synchronization and signaling." 
       },
       { 
-        method: "Priority Inversion & Inheritance", 
-        syntax: "Low priority promoted to high priority", 
-        params: "Priority levels: High (H), Med (M), Low (L)", 
-        output: "Lock release queue priority shifts", 
-        complexity: "Priority queue metadata updates", 
-        desc: "Subtopics: 1) Problem Scenario: L holds lock needed by H. H blocks. M preempts L because M has higher priority than L, preventing L from finishing and releasing lock, indirectly starving H. 2) Priority Inheritance: L's priority is temporarily elevated to H's level when H blocks on L's lock, preventing M from preempting L." 
+        method: "🔥 Gotcha: Spinlock vs Semaphore in Kernel", 
+        syntax: "spin_lock() vs down_semaphore()", 
+        params: "Thread context sleep flags", 
+        output: "Busy wait CPU loop vs Sleep queue block", 
+        complexity: "Spinlocks are O(1) loop checks", 
+        desc: "<b>Q: Why are spinlocks preferred in kernel space code (like drivers) but avoided in user space applications?</b><br/><ul><li><b>Kernel Space context:</b> Thread switching is expensive. If a lock is expected to be held for a very short duration (e.g., microsecond register writes), busy-waiting in a spinlock consumes fewer clock cycles than putting the thread to sleep (context switch).</li><li><b>No Sleep Context:</b> Interrupt service routines (ISRs) cannot sleep. Hence, they *must* use spinlocks.</li><li><b>User Space:</b> User threads have no control over the scheduler. If a user thread spins, it wastes its entire time quantum doing zero work, blocking the lock owner from completing. Hence, user space uses sleep locks (Semaphores/Mutexes).</li></ul>" 
       },
       { 
-        method: "Deadlock Prevention vs Avoidance", 
-        syntax: "Break conditions vs Safe State checks", 
-        params: "Banker's vectors, allocation matrices", 
-        output: "Deadlock-free execution scheduling", 
-        complexity: "Avoidance check: O(P^2 * R) Bankers runtime", 
-        desc: "Subtopics: 1) Prevention: Eliminates at least one Coffman condition at design time (e.g., locking resources in total ordering to break Circular Wait). 2) Avoidance: Dynamic checks. Allocator checks if allocating a resource leaves the system in a 'Safe State' (where at least one execution sequence exists that satisfies all maximum requests)." 
-      },
-      { 
-        method: "Monitors in OS", 
-        syntax: "Class wrapper + condition variables", 
-        params: "wait() and signal() condition hooks", 
-        output: "High-level compiler synchronization", 
-        complexity: "Compiler generated mutex locks", 
-        desc: "Subtopics: 1) Encapsulation: Object-oriented programming construct where only one thread can execute inside monitor methods at a time. 2) Condition Variables: Allows threads to release monitor lock and sleep inside monitor when waiting for conditions. Woken up via cv.signal()." 
+        method: "🔥 Gotcha: Livelock vs Deadlock vs Starvation", 
+        syntax: "Active status change loops", 
+        params: "Locks, state loops, CPU consumption", 
+        output: "Infinite busy-wait loops vs absolute freezes", 
+        complexity: "Livelock consumes 100% CPU cycles", 
+        desc: "<b>Q: What is the difference between Deadlock, Livelock, and Starvation?</b><br/><ul><li><b>Deadlock:</b> Two or more threads are permanently blocked, waiting for each other to release resources. Threads are in a *sleeping* state (consuming 0% CPU).</li><li><b>Livelock:</b> Threads actively change their states in response to each other, but make zero forward progress (like two polite people trying to pass each other in a hallway, repeatedly stepping to the same side). Threads are in a *running* state (consuming 100% CPU).</li><li><b>Starvation:</b> A thread is healthy but is repeatedly bypassed by the scheduler or resource allocator due to priority bias. The thread *could* run, but never gets the chance.</li></ul>" 
       }
     ]
   },
@@ -364,12 +332,20 @@ export const osConcepts = [
         desc: "Subtopics: 1) Hard Link: Points directly to same inode. File contents only deleted when reference count is 0. Cannot cross file system partitions. 2) Soft Link: Independent file containing target path. Can span partitions, breaks if target file is renamed or moved." 
       },
       { 
-        method: "Process Crash Handling", 
-        syntax: "SIGSEGV Trap -> Core Dump -> GC", 
-        params: "Interrupt Vector table, registers dump", 
-        output: "Core dump debugging files", 
-        complexity: "Releases page tables and frame maps", 
-        desc: "Subtopics: 1) Segfault: CPU throws trap when process tries to access restricted memory space (violating limit register). 2) Core Dump: Kernel captures registers, CPU states, and memory maps to a file on disk for debugging (gdb). 3) Resource Cleanup: Kernel terminates process and reclaims all allocated page tables and physical frames." 
+        method: "🔥 Gotcha: Directory Layout & Inode Mapping", 
+        syntax: "unlink() and link() actions", 
+        params: "Dir filename mapping string to Inode ID", 
+        output: "File access point redirection", 
+        complexity: "File link removal is O(1) metadata write", 
+        desc: "<b>Q: If filenames are not stored inside an Inode, where are they stored?</b><br/><ul><li><b>Directory Structure:</b> A directory is simply a special file containing a list of pairs: <b>[Filename, Inode Number]</b>.</li><li><b>File Lookup:</b> To open '/usr/bin/go', the OS looks up '/' inode to find the block containing directory mappings, reads it to find 'usr' inode, reads 'usr' directory block to find 'bin' inode, and so on.</li><li><b>Reference Counts:</b> Hard links increment the reference count inside the inode. Calling rm (unlink()) decreases the count. The disk blocks are reclaimed only when reference count drops to 0.</li></ul>" 
+      },
+      { 
+        method: "🔥 Gotcha: File Journaling & Crash Recovery", 
+        syntax: "Write-Ahead Logging (WAL)", 
+        params: "Journal circular log buffer on disk", 
+        output: "Atomic transactions commit states", 
+        complexity: "O(1) journal playback seek on boot", 
+        desc: "<b>Q: How does filesystem journaling prevent corruption during a sudden power loss?</b><br/><ul><li><b>The Problem:</b> Writing a file requires modifying: 1) Inode bitmap, 2) Data blocks, 3) Directory entry. If power cuts mid-write, filesystem state becomes inconsistent.</li><li><b>The Journal:</b> A reserved circular log on disk. Before any writes are made to the actual filesystem, the changes are written to the journal (Write-Ahead).</li><li><b>Recovery:</b> On boot after power failure, the OS checks the journal. Unfinished transactions are rolled back; finished but unwritten transactions are replayed, restoring consistency in seconds without scanning the whole disk (fsck).</li></ul>" 
       }
     ]
   },
@@ -652,7 +628,17 @@ export const osConcepts = [
     <tr><td>95%</td><td>82ns</td><td>162ns</td><td>86.0 ns</td><td>1.86x faster</td></tr>
     <tr><td>99%</td><td>82ns</td><td>162ns</td><td>82.8 ns</td><td>1.93x faster</td></tr>
   </tbody>
-</table>`
+</table>
+
+<br/>
+<b>5. Gotcha: EAT with Page Fault Service Rate</b>
+<ul>
+  <li><b>Q: How do you calculate EAT if the page fault rate is 1%?</b></li>
+  <li>Let Memory Access = 100ns, Page Fault Service Time = 10ms = 10,000,000ns.</li>
+  <li>Formula: <code>EAT = (1 - p) * Memory + p * Page_Fault_Service_Time</code></li>
+  <li>EAT = 0.99 * 100ns + 0.01 * 10,000,000ns = 99ns + 100,000ns = <b>100,099ns = ~100us</b>.</li>
+  <li><i>Takeaway: Even a 1% page fault rate slows access times by 1000x! This is why page fault reduction is critical.</i></li>
+</ul>`
       },
       { 
         method: "Banker's Safety State Math", 
