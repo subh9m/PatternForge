@@ -114,4 +114,9 @@ public class AuthController {
         }
         return ResponseEntity.status(401).body("Invalid or expired session");
     }
+
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("UP");
+    }
 }
