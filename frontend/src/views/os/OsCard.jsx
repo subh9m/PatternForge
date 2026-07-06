@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Cpu, Activity, Database, Key, Shield, HelpCircle, HardDrive } from 'lucide-react';
 
 // Syntax highlighter optimized for OS configurations and code/ascii diagrams
@@ -87,6 +87,42 @@ export default function OsCard({ data }) {
       [idx]: !prev[idx]
     }));
   };
+
+  // Scopes and wraps dynamically loaded images within collapsed tags
+  useEffect(() => {
+    const images = document.querySelectorAll('.os-rich-content img');
+    images.forEach((img) => {
+      if (img.dataset.wrapped) return;
+      img.dataset.wrapped = "true";
+
+      // Collapse by default
+      img.style.display = 'none';
+      img.style.maxWidth = '100%';
+      img.style.borderRadius = '8px';
+      img.style.marginTop = '12px';
+
+      // Create a toggle button
+      const btn = document.createElement('button');
+      btn.className = 'inline-flex items-center space-x-2 px-3 py-1.5 mt-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 hover:border-amber-500/40 rounded-lg text-[10px] font-mono font-bold cursor-pointer transition-all duration-150';
+      btn.innerHTML = '<span>🖼️ View Architectural Diagram</span>';
+
+      // Insert button before the image
+      img.parentNode.insertBefore(btn, img);
+
+      btn.onclick = (e) => {
+        e.preventDefault();
+        if (img.style.display === 'none') {
+          img.style.display = 'block';
+          btn.innerHTML = '<span>❌ Close Diagram</span>';
+          btn.className = 'inline-flex items-center space-x-2 px-3 py-1.5 mt-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 hover:border-red-500/40 rounded-lg text-[10px] font-mono font-bold cursor-pointer transition-all duration-150';
+        } else {
+          img.style.display = 'none';
+          btn.innerHTML = '<span>🖼️ View Architectural Diagram</span>';
+          btn.className = 'inline-flex items-center space-x-2 px-3 py-1.5 mt-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 hover:border-amber-500/40 rounded-lg text-[10px] font-mono font-bold cursor-pointer transition-all duration-150';
+        }
+      };
+    });
+  }, [expandedQuestions, data]);
 
   return (
     <section 
