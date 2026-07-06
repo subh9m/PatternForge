@@ -78,7 +78,7 @@ function getTopicIcon(id) {
 
 export default function OsCard({ data }) {
   const [showDeclaration, setShowDeclaration] = useState(false);
-  const [showInternal, setShowInternal] = useState(true);
+  const [showInternal, setShowInternal] = useState(false);
   const [expandedQuestions, setExpandedQuestions] = useState({});
 
   const toggleQuestion = (idx) => {
