@@ -150,6 +150,7 @@ export const osConcepts = [
 - Response Time (RT) = First allocation time - Arrival Time (AT)
 - Gantt Chart: Visual timeline representation of CPU core allocations over time.
 - Schedulers: Long-term (job admission), Medium-term (swapping), Short-term (CPU dispatcher select).`,
+    diagramUrl: "/os_process_states.png",
     methods: [
       { 
         method: "Preemptive vs Non-Preemptive", 
@@ -384,52 +385,490 @@ export const osConcepts = [
 5. Page Replacement Hit/Fault count calculation.`,
     methods: [
       { 
-        method: "CPU Scheduling Waiting Time Math", 
-        syntax: "Solved CPU Gantt Chart Wait Time", 
-        params: "P1(BT=8, AT=0), P2(BT=4, AT=1), P3(BT=2, AT=2)", 
-        output: "Gantt Timeline: [P1: 0-8][P3: 8-10][P2: 10-14]", 
-        complexity: "Average Waiting Time = 4.0ms", 
-        desc: "Step-by-step SJF Scheduling: 1) At t=0, only P1 is ready. CPU runs P1. Non-preemptive SJF runs P1 to finish at t=8. 2) At t=8, P2 and P3 are ready. SJF selects P3 (shorter BT=2). P3 runs 8 to 10. 3) P2 runs 10 to 14. \n- P1: Completion Time (CT)=8. TAT=8-0=8. WT=8-8=0. \n- P3: CT=10. TAT=10-2=8. WT=8-2=6. \n- P2: CT=14. TAT=14-1=13. WT=13-4=9. \n- Average WT = (0 + 6 + 9) / 3 = 5.0ms." 
+        method: "CPU Scheduling Calculations (All Schedulers)", 
+        syntax: "FCFS, SJF, SRTF, RR, Priority", 
+        params: "Processes: P1(AT=0, BT=4, Pri=2), P2(AT=1, BT=3, Pri=1), P3(AT=2, BT=1, Pri=3), P4(AT=3, BT=2, Pri=2)", 
+        output: "Comparative Average WT & TAT results", 
+        complexity: "SJF is optimal for minimum WT", 
+        desc: `Here is a comprehensive breakdown of all scheduling algorithms using a shared process set. Lower Priority number represents higher priority.
+<br/><br/>
+<b>1. First-Come-First-Serve (FCFS)</b>
+<ul>
+  <li>Gantt Chart Execution: [P1: 0-4] -> [P2: 4-7] -> [P3: 7-8] -> [P4: 8-10]</li>
+</ul>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Process</th>
+      <th>Arrival Time (AT)</th>
+      <th>Burst Time (BT)</th>
+      <th>Completion Time (CT)</th>
+      <th>Turnaround Time (TAT = CT-AT)</th>
+      <th>Waiting Time (WT = TAT-BT)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>P1</td><td>0</td><td>4</td><td>4</td><td>4</td><td>0</td></tr>
+    <tr><td>P2</td><td>1</td><td>3</td><td>7</td><td>6</td><td>3</td></tr>
+    <tr><td>P3</td><td>2</td><td>1</td><td>8</td><td>6</td><td>5</td></tr>
+    <tr><td>P4</td><td>3</td><td>2</td><td>10</td><td>7</td><td>5</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>Average Turnaround Time:</b> (4 + 6 + 6 + 7) / 4 = <b>5.75 ms</b></li>
+  <li><b>Average Waiting Time:</b> (0 + 3 + 5 + 5) / 4 = <b>3.25 ms</b></li>
+</ul>
+
+<br/>
+<b>2. Shortest Job First (SJF - Non-Preemptive)</b>
+<ul>
+  <li>Gantt Chart Execution:
+    <ul>
+      <li>At t=0, only P1 is available. Run [P1: 0-4].</li>
+      <li>At t=4, P2, P3, and P4 have arrived. Burst times: P3(1) &lt; P4(2) &lt; P2(3).</li>
+      <li>Run [P3: 4-5] -> [P4: 5-7] -> [P2: 7-10].</li>
+    </ul>
+  </li>
+</ul>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Process</th>
+      <th>AT</th>
+      <th>BT</th>
+      <th>CT</th>
+      <th>TAT</th>
+      <th>WT</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>P1</td><td>0</td><td>4</td><td>4</td><td>4</td><td>0</td></tr>
+    <tr><td>P2</td><td>1</td><td>3</td><td>10</td><td>9</td><td>6</td></tr>
+    <tr><td>P3</td><td>2</td><td>1</td><td>5</td><td>3</td><td>2</td></tr>
+    <tr><td>P4</td><td>3</td><td>2</td><td>7</td><td>4</td><td>2</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>Average Turnaround Time:</b> (4 + 9 + 3 + 4) / 4 = <b>5.00 ms</b></li>
+  <li><b>Average Waiting Time:</b> (0 + 6 + 2 + 2) / 4 = <b>2.50 ms</b></li>
+</ul>
+
+<br/>
+<b>3. Shortest Remaining Time First (SRTF - Preemptive SJF)</b>
+<ul>
+  <li>Gantt Chart Execution:
+    <ul>
+      <li>t=0: Run P1 (Remaining BT=4).</li>
+      <li>t=1: P2 arrives (BT=3). Since P2's BT=3 &lt; P1's remaining BT=3, P2 preempts P1. Run [P2: 1-2].</li>
+      <li>t=2: P3 arrives (BT=1). Since P3's BT=1 &lt; P2's remaining BT=2, P3 preempts P2. Run [P3: 2-3] (Terminates).</li>
+      <li>t=3: P4 arrives (BT=2). Queue contains: P1(3), P2(2), P4(2). Select P2 (remaining BT=2). Run [P2: 3-5] (Terminates).</li>
+      <li>t=5: Select P4 (remaining BT=2). Run [P4: 5-7] (Terminates).</li>
+      <li>t=7: Run P1 (remaining BT=3) until t=10.</li>
+    </ul>
+  </li>
+</ul>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Process</th>
+      <th>AT</th>
+      <th>BT</th>
+      <th>CT</th>
+      <th>TAT</th>
+      <th>WT</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>P1</td><td>0</td><td>4</td><td>10</td><td>10</td><td>6</td></tr>
+    <tr><td>P2</td><td>1</td><td>3</td><td>5</td><td>4</td><td>1</td></tr>
+    <tr><td>P3</td><td>2</td><td>1</td><td>3</td><td>1</td><td>0</td></tr>
+    <tr><td>P4</td><td>3</td><td>2</td><td>7</td><td>4</td><td>2</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>Average Turnaround Time:</b> (10 + 4 + 1 + 4) / 4 = <b>4.75 ms</b></li>
+  <li><b>Average Waiting Time:</b> (6 + 1 + 0 + 2) / 4 = <b>2.25 ms</b></li>
+</ul>
+
+<br/>
+<b>4. Round Robin (RR - Time Quantum = 2)</b>
+<ul>
+  <li>Ready Queue Trace: P1 [0] -> P2, P1 [2] -> P1, P3, P4, P2 [4] ...</li>
+  <li>Gantt Chart Execution: [P1: 0-2] -> [P2: 2-4] -> [P1: 4-6] (P1 Terminated) -> [P3: 6-7] -> [P4: 7-9] -> [P2: 9-10]</li>
+</ul>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Process</th>
+      <th>AT</th>
+      <th>BT</th>
+      <th>CT</th>
+      <th>TAT</th>
+      <th>WT</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>P1</td><td>0</td><td>4</td><td>6</td><td>6</td><td>2</td></tr>
+    <tr><td>P2</td><td>1</td><td>3</td><td>10</td><td>9</td><td>6</td></tr>
+    <tr><td>P3</td><td>2</td><td>1</td><td>7</td><td>5</td><td>4</td></tr>
+    <tr><td>P4</td><td>3</td><td>2</td><td>9</td><td>6</td><td>4</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>Average Turnaround Time:</b> (6 + 9 + 5 + 6) / 4 = <b>6.50 ms</b></li>
+  <li><b>Average Waiting Time:</b> (2 + 6 + 4 + 4) / 4 = <b>4.00 ms</b></li>
+</ul>
+
+<br/>
+<b>5. Preemptive Priority (Lower number = Higher Priority)</b>
+<ul>
+  <li>Gantt Chart Execution:
+    <ul>
+      <li>t=0: Run P1 (Priority 2).</li>
+      <li>t=1: P2 arrives (Priority 1). P2 has higher priority, preempts P1. Run [P2: 1-4] (Terminates).</li>
+      <li>t=4: Queue has: P1(Pri 2, remaining 3), P3(Pri 3), P4(Pri 2). Run P1 (Pri 2, arrived first). Run [P1: 4-7] (Terminates).</li>
+      <li>t=7: Run P4 (Pri 2). Run [P4: 7-9] (Terminates).</li>
+      <li>t=9: Run P3 (Pri 3). Run [P3: 9-10] (Terminates).</li>
+    </ul>
+  </li>
+</ul>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Process</th>
+      <th>AT</th>
+      <th>BT</th>
+      <th>CT</th>
+      <th>TAT</th>
+      <th>WT</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>P1</td><td>0</td><td>4</td><td>7</td><td>7</td><td>3</td></tr>
+    <tr><td>P2</td><td>1</td><td>3</td><td>4</td><td>3</td><td>0</td></tr>
+    <tr><td>P3</td><td>2</td><td>1</td><td>10</td><td>8</td><td>7</td></tr>
+    <tr><td>P4</td><td>3</td><td>2</td><td>9</td><td>6</td><td>4</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>Average Turnaround Time:</b> (7 + 3 + 8 + 6) / 4 = <b>6.00 ms</b></li>
+  <li><b>Average Waiting Time:</b> (3 + 0 + 7 + 4) / 4 = <b>3.50 ms</b></li>
+</ul>`
       },
       { 
-        method: "Virtual Memory Paging Bits Math", 
-        syntax: "Logical to Physical Page Translation", 
-        params: "16-bit Logical Address, 4KB Page Size, 8 frames RAM", 
-        output: "Page Bits: 4, Offset Bits: 12", 
-        complexity: "Offsets map directly to Physical Address", 
-        desc: "Paging calculation: 1) Page Size = 4KB = 4096 Bytes = 2^12. Hence, Offset (d) = 12 bits. 2) Logical Address space = 16 bits. Page Number (p) bits = 16 - 12 = 4 bits (Max 16 pages). 3) Main memory has 8 frames = 2^3 frames. Frame Number (f) bits = 3 bits. 4) Physical Address space = f + d = 3 + 12 = 15 bits. 5) For Logical Address 0x3A2E -> Page = 0x3, Offset = 0xA2E. If Page 3 maps to Frame 5, Physical Address = Frame 5 (101 in binary) + Offset (0xA2E) = 0x5A2E." 
+        method: "Virtual Memory Paging Mathematics", 
+        syntax: "Page, Frame & Offset Slicing", 
+        params: "32-bit Logical Address, 8KB Page size, 16GB Physical Memory RAM", 
+        output: "Page bits: 19, Frame bits: 21, Offset bits: 13", 
+        complexity: "O(1) address translation index", 
+        desc: `Detailed step-by-step memory space bit slicing math.
+<br/><br/>
+<b>1. Calculating Offset Bits (d)</b>
+<ul>
+  <li>Page Size = 8 KB = 8 * 1024 Bytes = 8192 Bytes = 2^13 Bytes.</li>
+  <li>The number of bits required to address each byte in a page is: <b>d = log2(8192) = 13 bits</b>.</li>
+</ul>
+
+<b>2. Calculating Page Number Bits (p)</b>
+<ul>
+  <li>Logical Address Size = 32 bits.</li>
+  <li>Logical Address structure: [ Page Number (p) | Offset (d) ]</li>
+  <li>Page Number bits (p) = Logical Address Bits - Offset Bits = 32 - 13 = <b>19 bits</b>.</li>
+  <li>Maximum number of Pages in virtual memory = 2^19 pages = 524,288 pages.</li>
+</ul>
+
+<b>3. Calculating Frame Number Bits (f)</b>
+<ul>
+  <li>Physical Memory RAM Size = 16 GB = 16 * 1024 * 1024 * 1024 Bytes = 17,179,869,184 Bytes = 2^34 Bytes.</li>
+  <li>Physical Address size = 34 bits.</li>
+  <li>Physical Address structure: [ Frame Number (f) | Offset (d) ]</li>
+  <li>Frame Number bits (f) = Physical Address Bits - Offset Bits = 34 - 13 = <b>21 bits</b>.</li>
+  <li>Number of frames in physical RAM = 2^21 frames = 2,097,152 frames.</li>
+</ul>
+
+<b>4. Slicing Example</b>
+<ul>
+  <li>Consider Logical Address: <b>0x00A23BC5</b>.</li>
+  <li>Convert to binary: 0000 0000 1010 0010 0011 1011 1100 0101</li>
+  <li>Group the lower 13 bits (Offset): 1 1011 1100 0101 -> <b>0x1BC5</b></li>
+  <li>Group the upper 19 bits (Page Number): 0000 0000 1010 0010 001 -> <b>0x00511</b></li>
+  <li>Hence, the MMU checks Page Table entry at index <b>0x00511</b>. If it maps to Frame <b>0x12A4</b>, the resulting Physical Address is: Frame (0x12A4) + Offset (0x1BC5) = <b>0x02489BC5</b>.</li>
+</ul>`
       },
       { 
-        method: "EAT TLB Cache hit Math", 
-        syntax: "Effective Access Time Calculation", 
-        params: "TLB lookup = 2ns, RAM access = 100ns, Hit Ratio = 90%", 
-        output: "EAT = 112 nanoseconds", 
-        complexity: "Saves 90ns on 90% of requests", 
-        desc: "EAT Formula: 1) TLB Hit Case (90%): TLB lookup + Memory access = 2ns + 100ns = 102ns. 2) TLB Miss Case (10%): TLB lookup + 2 * Memory access (one for page table, one for data) = 2ns + 200ns = 202ns. 3) Combined EAT = 0.90 * (102ns) + 0.10 * (202ns) = 91.8ns + 20.2ns = 112ns." 
+        method: "Effective Access Time (EAT) equations", 
+        syntax: "TLB Hit/Miss equations", 
+        params: "TLB time=2ns, RAM access=80ns, hit ratios: 90% vs 99%", 
+        output: "EAT: 90% = 91.8ns, 99% = 82.78ns", 
+        complexity: "O(1) associative lookup", 
+        desc: `Detailed calculation comparing memory access latencies across varying Translation Lookaside Buffer cache hit ratios.
+<br/><br/>
+<b>1. General Equations</b>
+<ul>
+  <li>Let <b>c</b> = TLB Lookup time.</li>
+  <li>Let <b>m</b> = Main Memory (RAM) access time.</li>
+  <li>Let <b>p</b> = TLB Hit Ratio.</li>
+  <li><b>Effective Access Time (EAT):</b>
+    <br/>
+    <code>EAT = p * (c + m) + (1 - p) * (c + 2 * m)</code>
+    <br/>
+    *(Note: On a TLB Miss, we do 2 memory accesses: first to read the page table entry, second to access the actual data frame).*
+  </li>
+</ul>
+
+<b>2. Step-by-step Calculation (90% Hit Ratio, c=2ns, m=80ns)</b>
+<ul>
+  <li>TLB Hit Case: 2ns + 80ns = 82ns</li>
+  <li>TLB Miss Case: 2ns + 2 * 80ns = 162ns</li>
+  <li>EAT = 0.90 * (82ns) + 0.10 * (162ns)</li>
+  <li>EAT = 73.8ns + 16.2ns = <b>90.0 nanoseconds</b></li>
+</ul>
+
+<b>3. Step-by-step Calculation (99% Hit Ratio, c=2ns, m=80ns)</b>
+<ul>
+  <li>TLB Hit Case: 82ns</li>
+  <li>TLB Miss Case: 162ns</li>
+  <li>EAT = 0.99 * (82ns) + 0.01 * (162ns)</li>
+  <li>EAT = 81.18ns + 1.62ns = <b>82.8 nanoseconds</b></li>
+</ul>
+
+<br/>
+<b>4. Comparative Benchmark Table</b>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Hit Ratio (p)</th>
+      <th>TLB Hit Time</th>
+      <th>TLB Miss Time</th>
+      <th>Effective Access Time (EAT)</th>
+      <th>Speedup vs No-TLB (160ns)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>0% (No TLB)</td><td>-</td><td>160ns</td><td>160.0 ns</td><td>1.00x (Baseline)</td></tr>
+    <tr><td>80%</td><td>82ns</td><td>162ns</td><td>98.0 ns</td><td>1.63x faster</td></tr>
+    <tr><td>90%</td><td>82ns</td><td>162ns</td><td>90.0 ns</td><td>1.77x faster</td></tr>
+    <tr><td>95%</td><td>82ns</td><td>162ns</td><td>86.0 ns</td><td>1.86x faster</td></tr>
+    <tr><td>99%</td><td>82ns</td><td>162ns</td><td>82.8 ns</td><td>1.93x faster</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "Banker's Safety State Math", 
-        syntax: "Resource Allocation Need Matrix", 
-        params: "Allocated=[0 1 0], Max=[7 5 3], Available=[3 3 2]", 
-        output: "Need Matrix = [7 4 3]", 
-        complexity: "Check if Available >= Need for safety", 
-        desc: "Banker's calculation for Process P1: 1) Need[1] = Max[1] - Allocation[1] = [7 5 3] - [0 1 0] = [7 4 3]. 2) To check if P1 can be allocated: Is Need [7 4 3] <= Available [3 3 2]? No, request denied (insufficient resources). P1 must wait. 3) Safety Sequence: If another process P2 has Need [1 2 2] <= [3 3 2], allocate to P2. P2 terminates, releasing its allocation back, increasing Available vector." 
+        syntax: "Resource Safety Matrices", 
+        params: "Available=[3 3 2], 5 processes (P0-P4), 3 resource types (A, B, C)", 
+        output: "Safe Sequence: P1 -> P3 -> P4 -> P0 -> P2", 
+        complexity: "O(P^2 * R) time safety loop", 
+        desc: `Detailed calculation check to prove if the system is in a Safe State.
+<br/><br/>
+<b>1. Input Matrices & Available Vector</b>
+<ul>
+  <li><b>Available Vector:</b> [A=3, B=3, C=2]</li>
+  <li><b>Need Matrix Equation:</b> <code>Need[i] = Max[i] - Allocation[i]</code></li>
+</ul>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Process</th>
+      <th>Allocation [A B C]</th>
+      <th>Max [A B C]</th>
+      <th>Need [A B C]</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>P0</td><td>0 1 0</td><td>7 5 3</td><td><b>7 4 3</b></td></tr>
+    <tr><td>P1</td><td>2 0 0</td><td>3 2 2</td><td><b>1 2 2</b></td></tr>
+    <tr><td>P2</td><td>3 0 2</td><td>9 0 2</td><td><b>6 0 0</b></td></tr>
+    <tr><td>P3</td><td>2 1 1</td><td>2 2 2</td><td><b>0 1 1</b></td></tr>
+    <tr><td>P4</td><td>0 0 2</td><td>4 3 3</td><td><b>4 3 1</b></td></tr>
+  </tbody>
+</table>
+
+<br/>
+<b>2. Safety Sequence Determination Procedure</b>
+<ul>
+  <li><b>Step 1 (Check P0):</b> Is Need [7 4 3] &lt;= Available [3 3 2]? <b>No.</b> P0 must wait.</li>
+  <li><b>Step 2 (Check P1):</b> Is Need [1 2 2] &lt;= Available [3 3 2]? <b>Yes.</b>
+    <ul>
+      <li>P1 enters execution, completes, and releases resources.</li>
+      <li>New Available = Current Available + P1's Allocation = [3 3 2] + [2 0 0] = <b>[5 3 2]</b>.</li>
+      <li>Safe sequence list: <b>[P1]</b>.</li>
+    </ul>
+  </li>
+  <li><b>Step 3 (Check P2):</b> Is Need [6 0 0] &lt;= Available [5 3 2]? <b>No.</b> P2 must wait.</li>
+  <li><b>Step 4 (Check P3):</b> Is Need [0 1 1] &lt;= Available [5 3 2]? <b>Yes.</b>
+    <ul>
+      <li>P3 executes, completes, and releases resources.</li>
+      <li>New Available = [5 3 2] + [2 1 1] = <b>[7 4 3]</b>.</li>
+      <li>Safe sequence list: <b>[P1, P3]</b>.</li>
+    </ul>
+  </li>
+  <li><b>Step 5 (Check P4):</b> Is Need [4 3 1] &lt;= Available [7 4 3]? <b>Yes.</b>
+    <ul>
+      <li>P4 executes, completes, and releases resources.</li>
+      <li>New Available = [7 4 3] + [0 0 2] = <b>[7 4 5]</b>.</li>
+      <li>Safe sequence list: <b>[P1, P3, P4]</b>.</li>
+    </ul>
+  </li>
+  <li><b>Step 6 (Recheck P0):</b> Is Need [7 4 3] &lt;= Available [7 4 5]? <b>Yes.</b>
+    <ul>
+      <li>P0 executes, completes, and releases resources.</li>
+      <li>New Available = [7 4 5] + [0 1 0] = <b>[7 5 5]</b>.</li>
+      <li>Safe sequence list: <b>[P1, P3, P4, P0]</b>.</li>
+    </ul>
+  </li>
+  <li><b>Step 7 (Recheck P2):</b> Is Need [6 0 0] &lt;= Available [7 5 5]? <b>Yes.</b>
+    <ul>
+      <li>P2 executes, completes, and releases resources.</li>
+      <li>New Available = [7 5 5] + [3 0 2] = <b>[10 5 7]</b>.</li>
+      <li>Safe sequence list: <b>[P1, P3, P4, P0, P2]</b>.</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li><b>Conclusion:</b> The system is in a <b>Safe State</b> because there exists a sequence <b>P1 -> P3 -> P4 -> P0 -> P2</b> that completes all allocations without deadlock.</li>
+</ul>`
       },
       { 
-        method: "FIFO vs LRU Page Replacement Math", 
-        syntax: "Page fault trace comparison", 
-        params: "3 Frames, Reference String: 7, 0, 1, 2, 0, 3", 
-        output: "FIFO = 5 faults, LRU = 5 faults", 
-        complexity: "LRU tracks usage recency", 
-        desc: "Step-by-step Page replacements: \n- FIFO trace: 1) Load 7 [7,x,x] (fault 1). 2) Load 0 [7,0,x] (fault 2). 3) Load 1 [7,0,1] (fault 3). 4) Load 2, evict oldest 7 [2,0,1] (fault 4). 5) Access 0 [2,0,1] (Hit!). 6) Load 3, evict oldest 0 [2,3,1] (fault 5). Total FIFO Faults = 5. \n- LRU trace: 1) Load 7 [7,x,x] (fault 1). 2) Load 0 [7,0,x] (fault 2). 3) Load 1 [7,0,1] (fault 3). 4) Load 2, evict least recently used 7 [2,0,1] (fault 4). 5) Access 0, update recency [2,1,0] (Hit!). 6) Load 3, evict least recently used 1 [2,3,0] (fault 5). Total LRU Faults = 5." 
+        method: "Page Replacement Trace (FIFO, LRU, Optimal)", 
+        syntax: "Solved Paging Fault metrics", 
+        params: "3 Frames, Reference String: 7, 0, 1, 2, 0, 3, 0, 4, 2, 3", 
+        output: "Faults: FIFO = 7, LRU = 7, Optimal = 6", 
+        complexity: "Optimal requires future foresight", 
+        desc: `Detailed frame tracing and fault count analysis for page replacements.
+<br/><br/>
+<b>1. First-In-First-Out (FIFO)</b>
+<ul>
+  <li>Mechanism: Evicts the oldest page that arrived in memory first.</li>
+</ul>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Ref</th><th>7</th><th>0</th><th>1</th><th>2</th><th>0</th><th>3</th><th>0</th><th>4</th><th>2</th><th>3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>F1</td><td>7</td><td>7</td><td>7</td><td>2</td><td>2</td><td>2</td><td>2</td><td>4</td><td>4</td><td>4</td></tr>
+    <tr><td>F2</td><td>-</td><td>0</td><td>0</td><td>0</td><td>0</td><td>3</td><td>3</td><td>3</td><td>2</td><td>2</td></tr>
+    <tr><td>F3</td><td>-</td><td>-</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>3</td></tr>
+    <tr><td><b>Stat</b></td><td>Fault</td><td>Fault</td><td>Fault</td><td>Fault</td><td>Hit</td><td>Fault</td><td>Fault</td><td>Fault</td><td>Fault</td><td>Fault</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>Total FIFO Faults:</b> <b>9</b></li>
+  <li><b>Total FIFO Hits:</b> <b>1</b></li>
+</ul>
+
+<br/>
+<b>2. Least Recently Used (LRU)</b>
+<ul>
+  <li>Mechanism: Evicts page that has not been referenced for the longest time.</li>
+</ul>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Ref</th><th>7</th><th>0</th><th>1</th><th>2</th><th>0</th><th>3</th><th>0</th><th>4</th><th>2</th><th>3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>F1</td><td>7</td><td>7</td><td>7</td><td>2</td><td>2</td><td>2</td><td>2</td><td>4</td><td>4</td><td>3</td></tr>
+    <tr><td>F2</td><td>-</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>2</td><td>2</td></tr>
+    <tr><td>F3</td><td>-</td><td>-</td><td>1</td><td>1</td><td>1</td><td>3</td><td>3</td><td>3</td><td>3</td><td>0</td></tr>
+    <tr><td><b>Stat</b></td><td>Fault</td><td>Fault</td><td>Fault</td><td>Fault</td><td>Hit</td><td>Fault</td><td>Hit</td><td>Fault</td><td>Fault</td><td>Fault</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>Total LRU Faults:</b> <b>8</b></li>
+  <li><b>Total LRU Hits:</b> <b>2</b></li>
+</ul>
+
+<br/>
+<b>3. Optimal (OPT)</b>
+<ul>
+  <li>Mechanism: Evicts page that will not be used for the longest period in the future.</li>
+</ul>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Ref</th><th>7</th><th>0</th><th>1</th><th>2</th><th>0</th><th>3</th><th>0</th><th>4</th><th>2</th><th>3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>F1</td><td>7</td><td>7</td><td>7</td><td>2</td><td>2</td><td>2</td><td>2</td><td>4</td><td>4</td><td>4</td></tr>
+    <tr><td>F2</td><td>-</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>2</td><td>2</td></tr>
+    <tr><td>F3</td><td>-</td><td>-</td><td>1</td><td>1</td><td>1</td><td>3</td><td>3</td><td>3</td><td>3</td><td>3</td></tr>
+    <tr><td><b>Stat</b></td><td>Fault</td><td>Fault</td><td>Fault</td><td>Fault</td><td>Hit</td><td>Fault</td><td>Hit</td><td>Fault</td><td>Fault</td><td>Hit</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>Total OPT Faults:</b> <b>7</b></li>
+  <li><b>Total OPT Hits:</b> <b>3</b></li>
+</ul>`
       },
       { 
-        method: "Disk Scheduling Seek count Math", 
-        syntax: "SSTF Seek Cylinder Distance", 
-        params: "Initial Head = 50, Queue = [82, 170, 43, 140, 24]", 
-        output: "Head Trace: 50 -> 43 -> 24 -> 82 -> 140 -> 170", 
-        complexity: "Total Cylinder Seek distance = 172 cylinders", 
-        desc: "SSTF (Shortest Seek Time First) Math: 1) Initial head is 50. Calculate distances to all pending cylinders: dist(43)=7, dist(24)=26, dist(82)=32. Closest is 43. Move Head to 43 (seek=7). 2) From 43, closest is 24 (seek=19). Head moves to 24. 3) Remaining: [82, 140, 170]. From 24, closest is 82 (seek=58). 4) From 82, closest is 140 (seek=58). 5) From 140, closest is 170 (seek=30). 6) Total head movement = 7 + 19 + 58 + 58 + 30 = 172 cylinders." 
+        method: "Disk Scheduling Seek track calculations", 
+        syntax: "FCFS, SSTF, SCAN, LOOK, C-SCAN, C-LOOK", 
+        params: "Initial Head = 53, Cylinder queue = [98, 183, 37, 122, 14, 124, 65, 67], Range = 0 to 199", 
+        output: "SSTF: 236 tracks, SCAN: 208 tracks, C-SCAN: 382 tracks", 
+        complexity: "Arm seek time is the primary latency factor", 
+        desc: `Detailed trace path and total cylinder head movements (seeks) for all major disk scheduling algorithms.
+<br/><br/>
+<b>1. First-Come-First-Serve (FCFS)</b>
+<ul>
+  <li>Trace Path: 53 -> 98 -> 183 -> 37 -> 122 -> 14 -> 124 -> 65 -> 67</li>
+  <li>Calculation: |98-53| + |183-98| + |37-183| + |122-37| + |14-122| + |124-14| + |65-124| + |67-65| = 45 + 85 + 146 + 85 + 108 + 110 + 59 + 2 = <b>640 cylinders</b>.</li>
+</ul>
+
+<b>2. Shortest Seek Time First (SSTF)</b>
+<ul>
+  <li>Trace Path: 53 -> 65 -> 67 -> 37 -> 14 -> 98 -> 122 -> 124 -> 183</li>
+  <li>Calculation: |65-53| + |67-65| + |37-67| + |14-37| + |98-14| + |122-98| + |124-122| + |183-124| = 12 + 2 + 30 + 23 + 84 + 24 + 2 + 59 = <b>236 cylinders</b>.</li>
+</ul>
+
+<b>3. SCAN (Elevator Algorithm - moving towards 0)</b>
+<ul>
+  <li>Trace Path: 53 -> 37 -> 14 -> 0 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183</li>
+  <li>Calculation: (53 - 0) + (183 - 0) = 53 + 183 = <b>236 cylinders</b>.</li>
+</ul>
+
+<b>4. LOOK (moving towards 0 - stops at minimum request 14)</b>
+<ul>
+  <li>Trace Path: 53 -> 37 -> 14 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183</li>
+  <li>Calculation: (53 - 14) + (183 - 14) = 39 + 169 = <b>208 cylinders</b>.</li>
+</ul>
+
+<b>5. C-SCAN (Circular SCAN - moving towards 199)</b>
+<ul>
+  <li>Trace Path: 53 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183 -> 199 -> 0 -> 14 -> 37</li>
+  <li>Calculation: (199 - 53) + (199 - 0) + (37 - 0) = 146 + 199 + 37 = <b>382 cylinders</b>.</li>
+</ul>
+
+<b>6. C-LOOK (Circular LOOK - stops at max and jumps to min)</b>
+<ul>
+  <li>Trace Path: 53 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183 -> 14 -> 37</li>
+  <li>Calculation: (183 - 53) + (183 - 14) + (37 - 14) = 130 + 169 + 23 = <b>322 cylinders</b>.</li>
+</ul>
+
+<br/>
+<b>7. Comparative Benchmark Summary</b>
+<table class="prose-table">
+  <thead>
+    <tr>
+      <th>Algorithm</th>
+      <th>Seek Sequence Path</th>
+      <th>Total Head Movement (Cylinders)</th>
+      <th>Pros / Cons</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>FCFS</td><td>53➔98➔183➔37➔122➔14➔124➔65➔67</td><td>640</td><td>Simple, fair / Massive head swings</td></tr>
+    <tr><td>SSTF</td><td>53➔65➔67➔37➔14➔98➔122➔124➔183</td><td>236</td><td>Efficient / Starves extreme cylinders</td></tr>
+    <tr><td>SCAN</td><td>53➔37➔14➔0➔65➔67➔98➔122➔124➔183</td><td>236</td><td>No starvation / Long wait at edges</td></tr>
+    <tr><td>LOOK</td><td>53➔37➔14➔65➔67➔98➔122➔124➔183</td><td>208</td><td>Saves seek to 0 / Slightly complex</td></tr>
+    <tr><td>C-SCAN</td><td>53➔65➔67➔98➔122➔124➔183➔199➔0➔14➔37</td><td>382</td><td>Uniform wait times / Long reset jump</td></tr>
+    <tr><td>C-LOOK</td><td>53➔65➔67➔98➔122➔124➔183➔14➔37</td><td>322</td><td>Saves edge seeks / High seek on jump</td></tr>
+  </tbody>
+</table>`
       }
     ]
   }

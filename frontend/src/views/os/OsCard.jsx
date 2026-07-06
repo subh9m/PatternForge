@@ -228,12 +228,18 @@ export default function OsCard({ data }) {
 
                     {/* Detailed Technical Explanation */}
                     <div>
-                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1">
-                        🔬 In-Depth Explanation
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">
+                        🔬 In-Depth Explanation & Workings
                       </span>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 font-sans font-light leading-relaxed">
-                        {row.desc}
-                      </p>
+                      <div 
+                        className="text-xs text-gray-600 dark:text-gray-300 font-sans font-light leading-relaxed space-y-2
+                                   prose-table:w-full prose-table:border-collapse prose-table:my-3 
+                                   prose-th:border prose-th:border-gray-200 dark:prose-th:border-[#222] prose-th:px-3 prose-th:py-1.5 prose-th:bg-gray-50 dark:prose-th:bg-neutral-900/50 prose-th:font-mono prose-th:text-[10px] prose-th:font-bold
+                                   prose-td:border prose-td:border-gray-200 dark:prose-td:border-[#222] prose-td:px-3 prose-td:py-1.5 prose-td:font-mono
+                                   prose-ul:list-disc prose-ul:pl-5 prose-ul:space-y-1 prose-ul:my-2
+                                   prose-li:text-gray-650 dark:prose-li:text-gray-400"
+                        dangerouslySetInnerHTML={{ __html: row.desc }} 
+                      />
                     </div>
 
                     {/* Micro-Stats Parameter Grid */}
