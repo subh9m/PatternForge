@@ -34,7 +34,7 @@ const JavaContent = () => (
   </>
 );
 
-export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleTheme, activeView }) {
+export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleTheme, activeView, onBackToPortal }) {
   return (
     <main
       className={`relative min-h-screen 
@@ -56,6 +56,22 @@ export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleT
       >
         <MenuIcon isOpen={isOpen} />
       </button>
+
+      {/* Switch Portal / Modules Button */}
+      {onBackToPortal && (
+        <button
+          onClick={onBackToPortal}
+          title="Switch Portal / Module"
+          className="fixed top-6 right-20 z-50 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider 
+                     bg-white/60 dark:bg-black/60 backdrop-blur-md 
+                     text-slate-700 dark:text-slate-350 hover:text-red-500 dark:hover:text-red-500 
+                     border border-gray-200 dark:border-[#333] 
+                     rounded-lg hover:shadow-[0_0_20px_rgba(255,0,0,0.4)]
+                     transition-all duration-300 ease-in-out cursor-pointer"
+        >
+          Modules
+        </button>
+      )}
 
       {/* Theme Toggle Button */}
       <button
