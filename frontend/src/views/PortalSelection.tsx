@@ -56,7 +56,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 rounded-full bg-emerald-500/5 blur-[90px] pointer-events-none"></div>
 
       {/* Unified Single Central Card */}
-      <div className="glass-panel w-full max-w-3xl p-8 sm:p-10 shadow-2xl border border-border relative z-10">
+      <div className="glass-panel w-full max-w-5xl p-8 sm:p-10 shadow-2xl border border-border relative z-10">
         {/* Header / Branding */}
         <div className="text-center mb-8 border-b border-border pb-6">
           <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent uppercase font-heading">
