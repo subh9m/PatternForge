@@ -97,6 +97,53 @@ export default function OsCard({ data }) {
                  hover:shadow-[0_0_25px_rgba(245,158,11,0.15)] hover:border-amber-500/30 hover:-translate-y-0.5
                  transition-all duration-500 ease-in-out mb-10"
     >
+      {/* Styles for rendering clean, lined tables and bullet lists in the descriptions */}
+      <style>{`
+        .os-rich-content table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin: 16px 0 !important;
+          font-family: monospace !important;
+          font-size: 11px !important;
+          border: 1px solid #444 !important;
+        }
+        .os-rich-content th {
+          border: 1px solid #444 !important;
+          padding: 8px 12px !important;
+          background-color: rgba(245, 158, 11, 0.08) !important;
+          font-weight: bold !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.05em !important;
+          color: #f59e0b !important;
+          text-align: left !important;
+        }
+        .os-rich-content td {
+          border: 1px solid #333 !important;
+          padding: 8px 12px !important;
+          color: #ccc !important;
+        }
+        .light .os-rich-content table {
+          border: 1px solid #ccc !important;
+        }
+        .light .os-rich-content th {
+          border: 1px solid #ccc !important;
+          background-color: rgba(245, 158, 11, 0.05) !important;
+          color: #b45309 !important;
+        }
+        .light .os-rich-content td {
+          border: 1px solid #ddd !important;
+          color: #333 !important;
+        }
+        .os-rich-content ul {
+          list-style-type: disc !important;
+          padding-left: 20px !important;
+          margin: 10px 0 !important;
+        }
+        .os-rich-content li {
+          margin-bottom: 4px !important;
+        }
+      `}</style>
+
       {/* Card Header */}
       <div className="p-6 md:p-8 border-b border-gray-250 dark:border-[#333] bg-gradient-to-r from-amber-500/[0.03] to-transparent">
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -232,12 +279,7 @@ export default function OsCard({ data }) {
                         🔬 In-Depth Explanation & Workings
                       </span>
                       <div 
-                        className="text-xs text-gray-600 dark:text-gray-300 font-sans font-light leading-relaxed space-y-2
-                                   prose-table:w-full prose-table:border-collapse prose-table:my-3 
-                                   prose-th:border prose-th:border-gray-200 dark:prose-th:border-[#222] prose-th:px-3 prose-th:py-1.5 prose-th:bg-gray-50 dark:prose-th:bg-neutral-900/50 prose-th:font-mono prose-th:text-[10px] prose-th:font-bold
-                                   prose-td:border prose-td:border-gray-200 dark:prose-td:border-[#222] prose-td:px-3 prose-td:py-1.5 prose-td:font-mono
-                                   prose-ul:list-disc prose-ul:pl-5 prose-ul:space-y-1 prose-ul:my-2
-                                   prose-li:text-gray-650 dark:prose-li:text-gray-400"
+                        className="os-rich-content text-xs text-gray-600 dark:text-gray-300 font-sans font-light leading-relaxed space-y-2"
                         dangerouslySetInnerHTML={{ __html: row.desc }} 
                       />
                     </div>
