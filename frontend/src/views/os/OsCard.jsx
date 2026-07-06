@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Cpu, Activity, Database, Key, Shield, HelpCircle, HardDrive } from 'lucide-react';
 
 // Syntax highlighter optimized for OS configurations and code/ascii diagrams
 function highlightCode(code) {
@@ -18,9 +18,75 @@ function highlightCode(code) {
   return escaped;
 }
 
+// Function to generate a fun, real-world analogy for complex OS topics
+function getAnalogy(methodName) {
+  const name = methodName.toLowerCase();
+  if (name.includes("os & its functions") || name.includes("purpose of an os")) {
+    return "Think of the OS as the manager of a busy hotel. Guests (applications) want rooms, room service, and towels (hardware/memory). The manager allocates resources fairly so no one starves and the hotel doesn't collapse.";
+  }
+  if (name.includes("multiprocessor")) {
+    return "Like having multiple chefs in a single kitchen sharing one spice rack (memory). They cook food faster, but need to coordinate so they don't bump into each other.";
+  }
+  if (name.includes("bootstrap")) {
+    return "The alarm clock and morning routine. You can't start your day (run applications) until you boot up, get out of bed, and load your consciousness (kernel) into memory.";
+  }
+  if (name.includes("rtos")) {
+    return "Like an airbag system in a car. It doesn't matter if the system is average, the action *must* deploy in exactly 15 milliseconds, or it's a total failure.";
+  }
+  if (name.includes("user mode vs kernel mode") || name.includes("difference between user")) {
+    return "User mode is like a dining customer (can't go into the kitchen). Kernel mode is the head chef (has knives, fire, and access to all ingredients). The kitchen door is the system call boundary.";
+  }
+  if (name.includes("context switching")) {
+    return "Imagine reading Book A, writing down your page number, closing it, picking up Book B, finding your page, and reading. Do this 100 times a second. Useful, but exhausting!";
+  }
+  if (name.includes("zombie")) {
+    return "A teenager who moved out (process finished) but hasn't updated their address yet (parent hasn't called wait()), so they still occupy a slot on the family tax registry.";
+  }
+  if (name.includes("deadlock")) {
+    return "Two stubborn drivers facing each other in a narrow one-lane street. Driver A won't reverse until Driver B does, and Driver B won't reverse until Driver A does. No one moves.";
+  }
+  if (name.includes("paging") || name.includes("segmentation")) {
+    return "Paging is cutting a book into identical 100-word blocks. Segmentation is dividing the book into logical chapters (Intro, Index). Paging is easier for the publisher, segments make sense to readers.";
+  }
+  if (name.includes("tlb")) {
+    return "A sticky note on your monitor with your 5 most common phone numbers. Instead of opening the heavy phone book (RAM page table) every time, you look at the sticky note in 1 second.";
+  }
+  if (name.includes("thrashing")) {
+    return "A student spending all their study time reorganizing their textbooks on the desk rather than actually reading them. Zero productive work is accomplished.";
+  }
+  if (name.includes("copy-on-write")) {
+    return "Sharing a single Google Doc link. Everyone reads the same link. The second someone tries to edit a sentence, Google creates a private copy for them to write on.";
+  }
+  if (name.includes("mutex vs semaphore")) {
+    return "Mutex is a bathroom key: only 1 person has it, and they must return it. Semaphore is a bike rental shop: 5 bikes available, customers take bikes and return them, count goes up/down.";
+  }
+  if (name.includes("hard link vs soft link")) {
+    return "Hard link is two contacts in your phone pointing to the same physical person. Soft link is a shortcut card in your wallet saying 'Go look at the contact card in your phone'.";
+  }
+  return "A critical coordinator designed to keep system operations efficient, insulated, and protected against data corruption/crashes.";
+}
+
+// Icon helper to dynamically get visual representations for topics
+function getTopicIcon(id) {
+  if (id.includes("basics")) return <Cpu className="h-5 w-5 text-amber-500" />;
+  if (id.includes("process")) return <Activity className="h-5 w-5 text-amber-500" />;
+  if (id.includes("scheduling")) return <Database className="h-5 w-5 text-amber-500" />;
+  if (id.includes("memory")) return <HardDrive className="h-5 w-5 text-amber-500" />;
+  if (id.includes("sync")) return <Key className="h-5 w-5 text-amber-500" />;
+  return <Shield className="h-5 w-5 text-amber-500" />;
+}
+
 export default function OsCard({ data }) {
-  const [showDeclaration, setShowDeclaration] = useState(true);
+  const [showDeclaration, setShowDeclaration] = useState(false);
   const [showInternal, setShowInternal] = useState(true);
+  const [expandedQuestions, setExpandedQuestions] = useState({});
+
+  const toggleQuestion = (idx) => {
+    setExpandedQuestions(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
+  };
 
   return (
     <section 
@@ -32,15 +98,20 @@ export default function OsCard({ data }) {
                  transition-all duration-500 ease-in-out mb-10"
     >
       {/* Card Header */}
-      <div className="p-6 md:p-8 border-b border-gray-250 dark:border-[#333]">
+      <div className="p-6 md:p-8 border-b border-gray-250 dark:border-[#333] bg-gradient-to-r from-amber-500/[0.03] to-transparent">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center space-x-3.5">
-            <span className="px-3 py-1 bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase font-mono tracking-wider rounded-md border border-amber-500/20">
-              {data.num}
-            </span>
-            <h2 className="text-xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
-              {data.title}
-            </h2>
+            <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/20">
+              {getTopicIcon(data.id)}
+            </div>
+            <div>
+              <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[9px] font-black uppercase font-mono tracking-wider rounded-md border border-amber-500/20">
+                {data.num}
+              </span>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide mt-1">
+                {data.title}
+              </h2>
+            </div>
           </div>
         </div>
         <p className="mt-3.5 text-sm text-gray-600 dark:text-gray-400 font-light leading-relaxed max-w-4xl">
@@ -48,14 +119,14 @@ export default function OsCard({ data }) {
         </p>
       </div>
 
-      {/* Revision Key Concepts Section */}
+      {/* Revision Key Concepts Summary Sheet */}
       <div className="border-b border-gray-200 dark:border-[#222]">
         <button
           onClick={() => setShowDeclaration(!showDeclaration)}
           className="w-full flex items-center justify-between p-5 bg-gray-50/50 dark:bg-[#111]/30 hover:bg-gray-100/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-gray-800 dark:text-gray-300"
         >
           <span className="flex items-center space-x-2">
-            <span>Key Concept Cheat Sheet & Formula Sheets</span>
+            <span>🚀 Module Core Quick Revision Summary</span>
           </span>
           {showDeclaration ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
@@ -76,7 +147,7 @@ export default function OsCard({ data }) {
             onClick={() => setShowInternal(!showInternal)}
             className="w-full flex items-center justify-between p-5 bg-gray-50/50 dark:bg-[#111]/30 hover:bg-gray-100/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-gray-800 dark:text-gray-300"
           >
-            <span>Logical Executions & Architectural Flowcharts</span>
+            <span>📊 Architectural Diagrams & Executions</span>
             {showInternal ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
           
@@ -90,56 +161,99 @@ export default function OsCard({ data }) {
         </div>
       )}
 
-      {/* OS Q&A Index Table */}
-      {data.methods && data.methods.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 dark:bg-neutral-900 border-b border-gray-250 dark:border-[#333]">
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest font-mono">Question / Concept</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest font-mono">Mechanism / Command</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest font-mono">Inputs / Context</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest font-mono">Result / Output</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest font-mono">Complexity / Overhead</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest font-mono">Revision Explanation</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-150 dark:divide-neutral-900/50">
-              {data.methods.map((row, idx) => (
-                <tr 
-                  key={idx} 
-                  className="hover:bg-amber-500/[0.02] dark:hover:bg-amber-500/[0.02] transition-colors duration-150"
+      {/* Interactive Collapsible Flashcards List */}
+      <div className="p-6 space-y-4">
+        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest font-mono mb-4 flex items-center space-x-1.5">
+          <HelpCircle className="h-4 w-4 text-amber-500" />
+          <span>Interactive Study Flashcards ({data.methods.length} topics)</span>
+        </h3>
+
+        <div className="space-y-3">
+          {data.methods.map((row, idx) => {
+            const isExpanded = expandedQuestions[idx];
+            return (
+              <div 
+                key={idx}
+                className={`border border-gray-200 dark:border-[#222] rounded-xl overflow-hidden transition-all duration-300
+                  ${isExpanded 
+                    ? 'bg-amber-500/[0.01] dark:bg-amber-500/[0.01] border-amber-500/20 shadow-md' 
+                    : 'bg-white/40 dark:bg-black/40 hover:border-amber-500/10'
+                  }`}
+              >
+                {/* Accordion Trigger */}
+                <button
+                  onClick={() => toggleQuestion(idx)}
+                  className="w-full flex items-center justify-between p-4 font-mono font-bold text-left text-xs text-gray-900 dark:text-gray-100 hover:text-amber-500 dark:hover:text-amber-500 transition-colors duration-150"
                 >
-                  {/* Question */}
-                  <td className="px-6 py-4 font-mono font-bold text-gray-900 dark:text-gray-100 text-xs">
-                    {row.method}
-                  </td>
-                  {/* System Call / Mechanism */}
-                  <td className="px-6 py-4 font-mono text-amber-600 dark:text-amber-400 text-xs font-semibold whitespace-nowrap">
-                    {row.syntax}
-                  </td>
-                  {/* Parameters / Inputs */}
-                  <td className="px-6 py-4 text-gray-650 dark:text-gray-400 font-light text-xs whitespace-nowrap">
-                    {row.params}
-                  </td>
-                  {/* Output */}
-                  <td className="px-6 py-4 font-mono text-gray-800 dark:text-gray-300 text-xs">
-                    <code>{row.output}</code>
-                  </td>
-                  {/* Complexity */}
-                  <td className="px-6 py-4 font-mono text-slate-700 dark:text-slate-400 font-semibold text-xs whitespace-nowrap">
-                    {row.complexity}
-                  </td>
-                  {/* Explanation */}
-                  <td className="px-6 py-4 text-gray-600 dark:text-gray-300 font-light text-xs leading-relaxed max-w-sm">
-                    {row.desc}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  <span className="flex items-center space-x-3.5 pr-4">
+                    <span className="h-2 w-2 rounded-full bg-amber-500/80"></span>
+                    <span>{row.method}</span>
+                  </span>
+                  {isExpanded ? <ChevronUp className="h-4 w-4 flex-shrink-0" /> : <ChevronDown className="h-4 w-4 flex-shrink-0" />}
+                </button>
+
+                {/* Accordion Content */}
+                {isExpanded && (
+                  <div className="px-5 pb-5 pt-1 space-y-4 border-t border-dashed border-gray-200 dark:border-[#222] animate-fadeIn">
+                    
+                    {/* Fun Analogy Callout Box */}
+                    <div className="p-4 bg-amber-500/[0.05] dark:bg-amber-500/[0.03] border-l-2 border-amber-500/70 rounded-r-lg">
+                      <span className="block text-[9px] font-black text-amber-500 uppercase tracking-widest font-mono mb-1">
+                        💡 Real-World Analogy
+                      </span>
+                      <p className="text-xs italic text-gray-650 dark:text-gray-300 font-sans leading-relaxed">
+                        {getAnalogy(row.method)}
+                      </p>
+                    </div>
+
+                    {/* Detailed Technical Explanation */}
+                    <div>
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1">
+                        🔬 In-Depth Explanation
+                      </span>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 font-sans font-light leading-relaxed">
+                        {row.desc}
+                      </p>
+                    </div>
+
+                    {/* Micro-Stats Parameter Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-gray-150 dark:border-[#222] rounded-lg">
+                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Mechanic / Key term</span>
+                        <span className="block text-[11px] font-mono font-semibold text-amber-600 dark:text-amber-400 mt-1 break-words">
+                          {row.syntax}
+                        </span>
+                      </div>
+                      
+                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-gray-150 dark:border-[#222] rounded-lg">
+                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Inputs / Context</span>
+                        <span className="block text-[11px] font-sans font-medium text-gray-700 dark:text-gray-300 mt-1 break-words">
+                          {row.params}
+                        </span>
+                      </div>
+                      
+                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-gray-150 dark:border-[#222] rounded-lg">
+                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Result / Output</span>
+                        <span className="block text-[11px] font-mono text-gray-700 dark:text-gray-300 mt-1 break-words">
+                          {row.output}
+                        </span>
+                      </div>
+                      
+                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-gray-150 dark:border-[#222] rounded-lg">
+                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Overhead / Complexity</span>
+                        <span className="block text-[11px] font-mono font-bold text-gray-800 dark:text-gray-200 mt-1 break-words">
+                          {row.complexity}
+                        </span>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </section>
   );
 }
