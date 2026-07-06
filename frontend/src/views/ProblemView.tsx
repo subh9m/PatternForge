@@ -242,6 +242,19 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     }
   };
 
+  const handleClearChat = async () => {
+    if (chatMessages.length === 0) return;
+    if (!window.confirm("Are you sure you want to clear your conversation history? This cannot be undone.")) return;
+
+    try {
+      await api.delete(`/problems/${problemId}/chat`);
+      setChatMessages([]);
+    } catch (err) {
+      console.error("Failed to clear chat history", err);
+      alert("Failed to clear conversation history. Please try again.");
+    }
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setIsLargeScreen(window.innerWidth >= 1024);
@@ -1871,12 +1884,21 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                   <span className="text-[10px] text-slate-500 font-bold block mt-0.5">Persistent DSA Coach Context: {problem?.name}</span>
                 </div>
               </div>
-              <button
-                onClick={() => setIsChatOpen(false)}
-                className="text-slate-500 hover:text-slate-300 transition-smooth p-1 text-xs font-bold font-mono border border-slate-900 hover:border-slate-800 rounded-lg px-2.5 py-1"
-              >
-                CLOSE [ESC]
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleClearChat}
+                  disabled={chatMessages.length === 0}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-1 text-xs font-bold transition-smooth cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Clear Chat
+                </button>
+                <button
+                  onClick={() => setIsChatOpen(false)}
+                  className="text-slate-500 hover:text-slate-300 transition-smooth p-1 text-xs font-bold font-mono border border-slate-900 hover:border-slate-800 rounded-lg px-2.5 py-1"
+                >
+                  CLOSE [ESC]
+                </button>
+              </div>
             </div>
 
             {/* Message Area */}

@@ -794,12 +794,34 @@ public class ProblemController {
                 .build();
         problemChatMessageRepository.save(aiMessage);
 
+        // 5. Automatically trim messages if they exceed 20
+        List<ProblemChatMessage> allMessages = problemChatMessageRepository
+                .findByUserIdAndProblemIdOrderByCreatedAtAsc(user.getId(), id);
+        if (allMessages.size() > 20) {
+            int toDeleteCount = allMessages.size() - 20;
+            for (int i = 0; i < toDeleteCount; i++) {
+                problemChatMessageRepository.delete(allMessages.get(i));
+            }
+        }
+
         // Return the AI message details
         return ResponseEntity.ok(Map.of(
                 "sender", "AI",
                 "content", aiResponseContent,
                 "createdAt", aiMessage.getCreatedAt() != null ? aiMessage.getCreatedAt() : LocalDateTime.now()
         ));
+    }
+
+    @DeleteMapping("/{id}/chat")
+    public ResponseEntity<Map<String, Object>> clearChatMessages(
+            @PathVariable UUID id,
+            Authentication authentication
+    ) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        List<ProblemChatMessage> messages = problemChatMessageRepository
+                .findByUserIdAndProblemIdOrderByCreatedAtAsc(userId, id);
+        problemChatMessageRepository.deleteAll(messages);
+        return ResponseEntity.ok(Map.of("success", true));
     }
 }
 

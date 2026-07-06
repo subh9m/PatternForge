@@ -1041,6 +1041,35 @@ export const api = {
     }
   },
 
+  delete: async <T>(endpoint: string): Promise<T> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${BASE_URL}/api${endpoint}`, {
+      method: 'DELETE',
+      headers,
+    });
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      if (unauthorizedListener) unauthorizedListener();
+      throw new Error('Session expired or unauthorized');
+    }
+    if (!response.ok) {
+      const errorMsg = await response.text();
+      throw new Error(errorMsg || `DELETE request failed with status ${response.status}`);
+    }
+    const contentType = response.headers.get('Content-Type');
+    if (contentType && contentType.includes('application/json')) {
+      return response.json() as Promise<T>;
+    } else {
+      return response.text() as unknown as Promise<T>;
+    }
+  },
+
   post: async <T>(endpoint: string, body: any): Promise<T> => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
