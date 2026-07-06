@@ -37,7 +37,7 @@ const JavaContent = () => (
 export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleTheme, activeView }) {
   return (
     <main
-      className={`relative min-h-[calc(100vh-64px)] 
+      className={`relative min-h-[calc(100vh-64px)] w-full
                   bg-background
                   transition-all duration-500 ease-in-out
                   ${isOpen ? 'pl-0 sm:pl-64' : 'pl-0'}`}
