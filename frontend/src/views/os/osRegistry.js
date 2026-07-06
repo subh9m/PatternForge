@@ -17,7 +17,18 @@ export const osConcepts = [
         params: "Hardware, Software, CPU, RAM", 
         output: "Resource coordination, protection", 
         complexity: "O(1) scheduler loops", 
-        desc: "An intermediary software managing hardware. Core subtopics: 1) Memory Management (tracking free bytes, page tables), 2) Processor Management (scheduling queues, CPU dispatching), 3) Device Control (drivers, I/O ports), 4) File Systems (directories, inodes), 5) Security (user permissions, rings)." 
+        desc: `Operating System core subsystems and responsibilities.
+<table class="prose-table">
+  <thead>
+    <tr><th>Subsystem</th><th>Function Description</th><th>Typical Action</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Process Management</td><td>Scheduling active threads, CPU core dispatching</td><td>Context switching</td></tr>
+    <tr><td>Memory Management</td><td>Tracking physical page allocations, translation tables</td><td>Paging, TLB caching</td></tr>
+    <tr><td>Device/IO Control</td><td>Interfacing with hardware ports and peripheral drivers</td><td>Spooling, buffers</td></tr>
+    <tr><td>File Systems</td><td>Directory naming trees, disk block sector mapping</td><td>Inodes, journaling</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "User Mode vs Kernel Mode", 
@@ -25,7 +36,20 @@ export const osConcepts = [
         params: "CPU Mode Bit (0=Kernel, 1=User)", 
         output: "Hardware protection, sandbox", 
         complexity: "O(1) register bit check", 
-        desc: "Privilege levels enforced by CPU hardware. Subtopics: 1) User Mode: applications run here, restricted from direct hardware/memory access. 2) Kernel Mode: full access to hardware, physical RAM, and privileged CPU instructions (CLI, STI). Mode switch is triggered via software interrupt/trap.<br/><br/><img src='/images/usermode_vs_kernelmode.png' alt='User vs Kernel mode' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-950/10 p-2' />" 
+        desc: `Comparison of user and kernel privilege states.
+<table class="prose-table">
+  <thead>
+    <tr><th>Feature</th><th>User Mode (Ring 3)</th><th>Kernel Mode (Ring 0)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Privilege Level</td><td>Restricted, sandboxed</td><td>Unrestricted, full control</td></tr>
+    <tr><td>Hardware Access</td><td>Through System Calls only</td><td>Direct hardware & memory access</td></tr>
+    <tr><td>Instructions</td><td>Non-privileged only</td><td>Privileged instructions (CLI, STI, CR3)</td></tr>
+    <tr><td>Crash Impact</td><td>Only crashing process exits</td><td>Kernel panic (System crash / BSOD)</td></tr>
+  </tbody>
+</table>
+<br/>
+<img src='/images/usermode_vs_kernelmode.png' alt='User vs Kernel mode' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-950/10 p-2' />`
       },
       { 
         method: "System Call vs Library Call", 
@@ -33,7 +57,18 @@ export const osConcepts = [
         params: "Syscall number in EAX register", 
         output: "Kernel Trap vs Userspace buffer", 
         complexity: "Syscall is ~15-50x more expensive", 
-        desc: "Subtopics: 1) System Call: Direct entry point to kernel mode (e.g., fork(), write()), executing in Ring 0. 2) Library Call: User-space function (e.g., printf(), malloc()) that wraps system calls with buffering mechanisms to avoid frequent kernel traps." 
+        desc: `Comparison between System calls and Library calls.
+<table class="prose-table">
+  <thead>
+    <tr><th>Metric</th><th>System Call (sys_write)</th><th>Library Call (printf)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Execution Space</td><td>Kernel Space (Ring 0)</td><td>User Space (Ring 3)</td></tr>
+    <tr><td>Execution Mode</td><td>Privileged kernel trap</td><td>Standard user code execution</td></tr>
+    <tr><td>Resource cost</td><td>High (mode switch overhead)</td><td>Low (fast stack call)</td></tr>
+    <tr><td>Buffer Cache</td><td>None (direct write request)</td><td>Buffered in userspace to save traps</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "Microkernel vs Monolithic", 
@@ -41,7 +76,20 @@ export const osConcepts = [
         params: "IPC message passing vs Direct calls", 
         output: "Stability/Modular vs High Performance", 
         complexity: "Microkernel has IPC overhead", 
-        desc: "Subtopics: 1) Monolithic: All services (scheduling, memory, drivers) run inside the kernel address space in Ring 0. Fast but unstable (one driver crash crashes OS). 2) Microkernel: Only core services (IPC, scheduling) run in Ring 0; drivers/file systems run in user space (Ring 3). Highly stable, modular, but slower due to message-passing overhead.<br/><br/><img src='/images/monolithic_vs_microkernel.png' alt='Monolithic vs Microkernel' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
+        desc: `Structural differences in Monolithic vs Microkernel architectures.
+<table class="prose-table">
+  <thead>
+    <tr><th>Attribute</th><th>Monolithic Architecture</th><th>Microkernel Architecture</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Core Services Location</td><td>All run inside Kernel Space (Ring 0)</td><td>Drivers & Filesystems run in User Space</td></tr>
+    <tr><td>Performance</td><td>Maximum (direct pointer calls)</td><td>Slower (frequent IPC context switches)</td></tr>
+    <tr><td>Stability</td><td>Low (faulty driver crashes kernel)</td><td>High (crashed driver is just restarted)</td></tr>
+    <tr><td>Size / Memory</td><td>Larger binary footprint</td><td>Extremely small kernel core</td></tr>
+  </tbody>
+</table>
+<br/>
+<img src='/images/monolithic_vs_microkernel.png' alt='Monolithic vs Microkernel' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "🔥 Gotcha: Double Fault & Kernel Panic", 
@@ -49,7 +97,17 @@ export const osConcepts = [
         params: "Nested kernel exceptions, stack overflow", 
         output: "Blue Screen / System Halt", 
         complexity: "Immediate CPU shutdown", 
-        desc: "<b>Q: What happens if a page fault handler itself page faults? Or if a kernel exception occurs inside another handler?</b><br/><ul><li><b>Double Fault:</b> A special CPU trap triggered if the CPU encounters an exception while trying to call an exception handler (nested exceptions).</li><li><b>Triple Fault:</b> If the Double Fault handler itself exceptions, x86 triggers a triple fault, forcing an immediate hardware reset (reboot).</li><li><b>Kernel Panic:</b> If the kernel detects an unrecoverable state in Ring 0 (e.g., dereferencing a null pointer in driver space), it halts the CPU and writes debug logs (panic() or BSOD) to prevent filesystem corruption.</li></ul>" 
+        desc: `Nested kernel failures and recovery stages.
+<table class="prose-table">
+  <thead>
+    <tr><th>State</th><th>Triggering Event</th><th>CPU / OS Action</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Double Fault</td><td>Exception occurs while executing active exception handler</td><td>Traps to ISR Vector 8 for recovery</td></tr>
+    <tr><td>Triple Fault</td><td>Exception occurs while executing Double Fault handler</td><td>CPU forces hardware reset (immediate reboot)</td></tr>
+    <tr><td>Kernel Panic</td><td>Unrecoverable state in Ring 0 (e.g. driver null pointer)</td><td>System halts immediately to prevent data corruption</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "🔥 Gotcha: CLI/STI User Privilege Block", 
@@ -57,7 +115,19 @@ export const osConcepts = [
         params: "EFLAGS register privilege check", 
         output: "General Protection Fault (GPF)", 
         complexity: "O(1) instruction bit trap", 
-        desc: "<b>Q: Why are userspace programs strictly blocked from executing instructions like CLI (Clear Interrupt Flag) and STI (Set Interrupt Flag)?</b><br/><ul><li><b>CLI/STI Power:</b> These CPU instructions disable and enable hardware interrupts.</li><li><b>Security Risk:</b> If a user application could disable interrupts, it could freeze the system timer clock. The scheduler would never run, effectively hijacking the CPU indefinitely.</li><li><b>Hardware Enforced Trap:</b> The CPU verifies the current privilege ring (CPL). If CPL &gt; IOPL (User Ring 3 attempting Ring 0 instruction), the CPU immediately triggers a General Protection Fault trap (SIGSEGV in Linux), terminating the process.</li></ul>" 
+        desc: `Why userspace programs are blocked from disabling interrupts.
+<table class="prose-table">
+  <thead>
+    <tr><th>Instruction</th><th>Purpose</th><th>Privilege Level</th><th>Failure Impact</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>CLI (Clear Interrupt)</td><td>Disables hardware interrupts</td><td>Ring 0 only</td><td>Triggers General Protection Fault (GPF) in User mode</td></tr>
+    <tr><td>STI (Set Interrupt)</td><td>Enables hardware interrupts</td><td>Ring 0 only</td><td>Triggers General Protection Fault (GPF) in User mode</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>Security Risk:</b> If user code could run CLI, it would freeze the timer clock interrupt. The CPU scheduler would never run, hijacking the system.</li>
+</ul>`
       }
     ]
   },
@@ -79,7 +149,21 @@ export const osConcepts = [
         params: "Ready List, Wait Queue, CPU Core", 
         output: "Transition: Ready -> Running -> Waiting", 
         complexity: "O(1) state queue inserts", 
-        desc: "Subtopics: 1) New: Process created. 2) Ready: Waiting in RAM to be assigned to CPU. 3) Running: Instructions executing on CPU. 4) Waiting: Blocked on I/O or event completion. 5) Terminated: Finished. Suspended states (Ready-Suspended, Blocked-Suspended) exist when memory pressure forces pages to swap disk.<br/><br/><img src='/images/process_states_lifecycle.png' alt='Process state transition' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
+        desc: `Process lifecycles and state machine transitions.
+<table class="prose-table">
+  <thead>
+    <tr><th>State</th><th>Meaning</th><th>Next Transition Trigger</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>New</td><td>Process being created</td><td>Admitted to Ready Queue</td></tr>
+    <tr><td>Ready</td><td>Waiting in RAM to execute</td><td>Scheduler dispatch assignment</td></tr>
+    <tr><td>Running</td><td>Executing instructions on CPU</td><td>Interrupt (Ready) or I/O request (Waiting)</td></tr>
+    <tr><td>Waiting</td><td>Blocked on I/O or event completion</td><td>I/O completion trigger (Ready)</td></tr>
+    <tr><td>Terminated</td><td>Execution finished</td><td>Parent wait() reap cleanup</td></tr>
+  </tbody>
+</table>
+<br/>
+<img src='/images/process_states_lifecycle.png' alt='Process state transition' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "What is Context Switching?", 
@@ -87,7 +171,18 @@ export const osConcepts = [
         params: "Instruction pointer, CPU registers, SP", 
         output: "Active thread swap execution", 
         complexity: "Microsecond overhead + Cache flushes", 
-        desc: "Subtopics: 1) Saving State: CPU registers, Program Counter (PC), and Stack Pointer (SP) of running process are stored in its PCB. 2) Loading State: Context of next process is loaded into CPU registers. 3) Cache Penalty: Instruction/data caches become cold, causing memory latency spikes immediately after switch." 
+        desc: `Context switching mechanics.
+<table class="prose-table">
+  <thead>
+    <tr><th>Phase</th><th>CPU / OS Operation</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Save Context</td><td>Registers, Program Counter (PC), and Stack Pointer (SP) stored in PCB/TCB</td></tr>
+    <tr><td>Scheduler Select</td><td>Short-term scheduler selects next process from ready queue</td></tr>
+    <tr><td>Load Context</td><td>Registers, PC, and page directory mappings of next process loaded to CPU</td></tr>
+    <tr><td>Cache Penalty</td><td>L1/L2 data cache misses occur since active cache is cold</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "Process vs Thread Context Switch", 
@@ -95,7 +190,17 @@ export const osConcepts = [
         params: "MMU page directory base, TLB cache entries", 
         output: "Page directory change mapping", 
         complexity: "Thread switch is significantly faster", 
-        desc: "Subtopics: 1) Process Switch: Requires changing page directory base register (CR3 in x86). This invalidates Translation Lookaside Buffer (TLB) caches. 2) Thread Switch: Threads share the same virtual address space. Switching between threads of the same process preserves TLB entries, avoiding cache flush penalties." 
+        desc: `Differences between Process and Thread context switching.
+<table class="prose-table">
+  <thead>
+    <tr><th>Attribute</th><th>Process Context Switch</th><th>Thread Context Switch</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Address Space</td><td>Swaps address space (switches CR3 register)</td><td>Shares same address space (preserves CR3)</td></tr>
+    <tr><td>TLB Cache</td><td>TLB cache entries invalidated and flushed</td><td>TLB cache entries preserved</td></tr>
+    <tr><td>Overhead Cost</td><td>High (Cache misses, page faults)</td><td>Low (Fast register swapping)</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "Zombie vs Orphan Processes", 
@@ -103,23 +208,55 @@ export const osConcepts = [
         params: "Parent PID, child exit status codes", 
         output: "Defunct processes reap structures", 
         complexity: "Zombie occupies 1 slot in process table", 
-        desc: "Subtopics: 1) Zombie: Children that finished execution but parent hasn't reaped status via wait(). Remains 'defunct'. Avoided by handling SIGCHLD or double-forking. 2) Orphan: Active children whose parent terminated. Automatically adopted by systemd/init (PID 1) which regularly calls wait() to reap them." 
+        desc: `Differences between Zombie and Orphan processes.
+<table class="prose-table">
+  <thead>
+    <tr><th>Feature</th><th>Zombie Process (Defunct)</th><th>Orphan Process</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Process State</td><td>Completed execution, dead</td><td>Actively executing, alive</td></tr>
+    <tr><td>Parent Status</td><td>Alive, but hasn't called wait()</td><td>Terminated / Dead</td></tr>
+    <tr><td>Table Entry</td><td>Occupies slot in process table</td><td>Adopted by systemd/init (PID 1)</td></tr>
+    <tr><td>Resolution</td><td>Parent must call wait() or be killed</td><td>init automatically calls wait() when finished</td></tr>
+  </tbody>
+</table>`
       },
       { 
-        method: "🔥 Gotcha: Double-Forking to Prevent Zombies", 
-        syntax: "fork() -> fork() -> exit()", 
-        params: "Process hierarchy IDs", 
-        output: "Orphaned grandchild process adopted by init", 
-        complexity: "Two context switches overhead", 
-        desc: "<b>Q: Explain the exact mechanism of double-forking to prevent zombie processes.</b><br/><ul><li><b>Step 1:</b> Parent forks child A. Child A immediately forks child B (grandchild) and then immediately calls exit().</li><li><b>Step 2:</b> The parent immediately reaps child A (since child A exits immediately, it spends practically zero time as a zombie).</li><li><b>Step 3:</b> The grandchild (child B) becomes an orphan because its direct parent (child A) is dead.</li><li><b>Step 4:</b> The OS automatically re-parents the grandchild to systemd/init (PID 1). When the grandchild finishes, init automatically wait()s on it, preventing it from ever becoming a zombie.</li></ul>" 
+        method: "Inter-Process Communication (IPC)", 
+        syntax: "Shared Memory vs Message Passing", 
+        params: "Pipes, Shared RAM, Sockets, Signals", 
+        output: "Data transmission across page barriers", 
+        complexity: "Shared memory: O(1) read/write access", 
+        desc: `Comparison of Shared Memory and Message Passing IPC.
+<table class="prose-table">
+  <thead>
+    <tr><th>Metric</th><th>Shared Memory IPC</th><th>Message Passing IPC (Pipes/Queues)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Data Rate Speed</td><td>Maximum (Direct RAM read/write)</td><td>Slower (Kernel buffers copy)</td></tr>
+    <tr><td>System Call count</td><td>Only during setup</td><td>For every read and write call</td></tr>
+    <tr><td>Sync Handling</td><td>Manual lock needed (Mutex/Sem)</td><td>Kernel handles blocking queue internally</td></tr>
+    <tr><td>Hardware Support</td><td>MMU page sharing</td><td>Kernel memory buffer blocks</td></tr>
+  </tbody>
+</table>`
       },
       { 
-        method: "🔥 Gotcha: Shared vs Independent Stack Spaces", 
-        syntax: "pthread_create() stack mapping", 
-        params: "Threads allocated segments in Heap/Data", 
-        output: "Independent thread stacks, shared heaps", 
-        complexity: "O(1) thread memory dereference", 
-        desc: "<b>Q: Since threads share the virtual address space, what keeps thread local variables separate?</b><br/><ul><li><b>Independent Stacks:</b> Every thread is allocated its own stack space inside the process's virtual address space during creation (usually ~2MB to 8MB).</li><li><b>Registration:</b> Thread Control Blocks (TCBs) store the distinct stack pointers (ESP/RSP) of each thread.</li><li><b>No Isolation Protection:</b> Because there is no address separation, Thread A *can* theoretically corrupt the stack of Thread B if it obtains a pointer to it (no compiler or MMU protection exists between threads of the exact same process).</li></ul>" 
+        method: "Pipes: Anonymous vs Named (FIFO)", 
+        syntax: "pipe(fd) vs mkfifo(name)", 
+        params: "Read/Write file descriptors", 
+        output: "Unidirectional kernel buffer channel", 
+        complexity: "Buffer queue copy overhead", 
+        desc: `Differences between Anonymous and Named pipes.
+<table class="prose-table">
+  <thead>
+    <tr><th>Feature</th><th>Anonymous Pipe</th><th>Named Pipe (FIFO)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>File Node</td><td>Does not appear in file system</td><td>Appears as special file in filesystem</td></tr>
+    <tr><td>Connection</td><td>Parent-child processes only</td><td>Any unrelated processes can connect</td></tr>
+    <tr><td>Lifecycle</td><td>Destroyed when process exits</td><td>Persists on disk until unlinked</td></tr>
+  </tbody>
+</table>`
       }
     ]
   },
@@ -142,7 +279,18 @@ export const osConcepts = [
         params: "Timer ticks, priorities, I/O blocks", 
         output: "CPU state context switch swap", 
         complexity: "Preemption increases system overhead", 
-        desc: "Subtopics: 1) Non-Preemptive: Running process retains CPU until it voluntarily terminates or blocks for I/O (e.g., early FCFS, SJF). 2) Preemptive: Kernel can forcibly suspend a healthy running process (e.g., when a higher-priority task arrives, or at timer interrupt slice expiry). Improves system responsiveness." 
+        desc: `Differences in Preemptive vs Non-Preemptive scheduling.
+<table class="prose-table">
+  <thead>
+    <tr><th>Property</th><th>Non-Preemptive Scheduling</th><th>Preemptive Scheduling</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>CPU Control</td><td>Process retains CPU until I/O or exits</td><td>Process can be suspended mid-execution</td></tr>
+    <tr><td>System overhead</td><td>Minimal</td><td>High (Frequent context switches)</td></tr>
+    <tr><td>Throughput</td><td>Optimal for CPU-bound batch tasks</td><td>Optimal for interactive userspace apps</td></tr>
+    <tr><td>Real-Time</td><td>Not suitable</td><td>Required for RTOS deadlines</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "First-Come-First-Serve (FCFS)", 
@@ -205,7 +353,20 @@ export const osConcepts = [
         params: "Frame slots vs Base-Limit descriptors", 
         output: "Non-contiguous hardware partitions", 
         complexity: "Paging lookup: O(1) index array", 
-        desc: "Subtopics: 1) Paging: Physical memory split into fixed frames; virtual memory split into identical pages. Avoids external fragmentation. 2) Segmentation: Logical division based on compiler modules (code, data, stack). Variable sizes. Prone to external fragmentation, requiring memory compaction.<br/><br/><img src='/images/paging_in_os.png' alt='Paging memory mapping schematic' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
+        desc: `Differences in Paging vs Segmentation architectures.
+<table class="prose-table">
+  <thead>
+    <tr><th>Feature</th><th>Paging Architecture</th><th>Segmentation Architecture</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Partition Size</td><td>Fixed size (e.g. 4KB frames)</td><td>Variable size (based on code units)</td></tr>
+    <tr><td>Fragmentation</td><td>Prone to Internal fragmentation</td><td>Prone to External fragmentation</td></tr>
+    <tr><td>Mapping structure</td><td>Page Table index lookup</td><td>Segment Table base-limit lookup</td></tr>
+    <tr><td>Virtual Sharing</td><td>Shared pages share frames</td><td>Shared segments mapped directly</td></tr>
+  </tbody>
+</table>
+<br/>
+<img src='/images/paging_in_os.png' alt='Paging memory mapping schematic' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "Demand Paging & Page Faults", 
@@ -222,6 +383,23 @@ export const osConcepts = [
         output: "Physical Frame base address hit", 
         complexity: "TLB search lookup: < 1 nanosecond", 
         desc: "Subtopics: 1) Cache hits: Returns physical frame index immediately, bypassing page table read in RAM. 2) TLB misses: Requires a slow page table lookup in main memory, and updates TLB. 3) TLB Shootdown: Multi-core processors must synchronize TLB entries when page mappings change." 
+      },
+      { 
+        method: "Fragmentation: Internal vs External", 
+        syntax: "Wasted boundary bytes vs scattered free holes", 
+        params: "Fixed page allocation limit vs Dynamic heaps", 
+        output: "Compaction / Paging allocations", 
+        complexity: "Compaction requires copying physical RAM blocks", 
+        desc: `Fragmentation types and resolutions.
+<table class="prose-table">
+  <thead>
+    <tr><th>Fragmentation</th><th>Description</th><th>Remedial Solution</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Internal</td><td>Wasted memory inside allocated pages since process needs &lt; page boundary size</td><td>Reduce page size profiles</td></tr>
+    <tr><td>External</td><td>Total free space exists but is scattered dynamically, unable to fit continuous block</td><td>Compaction (moving allocations) or Paging</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "🔥 Gotcha: Belady's Anomaly & Stack Property", 
@@ -275,7 +453,37 @@ export const osConcepts = [
         params: "Owner thread pointer verification", 
         output: "Exclusion lock vs Thread signaling", 
         complexity: "Mutex has lower scheduling overhead", 
-        desc: "Subtopics: 1) Ownership: Mutex has a strict ownership contract. Only the thread that locked the mutex can unlock it. Semaphores have no owner (Thread A can call wait(), Thread B can call signal()). 2) Locking: Mutex is used for mutual exclusion. Semaphore is used for synchronization and signaling." 
+        desc: `Differences between Mutex and Semaphore structures.
+<table class="prose-table">
+  <thead>
+    <tr><th>Feature</th><th>Mutex Lock</th><th>Counting Semaphore</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Ownership</td><td>Strictly owned by locking thread</td><td>No owner contract</td></tr>
+    <tr><td>Lock Release</td><td>Only locking thread can release mutex</td><td>Any thread can call signal()</td></tr>
+    <tr><td>Priority Inheritance</td><td>Supported (prevents priority inversion)</td><td>Not supported</td></tr>
+    <tr><td>Typical Purpose</td><td>Mutual Exclusion (protecting resources)</td><td>Signaling / synchronization tasks</td></tr>
+  </tbody>
+</table>`
+      },
+      { 
+        method: "Deadlock Conditions (Coffman)", 
+        syntax: "Mutual Exclusion + Hold & Wait + No Preemption + Circular Wait", 
+        params: "Resource Allocation Graph (RAG) cycles", 
+        output: "Deadlock identification criteria", 
+        complexity: "All 4 must hold simultaneously", 
+        desc: `All 4 conditions must hold simultaneously for a deadlock to occur.
+<table class="prose-table">
+  <thead>
+    <tr><th>Condition</th><th>Definition</th><th>Real-World Analogy</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Mutual Exclusion</td><td>Resource can only be held by 1 process at a time</td><td>A single-occupancy bathroom</td></tr>
+    <tr><td>Hold & Wait</td><td>Process holding resource waits for another resource</td><td>Holding fork A, waiting for fork B</td></tr>
+    <tr><td>No Preemption</td><td>Resource cannot be forcibly taken from process</td><td>Cannot snatch fork from neighbor</td></tr>
+    <tr><td>Circular Wait</td><td>A loop chain of wait dependencies exists</td><td>A waits for B, B waits for A loop</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "🔥 Gotcha: Spinlock vs Semaphore in Kernel", 
@@ -283,7 +491,18 @@ export const osConcepts = [
         params: "Thread context sleep flags", 
         output: "Busy wait CPU loop vs Sleep queue block", 
         complexity: "Spinlocks are O(1) loop checks", 
-        desc: "<b>Q: Why are spinlocks preferred in kernel space code (like drivers) but avoided in user space applications?</b><br/><ul><li><b>Kernel Space context:</b> Thread switching is expensive. If a lock is expected to be held for a very short duration (e.g., microsecond register writes), busy-waiting in a spinlock consumes fewer clock cycles than putting the thread to sleep (context switch).</li><li><b>No Sleep Context:</b> Interrupt service routines (ISRs) cannot sleep. Hence, they *must* use spinlocks.</li><li><b>User Space:</b> User threads have no control over the scheduler. If a user thread spins, it wastes its entire time quantum doing zero work, blocking the lock owner from completing. Hence, user space uses sleep locks (Semaphores/Mutexes).</li></ul>" 
+        desc: `Spinlock vs Semaphore comparison.
+<table class="prose-table">
+  <thead>
+    <tr><th>Metric</th><th>Spinlock</th><th>Semaphore</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Lock Block Action</td><td>Busy-waits in infinite loop</td><td>Puts thread to sleep on wait queue</td></tr>
+    <tr><td>Context switch</td><td>None (avoids scheduling cost)</td><td>Triggers scheduling context switch</td></tr>
+    <tr><td>Interrupt Safe</td><td>Yes (usable in ISR handlers)</td><td>No (sleeping in ISR causes crash)</td></tr>
+    <tr><td>Lock Duration</td><td>Microseconds (short hold time)</td><td>Milliseconds / seconds (long hold time)</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "🔥 Gotcha: Livelock vs Deadlock vs Starvation", 
@@ -291,7 +510,17 @@ export const osConcepts = [
         params: "Locks, state loops, CPU consumption", 
         output: "Infinite busy-wait loops vs absolute freezes", 
         complexity: "Livelock consumes 100% CPU cycles", 
-        desc: "<b>Q: What is the difference between Deadlock, Livelock, and Starvation?</b><br/><ul><li><b>Deadlock:</b> Two or more threads are permanently blocked, waiting for each other to release resources. Threads are in a *sleeping* state (consuming 0% CPU).</li><li><b>Livelock:</b> Threads actively change their states in response to each other, but make zero forward progress (like two polite people trying to pass each other in a hallway, repeatedly stepping to the same side). Threads are in a *running* state (consuming 100% CPU).</li><li><b>Starvation:</b> A thread is healthy but is repeatedly bypassed by the scheduler or resource allocator due to priority bias. The thread *could* run, but never gets the chance.</li></ul>" 
+        desc: `Differences between Deadlock, Livelock, and Starvation.
+<table class="prose-table">
+  <thead>
+    <tr><th>Scenario</th><th>Thread State</th><th>CPU Usage</th><th>Resource Loop</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Deadlock</td><td>Permanently blocked (Sleeping)</td><td>0% CPU consumption</td><td>Yes, circular wait loop</td></tr>
+    <tr><td>Livelock</td><td>Actively changing states (Running)</td><td>100% CPU consumption</td><td>Yes, active collision loop</td></tr>
+    <tr><td>Starvation</td><td>Ready to run but bypassed (Ready)</td><td>0% CPU consumption</td><td>No, scheduler bias anomaly</td></tr>
+  </tbody>
+</table>`
       }
     ]
   },
@@ -313,7 +542,19 @@ export const osConcepts = [
         params: "Striping, Mirroring, Parity equations", 
         output: "Fault-tolerance virtual disk arrays", 
         complexity: "Disk read speed scales with drive count", 
-        desc: "Subtopics: 1) RAID 0 (Striping): Spreads blocks across drives. High speed, zero fault tolerance. 2) RAID 1 (Mirroring): Duplicates data. Safe, read-speed scaling, 50% capacity overhead. 3) RAID 5 (Distributed Parity): Stripes data and parity. Tolerates 1 drive loss, requires minimum 3 drives. 4) RAID 6 (Double Parity): Tolerates 2 drive losses, requires minimum 4 drives.<br/><br/><img src='/images/raid_levels.png' alt='RAID array levels' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
+        desc: `Comparative summary of primary RAID configurations.
+<table class="prose-table">
+  <thead>
+    <tr><th>RAID Level</th><th>Mechanism</th><th>Fault Tolerance</th><th>Min Drives</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>RAID 0</td><td>Striping (Data split across disks)</td><td>None (0 drive loss)</td><td>2</td></tr>
+    <tr><td>RAID 1</td><td>Mirroring (Identical replica)</td><td>1 disk loss (50% size loss)</td><td>2</td></tr>
+    <tr><td>RAID 5</td><td>Distributed Parity</td><td>1 disk loss (1 parity block)</td><td>3</td></tr>
+    <tr><td>RAID 6</td><td>Double Parity</td><td>2 disk loss (2 parity blocks)</td><td>4</td></tr>
+  </tbody>
+</table>
+<br/><img src='/images/raid_levels.png' alt='RAID array levels' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "What is an Inode?", 
@@ -321,7 +562,18 @@ export const osConcepts = [
         params: "Inode ID, file block pointers", 
         output: "File metadata block mappings", 
         complexity: "Inode lookup: O(1) array seek", 
-        desc: "Subtopics: 1) Inode Contents: Holds file size, permissions, owner UID, timestamps, and data block pointers. Does NOT hold filename. 2) Pointers: Uses direct pointers for small files, and single/double/triple indirect block pointers on disk for large files.<br/><br/><img src='/images/inode_structure.png' alt='Unix Inode blocks mapping schema' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
+        desc: `Unix Inode contents database.
+<table class="prose-table">
+  <thead>
+    <tr><th>Stored in Inode</th><th>NOT Stored in Inode</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>File Size, Owner UID/GID, Timestamps</td><td>File Name (stored in Directory entry)</td></tr>
+    <tr><td>Permissions, File type flags</td><td>Directory path locations</td></tr>
+    <tr><td>Direct and Indirect Block pointers on disk</td><td>Actual file content bytes</td></tr>
+  </tbody>
+</table>
+<br/><img src='/images/inode_structure.png' alt='Unix Inode blocks mapping schema' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "Hard Link vs Soft Link (Symlink)", 
@@ -329,7 +581,17 @@ export const osConcepts = [
         params: "Reference counts, partition boundaries", 
         output: "Inode references pointer redirection", 
         complexity: "Soft link resolution requires path lookup", 
-        desc: "Subtopics: 1) Hard Link: Points directly to same inode. File contents only deleted when reference count is 0. Cannot cross file system partitions. 2) Soft Link: Independent file containing target path. Can span partitions, breaks if target file is renamed or moved." 
+        desc: `Differences between Hard and Soft link file redirection.
+<table class="prose-table">
+  <thead>
+    <tr><th>Property</th><th>Hard Link</th><th>Soft Link (Symlink)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Inode ID Reference</td><td>Same Inode ID as original</td><td>New independent Inode containing path text</td></tr>
+    <tr><td>Cross-Partition Support</td><td>No (restricted to same filesystem disk partition)</td><td>Yes (can point to any path or network block)</td></tr>
+    <tr><td>Target Deletion</td><td>File data remains until link count is 0</td><td>Link breaks immediately (dangling symlink)</td></tr>
+  </tbody>
+</table>`
       },
       { 
         method: "🔥 Gotcha: Directory Layout & Inode Mapping", 
