@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { Flame, Terminal, CheckCircle2, Sun, Moon } from 'lucide-react';
+import { Flame, Terminal, CheckCircle2, Sun, Moon, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
   activeTab: 'dashboard' | 'explorer' | 'problem' | 'settings';
@@ -8,6 +9,7 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
+  const { logout, user } = useAuth();
   const [streak, setStreak] = useState(0);
   const [solved, setSolved] = useState(0);
 
@@ -146,6 +148,21 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           >
             {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
           </button>
+
+          {/* Logout Button */}
+          {user && (
+            <>
+              <div className="h-5 w-px bg-border"></div>
+              <button
+                onClick={logout}
+                title="Logout"
+                className="p-1.5 rounded-sm text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-smooth flex items-center space-x-1.5"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden md:inline text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{user.username}</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </header>

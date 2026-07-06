@@ -97,7 +97,22 @@ public class GeminiService {
                 + "13. 'optimalSpaceComplexity': The big-O optimal space complexity (e.g. 'O(1)').\n"
                 + "14. 'fullExplanation': In-depth markdown explanation of how to solve the problem optimal code strategy.\n"
                 + "15. 'referenceSolution': Code snippet block of the optimal solution in C++.\n"
-                + "16. 'referenceSolutions': A JSON object containing key-value pairs mapping language name ('cpp', 'java') to clean code solution strings (with C++ as the primary focus).";
+                + "16. 'referenceSolutions': A JSON object containing key-value pairs mapping language name ('cpp', 'java') to clean code solution strings (with C++ as the primary focus).\n"
+                + "17. 'bruteForce': A JSON object containing:\n"
+                + "    - 'approach': Short summary markdown explanation of the brute force strategy.\n"
+                + "    - 'timeComplexity': The big-O time complexity (e.g. 'O(n^2)').\n"
+                + "    - 'spaceComplexity': The big-O space complexity (e.g. 'O(1)').\n"
+                + "    - 'code': A JSON object containing 'cpp' and 'java' fields with clean code implementations.\n"
+                + "18. 'better': (Optional, set to null if no distinct 'better' approach exists) A JSON object containing:\n"
+                + "    - 'approach': Short summary markdown explanation of the better strategy.\n"
+                + "    - 'timeComplexity': The big-O time complexity (e.g. 'O(n log n)').\n"
+                + "    - 'spaceComplexity': The big-O space complexity (e.g. 'O(n)').\n"
+                + "    - 'code': A JSON object containing 'cpp' and 'java' fields with clean code implementations.\n"
+                + "19. 'optimal': A JSON object containing:\n"
+                + "    - 'approach': Short summary markdown explanation of the optimal strategy.\n"
+                + "    - 'timeComplexity': The big-O time complexity (e.g. 'O(n)').\n"
+                + "    - 'spaceComplexity': The big-O space complexity (e.g. 'O(1)' or 'O(n)').\n"
+                + "    - 'code': A JSON object containing 'cpp' and 'java' fields with clean code implementations.";
 
         try {
             String escapedPrompt = escapeJsonString(prompt);

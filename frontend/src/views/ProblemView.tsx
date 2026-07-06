@@ -1205,17 +1205,30 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                             {ALL_DSA_PATTERNS.map((pat) => {
                               const selectedList = notes.possiblePatterns ? notes.possiblePatterns.split(',') : [];
                               const isSelected = selectedList.includes(pat);
+                              
+                              let pillClass = '';
+                              if (notes.thinkingChecked && details) {
+                                const correctPattern = details.pattern;
+                                if (pat === correctPattern) {
+                                  pillClass = 'bg-emerald-500/20 border border-emerald-500/35 text-emerald-400';
+                                } else if (isSelected) {
+                                  pillClass = 'bg-orange-500/20 border border-orange-500/35 text-orange-400';
+                                } else {
+                                  pillClass = 'bg-slate-900/60 border border-slate-855 text-slate-650 opacity-40';
+                                }
+                              } else {
+                                pillClass = isSelected
+                                  ? 'bg-primary/20 border border-primary/30 text-blue-400'
+                                  : 'bg-slate-900/60 border border-slate-855 text-slate-500 hover:text-slate-300 disabled:opacity-70';
+                              }
+
                               return (
                                 <button
                                   key={pat}
                                   type="button"
                                   disabled={notes.thinkingChecked}
                                   onClick={() => handlePatternToggle(pat)}
-                                  className={`px-2.5 py-1 rounded-lg text-[9px] font-bold transition-smooth ${
-                                    isSelected
-                                      ? 'bg-primary/20 border border-primary/30 text-blue-400'
-                                      : 'bg-slate-900/60 border border-slate-855 text-slate-500 hover:text-slate-300 disabled:opacity-70'
-                                  }`}
+                                  className={`px-2.5 py-1 rounded-lg text-[9px] font-bold transition-smooth ${pillClass}`}
                                 >
                                   {pat}
                                 </button>
@@ -1228,32 +1241,62 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 font-mono">Expected Time</label>
-                            <select
-                              disabled={notes.thinkingChecked}
-                              value={notes.timeComplexityGuess}
-                              onChange={(e) => setNotes({ ...notes, timeComplexityGuess: e.target.value })}
-                              className="w-full glass-input rounded-xl px-3 py-2 text-xs font-bold font-sans"
-                            >
-                              <option value="" className="bg-slate-950">Select Time</option>
-                              {COMPLEXITY_GUESSES.map(cg => (
-                                <option key={cg} value={cg} className="bg-slate-950">{cg}</option>
-                              ))}
-                            </select>
+                            {notes.thinkingChecked && details ? (
+                              <div className="space-y-1">
+                                <div className={`w-full rounded-xl px-3 py-2 text-xs font-bold font-mono border flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 ${
+                                  notes.timeComplexityGuess === details.optimalTimeComplexity
+                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                    : 'bg-orange-500/10 border-orange-500/30 text-orange-400'
+                                }`}>
+                                  <span>Selected: {notes.timeComplexityGuess || 'None'}</span>
+                                  {notes.timeComplexityGuess !== details.optimalTimeComplexity && (
+                                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-extrabold">Correct: {details.optimalTimeComplexity}</span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <select
+                                disabled={notes.thinkingChecked}
+                                value={notes.timeComplexityGuess}
+                                onChange={(e) => setNotes({ ...notes, timeComplexityGuess: e.target.value })}
+                                className="w-full glass-input rounded-xl px-3 py-2 text-xs font-bold font-sans"
+                              >
+                                <option value="" className="bg-slate-950">Select Time</option>
+                                {COMPLEXITY_GUESSES.map(cg => (
+                                  <option key={cg} value={cg} className="bg-slate-950">{cg}</option>
+                                ))}
+                              </select>
+                            )}
                           </div>
 
                           <div>
                             <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 font-mono">Expected Space</label>
-                            <select
-                              disabled={notes.thinkingChecked}
-                              value={notes.spaceComplexityGuess}
-                              onChange={(e) => setNotes({ ...notes, spaceComplexityGuess: e.target.value })}
-                              className="w-full glass-input rounded-xl px-3 py-2 text-xs font-bold font-sans"
-                            >
-                              <option value="" className="bg-slate-950">Select Space</option>
-                              {SPACE_COMPLEXITY_GUESSES.map(cg => (
-                                <option key={cg} value={cg} className="bg-slate-950">{cg}</option>
-                              ))}
-                            </select>
+                            {notes.thinkingChecked && details ? (
+                              <div className="space-y-1">
+                                <div className={`w-full rounded-xl px-3 py-2 text-xs font-bold font-mono border flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 ${
+                                  notes.spaceComplexityGuess === details.optimalSpaceComplexity
+                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                    : 'bg-orange-500/10 border-orange-500/30 text-orange-400'
+                                }`}>
+                                  <span>Selected: {notes.spaceComplexityGuess || 'None'}</span>
+                                  {notes.spaceComplexityGuess !== details.optimalSpaceComplexity && (
+                                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-extrabold">Correct: {details.optimalSpaceComplexity}</span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <select
+                                disabled={notes.thinkingChecked}
+                                value={notes.spaceComplexityGuess}
+                                onChange={(e) => setNotes({ ...notes, spaceComplexityGuess: e.target.value })}
+                                className="w-full glass-input rounded-xl px-3 py-2 text-xs font-bold font-sans"
+                              >
+                                <option value="" className="bg-slate-950">Select Space</option>
+                                {SPACE_COMPLEXITY_GUESSES.map(cg => (
+                                  <option key={cg} value={cg} className="bg-slate-950">{cg}</option>
+                                ))}
+                              </select>
+                            )}
                           </div>
                         </div>
 
