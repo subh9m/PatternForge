@@ -9,6 +9,7 @@ interface SettingsDto {
   tabSize: number;
   autosaveInterval: number;
   keyboardShortcutsEnabled: boolean;
+  dailyGoal: number;
 }
 
 const SettingsView: React.FC = () => {
@@ -19,6 +20,7 @@ const SettingsView: React.FC = () => {
     tabSize: 4,
     autosaveInterval: 30,
     keyboardShortcutsEnabled: true,
+    dailyGoal: 3,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -273,6 +275,23 @@ const SettingsView: React.FC = () => {
                 onChange={(e) => setSettings({ ...settings, keyboardShortcutsEnabled: e.target.checked })}
                 className="h-4 w-4 accent-primary rounded bg-slate-900 border-slate-850 cursor-pointer"
               />
+            </div>
+
+            {/* Daily Goal */}
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-slate-200 block">Daily Goal Target</span>
+                <span className="text-[10px] text-slate-500">Minimum solved problems per day to keep/increment your streak.</span>
+              </div>
+              <select
+                value={settings.dailyGoal || 3}
+                onChange={(e) => setSettings({ ...settings, dailyGoal: Number(e.target.value) })}
+                className="glass-input rounded-lg px-3 py-1.5 text-xs font-semibold w-28 bg-slate-900 border border-slate-800"
+              >
+                {[1, 2, 3, 4, 5, 8, 10].map(val => (
+                  <option key={val} value={val} className="bg-slate-900">{val} {val === 1 ? 'Problem' : 'Problems'}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

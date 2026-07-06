@@ -25,21 +25,27 @@ public class DashboardController {
     private final AttemptRepository attemptRepository;
     private final SubmissionRepository submissionRepository;
     private final RevisionRepository revisionRepository;
+    private final SettingsRepository settingsRepository;
 
     public DashboardController(ProblemRepository problemRepository,
                                TopicRepository topicRepository,
                                AttemptRepository attemptRepository,
                                SubmissionRepository submissionRepository,
-                               RevisionRepository revisionRepository) {
+                               RevisionRepository revisionRepository,
+                               SettingsRepository settingsRepository) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
         this.submissionRepository = submissionRepository;
         this.revisionRepository = revisionRepository;
+        this.settingsRepository = settingsRepository;
     }
 
     @GetMapping
-    public ResponseEntity<?> getStats(Authentication authentication) {
+    public ResponseEntity<?> getStats(
+            Authentication authentication,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer year
+    ) {
         UUID userId = (UUID) authentication.getPrincipal();
 
         List<Problem> problems = problemRepository.findAll();
@@ -56,15 +62,24 @@ public class DashboardController {
         long approachSavedCount = attempts.stream().filter(a -> Boolean.TRUE.equals(a.getApproachSaved())).count();
         double approachAccuracy = attemptedCount > 0 ? ((double) approachSavedCount / attemptedCount) * 100 : 0.0;
 
-        // Collect all activity dates for accurate streak
+        // Load daily goal from settings
+        Settings userSettings = settingsRepository.findByUserId(userId).orElse(null);
+        int dailyGoal = (userSettings != null && userSettings.getDailyGoal() != null) ? userSettings.getDailyGoal() : 3;
+
+        // Count solved problems per day to see if they met daily goal for streak
+        Map<LocalDate, Long> solvedCountByDate = attempts.stream()
+                .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastAttemptedAt() != null)
+                .collect(Collectors.groupingBy(
+                        a -> a.getLastAttemptedAt().toLocalDate(),
+                        Collectors.counting()
+                ));
+
         Set<LocalDate> activityDates = new HashSet<>();
-        submissions.stream()
-                .map(s -> s.getCreatedAt().toLocalDate())
-                .forEach(activityDates::add);
-        attempts.stream()
-                .filter(a -> a.getLastAttemptedAt() != null)
-                .map(a -> a.getLastAttemptedAt().toLocalDate())
-                .forEach(activityDates::add);
+        solvedCountByDate.forEach((date, count) -> {
+            if (count >= dailyGoal) {
+                activityDates.add(date);
+            }
+        });
 
         // Streaks engine
         int streak = calculateStreak(activityDates);
@@ -136,8 +151,8 @@ public class DashboardController {
             }
         }
 
-        // Submissions activity (last 365 days heatmap with problem arrays)
-        List<Map<String, Object>> monthlyHeatmap = getHeatmapData(attempts);
+        // Submissions activity (calendar heatmap with problem arrays for selected year)
+        List<Map<String, Object>> monthlyHeatmap = getHeatmapData(attempts, year);
 
         // Weekly activity (last 7 days counts)
         List<Map<String, Object>> weeklyActivity = getWeeklyActivityData(attempts);
@@ -153,7 +168,7 @@ public class DashboardController {
                 .problemsAttempted(attemptedCount)
                 .approachAccuracy(approachAccuracy)
                 .todayGoalSolved((int) todayGoalSolved)
-                .todayGoalTarget(3) // 3 problems per day target
+                .todayGoalTarget(dailyGoal)
                 .weakestPattern(weakestPattern)
                 .strongestPattern(strongestPattern)
                 .recentlySolved(recentlySolved)
@@ -206,15 +221,23 @@ public class DashboardController {
         return currentStreak;
     }
 
-    private List<Map<String, Object>> getHeatmapData(List<Attempt> attempts) {
+    private List<Map<String, Object>> getHeatmapData(List<Attempt> attempts, Integer selectedYear) {
         LocalDate today = LocalDate.now();
-        LocalDate startDate = today.minusDays(365); // 1 year of data
+        int activeYear = (selectedYear != null) ? selectedYear : today.getYear();
+
+        LocalDate startDate = LocalDate.of(activeYear, 1, 1);
+        LocalDate endDate;
+        if (activeYear == today.getYear()) {
+            endDate = today;
+        } else {
+            endDate = LocalDate.of(activeYear, 12, 31);
+        }
 
         Map<LocalDate, List<Problem>> solvedByDate = attempts.stream()
                 .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastAttemptedAt() != null)
                 .filter(a -> {
                     LocalDate date = a.getLastAttemptedAt().toLocalDate();
-                    return date.isAfter(startDate) || date.isEqual(startDate);
+                    return !date.isBefore(startDate) && !date.isAfter(endDate);
                 })
                 .collect(Collectors.groupingBy(
                         a -> a.getLastAttemptedAt().toLocalDate(),
@@ -224,7 +247,7 @@ public class DashboardController {
         List<Map<String, Object>> heatmapList = new ArrayList<>();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        for (LocalDate date = startDate; !date.isAfter(today); date = date.plusDays(1)) {
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             Map<String, Object> cell = new HashMap<>();
             cell.put("date", date.format(dtf));
 

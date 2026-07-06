@@ -21,10 +21,24 @@ public class Settings {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
+    @Builder.Default
     private Boolean darkMode = true;
+
+    @Builder.Default
     private String editorTheme = "vs-dark";
+
+    @Builder.Default
     private Integer fontSize = 14;
+
+    @Builder.Default
     private Integer tabSize = 4;
+
+    @Builder.Default
     private Integer autosaveInterval = 30; // seconds
+
+    @Builder.Default
     private Boolean keyboardShortcutsEnabled = true;
+
+    @Builder.Default
+    private Integer dailyGoal = 3;
 }

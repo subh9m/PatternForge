@@ -13,4 +13,5 @@ public class SettingsDto {
     private Integer tabSize;
     private Integer autosaveInterval;
     private Boolean keyboardShortcutsEnabled;
+    private Integer dailyGoal;
 }

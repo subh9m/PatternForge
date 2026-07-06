@@ -50,12 +50,15 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<HeatmapDay | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
 
   useEffect(() => {
     const loadStats = async () => {
+      setLoading(true);
       try {
-        const data = await api.get<DashboardStats>('/dashboard/stats');
+        const data = await api.get<DashboardStats>(`/dashboard/stats?year=${selectedYear}`);
         setStats(data);
+        setSelectedDay(null);
       } catch (e) {
         console.error("Failed to load dashboard stats", e);
       } finally {
@@ -63,7 +66,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
       }
     };
     loadStats();
-  }, []);
+  }, [selectedYear]);
 
   const triggerRandomizer = async (type: string) => {
     try {
@@ -246,156 +249,172 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
         </div>
       </div>
 
+      {/* Heatmap Calendar (Pulled out to be full-width) */}
+      <div className="glass-panel rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5 text-text-primary" />
+            <h3 className="text-base font-extrabold font-heading text-text-primary uppercase tracking-wider">Progress History</h3>
+          </div>
+          
+          {/* Year Selector Dropdown */}
+          <div className="flex items-center space-x-2 bg-slate-900/60 border border-slate-850 px-3.5 py-1.5 rounded-xl text-xs">
+            <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px] font-mono">Select Year:</span>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="bg-transparent text-slate-200 outline-none border-none font-extrabold cursor-pointer"
+            >
+              <option value="2026" className="bg-slate-950">2026</option>
+              <option value="2025" className="bg-slate-950">2025</option>
+              <option value="2024" className="bg-slate-950">2024</option>
+            </select>
+          </div>
+        </div>
+        
+        {/* LeetCode-style Continuous Heatmap */}
+        <div className="w-full overflow-x-auto md:overflow-x-visible p-4 bg-surface/30 border border-border custom-scrollbar">
+          <div className="flex gap-2 min-w-[760px] md:min-w-0 md:justify-center py-1 select-none">
+            {/* Day Labels Column */}
+            <div className="flex flex-col justify-between text-[9px] text-text-secondary font-mono pt-5 pb-1 pr-1.5 h-[112px]">
+              <span>Mon</span>
+              <span>Wed</span>
+              <span>Fri</span>
+            </div>
+
+            {/* Heatmap Grid */}
+            <div className="flex flex-1 flex-col md:flex-initial">
+              {/* Months Row */}
+              <div className="flex text-[9px] text-text-secondary font-mono pb-1.5 pl-0.5 h-[16px]">
+                {weeks.map((week, idx) => {
+                  const firstDay = week[0];
+                  if (!firstDay) return null;
+                  const parts = firstDay.date.split('-');
+                  const monthIndex = parseInt(parts[1]) - 1;
+                  const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                  const monthName = monthNamesShort[monthIndex];
+
+                  // Show month name if it's the first week of the month
+                  let showMonth = false;
+                  if (idx === 0) {
+                    showMonth = true;
+                  } else {
+                    const prevFirstDay = weeks[idx - 1][0];
+                    if (prevFirstDay) {
+                      const prevParts = prevFirstDay.date.split('-');
+                      const prevMonthIndex = parseInt(prevParts[1]) - 1;
+                      if (monthIndex !== prevMonthIndex) {
+                        showMonth = true;
+                      }
+                    }
+                  }
+
+                  return (
+                    <div key={idx} className="w-[14px] shrink-0 text-left overflow-visible">
+                      {showMonth ? monthName : ""}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Columns of Days */}
+              <div className="flex gap-[3px]">
+                {weeks.map((week, weekIdx) => (
+                  <div key={weekIdx} className="flex flex-col gap-[3px] shrink-0">
+                    {week.map((day, dayIdx) => {
+                      const count = day.count;
+                      
+                      // LeetCode / GitHub green shades
+                      let bgClass = "bg-[#18181b] border border-border/40 hover:border-text-primary";
+                      
+                      if (count > 0 && count <= 2) {
+                        bgClass = "bg-[#2cbb5d]/20 border border-[#2cbb5d]/30 text-[#2cbb5d] hover:border-[#2cbb5d]";
+                      } else if (count > 2 && count <= 4) {
+                        bgClass = "bg-[#2cbb5d]/50 border border-[#2cbb5d]/60 text-white hover:border-[#2cbb5d]";
+                      } else if (count > 4) {
+                        bgClass = "bg-[#2cbb5d] border border-[#2cbb5d] text-white hover:border-text-primary shadow-[0_0_8px_rgba(44,187,93,0.3)]";
+                      }
+
+                      return (
+                        <div
+                          key={dayIdx}
+                          onClick={() => {
+                            if (day.problems && day.problems.length > 0) {
+                              setSelectedDay(day === selectedDay ? null : day);
+                            }
+                          }}
+                          className={`h-[11px] w-[11px] rounded-[2px] cursor-pointer transition-smooth ${bgClass}`}
+                          title={`${day.date}: ${count} solved`}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-3.5 text-[10px] text-text-secondary font-mono uppercase tracking-wider">
+          <span>Activity Legend</span>
+          <div className="flex items-center space-x-2">
+            <span>Less</span>
+            <div className="h-3 w-3 bg-[#18181b] border border-border rounded-[2px]"></div>
+            <div className="h-3 w-3 bg-[#2cbb5d]/20 border border-[#2cbb5d]/30 rounded-[2px]"></div>
+            <div className="h-3 w-3 bg-[#2cbb5d]/50 border border-[#2cbb5d]/60 rounded-[2px]"></div>
+            <div className="h-3 w-3 bg-[#2cbb5d] rounded-[2px]"></div>
+            <span>More</span>
+          </div>
+        </div>
+
+        {/* Interactive Day Details Card */}
+        {selectedDay && (
+          <div className="mt-4 p-4 border border-border bg-surface/50 space-y-3 transition-smooth">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="text-xs font-black font-heading uppercase tracking-widest text-text-primary">
+                Activity on {selectedDay.date}
+              </span>
+              <span className="text-[10px] font-bold font-mono text-accent uppercase bg-accent/10 border border-accent/20 px-2 py-0.5">
+                {selectedDay.count} Solved
+              </span>
+            </div>
+            
+            <div className="space-y-2">
+              {selectedDay.problems && selectedDay.problems.length > 0 ? (
+                selectedDay.problems.map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => navigateToProblem(p.id)}
+                    className="flex items-center justify-between p-2.5 border border-border hover:border-text-primary bg-background cursor-pointer transition-smooth"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[11px] font-bold font-mono text-text-secondary">#{p.leetcodeNumber}</span>
+                      <span className="text-xs font-bold text-text-primary hover:underline">{p.name}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[10px] text-text-secondary uppercase tracking-wider">{p.topicName}</span>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                        p.difficulty === 'EASY' ? 'text-emerald-400 bg-emerald-500/10' :
+                        p.difficulty === 'MEDIUM' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'
+                      }`}>
+                        {p.difficulty}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <span className="text-xs text-text-secondary font-mono">No problems solved on this day.</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Grid Dashboard Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Side: Weak/Strong & History */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Heatmap Calendar */}
-          <div className="glass-panel rounded-2xl p-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <Calendar className="h-5 w-5 text-text-primary" />
-              <h3 className="text-base font-extrabold font-heading text-text-primary uppercase tracking-wider">Progress History</h3>
-            </div>
-            
-            {/* LeetCode-style Continuous Heatmap */}
-            <div className="w-full overflow-x-auto custom-scrollbar p-4 bg-surface/30 border border-border">
-              <div className="flex gap-2 min-w-[760px] py-1 select-none">
-                {/* Day Labels Column */}
-                <div className="flex flex-col justify-between text-[9px] text-text-secondary font-mono pt-5 pb-1 pr-1.5 h-[112px]">
-                  <span>Mon</span>
-                  <span>Wed</span>
-                  <span>Fri</span>
-                </div>
-
-                {/* Heatmap Grid */}
-                <div className="flex flex-1 flex-col">
-                  {/* Months Row */}
-                  <div className="flex text-[9px] text-text-secondary font-mono pb-1.5 pl-0.5 h-[16px]">
-                    {weeks.map((week, idx) => {
-                      const firstDay = week[0];
-                      if (!firstDay) return null;
-                      const parts = firstDay.date.split('-');
-                      const monthIndex = parseInt(parts[1]) - 1;
-                      const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                      const monthName = monthNamesShort[monthIndex];
-
-                      // Show month name if it's the first week of the month
-                      let showMonth = false;
-                      if (idx === 0) {
-                        showMonth = true;
-                      } else {
-                        const prevFirstDay = weeks[idx - 1][0];
-                        if (prevFirstDay) {
-                          const prevParts = prevFirstDay.date.split('-');
-                          const prevMonthIndex = parseInt(prevParts[1]) - 1;
-                          if (monthIndex !== prevMonthIndex) {
-                            showMonth = true;
-                          }
-                        }
-                      }
-
-                      return (
-                        <div key={idx} className="w-[14px] shrink-0 text-left overflow-visible">
-                          {showMonth ? monthName : ""}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Columns of Days */}
-                  <div className="flex gap-[3px]">
-                    {weeks.map((week, weekIdx) => (
-                      <div key={weekIdx} className="flex flex-col gap-[3px] shrink-0">
-                        {week.map((day, dayIdx) => {
-                          const count = day.count;
-                          
-                          // LeetCode / GitHub green shades
-                          let bgClass = "bg-[#18181b] border border-border/40 hover:border-text-primary";
-                          
-                          if (count > 0 && count <= 2) {
-                            bgClass = "bg-[#2cbb5d]/20 border border-[#2cbb5d]/30 text-[#2cbb5d] hover:border-[#2cbb5d]";
-                          } else if (count > 2 && count <= 4) {
-                            bgClass = "bg-[#2cbb5d]/50 border border-[#2cbb5d]/60 text-white hover:border-[#2cbb5d]";
-                          } else if (count > 4) {
-                            bgClass = "bg-[#2cbb5d] border border-[#2cbb5d] text-white hover:border-text-primary shadow-[0_0_8px_rgba(44,187,93,0.3)]";
-                          }
-
-                          return (
-                            <div
-                              key={dayIdx}
-                              onClick={() => {
-                                if (day.problems && day.problems.length > 0) {
-                                  setSelectedDay(day === selectedDay ? null : day);
-                                }
-                              }}
-                              className={`h-[11px] w-[11px] rounded-[2px] cursor-pointer transition-smooth ${bgClass}`}
-                              title={`${day.date}: ${count} solved`}
-                            />
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between mt-3.5 text-[10px] text-text-secondary font-mono uppercase tracking-wider">
-              <span>Activity Legend</span>
-              <div className="flex items-center space-x-2">
-                <span>Less</span>
-                <div className="h-3 w-3 bg-[#18181b] border border-border rounded-[2px]"></div>
-                <div className="h-3 w-3 bg-[#2cbb5d]/20 border border-[#2cbb5d]/30 rounded-[2px]"></div>
-                <div className="h-3 w-3 bg-[#2cbb5d]/50 border border-[#2cbb5d]/60 rounded-[2px]"></div>
-                <div className="h-3 w-3 bg-[#2cbb5d] rounded-[2px]"></div>
-                <span>More</span>
-              </div>
-            </div>
-
-            {/* Interactive Day Details Card */}
-            {selectedDay && (
-              <div className="mt-4 p-4 border border-border bg-surface/50 space-y-3 transition-smooth">
-                <div className="flex items-center justify-between border-b border-border pb-2">
-                  <span className="text-xs font-black font-heading uppercase tracking-widest text-text-primary">
-                    Activity on {selectedDay.date}
-                  </span>
-                  <span className="text-[10px] font-bold font-mono text-accent uppercase bg-accent/10 border border-accent/20 px-2 py-0.5">
-                    {selectedDay.count} Solved
-                  </span>
-                </div>
-                
-                <div className="space-y-2">
-                  {selectedDay.problems && selectedDay.problems.length > 0 ? (
-                    selectedDay.problems.map((p) => (
-                      <div
-                        key={p.id}
-                        onClick={() => navigateToProblem(p.id)}
-                        className="flex items-center justify-between p-2.5 border border-border hover:border-text-primary bg-background cursor-pointer transition-smooth"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <span className="text-[11px] font-bold font-mono text-text-secondary">#{p.leetcodeNumber}</span>
-                          <span className="text-xs font-bold text-text-primary hover:underline">{p.name}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-[10px] text-text-secondary uppercase tracking-wider">{p.topicName}</span>
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                            p.difficulty === 'EASY' ? 'text-emerald-400 bg-emerald-500/10' :
-                            p.difficulty === 'MEDIUM' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'
-                          }`}>
-                            {p.difficulty}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <span className="text-xs text-text-secondary font-mono">No problems solved on this day.</span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Strength Analysis */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="glass-panel rounded-2xl p-5 border border-emerald-500/10">
