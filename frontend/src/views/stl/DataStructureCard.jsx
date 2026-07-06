@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Braces, Code, Play } from 'lucide-react';
-import { 
-  departmentsData, 
-  employeesData, 
-  salariesData, 
-  projectsData, 
-  employeeProjectsData, 
-  fullSqlScript 
-} from './sqlSeedData';
-
 
 // Single-pass regex syntax highlighter
 function highlightCode(code) {
@@ -21,7 +12,7 @@ function highlightCode(code) {
     .replace(/>/g, '&gt;');
 
   // Combined regex matching comments, strings, numbers, keywords, and types in one pass
-  const combinedRegex = /(\/\/.*|--.*|\/\*[\s\S]*?\*\/)|("[^"]*"|'[^']*')|\b(\d+)\b|\b(class|template|typename|struct|public|private|protected|void|int|const|return|new|delete|import|package|static|final|transient|synchronized|extends|instanceof|true|false|null|boolean|char|double|float|long|short|byte|super|this|interface|namespace|std|auto|using|include|define|SELECT|FROM|WHERE|AND|OR|NOT|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|ALTER|ADD|COLUMN|DROP|TRUNCATE|JOIN|ON|INNER|LEFT|RIGHT|FULL|OUTER|GROUP|BY|HAVING|ORDER|ASC|DESC|LIMIT|OFFSET|UNION|ALL|WITH|AS|OVER|PARTITION|RANK|DENSE_RANK|ROW_NUMBER|LEAD|LAG|CASE|WHEN|THEN|ELSE|END|BETWEEN|IN|LIKE|IS|NULL|EXTRACT|DATE_TRUNC|DATE_PART|CEIL|FLOOR|ROUND|SUM|AVG|COUNT|BEGIN|COMMIT|ROLLBACK|SAVEPOINT|TRANSACTION)\b|\b(vector|string|list|deque|stack|queue|priority_queue|set|multiset|map|multimap|unordered_set|unordered_multiset|unordered_map|unordered_multimap|pair|ArrayList|LinkedList|Vector|Stack|Queue|Deque|PriorityQueue|HashSet|LinkedHashSet|TreeSet|HashMap|LinkedHashMap|TreeMap|Hashtable|StringBuilder|StringBuffer|Object|Integer|String|greater|CustomCompare|SERIAL|VARCHAR|NUMERIC|DATE|FLOAT)\b/g;
+  const combinedRegex = /(\/\/.*|--.*|\/\*[\s\S]*?\*\/)|("[^"]*"|'[^']*')|\b(\d+)\b|\b(class|template|typename|struct|public|private|protected|void|int|const|return|new|delete|import|package|static|final|transient|synchronized|extends|instanceof|true|false|null|boolean|char|double|float|long|short|byte|super|this|interface|namespace|std|auto|using|include|define)\b|\b(vector|string|list|deque|stack|queue|priority_queue|set|multiset|map|multimap|unordered_set|unordered_multiset|unordered_map|unordered_multimap|pair|ArrayList|LinkedList|Vector|Stack|Queue|Deque|PriorityQueue|HashSet|LinkedHashSet|TreeSet|HashMap|LinkedHashMap|TreeMap|Hashtable|StringBuilder|StringBuffer|Object|Integer|String|greater|CustomCompare)\b/g;
 
   escaped = escaped.replace(combinedRegex, (match, comment, string, number, keyword, type) => {
     if (comment) return `<span class="text-slate-500 italic">${match}</span>`;
@@ -35,41 +26,10 @@ function highlightCode(code) {
   return escaped;
 }
 
-const tableHeaders = {
-  departments: ["dept_id", "dept_name", "location", "budget"],
-  employees: ["emp_id", "first_name", "last_name", "email", "dept_id", "manager_id", "hire_date", "job_title"],
-  salaries: ["salary_id", "emp_id", "amount", "effective_date", "currency"],
-  projects: ["project_id", "project_name", "dept_id", "start_date", "end_date", "status"],
-  employee_projects: ["emp_id", "project_id", "role", "hours_logged"]
-};
-
-const tableDataSources = {
-  departments: departmentsData,
-  employees: employeesData,
-  salaries: salariesData,
-  projects: projectsData,
-  employee_projects: employeeProjectsData
-};
-
 export default function DataStructureCard({ data }) {
   const [showDeclaration, setShowDeclaration] = useState(false);
   const [showInternal, setShowInternal] = useState(false);
-  const [selectedQueryIdx, setSelectedQueryIdx] = useState(0);
-  const [executed, setExecuted] = useState(false);
-  const [activeFullTable, setActiveFullTable] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showFullScriptModal, setShowFullScriptModal] = useState(false);
 
-  const handleRunQuery = () => {
-    setExecuted(true);
-  };
-
-  const filteredRows = activeFullTable ? (tableDataSources[activeFullTable] || []).filter(row => {
-    if (!searchQuery) return true;
-    return Object.values(row).some(val => 
-      val !== null && String(val).toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }) : [];
 
   return (
     <section 
@@ -523,117 +483,6 @@ export default function DataStructureCard({ data }) {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Table Data Modal */}
-      {activeFullTable && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#333] w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-gray-250 dark:border-[#333] bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase">
-                  Table View: {activeFullTable.toUpperCase()}
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-light">
-                  Showing {filteredRows.length} of {tableDataSources[activeFullTable].length} rows.
-                </p>
-              </div>
-              <button 
-                onClick={() => { setActiveFullTable(null); setSearchQuery(""); }}
-                className="px-4 py-2 bg-red-650 hover:bg-red-500 text-white font-mono text-xs font-bold rounded-lg cursor-pointer transition-all duration-200"
-              >
-                Close View
-              </button>
-            </div>
-            
-            {/* Search filter bar */}
-            <div className="p-4 bg-gray-55/20 dark:bg-neutral-950/20 border-b border-gray-200 dark:border-[#333]">
-              <input
-                type="text"
-                placeholder={`Search records in ${activeFullTable}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white dark:bg-black border border-gray-250 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-4 py-3 rounded-xl focus:outline-none focus:border-red-500"
-              />
-            </div>
-            
-            {/* Table Body Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-gray-100 dark:bg-neutral-900 border-b border-gray-200 dark:border-[#333] sticky top-0">
-                    <tr>
-                      {tableHeaders[activeFullTable].map(header => (
-                        <th key={header} className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-150 dark:divide-neutral-900/50 text-gray-800 dark:text-gray-300">
-                    {filteredRows.length === 0 ? (
-                      <tr>
-                        <td colSpan={tableHeaders[activeFullTable].length} className="px-5 py-8 text-center text-gray-500 italic">
-                          No matching records found.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredRows.map((row, i) => (
-                        <tr key={i} className="hover:bg-red-500/5 dark:hover:bg-red-500/5 even:bg-gray-50/10 dark:even:bg-neutral-900/10">
-                          {tableHeaders[activeFullTable].map(col => {
-                            const val = row[col];
-                            return (
-                              <td key={col} className="px-5 py-3">
-                                {val === null ? (
-                                  <span className="text-red-400 font-bold bg-red-400/5 px-1.5 py-0.5 rounded-sm">NULL</span>
-                                ) : col === 'amount' || col === 'budget' ? (
-                                  <span className="text-emerald-550 dark:text-emerald-450 font-semibold">{Number(val).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                                ) : (
-                                  String(val)
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SQL Script View Modal */}
-      {showFullScriptModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#333] w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-gray-250 dark:border-[#333] bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase">
-                  Complete Seed Script (DDL & DML)
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-light">
-                  Copy and paste this script directly into any PostgreSQL/SQLite client to set up the practice database.
-                </p>
-              </div>
-              <button 
-                onClick={() => setShowFullScriptModal(false)}
-                className="px-4 py-2 bg-red-650 hover:bg-red-500 text-white font-mono text-xs font-bold rounded-lg cursor-pointer transition-all duration-200"
-              >
-                Close Script
-              </button>
-            </div>
-            
-            {/* Script body */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-950 text-gray-300 font-mono text-[11px] select-all leading-relaxed whitespace-pre-wrap">
-              <code>{fullSqlScript}</code>
-            </div>
-          </div>
         </div>
       )}
     </section>

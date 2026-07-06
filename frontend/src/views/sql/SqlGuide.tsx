@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import Sidebar from './Sidebar';
-import MainContent from './MainContent';
+import SqlSidebar from './SqlSidebar';
+import SqlMainContent from './SqlMainContent';
 import { Terminal, Sun, Moon } from 'lucide-react';
 
-interface StlGuideProps {
+interface SqlGuideProps {
   onBackToPortal: () => void;
 }
 
-const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
+const SqlGuide: React.FC<SqlGuideProps> = ({ onBackToPortal }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeView, setActiveView] = useState<'cpp' | 'java'>('cpp');
-  const [activeTab, setActiveTab] = useState<string>('vector');
+  const [activeTab, setActiveTab] = useState<string>('sql_practice_db');
   
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
@@ -40,7 +39,7 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
 
   return (
     <div className="relative min-h-screen flex flex-col bg-transparent">
-      {/* Sticky Header identical to the DSA Navbar */}
+      {/* Sticky Header */}
       <header className="sticky top-0 w-full border-b border-border bg-surface/80 backdrop-blur-md z-45">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
@@ -54,29 +53,10 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
             </span>
           </div>
 
-          {/* View Switcher Tabs (Center) */}
-          <nav className="hidden md:flex space-x-1.5 p-1">
-            <button
-              onClick={() => { setActiveView('cpp'); setActiveTab('vector'); }}
-              className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth cursor-pointer ${
-                activeView === 'cpp'
-                  ? 'border border-text-primary text-text-primary bg-surface/40'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              C++ STL
-            </button>
-            <button
-              onClick={() => { setActiveView('java'); setActiveTab('arrayList'); }}
-              className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth cursor-pointer ${
-                activeView === 'java'
-                  ? 'border border-text-primary text-text-primary bg-surface/40'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              Java Collections
-            </button>
-          </nav>
+          {/* Module Heading */}
+          <div className="font-mono text-xs font-black uppercase tracking-widest text-text-primary px-3 py-1 border border-border rounded-sm bg-surface/40">
+            SQL Mastery & Sandbox
+          </div>
 
           {/* Right Action Controls */}
           <div className="flex items-center space-x-3.5">
@@ -103,19 +83,15 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
 
       {/* Main Layout Container */}
       <div className="flex-1 flex relative">
-        <Sidebar 
+        <SqlSidebar 
           isOpen={isSidebarOpen} 
-          activeView={activeView}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
         
-        <MainContent 
+        <SqlMainContent 
           isOpen={isSidebarOpen} 
           toggleSidebar={toggleSidebar} 
-          isDarkMode={theme === 'dark'}
-          toggleTheme={toggleTheme}
-          activeView={activeView}
           activeTab={activeTab}
         />
       </div>
@@ -123,4 +99,4 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
   );
 };
 
-export default StlGuide;
+export default SqlGuide;

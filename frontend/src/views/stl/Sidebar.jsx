@@ -142,68 +142,6 @@ const JavaNavLinks = () => (
   </nav>
 );
 
-// SQL Links Component
-const SqlNavLinks = () => (
-  <nav className="mt-4 space-y-4 font-mono">
-    <div>
-      <NavHeading>A. PRACTICE DATABASE</NavHeading>
-      <ul className="space-y-1">
-        <li><NavItem href="#sql_practice_db">A.1 NorthPeak Schema</NavItem></li>
-      </ul>
-    </div>
-    <div>
-      <NavHeading>B. SQL COMMAND TYPES</NavHeading>
-      <ul className="space-y-1">
-        <li><NavItem href="#sql_ddl">B.1 DDL Commands</NavItem></li>
-        <li><NavItem href="#sql_dml">B.2 DML Commands</NavItem></li>
-        <li><NavItem href="#sql_dql">B.3 DQL Commands</NavItem></li>
-        <li><NavItem href="#sql_dcl">B.4 DCL Commands</NavItem></li>
-        <li><NavItem href="#sql_tcl">B.5 TCL Commands</NavItem></li>
-      </ul>
-    </div>
-    <div>
-      <NavHeading>C. PHASE 2: FILTER & SORT</NavHeading>
-      <ul className="space-y-1">
-        <li><NavItem href="#sql_topic1">C.1 SELECT / FROM / WHERE</NavItem></li>
-        <li><NavItem href="#sql_topic2">C.2 Logical Operators</NavItem></li>
-        <li><NavItem href="#sql_topic3">C.3 Patterns & Sorting</NavItem></li>
-        <li><NavItem href="#sql_topic4">C.4 LIMIT & OFFSET</NavItem></li>
-        <li><NavItem href="#sql_topic5">C.5 NULL Handling</NavItem></li>
-        <li><NavItem href="#sql_topic6">C.6 SQL Execution Order</NavItem></li>
-      </ul>
-    </div>
-    <div>
-      <NavHeading>D. PHASE 3: GROUPS, JOINS & SETS</NavHeading>
-      <ul className="space-y-1">
-        <li><NavItem href="#sql_topic7">D.1 GROUP BY & HAVING</NavItem></li>
-        <li><NavItem href="#sql_topic8">D.2 Join Operators</NavItem></li>
-        <li><NavItem href="#sql_topic9">D.3 Self-Referential Joins</NavItem></li>
-        <li><NavItem href="#sql_topic10">D.4 Set Operations</NavItem></li>
-      </ul>
-    </div>
-    <div>
-      <NavHeading>E. PHASE 4: SUBQUERIES & CTEs</NavHeading>
-      <ul className="space-y-1">
-        <li><NavItem href="#sql_topic11">E.1 Subqueries</NavItem></li>
-        <li><NavItem href="#sql_topic12">E.2 Correlated Subqueries</NavItem></li>
-        <li><NavItem href="#sql_topic13">E.3 EXISTS, IN, ANY, ALL</NavItem></li>
-        <li><NavItem href="#sql_topic14">E.4 CTE Pipelines</NavItem></li>
-        <li><NavItem href="#sql_topic15">E.5 Recursive CTEs</NavItem></li>
-      </ul>
-    </div>
-    <div>
-      <NavHeading>F. PHASE 5: WINDOWS & PIVOTING</NavHeading>
-      <ul className="space-y-1">
-        <li><NavItem href="#sql_topic16">F.1 Window Core</NavItem></li>
-        <li><NavItem href="#sql_topic17">F.2 Ranking Functions</NavItem></li>
-        <li><NavItem href="#sql_topic18">F.3 Positional Functions</NavItem></li>
-        <li><NavItem href="#sql_topic19">F.4 Aggregate Frames</NavItem></li>
-        <li><NavItem href="#sql_topic20">F.5 Pivoting & CASE</NavItem></li>
-      </ul>
-    </div>
-  </nav>
-);
-
 export default function Sidebar({ isOpen, activeView, activeTab, onTabChange }) {
   return (
     <SidebarContext.Provider value={{ activeTab, onTabChange }}>
@@ -218,16 +156,14 @@ export default function Sidebar({ isOpen, activeView, activeTab, onTabChange }) 
           {/* Title */}
           <h2 className="p-4 text-2xl font-medium uppercase tracking-wider 
                          text-gray-900 dark:text-white font-mono">
-            {activeView === 'cpp' ? 'C++ STL' : activeView === 'java' ? 'Java Collections' : 'SQL Reference'}
+            {activeView === 'cpp' ? 'C++ STL' : 'Java Collections'}
           </h2>
           
           {/* Conditionally render navigation links */}
           {activeView === 'cpp' ? (
             <CppNavLinks />
-          ) : activeView === 'java' ? (
-            <JavaNavLinks />
           ) : (
-            <SqlNavLinks />
+            <JavaNavLinks />
           )}
         </div>
       </aside>

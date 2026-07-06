@@ -8,12 +8,13 @@ import Settings from './views/Settings';
 import AuthScreen from './views/AuthScreen';
 import PortalSelection from './views/PortalSelection';
 import StlGuide from './views/stl/StlGuide';
+import SqlGuide from './views/sql/SqlGuide';
 
 const MainApp: React.FC = () => {
   const { user, loading } = useAuth();
-  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl'>(() => {
+  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl' | 'sql'>(() => {
     const saved = localStorage.getItem('activePortal');
-    return (saved === 'dsa' || saved === 'stl') ? saved : 'selection';
+    return (saved === 'dsa' || saved === 'stl' || saved === 'sql') ? saved : 'selection';
   });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings'>('dashboard');
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
@@ -47,6 +48,17 @@ const MainApp: React.FC = () => {
   if (activePortal === 'stl') {
     return (
       <StlGuide
+        onBackToPortal={() => {
+          localStorage.removeItem('activePortal');
+          setActivePortal('selection');
+        }}
+      />
+    );
+  }
+
+  if (activePortal === 'sql') {
+    return (
+      <SqlGuide
         onBackToPortal={() => {
           localStorage.removeItem('activePortal');
           setActivePortal('selection');
