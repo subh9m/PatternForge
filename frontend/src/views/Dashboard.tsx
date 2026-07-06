@@ -286,35 +286,40 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
             <div className="flex flex-1 flex-col md:flex-initial">
               {/* Months Row */}
               <div className="flex text-[9px] text-text-secondary font-mono pb-1.5 pl-0.5 h-[16px]">
-                {weeks.map((week, idx) => {
-                  const firstDay = week[0];
-                  if (!firstDay) return null;
-                  const parts = firstDay.date.split('-');
-                  const monthIndex = parseInt(parts[1]) - 1;
-                  const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                  const monthName = monthNamesShort[monthIndex];
+                {(() => {
+                  let lastRenderedWeekIdx = -10;
+                  return weeks.map((week, idx) => {
+                    const firstDay = week[0];
+                    if (!firstDay) return null;
+                    const parts = firstDay.date.split('-');
+                    const monthIndex = parseInt(parts[1]) - 1;
+                    const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    const monthName = monthNamesShort[monthIndex];
 
-                  // Show month name if it's the first week of the month
-                  let showMonth = false;
-                  if (idx === 0) {
-                    showMonth = true;
-                  } else {
-                    const prevFirstDay = weeks[idx - 1][0];
-                    if (prevFirstDay) {
-                      const prevParts = prevFirstDay.date.split('-');
-                      const prevMonthIndex = parseInt(prevParts[1]) - 1;
-                      if (monthIndex !== prevMonthIndex) {
-                        showMonth = true;
+                    // Show month name if it's the first week of the month and spacing is safe
+                    let showMonth = false;
+                    if (idx === 0) {
+                      showMonth = true;
+                      lastRenderedWeekIdx = idx;
+                    } else {
+                      const prevFirstDay = weeks[idx - 1][0];
+                      if (prevFirstDay) {
+                        const prevParts = prevFirstDay.date.split('-');
+                        const prevMonthIndex = parseInt(prevParts[1]) - 1;
+                        if (monthIndex !== prevMonthIndex && (idx - lastRenderedWeekIdx >= 4)) {
+                          showMonth = true;
+                          lastRenderedWeekIdx = idx;
+                        }
                       }
                     }
-                  }
 
-                  return (
-                    <div key={idx} className="w-[14px] shrink-0 text-left overflow-visible">
-                      {showMonth ? monthName : ""}
-                    </div>
-                  );
-                })}
+                    return (
+                      <div key={idx} className="w-[14px] shrink-0 text-left overflow-visible">
+                        {showMonth ? monthName : ""}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
 
               {/* Columns of Days */}

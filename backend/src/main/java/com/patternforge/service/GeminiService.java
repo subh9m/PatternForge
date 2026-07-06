@@ -185,9 +185,7 @@ public class GeminiService {
                 + "- Selected Candidate Patterns: " + userPossiblePatterns + "\n"
                 + "- Time Complexity Guess: " + userTimeComplexity + "\n"
                 + "- Space Complexity Guess: " + userSpaceComplexity + "\n"
-                + "- Observations Draft: " + userObservations + "\n"
-                + "- Brute Force Idea: " + userBruteForce + "\n"
-                + "- Chosen Final Approach: " + userApproach + "\n\n"
+                + "- User Solution Approach Draft: " + userApproach + "\n\n"
                 + "Compare user's values against expected. Award a score out of 100 for every single parameter.\n"
                 + "You MUST structure your response EXACTLY as follows (do not use JSON, just plain text with these exact headers):\n\n"
                 + "PATTERNS_MATCH: [Correct/Partially Correct/Incorrect (Score: X/100)]\n"
@@ -196,10 +194,10 @@ public class GeminiService {
                 + "FEEDBACK_START\n"
                 + "[Detailed feedback text in markdown...]\n"
                 + "   - A clear score breakdown for each of the parameters out of 100.\n"
-                + "   - A thorough verification of the user's written explanation of the solution (from 'Final Approach'). Compare it against the optimal logic, cross-verify its correctness, highlight any logical bugs/flaws or missing edge cases in their description, and award an 'Explanation Score' out of 100 for logic clarity and correctness.\n"
+                + "   - A thorough verification of the user's written explanation of the solution (from 'User Solution Approach Draft'). Compare it against the optimal logic, cross-verify its correctness, highlight any logical bugs/flaws or missing edge cases in their description, and award an 'Explanation Score' out of 100 for logic clarity and correctness.\n"
                 + "   - Why their patterns guesses are correct/incorrect relative to " + optimalPattern + ".\n"
                 + "   - If their complexity estimates match optimal thresholds.\n"
-                + "   - Constructive interview advice on their observations and chosen final approach.\n"
+                + "   - Constructive interview advice on their solution approach.\n"
                 + "   - DO NOT reveal the final code solution.";
 
         try {

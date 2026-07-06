@@ -169,6 +169,53 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const timerIntervalRef = useRef<any>(null);
 
+  // Resizable Splitter states & handlers
+  const [leftWidthPercent, setLeftWidthPercent] = useState<number>(50);
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const startResizing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = document.getElementById('main-split-container');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const relativeX = e.clientX - rect.left;
+      let newPercent = (relativeX / rect.width) * 100;
+      
+      if (newPercent < 25) newPercent = 25;
+      if (newPercent > 75) newPercent = 75;
+      
+      setLeftWidthPercent(newPercent);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
   // Accordion details
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const [unlockedHintCount, setUnlockedHintCount] = useState<number>(1);
@@ -375,8 +422,8 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
         possiblePatterns: notes.possiblePatterns,
         timeComplexityGuess: notes.timeComplexityGuess,
         spaceComplexityGuess: notes.spaceComplexityGuess,
-        observations: notes.observations,
-        bruteForce: notes.bruteForce,
+        observations: "",
+        bruteForce: "",
         approach: notes.approach
       });
       setNotes(checkedNote);
@@ -463,6 +510,45 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     setNotes({ ...notes, possiblePatterns: updated.join(',') });
   };
 
+  const parseInlineMarkdown = (text: string): React.ReactNode[] => {
+    if (!text) return [];
+    
+    // Split by ** first to find bold text
+    let parts: (string | React.ReactNode)[] = [text];
+    
+    if (text.includes('**')) {
+      const splitParts = text.split('**');
+      parts = splitParts.map((part, i) => 
+        i % 2 === 1 ? <strong key={`b-${i}`} className="text-slate-50 font-black">{part}</strong> : part
+      );
+    }
+    
+    // Split each string element by ` for inline code blocks
+    const finalParts: React.ReactNode[] = [];
+    parts.forEach((part, partIdx) => {
+      if (typeof part !== 'string') {
+        finalParts.push(part);
+      } else if (!part.includes('`')) {
+        finalParts.push(part);
+      } else {
+        const splitParts = part.split('`');
+        splitParts.forEach((subPart, i) => {
+          if (i % 2 === 1) {
+            finalParts.push(
+              <code key={`code-${partIdx}-${i}`} className="bg-slate-900 px-1.5 py-0.5 rounded text-[12px] font-mono text-amber-400 font-bold border border-slate-800/80">
+                {subPart}
+              </code>
+            );
+          } else {
+            finalParts.push(subPart);
+          }
+        });
+      }
+    });
+    
+    return finalParts;
+  };
+
   const renderMarkdown = (text: string) => {
     if (!text) return null;
     return text.split('\n').map((para, idx) => {
@@ -470,35 +556,27 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
         return (
           <li key={idx} className="ml-4 list-disc text-slate-200 my-1.5 font-sans text-[13.5px] leading-relaxed font-medium">
-            {trimmed.substring(2)}
+            {parseInlineMarkdown(trimmed.substring(2))}
           </li>
         );
       }
       if (trimmed.startsWith('### ')) {
         return (
           <h4 key={idx} className="text-xs font-bold text-slate-100 mt-3 mb-1.5 uppercase tracking-wider font-sans">
-            {trimmed.substring(4)}
+            {parseInlineMarkdown(trimmed.substring(4))}
           </h4>
         );
       }
       if (trimmed.startsWith('## ')) {
         return (
           <h3 key={idx} className="text-sm font-extrabold text-slate-50 mt-4 mb-2 font-sans">
-            {trimmed.substring(3)}
+            {parseInlineMarkdown(trimmed.substring(3))}
           </h3>
-        );
-      }
-      if (trimmed.includes('**')) {
-        const parts = trimmed.split('**');
-        return (
-          <p key={idx} className="text-[13.5px] text-slate-200 my-2 leading-relaxed font-sans font-medium">
-            {parts.map((part, i) => i % 2 === 1 ? <strong key={i} className="text-slate-50 font-black">{part}</strong> : part)}
-          </p>
         );
       }
       return (
         <p key={idx} className="text-[13.5px] text-slate-200 my-2 leading-relaxed font-sans font-medium">
-          {para}
+          {parseInlineMarkdown(para)}
         </p>
       );
     });
@@ -594,10 +672,17 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       </div>
 
       {/* Main Double Column Workspace Layout */}
-      <div className="flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-10rem)] items-stretch">
+      <div 
+        id="main-split-container"
+        className={`flex flex-col lg:flex-row gap-4 min-h-[calc(100vh-10rem)] items-stretch ${isResizing ? 'select-none' : ''}`}
+        style={isResizing ? { cursor: 'col-resize' } : undefined}
+      >
         
         {/* LEFT PANEL: Scrollable Problem Details and Locked Accordion Hints */}
-        <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar">
+        <div 
+          className="glass-panel rounded-2xl p-6 flex flex-col space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar"
+          style={isLargeScreen ? { flex: `0 0 calc(${leftWidthPercent}% - 0.5rem)` } : undefined}
+        >
           
           {/* Header Metadata */}
           <div>
@@ -1011,8 +1096,20 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
         </div>
 
+        {/* Splitter slider handler */}
+        <div
+          onMouseDown={startResizing}
+          className="hidden lg:flex w-2 cursor-col-resize hover:bg-blue-500/20 active:bg-blue-500/40 rounded-full bg-slate-900 border border-slate-800 transition-all select-none items-center justify-center group"
+          title="Drag to resize panel spacing"
+        >
+          <div className="w-1.5 h-10 rounded bg-slate-700 group-hover:bg-blue-400 group-active:bg-blue-400 transition-colors" />
+        </div>
+
         {/* RIGHT PANEL: Workspace containing Timer, Approach Builder and Monaco IDE */}
-        <div className="flex-1 flex flex-col space-y-4">
+        <div 
+          className="flex-grow flex flex-col space-y-4"
+          style={isLargeScreen ? { flex: `0 0 calc(${100 - leftWidthPercent}% - 0.5rem)` } : undefined}
+        >
           
           {!thinkingStarted ? (
             /* STAGE 1: Thinking Mode selection selector */
@@ -1313,39 +1410,15 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                           </div>
                         </div>
 
-                        {/* Observations */}
+                        {/* Solution approach explanation */}
                         <div>
-                          <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 font-mono">My Observations</label>
-                          <textarea
-                            disabled={notes.thinkingChecked}
-                            value={notes.observations}
-                            onChange={(e) => setNotes({ ...notes, observations: e.target.value })}
-                            placeholder="Note inputs size constraints, values range, sorted layout clues..."
-                            className="w-full h-16 glass-input rounded-xl p-3 text-xs resize-none"
-                          />
-                        </div>
-
-                        {/* Brute force */}
-                        <div>
-                          <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 font-mono">Brute Force</label>
-                          <textarea
-                            disabled={notes.thinkingChecked}
-                            value={notes.bruteForce}
-                            onChange={(e) => setNotes({ ...notes, bruteForce: e.target.value })}
-                            placeholder="What is the most basic approach? (Big-O details?)"
-                            className="w-full h-16 glass-input rounded-xl p-3 text-xs resize-none"
-                          />
-                        </div>
-
-                        {/* Final approach */}
-                        <div>
-                          <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 font-mono">Final Approach Strategy (Written Explanation)</label>
+                          <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 font-mono">Solution Approach Strategy (Written Explanation)</label>
                           <textarea
                             disabled={notes.thinkingChecked}
                             value={notes.approach}
                             onChange={(e) => setNotes({ ...notes, approach: e.target.value })}
-                            placeholder="Describe your chosen optimal algorithm logic steps here... Gemini will cross-verify this explanation."
-                            className="w-full h-24 glass-input rounded-xl p-3 text-xs font-sans"
+                            placeholder="Describe your solution strategy here (include key observations, brute force ideas, and your chosen optimal steps). Gemini will cross-verify this explanation for logical bugs, edge cases, and pattern correctness."
+                            className="w-full h-44 glass-input rounded-xl p-3 text-[13px] font-sans leading-relaxed"
                           />
                         </div>
                   </div>
