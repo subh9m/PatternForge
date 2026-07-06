@@ -220,8 +220,8 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                   onClick={() => setSelectedDifficulty(d)}
                   className={`px-3 py-1.5 rounded-lg uppercase tracking-wider transition-smooth ${
                     selectedDifficulty === d 
-                      ? 'bg-slate-800 text-slate-200' 
-                      : 'text-slate-500 hover:text-slate-300'
+                      ? 'bg-accent text-white shadow-glow-accent font-black' 
+                      : 'text-slate-500 hover:text-slate-300 font-semibold'
                   }`}
                 >
                   {d}
@@ -237,8 +237,8 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                   onClick={() => setSelectedStatus(s)}
                   className={`px-3 py-1.5 rounded-lg uppercase tracking-wider transition-smooth ${
                     selectedStatus === s 
-                      ? 'bg-slate-800 text-slate-200' 
-                      : 'text-slate-500 hover:text-slate-300'
+                      ? 'bg-accent text-white shadow-glow-accent font-black' 
+                      : 'text-slate-500 hover:text-slate-300 font-semibold'
                   }`}
                 >
                   {s}

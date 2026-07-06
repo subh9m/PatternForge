@@ -105,7 +105,7 @@ body {
 }
 
 /* Search input override for left padding */
-.glass-input-search {
+.glass-input.glass-input-search {
   padding-left: 2.75rem !important;
 }
 
