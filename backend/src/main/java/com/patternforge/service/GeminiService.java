@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import com.patternforge.model.ProblemChatMessage;
 
 @Service
 @Slf4j
@@ -281,6 +282,83 @@ public class GeminiService {
                     "spaceComplexityMatch", "Correct",
                     "feedback", "Approach received. (Note: Gemini feedback check failed: " + e.getMessage() + ")"
             );
+        }
+    }
+
+    public String generateChatResponse(
+            String problemName,
+            String problemStatement,
+            List<ProblemChatMessage> chatHistory,
+            String latestUserMessage,
+            String currentCode
+    ) {
+        String key = getApiKey();
+        if (key.isEmpty()) {
+            throw new IllegalStateException("Gemini API key is not configured.");
+        }
+
+        // Construct the chat system instructions and context
+        StringBuilder contextBuilder = new StringBuilder();
+        contextBuilder.append("You are the Gemini DSA Mentor. You are helping the candidate solve the problem '")
+                .append(problemName).append("'.\n\n")
+                .append("Problem Statement:\n")
+                .append(problemStatement).append("\n\n");
+
+        if (currentCode != null && !currentCode.trim().isEmpty()) {
+            contextBuilder.append("Current Code in the Editor:\n")
+                    .append("```\n")
+                    .append(currentCode)
+                    .append("\n```\n\n");
+        }
+
+        if (!chatHistory.isEmpty()) {
+            contextBuilder.append("Conversation History:\n");
+            for (ProblemChatMessage msg : chatHistory) {
+                contextBuilder.append(msg.getSender()).append(": ").append(msg.getContent()).append("\n");
+            }
+            contextBuilder.append("\n");
+        }
+
+        contextBuilder.append("Candidate's new message: ").append(latestUserMessage).append("\n\n")
+                .append("Act as an interactive DSA coach. Review their logic or code, answer their questions, suggest optimizations or edge cases, but do NOT give them the full solution code directly. Encourage them to figure it out step-by-step. Keep responses concise and formatted in markdown.");
+
+        String prompt = contextBuilder.toString();
+
+        try {
+            String escapedPrompt = escapeJsonString(prompt);
+
+            String requestBody = "{"
+                    + "\"contents\": [{"
+                    + "  \"parts\": [{"
+                    + "    \"text\": \"" + escapedPrompt + "\""
+                    + "  }]"
+                    + "}]"
+                    + "}";
+
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                log.error("Gemini API error during chat: Status = {}, Body = {}", response.statusCode(), response.body());
+                return "I'm sorry, I'm having trouble connecting to my AI core right now. (Status: " + response.statusCode() + ")";
+            }
+
+            String aiResponseText = extractCandidateText(response.body());
+            if (aiResponseText == null || aiResponseText.trim().isEmpty()) {
+                return "I received an empty response from Gemini. Let's try again.";
+            }
+
+            return aiResponseText;
+        } catch (Exception e) {
+            log.error("Failed to generate chat response from Gemini API", e);
+            return "I encountered an error while processing your request. Please try again. (" + e.getMessage() + ")";
         }
     }
 

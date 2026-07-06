@@ -33,6 +33,7 @@ public class ProblemController {
     private final UserRepository userRepository;
     private final GeminiService geminiService;
     private final SubmissionRepository submissionRepository;
+    private final ProblemChatMessageRepository problemChatMessageRepository;
 
     public ProblemController(ProblemRepository problemRepository,
                              TopicRepository topicRepository,
@@ -43,7 +44,8 @@ public class ProblemController {
                              NoteRepository noteRepository,
                              UserRepository userRepository,
                              GeminiService geminiService,
-                             SubmissionRepository submissionRepository) {
+                             SubmissionRepository submissionRepository,
+                             ProblemChatMessageRepository problemChatMessageRepository) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -54,6 +56,7 @@ public class ProblemController {
         this.userRepository = userRepository;
         this.geminiService = geminiService;
         this.submissionRepository = submissionRepository;
+        this.problemChatMessageRepository = problemChatMessageRepository;
     }
 
     @GetMapping
@@ -715,6 +718,86 @@ public class ProblemController {
         }
 
         return currentStreak;
+    }
+
+    @GetMapping("/{id}/chat")
+    public ResponseEntity<List<Map<String, Object>>> getChatMessages(
+            @PathVariable UUID id,
+            Authentication authentication
+    ) {
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        List<ProblemChatMessage> messages = problemChatMessageRepository
+                .findByUserIdAndProblemIdOrderByCreatedAtAsc(user.getId(), id);
+
+        List<Map<String, Object>> response = messages.stream().map(msg -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("sender", msg.getSender());
+            map.put("content", msg.getContent());
+            map.put("createdAt", msg.getCreatedAt());
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/chat")
+    public ResponseEntity<Map<String, Object>> postChatMessage(
+            @PathVariable UUID id,
+            Authentication authentication,
+            @RequestBody Map<String, String> body
+    ) {
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Problem problem = problemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
+
+        String userMessageContent = body.get("message");
+        if (userMessageContent == null || userMessageContent.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Message cannot be empty"));
+        }
+
+        String currentCode = body.get("code");
+
+        // 1. Save user's chat message to the DB
+        ProblemChatMessage userMessage = ProblemChatMessage.builder()
+                .user(user)
+                .problem(problem)
+                .sender("USER")
+                .content(userMessageContent)
+                .build();
+        problemChatMessageRepository.save(userMessage);
+
+        // 2. Fetch history (including this message) to feed Gemini context
+        List<ProblemChatMessage> history = problemChatMessageRepository
+                .findByUserIdAndProblemIdOrderByCreatedAtAsc(user.getId(), id);
+
+        // 3. Generate Mentor response via Gemini
+        String aiResponseContent = geminiService.generateChatResponse(
+                problem.getName(),
+                problem.getProblemDetailsJson(),
+                history,
+                userMessageContent,
+                currentCode
+        );
+
+        // 4. Save AI's response to the DB
+        ProblemChatMessage aiMessage = ProblemChatMessage.builder()
+                .user(user)
+                .problem(problem)
+                .sender("AI")
+                .content(aiResponseContent)
+                .build();
+        problemChatMessageRepository.save(aiMessage);
+
+        // Return the AI message details
+        return ResponseEntity.ok(Map.of(
+                "sender", "AI",
+                "content", aiResponseContent,
+                "createdAt", aiMessage.getCreatedAt() != null ? aiMessage.getCreatedAt() : LocalDateTime.now()
+        ));
     }
 }
 
