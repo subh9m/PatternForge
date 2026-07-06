@@ -6,8 +6,15 @@ import Explorer from './views/Explorer';
 import ProblemView from './views/ProblemView';
 import Settings from './views/Settings';
 import AuthScreen from './views/AuthScreen';
+import PortalSelection from './views/PortalSelection';
+import StlGuide from './views/stl/StlGuide';
+
 const MainApp: React.FC = () => {
   const { user, loading } = useAuth();
+  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl'>(() => {
+    const saved = localStorage.getItem('activePortal');
+    return (saved === 'dsa' || saved === 'stl') ? saved : 'selection';
+  });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings'>('dashboard');
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
 
@@ -26,6 +33,28 @@ const MainApp: React.FC = () => {
     return <AuthScreen />;
   }
 
+  if (activePortal === 'selection') {
+    return (
+      <PortalSelection
+        onSelectPortal={(portal) => {
+          localStorage.setItem('activePortal', portal);
+          setActivePortal(portal);
+        }}
+      />
+    );
+  }
+
+  if (activePortal === 'stl') {
+    return (
+      <StlGuide
+        onBackToPortal={() => {
+          localStorage.removeItem('activePortal');
+          setActivePortal('selection');
+        }}
+      />
+    );
+  }
+
   const navigateToProblem = (id: string) => {
     setActiveProblemId(id);
     setActiveTab('problem');
@@ -33,7 +62,14 @@ const MainApp: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent">
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navbar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onSwitchPortal={() => {
+          localStorage.removeItem('activePortal');
+          setActivePortal('selection');
+        }}
+      />
       
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'dashboard' && (

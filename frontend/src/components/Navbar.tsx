@@ -6,9 +6,10 @@ import { useAuth } from '../context/AuthContext';
 interface NavbarProps {
   activeTab: 'dashboard' | 'explorer' | 'problem' | 'settings';
   setActiveTab: (tab: 'dashboard' | 'explorer' | 'problem' | 'settings') => void;
+  onSwitchPortal?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
+const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal }) => {
   const { logout, user } = useAuth();
   const [streak, setStreak] = useState(0);
   const [solved, setSolved] = useState(0);
@@ -138,7 +139,19 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             <span>{solved} SOLVED</span>
           </div>
 
-          <div className="h-5 w-px bg-border"></div>
+          {/* Switch Portal / Module Button */}
+          {onSwitchPortal && (
+            <>
+              <button
+                onClick={onSwitchPortal}
+                title="Switch Portal / Module"
+                className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-text-secondary hover:text-text-primary border border-border hover:border-text-primary transition-smooth rounded-sm cursor-pointer"
+              >
+                Modules
+              </button>
+              <div className="h-5 w-px bg-border"></div>
+            </>
+          )}
 
           {/* Theme Toggle */}
           <button
