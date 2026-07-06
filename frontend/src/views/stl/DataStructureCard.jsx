@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Braces, Code } from 'lucide-react';
 
-// Regex-based syntax highlighter for Monaco editor-style code rendering
+// Single-pass regex syntax highlighter
 function highlightCode(code) {
   if (!code) return '';
   
@@ -11,63 +11,17 @@ function highlightCode(code) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // Regex patterns
-  const commentPattern = /(\/\/.*|\/\*[\s\S]*?\*\/)/g;
-  const stringPattern = /("[^"]*"|'[^']*')/g;
-  const numberPattern = /\b(\d+)\b/g;
+  // Combined regex matching comments, strings, numbers, keywords, and types in one pass
+  const combinedRegex = /(\/\/.*|\/\*[\s\S]*?\*\/)|("[^"]*"|'[^']*')|\b(\d+)\b|\b(class|template|typename|struct|public|private|protected|void|int|const|return|new|delete|import|package|static|final|transient|synchronized|extends|instanceof|true|false|null|boolean|char|double|float|long|short|byte|super|this|interface|namespace|std|auto|using|include|define)\b|\b(vector|string|list|deque|stack|queue|priority_queue|set|multiset|map|multimap|unordered_set|unordered_multiset|unordered_map|unordered_multimap|pair|ArrayList|LinkedList|Vector|Stack|Queue|Deque|PriorityQueue|HashSet|LinkedHashSet|TreeSet|HashMap|LinkedHashMap|TreeMap|Hashtable|StringBuilder|StringBuffer|Object|Integer|String|greater|CustomCompare)\b/g;
 
-  // Keywords
-  const keywords = [
-    'class', 'template', 'typename', 'struct', 'public', 'private', 'protected',
-    'void', 'int', 'const', 'return', 'new', 'delete', 'import', 'package',
-    'static', 'final', 'transient', 'synchronized', 'extends', 'instanceof',
-    'true', 'false', 'null', 'boolean', 'char', 'double', 'float', 'long',
-    'short', 'byte', 'super', 'this', 'interface', 'namespace', 'std', 'auto',
-    'using', 'include', 'define'
-  ];
-  const keywordPattern = new RegExp('\\b(' + keywords.join('|') + ')\\b', 'g');
-
-  // Types / Containers
-  const types = [
-    'vector', 'string', 'list', 'deque', 'stack', 'queue', 'priority_queue',
-    'set', 'multiset', 'map', 'multimap', 'unordered_set', 'unordered_multiset',
-    'unordered_map', 'unordered_multimap', 'pair', 'ArrayList', 'LinkedList',
-    'Vector', 'Stack', 'Queue', 'Deque', 'PriorityQueue', 'HashSet',
-    'LinkedHashSet', 'TreeSet', 'HashMap', 'LinkedHashMap', 'TreeMap',
-    'Hashtable', 'StringBuilder', 'StringBuffer', 'Object', 'Integer', 'String',
-    'greater', 'CustomCompare'
-  ];
-  const typePattern = new RegExp('\\b(' + types.join('|') + ')\\b', 'g');
-
-  const placeholders = [];
-  
-  // Extract Comments
-  escaped = escaped.replace(commentPattern, (match) => {
-    const placeholder = `___COMMENT_PLACEHOLDER_${placeholders.length}___`;
-    placeholders.push({ placeholder, html: `<span class="text-slate-500 italic">${match}</span>` });
-    return placeholder;
+  escaped = escaped.replace(combinedRegex, (match, comment, string, number, keyword, type) => {
+    if (comment) return `<span class="text-slate-500 italic">${match}</span>`;
+    if (string) return `<span class="text-amber-600 dark:text-emerald-450 font-medium">${match}</span>`;
+    if (number) return `<span class="text-purple-600 dark:text-violet-400">${match}</span>`;
+    if (keyword) return `<span class="text-blue-600 dark:text-sky-400 font-bold">${match}</span>`;
+    if (type) return `<span class="text-cyan-600 dark:text-teal-400 font-semibold">${match}</span>`;
+    return match;
   });
-
-  // Extract Strings
-  escaped = escaped.replace(stringPattern, (match) => {
-    const placeholder = `___STRING_PLACEHOLDER_${placeholders.length}___`;
-    placeholders.push({ placeholder, html: `<span class="text-amber-600 dark:text-emerald-450 font-medium">${match}</span>` });
-    return placeholder;
-  });
-
-  // Highlight Keywords
-  escaped = escaped.replace(keywordPattern, '<span class="text-blue-600 dark:text-sky-400 font-bold">$1</span>');
-
-  // Highlight Types
-  escaped = escaped.replace(typePattern, '<span class="text-cyan-600 dark:text-teal-400 font-semibold">$1</span>');
-
-  // Highlight Numbers
-  escaped = escaped.replace(numberPattern, '<span class="text-purple-600 dark:text-violet-400">$1</span>');
-
-  // Restore placeholders
-  for (let i = placeholders.length - 1; i >= 0; i--) {
-    escaped = escaped.replace(placeholders[i].placeholder, placeholders[i].html);
-  }
 
   return escaped;
 }
