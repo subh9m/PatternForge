@@ -136,38 +136,44 @@ const JavaNavLinks = () => (
 const SqlNavLinks = () => (
   <nav className="mt-4 space-y-4 font-mono">
     <div>
-      <NavHeading>A. SQL COMMAND TYPES</NavHeading>
+      <NavHeading>A. PRACTICE DATABASE</NavHeading>
       <ul className="space-y-1">
-        <li><NavItem href="#sql_ddl">A.1 DDL Commands</NavItem></li>
-        <li><NavItem href="#sql_dml">A.2 DML Commands</NavItem></li>
-        <li><NavItem href="#sql_dql">A.3 DQL Commands</NavItem></li>
-        <li><NavItem href="#sql_dcl">A.4 DCL Commands</NavItem></li>
-        <li><NavItem href="#sql_tcl">A.5 TCL Commands</NavItem></li>
+        <li><NavItem href="#sql_practice_db">A.1 NorthPeak Schema</NavItem></li>
       </ul>
     </div>
     <div>
-      <NavHeading>B. BASIC SQL</NavHeading>
+      <NavHeading>B. SQL COMMAND TYPES</NavHeading>
       <ul className="space-y-1">
-        <li><NavItem href="#sql_filter_basics">B.1 Basic SELECT & WHERE</NavItem></li>
-        <li><NavItem href="#sql_logical_ops">B.2 Logical Combination</NavItem></li>
-        <li><NavItem href="#sql_like_order">B.3 Patterns & Sorting</NavItem></li>
+        <li><NavItem href="#sql_ddl">B.1 DDL Commands</NavItem></li>
+        <li><NavItem href="#sql_dml">B.2 DML Commands</NavItem></li>
+        <li><NavItem href="#sql_dql">B.3 DQL Commands</NavItem></li>
+        <li><NavItem href="#sql_dcl">B.4 DCL Commands</NavItem></li>
+        <li><NavItem href="#sql_tcl">B.5 TCL Commands</NavItem></li>
       </ul>
     </div>
     <div>
-      <NavHeading>C. INTERMEDIATE SQL</NavHeading>
+      <NavHeading>C. BASIC SQL</NavHeading>
       <ul className="space-y-1">
-        <li><NavItem href="#sql_aggregation">C.1 Grouping & Aggregates</NavItem></li>
-        <li><NavItem href="#sql_math">C.2 Math & Division</NavItem></li>
-        <li><NavItem href="#sql_null_case">C.3 Nulls & CASE logic</NavItem></li>
-        <li><NavItem href="#sql_joins_dates">C.4 Joins & Dates</NavItem></li>
+        <li><NavItem href="#sql_filter_basics">C.1 Basic SELECT & WHERE</NavItem></li>
+        <li><NavItem href="#sql_logical_ops">C.2 Logical Combination</NavItem></li>
+        <li><NavItem href="#sql_like_order">C.3 Patterns & Sorting</NavItem></li>
       </ul>
     </div>
     <div>
-      <NavHeading>D. ADVANCED SQL</NavHeading>
+      <NavHeading>D. INTERMEDIATE SQL</NavHeading>
       <ul className="space-y-1">
-        <li><NavItem href="#sql_ctes_windows">D.1 CTEs & Window Functions</NavItem></li>
-        <li><NavItem href="#sql_ranking_position">D.2 Ranking & Lead/Lag</NavItem></li>
-        <li><NavItem href="#sql_advanced_review">D.3 Set Ops & Pipelines</NavItem></li>
+        <li><NavItem href="#sql_aggregation">D.1 Grouping & Aggregates</NavItem></li>
+        <li><NavItem href="#sql_math">D.2 Math & Division</NavItem></li>
+        <li><NavItem href="#sql_null_case">D.3 Nulls & CASE logic</NavItem></li>
+        <li><NavItem href="#sql_joins_dates">D.4 Joins & Dates</NavItem></li>
+      </ul>
+    </div>
+    <div>
+      <NavHeading>E. ADVANCED SQL</NavHeading>
+      <ul className="space-y-1">
+        <li><NavItem href="#sql_ctes_windows">E.1 CTEs & Window Functions</NavItem></li>
+        <li><NavItem href="#sql_ranking_position">E.2 Ranking & Lead/Lag</NavItem></li>
+        <li><NavItem href="#sql_advanced_review">E.3 Set Ops & Pipelines</NavItem></li>
       </ul>
     </div>
   </nav>

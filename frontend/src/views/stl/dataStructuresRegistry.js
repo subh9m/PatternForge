@@ -905,6 +905,124 @@ public synchronized StringBuffer append(String str) {
 
 export const sqlConcepts = [
   {
+    id: "sql_practice_db",
+    num: "DB.1",
+    title: "NorthPeak Corp Practice Database",
+    desc: "A realistic corporate database schema designed to test edge cases: self-referencing managers, orphan records, NULL values, salary history ties, ongoing projects, and duplicate employee names.",
+    declaration: `-- NORTHPEAK CORP DATABASE SCHEMA (DDL)
+
+CREATE TABLE departments (
+    dept_id     INT PRIMARY KEY,
+    dept_name   VARCHAR(50) NOT NULL UNIQUE,
+    location    VARCHAR(50),
+    budget      NUMERIC(12,2) CHECK (budget >= 0)
+);
+
+CREATE TABLE employees (
+    emp_id      INT PRIMARY KEY,
+    first_name  VARCHAR(30) NOT NULL,
+    last_name   VARCHAR(30) NOT NULL,
+    email       VARCHAR(100) UNIQUE,
+    dept_id     INT REFERENCES departments(dept_id),
+    manager_id  INT REFERENCES employees(emp_id),
+    hire_date   DATE NOT NULL,
+    job_title   VARCHAR(50)
+);
+
+CREATE TABLE salaries (
+    salary_id      INT PRIMARY KEY,
+    emp_id         INT NOT NULL REFERENCES employees(emp_id),
+    amount         NUMERIC(10,2) CHECK (amount > 0),
+    effective_date DATE NOT NULL,
+    currency       VARCHAR(3) DEFAULT 'USD'
+);
+
+CREATE TABLE projects (
+    project_id    INT PRIMARY KEY,
+    project_name  VARCHAR(100) NOT NULL,
+    dept_id       INT REFERENCES departments(dept_id),
+    start_date    DATE NOT NULL,
+    end_date      DATE,
+    status        VARCHAR(20) CHECK (status IN ('Planned','Active','Completed','Cancelled'))
+);
+
+CREATE TABLE employee_projects (
+    emp_id        INT REFERENCES employees(emp_id),
+    project_id    INT REFERENCES projects(project_id),
+    role          VARCHAR(50),
+    hours_logged  INT DEFAULT 0,
+    PRIMARY KEY (emp_id, project_id)
+);
+
+-- SEED DATA (Sample inserts for verification)
+INSERT INTO departments (dept_id, dept_name, location, budget) VALUES
+(1, 'Engineering', 'Bengaluru', 5000000.00),
+(2, 'Sales', 'Mumbai', 2000000.00),
+(3, 'Marketing', 'Delhi', 1200000.00),
+(4, 'HR', 'Bengaluru', 800000.00),
+(5, 'Finance', 'Mumbai', 1500000.00),
+(6, 'Customer Support', 'Pune', 900000.00),
+(7, 'Legal', 'Delhi', 600000.00),
+(8, 'R&D Satellite', 'Hyderabad', NULL);`,
+    internalImplementation: `/* ----------------- ENTITY RELATIONSHIP DIAGRAM ----------------- */
+
+  ┌──────────────────┐               ┌──────────────────┐               ┌──────────────────┐
+  │   departments    │ 1           * │    employees     │ 1           * │     salaries     │
+  ├──────────────────┤◄──────────────├──────────────────┤◄──────────────├──────────────────┤
+  │ [PK] dept_id     │               │ [PK] emp_id      │               │ [PK] salary_id   │
+  │      dept_name   │               │      first_name  │               │ [FK] emp_id      │
+  │      location    │               │      last_name   │               │      amount      │
+  │      budget      │               │      email       │               │      effective_dt│
+  └────────┬─────────┘               │ [FK] dept_id ────┼──┐            │      currency    │
+           │ 1                       │ [FK] manager_id◄─┼──┘(Self)      └──────────────────┘
+           │                         │      hire_date   │
+           │ *                       │      job_title   │
+  ┌────────▼─────────┐               └────────┬─────────┘
+  │    projects      │ 1                      │ 1
+  ├──────────────────┤                        │
+  │ [PK] project_id  │                        │
+  │ [FK] dept_id     │                        │ *
+  │      project_name│               ┌────────▼─────────┐
+  │      employee_projects │
+  │      start_date  │               ├──────────────────┤
+  │      end_date    │               │ [PK, FK] emp_id  │
+  │      status      │ *           1 │ [PK, FK] proj_id │
+  └──────────────────┴◄──────────────┤          role    │
+                                     │          hours   │
+                                     └──────────────────┘
+
+/* ----------------- DATA ENTRIES SAMPLES ----------------- */
+
+-- Table: DEPARTMENTS (Sample rows)
+dept_id | dept_name     | location  | budget
+--------+---------------+-----------+------------
+1       | Engineering   | Bengaluru | 5000000.00
+7       | Legal         | Delhi     | 600000.00   (0 employees assigned)
+8       | R&D Satellite | Hyderabad | NULL        (0 employees, null budget)
+
+-- Table: EMPLOYEES (Sample rows)
+emp_id | first_name | last_name | dept_id | manager_id | job_title
+-------+------------+-----------+---------+------------+-----------------------
+1      | Ravi       | Sharma    | 1       | NULL       | VP Engineering (Boss)
+2      | Anita      | Verma     | 1       | 1          | Engineering Manager
+34     | Simran     | Chadha    | NULL    | NULL       | Contractor (No dept)
+
+-- Table: SALARIES (Sample rows showing salary history)
+salary_id | emp_id | amount     | effective_date
+----------+--------+------------+----------------
+1         | 1      | 4500000.00 | 2015-03-01
+2         | 1      | 5200000.00 | 2020-01-01     (Salary increment history)
+8         | 4      | 1500000.00 | 2018-02-20
+10        | 5      | 1500000.00 | 2019-07-01     (Salary tie with emp_id 4)`,
+    methods: [
+      { method: "departments", syntax: "SELECT * FROM departments;", params: "dept_id (PK)", output: "8 rows", complexity: "No duplicates", desc: "Contains location and budgeting details." },
+      { method: "employees", syntax: "SELECT * FROM employees;", params: "emp_id (PK), dept_id (FK)", output: "40 rows", complexity: "Self-joins on manager_id", desc: "Main corporate workforce directory." },
+      { method: "salaries", syntax: "SELECT * FROM salaries;", params: "salary_id (PK), emp_id (FK)", output: "48 rows", complexity: "History history metrics", desc: "Stores time-series salary logs per worker." },
+      { method: "projects", syntax: "SELECT * FROM projects;", params: "project_id (PK), dept_id (FK)", output: "12 rows", complexity: "Null columns (ongoing)", desc: "Tracks project scopes and operational statuses." },
+      { method: "employee_projects", syntax: "SELECT * FROM employee_projects;", params: "Composite PK", output: "25 rows", complexity: "Bridge table mapping", desc: "Logs billable project hours per designer/developer." }
+    ]
+  },
+  {
     id: "sql_ddl",
     num: "CMD.1",
     title: "Data Definition Language (DDL)",
