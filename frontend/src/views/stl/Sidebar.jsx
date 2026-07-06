@@ -152,28 +152,33 @@ const SqlNavLinks = () => (
       </ul>
     </div>
     <div>
-      <NavHeading>C. BASIC SQL</NavHeading>
+      <NavHeading>C. PHASE 2: FILTER & SORT</NavHeading>
       <ul className="space-y-1">
-        <li><NavItem href="#sql_filter_basics">C.1 Basic SELECT & WHERE</NavItem></li>
-        <li><NavItem href="#sql_logical_ops">C.2 Logical Combination</NavItem></li>
-        <li><NavItem href="#sql_like_order">C.3 Patterns & Sorting</NavItem></li>
+        <li><NavItem href="#sql_topic1">C.1 SELECT / FROM / WHERE</NavItem></li>
+        <li><NavItem href="#sql_topic2">C.2 Logical Operators</NavItem></li>
+        <li><NavItem href="#sql_topic3">C.3 Patterns & Sorting</NavItem></li>
+        <li><NavItem href="#sql_topic4">C.4 LIMIT & OFFSET</NavItem></li>
+        <li><NavItem href="#sql_topic5">C.5 NULL Handling</NavItem></li>
+        <li><NavItem href="#sql_topic6">C.6 SQL Execution Order</NavItem></li>
       </ul>
     </div>
     <div>
-      <NavHeading>D. INTERMEDIATE SQL</NavHeading>
+      <NavHeading>D. PHASE 3: GROUPS, JOINS & SETS</NavHeading>
       <ul className="space-y-1">
-        <li><NavItem href="#sql_aggregation">D.1 Grouping & Aggregates</NavItem></li>
-        <li><NavItem href="#sql_math">D.2 Math & Division</NavItem></li>
-        <li><NavItem href="#sql_null_case">D.3 Nulls & CASE logic</NavItem></li>
-        <li><NavItem href="#sql_joins_dates">D.4 Joins & Dates</NavItem></li>
+        <li><NavItem href="#sql_topic7">D.1 GROUP BY & HAVING</NavItem></li>
+        <li><NavItem href="#sql_topic8">D.2 Join Operators</NavItem></li>
+        <li><NavItem href="#sql_topic9">D.3 Self-Referential Joins</NavItem></li>
+        <li><NavItem href="#sql_topic10">D.4 Set Operations</NavItem></li>
       </ul>
     </div>
     <div>
-      <NavHeading>E. ADVANCED SQL</NavHeading>
+      <NavHeading>E. PHASE 4: SUBQUERIES & CTEs</NavHeading>
       <ul className="space-y-1">
-        <li><NavItem href="#sql_ctes_windows">E.1 CTEs & Window Functions</NavItem></li>
-        <li><NavItem href="#sql_ranking_position">E.2 Ranking & Lead/Lag</NavItem></li>
-        <li><NavItem href="#sql_advanced_review">E.3 Set Ops & Pipelines</NavItem></li>
+        <li><NavItem href="#sql_topic11">E.1 Subqueries</NavItem></li>
+        <li><NavItem href="#sql_topic12">E.2 Correlated Subqueries</NavItem></li>
+        <li><NavItem href="#sql_topic13">E.3 EXISTS, IN, ANY, ALL</NavItem></li>
+        <li><NavItem href="#sql_topic14">E.4 CTE Pipelines</NavItem></li>
+        <li><NavItem href="#sql_topic15">E.5 Recursive CTEs</NavItem></li>
       </ul>
     </div>
   </nav>

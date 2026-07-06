@@ -1397,6 +1397,133 @@ SET PERFORMANCE DIFFERENCES:
         ]
       }
     ]
+  },
+  {
+    id: "sql_topic11",
+    num: "SQL.4.1",
+    title: "Topic 11: Subqueries (Nested Queries)",
+    desc: "A query nested inside another statement. Subqueries can be scalar (returns single value), row (returns single row), or table (returns multi-row derived relation).",
+    declaration: `-- Scalar comparison\nSELECT cols FROM table WHERE col = (SELECT val FROM table2 WHERE cond);\n\n-- Derived table\nSELECT * FROM (SELECT cols FROM table) AS alias;`,
+    internalImplementation: `/*
+SUBQUERY TYPES & COMPILATION:
+1. Scalar Subqueries: Must return exactly 1 row & 1 column. If 0 rows return, resolves to NULL. If >1 row returns, throws a runtime engine error.
+2. Derived Tables: Evaluated and materialized in-memory (or on temp disk buffers) as intermediate relations.
+3. Subquery Flattening: Modern query planners rewrite subqueries into joins where semantically equivalent to avoid materialization overhead.
+*/`,
+    queries: [
+      {
+        sql: "-- Find Engineering employees by resolving the department ID first\nSELECT first_name, last_name, job_title\nFROM employees\nWHERE dept_id = (SELECT dept_id FROM departments WHERE dept_name = 'Engineering')\nLIMIT 5;",
+        columns: ["first_name", "last_name", "job_title"],
+        rows: [
+          ["Ravi", "Sharma", "VP Engineering"],
+          ["Anita", "Verma", "Engineering Manager"],
+          ["Alex", "Kim", "Senior Software Engineer"],
+          ["Priya", "Nair", "Software Engineer"],
+          ["Alex", "Kim", "Software Engineer"]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic12",
+    num: "SQL.4.2",
+    title: "Topic 12: Correlated Subqueries",
+    desc: "Subqueries referencing columns from the outer statement. Conceptually evaluated per outer row, though modern planners try to decorrelate them.",
+    declaration: `-- Correlated lookup referencing outer table alias\nSELECT * FROM t1 WHERE col = (SELECT MAX(col2) FROM t2 WHERE t2.t1_id = t1.id);`,
+    internalImplementation: `/*
+DECORRELATION & PERFORMANCE:
+Planners attempt subquery decorrelation (rewriting into left/semi-joins). Un-decorrelatable queries force nested loops, leading to O(n * m) complexity.
+*/`,
+    queries: [
+      {
+        sql: "-- Find the latest salary amount per employee (Correlated subquery)\nSELECT e.first_name, e.last_name, s.amount\nFROM employees e\nJOIN salaries s ON e.emp_id = s.emp_id\nWHERE s.effective_date = (\n    SELECT MAX(s2.effective_date)\n    FROM salaries s2\n    WHERE s2.emp_id = e.emp_id\n)\nLIMIT 5;",
+        columns: ["first_name", "last_name", "amount"],
+        rows: [
+          ["Ravi", "Sharma", 5200000.00],
+          ["Anita", "Verma", 3800000.00],
+          ["Alex", "Kim", 2600000.00],
+          ["Priya", "Nair", 1900000.00],
+          ["Alex", "Kim", 1900000.00]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic13",
+    num: "SQL.4.3",
+    title: "Topic 13: EXISTS vs IN vs ANY vs ALL",
+    desc: "Set verification and existence checks. EXISTS is NULL-safe and short-circuits. NOT IN fails completely if the subquery returns even one NULL.",
+    declaration: `-- EXISTS (Short-circuits, stops on first match)\nSELECT cols FROM table WHERE EXISTS (SELECT 1 FROM table2 WHERE cond);\n\n-- ANY / ALL (Inequality evaluations)\nSELECT cols FROM table WHERE col > ALL (SELECT val FROM table2);`,
+    internalImplementation: `/*
+NULL AMBIGUITY COMPARISON:
+- IN / NOT IN: Builds a flat list. If NULL enters a NOT IN list, standard comparison rule makes every evaluation UNKNOWN, returning empty results.
+- EXISTS / NOT EXISTS: Evaluated on correlation predicates row-by-row. Safe against NULL poisoning.
+*/`,
+    queries: [
+      {
+        sql: "-- Find departments with active projects using EXISTS\nSELECT dept_name FROM departments d\nWHERE EXISTS (\n    SELECT 1 FROM projects p \n    WHERE p.dept_id = d.dept_id AND p.status = 'Active'\n);",
+        columns: ["dept_name"],
+        rows: [
+          ["Engineering"],
+          ["Sales"],
+          ["Marketing"],
+          ["Customer Support"]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic14",
+    num: "SQL.4.4",
+    title: "Topic 14: Common Table Expressions (CTEs)",
+    desc: "Named, statement-scoped temporary result sets (WITH clause) to build clean sequential query pipelines.",
+    declaration: `-- Multi-CTE pipeline\nWITH cte1 AS (SELECT ...), cte2 AS (SELECT ...) SELECT * FROM cte2;`,
+    internalImplementation: `/*
+CTE MATERIALIZATION MECHANICS:
+- Materialized: Computed once and cached in a temp structure. Pushdowns past CTE boundary are blocked.
+- Inline: Merged directly into the outer query AST by the planner, allowing indexing optimizations.
+*/`,
+    queries: [
+      {
+        sql: "-- Multi-stage CTE calculation of average current salaries per department\nWITH latest_salary AS (\n    SELECT emp_id, amount,\n           ROW_NUMBER() OVER (PARTITION BY emp_id ORDER BY effective_date DESC) AS rn\n    FROM salaries\n),\ncurrent_salary AS (\n    SELECT emp_id, amount FROM latest_salary WHERE rn = 1\n)\nSELECT d.dept_name, ROUND(AVG(cs.amount), 2) AS avg_salary\nFROM departments d\nJOIN employees e ON d.dept_id = e.dept_id\nJOIN current_salary cs ON e.emp_id = cs.emp_id\nGROUP BY d.dept_name\nORDER BY avg_salary DESC;",
+        columns: ["dept_name", "avg_salary"],
+        rows: [
+          ["Finance", 2770000.00],
+          ["HR", 2450000.00],
+          ["Sales", 2307142.86],
+          ["Marketing", 2266666.67],
+          ["Engineering", 2155000.00],
+          ["Customer Support", 1126000.00]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic15",
+    num: "SQL.4.5",
+    title: "Topic 15: Recursive Common Table Expressions",
+    desc: "Loop-based traversals generating rows until a termination criteria is met. Essential for hierarchal/graph search.",
+    declaration: `-- Recursive query structure\nWITH RECURSIVE cte AS (\n    SELECT ... -- Anchor\n    UNION ALL\n    SELECT ... FROM cte JOIN ... -- Recursion\n) SELECT * FROM cte;`,
+    internalImplementation: `/*
+RECURSION FLOW:
+1. Anchor member executes, adding initial rows to Working Set.
+2. Recursive member runs, referencing ONLY the previous iteration's new rows.
+3. Termination: Executes until an iteration outputs 0 rows. Guard clauses prevent infinite loops on cyclic cycles.
+*/`,
+    queries: [
+      {
+        sql: "-- Recursive walk down organizational tree reporting to VP Engineering Ravi Sharma\nWITH RECURSIVE org_chart AS (\n    SELECT emp_id, first_name, last_name, manager_id, 0 AS depth\n    FROM employees\n    WHERE emp_id = 1\n    UNION ALL\n    SELECT e.emp_id, e.first_name, e.last_name, e.manager_id, oc.depth + 1\n    FROM employees e\n    JOIN org_chart oc ON e.manager_id = oc.emp_id\n)\nSELECT first_name, last_name, depth FROM org_chart ORDER BY depth, emp_id LIMIT 6;",
+        columns: ["first_name", "last_name", "depth"],
+        rows: [
+          ["Ravi", "Sharma", 0],
+          ["Anita", "Verma", 1],
+          ["Alex", "Kim", 2],
+          ["Priya", "Nair", 2],
+          ["Alex", "Kim", 2],
+          ["Tarun", "Oberoi", 3]
+        ]
+      }
+    ]
   }
 ];
 
