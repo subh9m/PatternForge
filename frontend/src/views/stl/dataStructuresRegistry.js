@@ -1257,6 +1257,146 @@ THREE-VALUED LOGIC TRUTH TABLES (AND/OR/NOT):
 WHY IT MATTERS:
 Because SELECT runs at step 5 (after WHERE in step 2), aliases defined in the SELECT clause (e.g. SELECT name AS n) cannot be referenced inside the WHERE clause.
 */`
+  },
+  {
+    id: "sql_topic7",
+    num: "SQL.3.1",
+    title: "Topic 7: Aggregate Functions & GROUP BY / HAVING",
+    desc: "Collapsing multiple rows into group summaries. Any column selected that is not an aggregate function must appear in the GROUP BY clause.",
+    declaration: `-- Group and filter summaries\nSELECT col, COUNT(*), AVG(col2) FROM table GROUP BY col HAVING COUNT(*) > n;`,
+    internalImplementation: `/*
+GROUPING STRATEGIES:
+1. Hash Grouping: Builds an in-memory hash table keyed by the grouping columns. O(n) average time complexity.
+2. Sort Grouping: Sorts the dataset on the grouping columns first, then aggregates. O(n log n) complexity.
+*/
+
+-- Find department current averages exceeding 3 members
+SELECT d.dept_name, COUNT(e.emp_id) AS headcount, AVG(s.amount) AS avg_current_salary
+FROM departments d
+LEFT JOIN employees e ON d.dept_id = e.dept_id
+LEFT JOIN salaries s ON e.emp_id = s.emp_id
+    AND s.effective_date = (SELECT MAX(s2.effective_date) FROM salaries s2 WHERE s2.emp_id = e.emp_id)
+GROUP BY d.dept_name
+HAVING COUNT(e.emp_id) > 3
+ORDER BY avg_current_salary DESC;`,
+    queries: [
+      {
+        sql: "-- Find department current averages exceeding 3 members\nSELECT d.dept_name, COUNT(e.emp_id) AS headcount, AVG(s.amount) AS avg_current_salary\nFROM departments d\nLEFT JOIN employees e ON d.dept_id = e.dept_id\nLEFT JOIN salaries s ON e.emp_id = s.emp_id\n    AND s.effective_date = (SELECT MAX(s2.effective_date) FROM salaries s2 WHERE s2.emp_id = e.emp_id)\nGROUP BY d.dept_name\nHAVING COUNT(e.emp_id) > 3\nORDER BY avg_current_salary DESC;",
+        columns: ["dept_name", "headcount", "avg_current_salary"],
+        rows: [
+          ["Finance", 5, 2770000.00],
+          ["HR", 4, 2450000.00],
+          ["Sales", 7, 2307142.86],
+          ["Marketing", 6, 2266666.67],
+          ["Engineering", 10, 2155000.00],
+          ["Customer Support", 5, 1126000.00]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic8",
+    num: "SQL.3.2",
+    title: "Topic 8: All JOIN Types",
+    desc: "Projection of Cartesian relations. Nest loop, merge sort, or hash indexes map row pairs. Beware of outer-join filters in WHERE.",
+    declaration: `-- INNER JOIN\nSELECT * FROM t1 INNER JOIN t2 ON t1.id = t2.id;\n\n-- LEFT OUTER JOIN\nSELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id;`,
+    internalImplementation: `/*
+JOIN PHYSICAL RUNNERS:
+1. Nested Loop Join: Loops outer table, performs seek lookups on inner table. O(n log m) with index.
+2. Hash Join: Builds hash table on smaller side, probes with larger side. O(n + m) runtime.
+3. Merge Sort Join: Sorts both relations, aggregates in lockstep scan. O(n log n + m log m).
+*/`,
+    queries: [
+      {
+        sql: "-- Standard INNER JOIN department lookup\nSELECT e.first_name, e.last_name, d.dept_name\nFROM employees e\nINNER JOIN departments d ON e.dept_id = d.dept_id\nLIMIT 5;",
+        columns: ["first_name", "last_name", "dept_name"],
+        rows: [
+          ["Ravi", "Sharma", "Engineering"],
+          ["Anita", "Verma", "Engineering"],
+          ["Alex", "Kim", "Engineering"],
+          ["Priya", "Nair", "Engineering"],
+          ["Alex", "Kim", "Engineering"]
+        ]
+      },
+      {
+        sql: "-- Find employees with zero projects (Anti-Join Pattern)\nSELECT e.first_name, e.last_name\nFROM employees e\nLEFT JOIN employee_projects ep ON e.emp_id = ep.emp_id\nWHERE ep.emp_id IS NULL;",
+        columns: ["first_name", "last_name"],
+        rows: [
+          ["Sneha", "Iyer"],
+          ["Arjun", "Gupta"],
+          ["Pooja", "Bhatt"],
+          ["Ritu", "Chopra"],
+          ["Deepak", "Malhotra"],
+          ["Amitabh", "Sinha"],
+          ["Swati", "Nambiar"],
+          ["Harish", "Pandey"],
+          ["Fatima", "Sheikh"],
+          ["Yusuf", "Ansari"],
+          ["Gauri", "Deshmukh"],
+          ["Rajesh", "Kulkarni"],
+          ["Simran", "Chadha"],
+          ["Zoya", "Khan"]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic9",
+    num: "SQL.3.3",
+    title: "Topic 9: Self-Joins",
+    desc: "Joining a table back to a copy of itself via separate aliases to resolve hierarchy, tree structures, or comparative rows.",
+    declaration: `-- Self-referential join\nSELECT e1.name, e2.name FROM employees e1 JOIN employees e2 ON e1.manager_id = e2.emp_id;`,
+    internalImplementation: `/*
+HIERARCHICAL RESOLUTION:
+org charts, comment sub-threads, or nested categorizations. Chaining self-joins works for fixed depth. Recursive queries are needed for arbitrary depth.
+*/`,
+    queries: [
+      {
+        sql: "-- Map employees to direct managers (LEFT JOIN prevents root exclusions)\nSELECT e.first_name AS employee, m.first_name AS manager\nFROM employees e\nLEFT JOIN employees m ON e.manager_id = m.emp_id\nORDER BY e.emp_id\nLIMIT 10;",
+        columns: ["employee", "manager"],
+        rows: [
+          ["Ravi", null],
+          ["Anita", "Ravi"],
+          ["Alex", "Anita"],
+          ["Priya", "Anita"],
+          ["Alex", "Anita"],
+          ["Divya", "Alex"],
+          ["Karan", "Alex"],
+          ["Sneha", "Alex"],
+          ["Arjun", null],
+          ["Meera", null]
+        ]
+      },
+      {
+        sql: "-- Find employees earning more than their direct manager (returns empty set for this seed)\nSELECT e.first_name AS employee, se.amount AS emp_salary, m.first_name AS manager, sm.amount AS mgr_salary\nFROM employees e\nJOIN employees m ON e.manager_id = m.emp_id\nJOIN salaries se ON e.emp_id = se.emp_id AND se.effective_date = (SELECT MAX(effective_date) FROM salaries s2 WHERE s2.emp_id = e.emp_id)\nJOIN salaries sm ON m.emp_id = sm.emp_id AND sm.effective_date = (SELECT MAX(effective_date) FROM salaries s3 WHERE s3.emp_id = m.emp_id)\nWHERE se.amount > sm.amount;",
+        columns: ["employee", "emp_salary", "manager", "mgr_salary"],
+        rows: []
+      }
+    ]
+  },
+  {
+    id: "sql_topic10",
+    num: "SQL.3.4",
+    title: "Topic 10: Set Operations (UNION, UNION ALL, INTERSECT, EXCEPT)",
+    desc: "Combining queries vertically. Column positions, counts, and types must match. UNION ALL is faster as it skips deduplication.",
+    declaration: `-- Stack queries vertically\nSELECT col FROM t1 UNION ALL SELECT col FROM t2;`,
+    internalImplementation: `/*
+SET PERFORMANCE DIFFERENCES:
+- UNION: Appends result sets and performs deduplication (via sorting or hashing). Time: O(n log n).
+- UNION ALL: Straight concatenation with zero deduplication or sorting steps. Time: O(n).
+*/`,
+    queries: [
+      {
+        sql: "-- Emulate FULL OUTER JOIN using UNION (MySQL compatible)\nSELECT e.first_name, d.dept_name\nFROM employees e LEFT JOIN departments d ON e.dept_id = d.dept_id\nWHERE e.dept_id IS NULL OR d.dept_id IS NULL\nUNION\nSELECT e.first_name, d.dept_name\nFROM employees e RIGHT JOIN departments d ON e.dept_id = d.dept_id\nWHERE e.dept_id IS NULL OR d.dept_id IS NULL;",
+        columns: ["first_name", "dept_name"],
+        rows: [
+          [null, "Legal"],
+          [null, "R&D Satellite"],
+          ["Simran", null],
+          ["Zoya", null]
+        ]
+      }
+    ]
   }
 ];
 
