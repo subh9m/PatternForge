@@ -18,31 +18,22 @@ const ThemeIcon = ({ isDarkMode }) => (
   </svg>
 );
 
-const CppContent = () => (
-  <>
-    {cppDataStructures.map((ds) => (
-      <DataStructureCard key={ds.id} data={ds} />
-    ))}
-  </>
-);
+const CppContent = ({ activeTab }) => {
+  const ds = cppDataStructures.find(item => item.id === activeTab) || cppDataStructures[0];
+  return ds ? <DataStructureCard key={ds.id} data={ds} /> : null;
+};
 
-const JavaContent = () => (
-  <>
-    {javaDataStructures.map((ds) => (
-      <DataStructureCard key={ds.id} data={ds} />
-    ))}
-  </>
-);
+const JavaContent = ({ activeTab }) => {
+  const ds = javaDataStructures.find(item => item.id === activeTab) || javaDataStructures[0];
+  return ds ? <DataStructureCard key={ds.id} data={ds} /> : null;
+};
 
-const SqlContent = () => (
-  <>
-    {sqlConcepts.map((ds) => (
-      <DataStructureCard key={ds.id} data={ds} />
-    ))}
-  </>
-);
+const SqlContent = ({ activeTab }) => {
+  const ds = sqlConcepts.find(item => item.id === activeTab) || sqlConcepts[0];
+  return ds ? <DataStructureCard key={ds.id} data={ds} /> : null;
+};
 
-export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleTheme, activeView }) {
+export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleTheme, activeView, activeTab }) {
   return (
     <main
       className={`relative min-h-[calc(100vh-64px)] w-full
@@ -68,11 +59,11 @@ export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleT
       {/* Content grid */}
       <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8">
         {activeView === 'cpp' ? (
-          <CppContent />
+          <CppContent activeTab={activeTab} />
         ) : activeView === 'java' ? (
-          <JavaContent />
+          <JavaContent activeTab={activeTab} />
         ) : (
-          <SqlContent />
+          <SqlContent activeTab={activeTab} />
         )}
       </div>
     </main>

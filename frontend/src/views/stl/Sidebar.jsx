@@ -1,18 +1,28 @@
-import React from 'react'; // Make sure React is imported
+import React, { createContext, useContext } from 'react';
 
-// NavItem and NavHeading are unchanged
-const NavItem = ({ href, children }) => (
-  <a
-    href={href}
-    className="block px-4 py-2 rounded-lg 
-               text-gray-700 hover:text-red-500 
-               dark:text-gray-300 dark:hover:text-red-500
-               hover:shadow-[0_0_15px_rgba(255,0,0,0.3)] hover:-translate-y-px 
-               transition-all duration-300 ease-in-out"
-  >
-    {children}
-  </a>
-);
+export const SidebarContext = createContext({ activeTab: '', onTabChange: () => {} });
+
+const NavItem = ({ href, children }) => {
+  const { activeTab, onTabChange } = useContext(SidebarContext);
+  const targetId = href.replace('#', '');
+  const isActive = activeTab === targetId;
+  return (
+    <a
+      href={href}
+      onClick={(e) => {
+        e.preventDefault();
+        onTabChange(targetId);
+      }}
+      className={`block px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition-all duration-300 ease-in-out cursor-pointer
+        ${isActive 
+          ? 'bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(255,0,0,0.15)] border-l-2 border-red-500 pl-3.5' 
+          : 'text-gray-700 hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500 hover:shadow-[0_0_15px_rgba(255,0,0,0.2)] hover:-translate-y-px pl-4'
+        }`}
+    >
+      {children}
+    </a>
+  );
+};
 
 const NavHeading = ({ children }) => (
   <h3 className="px-4 pt-4 pb-2 text-sm font-mono uppercase tracking-widest text-gray-500 dark:text-gray-500">
@@ -181,34 +191,46 @@ const SqlNavLinks = () => (
         <li><NavItem href="#sql_topic15">E.5 Recursive CTEs</NavItem></li>
       </ul>
     </div>
+    <div>
+      <NavHeading>F. PHASE 5: WINDOWS & PIVOTING</NavHeading>
+      <ul className="space-y-1">
+        <li><NavItem href="#sql_topic16">F.1 Window Core</NavItem></li>
+        <li><NavItem href="#sql_topic17">F.2 Ranking Functions</NavItem></li>
+        <li><NavItem href="#sql_topic18">F.3 Positional Functions</NavItem></li>
+        <li><NavItem href="#sql_topic19">F.4 Aggregate Frames</NavItem></li>
+        <li><NavItem href="#sql_topic20">F.5 Pivoting & CASE</NavItem></li>
+      </ul>
+    </div>
   </nav>
 );
 
-export default function Sidebar({ isOpen, activeView }) {
+export default function Sidebar({ isOpen, activeView, activeTab, onTabChange }) {
   return (
-    <aside
-      className={`fixed top-16 left-0 z-35 h-[calc(100vh-64px)] w-64 
-                  bg-white/80 dark:bg-black/80 backdrop-blur-md 
-                  border-r border-gray-200 dark:border-[#333]
-                  transform transition-all duration-500 ease-in-out
-                  ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
-    >
-      <div className="h-full px-3 py-4 overflow-y-auto">
-        {/* Title */}
-        <h2 className="p-4 text-2xl font-medium uppercase tracking-wider 
-                       text-gray-900 dark:text-white font-mono">
-          {activeView === 'cpp' ? 'C++ STL' : activeView === 'java' ? 'Java Collections' : 'SQL Reference'}
-        </h2>
-        
-        {/* Conditionally render navigation links */}
-        {activeView === 'cpp' ? (
-          <CppNavLinks />
-        ) : activeView === 'java' ? (
-          <JavaNavLinks />
-        ) : (
-          <SqlNavLinks />
-        )}
-      </div>
-    </aside>
+    <SidebarContext.Provider value={{ activeTab, onTabChange }}>
+      <aside
+        className={`fixed top-16 left-0 z-35 h-[calc(100vh-64px)] w-64 
+                    bg-white/80 dark:bg-black/80 backdrop-blur-md 
+                    border-r border-gray-200 dark:border-[#333]
+                    transform transition-all duration-500 ease-in-out
+                    ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="h-full px-3 py-4 overflow-y-auto">
+          {/* Title */}
+          <h2 className="p-4 text-2xl font-medium uppercase tracking-wider 
+                         text-gray-900 dark:text-white font-mono">
+            {activeView === 'cpp' ? 'C++ STL' : activeView === 'java' ? 'Java Collections' : 'SQL Reference'}
+          </h2>
+          
+          {/* Conditionally render navigation links */}
+          {activeView === 'cpp' ? (
+            <CppNavLinks />
+          ) : activeView === 'java' ? (
+            <JavaNavLinks />
+          ) : (
+            <SqlNavLinks />
+          )}
+        </div>
+      </aside>
+    </SidebarContext.Provider>
   );
 }

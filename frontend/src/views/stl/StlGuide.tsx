@@ -10,6 +10,7 @@ interface StlGuideProps {
 const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState<'cpp' | 'java' | 'sql'>('cpp');
+  const [activeTab, setActiveTab] = useState<string>('vector');
   
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
@@ -56,7 +57,7 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
           {/* View Switcher Tabs (Center) */}
           <nav className="hidden md:flex space-x-1.5 p-1">
             <button
-              onClick={() => setActiveView('cpp')}
+              onClick={() => { setActiveView('cpp'); setActiveTab('vector'); }}
               className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth cursor-pointer ${
                 activeView === 'cpp'
                   ? 'border border-text-primary text-text-primary bg-surface/40'
@@ -66,7 +67,7 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
               C++ STL
             </button>
             <button
-              onClick={() => setActiveView('java')}
+              onClick={() => { setActiveView('java'); setActiveTab('arrayList'); }}
               className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth cursor-pointer ${
                 activeView === 'java'
                   ? 'border border-text-primary text-text-primary bg-surface/40'
@@ -76,7 +77,7 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
               Java Collections
             </button>
             <button
-              onClick={() => setActiveView('sql')}
+              onClick={() => { setActiveView('sql'); setActiveTab('sql_practice_db'); }}
               className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth cursor-pointer ${
                 activeView === 'sql'
                   ? 'border border-text-primary text-text-primary bg-surface/40'
@@ -115,6 +116,8 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
         <Sidebar 
           isOpen={isSidebarOpen} 
           activeView={activeView}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
         
         <MainContent 
@@ -123,6 +126,7 @@ const StlGuide: React.FC<StlGuideProps> = ({ onBackToPortal }) => {
           isDarkMode={theme === 'dark'}
           toggleTheme={toggleTheme}
           activeView={activeView}
+          activeTab={activeTab}
         />
       </div>
     </div>

@@ -1524,6 +1524,134 @@ RECURSION FLOW:
         ]
       }
     ]
+  },
+  {
+    id: "sql_topic16",
+    num: "SQL.5.1",
+    title: "Topic 16: Window Functions — The Core Concept",
+    desc: "Computes values across partitions (windows) without collapsing rows. Every candidate row is preserved with its corresponding aggregate values appended.",
+    declaration: `-- Window aggregate syntax\nSELECT col, AVG(col2) OVER (PARTITION BY col3 ORDER BY col4) FROM table;`,
+    internalImplementation: `/*
+WINDOW COMPILATION ORDER:
+Window evaluations execute AFTER WHERE, GROUP BY, and HAVING clauses have completed, but BEFORE the final SELECT projection.
+Hence, window aliases cannot be filtered directly in WHERE clauses; they must be wrapped in nested queries or CTE statements first.
+*/`,
+    queries: [
+      {
+        sql: "-- Compute department average current salaries alongside employee rows\nSELECT e.first_name, d.dept_name, cs.amount, \n       AVG(cs.amount) OVER (PARTITION BY d.dept_id) AS dept_avg_salary\nFROM employees e\nJOIN departments d ON e.dept_id = d.dept_id\nJOIN (\n    SELECT emp_id, amount,\n           ROW_NUMBER() OVER (PARTITION BY emp_id ORDER BY effective_date DESC) AS rn\n    FROM salaries\n) cs ON e.emp_id = cs.emp_id AND cs.rn = 1\nLIMIT 6;",
+        columns: ["first_name", "dept_name", "amount", "dept_avg_salary"],
+        rows: [
+          ["Ravi", "Engineering", 5200000.00, 2155000.00],
+          ["Anita", "Engineering", 3800000.00, 2155000.00],
+          ["Alex", "Engineering", 2600000.00, 2155000.00],
+          ["Priya", "Engineering", 1900000.00, 2155000.00],
+          ["Alex", "Engineering", 1900000.00, 2155000.00],
+          ["Divya", "Engineering", 900000.00, 2155000.00]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic17",
+    num: "SQL.5.2",
+    title: "Topic 17: Ranking Functions — ROW_NUMBER, RANK, DENSE_RANK",
+    desc: "Specifies how ranks are assigned to peers/ties. ROW_NUMBER assigns sequential indexes; RANK leaves holes; DENSE_RANK is gapless.",
+    declaration: `-- Distinct tie handling behaviors\nROW_NUMBER() OVER (ORDER BY col);\nRANK() OVER (ORDER BY col);\nDENSE_RANK() OVER (ORDER BY col);`,
+    internalImplementation: `/*
+TIE COMPARISONS:
+- ROW_NUMBER: 1, 2, 3, 4 (strictly unique, non-deterministic tie-breaks unless sorted by a secondary unique column).
+- RANK: 1, 1, 3, 4 (duplicates skip ranking slots).
+- DENSE_RANK: 1, 1, 2, 3 (duplicates take the same rank, next distinct item increments by exactly 1).
+*/`,
+    queries: [
+      {
+        sql: "-- Compare ranking functions over current salaries (tied salaries at 1,900,000)\nWITH current_salary AS (\n    SELECT emp_id, amount,\n           ROW_NUMBER() OVER (PARTITION BY emp_id ORDER BY effective_date DESC) AS rn\n    FROM salaries\n)\nSELECT e.first_name, e.last_name, cs.amount,\n       ROW_NUMBER() OVER (ORDER BY cs.amount DESC) AS row_num,\n       RANK()       OVER (ORDER BY cs.amount DESC) AS rank_val,\n       DENSE_RANK() OVER (ORDER BY cs.amount DESC) AS dense_rank_val\nFROM employees e\nJOIN current_salary cs ON e.emp_id = cs.emp_id AND cs.rn = 1\nORDER BY cs.amount DESC\nLIMIT 6;",
+        columns: ["first_name", "last_name", "amount", "row_num", "rank_val", "dense_rank_val"],
+        rows: [
+          ["Amitabh", "Sinha", 6000000.00, 1, 1, 1],
+          ["Meera", "Pillai", 5500000.00, 2, 2, 2],
+          ["Ravi", "Sharma", 5200000.00, 3, 3, 3],
+          ["Deepak", "Malhotra", 4600000.00, 4, 4, 4],
+          ["Pooja", "Bhatt", 4200000.00, 5, 5, 5],
+          ["Anita", "Verma", 3800000.00, 6, 6, 6]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic18",
+    num: "SQL.5.3",
+    title: "Topic 18: Positional Functions — LEAD, LAG, FIRST_VALUE, LAST_VALUE",
+    desc: "Peeks at offset entries (LEAD = forward, LAG = backward) or captures boundary items (FIRST_VALUE/LAST_VALUE) within frames.",
+    declaration: `-- Peeking relative offset positions\nLAG(col, offset, default) OVER (PARTITION BY col2 ORDER BY col3);\nLEAD(col, offset, default) OVER (PARTITION BY col2 ORDER BY col3);`,
+    internalImplementation: `/*
+LAST_VALUE gotcha:
+The default window frame behaves as 'RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW'.
+Consequently, LAST_VALUE evaluates to the current row value unless the frame boundary is explicitly widened:
+'ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING'.
+*/`,
+    queries: [
+      {
+        sql: "-- View salary increment history and raise amount relative to preceding logs\nSELECT e.first_name, s.effective_date, s.amount,\n       LAG(s.amount) OVER (PARTITION BY s.emp_id ORDER BY s.effective_date) AS previous_amount,\n       s.amount - LAG(s.amount) OVER (PARTITION BY s.emp_id ORDER BY s.effective_date) AS raise_amount\nFROM salaries s\nJOIN employees e ON s.emp_id = e.emp_id\nWHERE s.emp_id = 3\nORDER BY s.effective_date;",
+        columns: ["first_name", "effective_date", "amount", "previous_amount", "raise_amount"],
+        rows: [
+          ["Alex", "2017-06-01", 1800000.00, null, null],
+          ["Alex", "2020-01-01", 2200000.00, 1800000.00, 400000.00],
+          ["Alex", "2023-03-15", 2600000.00, 2200000.00, 400000.00]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic19",
+    num: "SQL.5.4",
+    title: "Topic 19: Aggregate Window Frames (ROWS vs RANGE)",
+    desc: "Widens or restricts sliding boundaries inside window partitions. ROWS calculates strictly by indexes; RANGE matches peers.",
+    declaration: `-- Bounding sliding windows\nSUM(col) OVER (ORDER BY col2 ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING);`,
+    internalImplementation: `/*
+FRAME BINDING MECHANICS:
+- ROWS: Counts absolute offset steps (e.g. 2 preceding rows).
+- RANGE: Matches logical boundaries (peers sharing the identical value in the ORDER BY clause).
+If ORDER BY is specified without an explicit frame clause, it defaults to:
+'RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW'.
+*/`,
+    queries: [
+      {
+        sql: "-- Running total calculation of project hours logged per employee\nSELECT emp_id, project_id, hours_logged,\n       SUM(hours_logged) OVER (\n           PARTITION BY emp_id\n           ORDER BY project_id\n           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n       ) AS running_total_hours\nFROM employee_projects\nWHERE emp_id = 3\nORDER BY project_id;",
+        columns: ["emp_id", "project_id", "hours_logged", "running_total_hours"],
+        rows: [
+          [3, 1, 420, 420],
+          [3, 2, 200, 620]
+        ]
+      }
+    ]
+  },
+  {
+    id: "sql_topic20",
+    num: "SQL.5.5",
+    title: "Topic 20: Pivoting (Conditional Aggregation)",
+    desc: "Reshapes vertical database listings horizontally into columns. Standardized via CASE logic aggregate sum filters.",
+    declaration: `-- Pivoting wide formats dynamically\nSELECT cat, SUM(CASE WHEN type = 'A' THEN 1 ELSE 0 END) AS type_a FROM table GROUP BY cat;`,
+    internalImplementation: `/*
+CONDITIONAL AGGREGATION VS NATIVE PIVOT:
+While platforms like SQL Server and Oracle support a dedicated 'PIVOT' keyword, conditional aggregations utilizing 'SUM(CASE...)' are universally compatible across all engines (PostgreSQL, MySQL, SQLite, etc.) and perform identically.
+*/`,
+    queries: [
+      {
+        sql: "-- Pivot headcount metrics categorized by department and seniority tier\nSELECT\n    d.dept_name,\n    SUM(CASE WHEN e.job_title LIKE '%VP%' OR e.job_title LIKE '%Director%' OR e.job_title LIKE '%CFO%' THEN 1 ELSE 0 END) AS leadership,\n    SUM(CASE WHEN e.job_title LIKE '%Manager%' THEN 1 ELSE 0 END) AS managers,\n    SUM(CASE WHEN e.job_title LIKE '%Intern%' THEN 1 ELSE 0 END) AS interns,\n    SUM(CASE WHEN e.job_title NOT LIKE '%VP%' AND e.job_title NOT LIKE '%Director%' AND e.job_title NOT LIKE '%CFO%'\n              AND e.job_title NOT LIKE '%Manager%' AND e.job_title NOT LIKE '%Intern%' THEN 1 ELSE 0 END) AS individual_contributors\nFROM departments d\nLEFT JOIN employees e ON d.dept_id = e.dept_id\nGROUP BY d.dept_name\nORDER BY dept_name;",
+        columns: ["dept_name", "leadership", "managers", "interns", "individual_contributors"],
+        rows: [
+          ["Customer Support", 0, 1, 0, 4],
+          ["Engineering", 1, 1, 0, 8],
+          ["Finance", 0, 1, 0, 4],
+          ["HR", 0, 1, 0, 3],
+          ["Legal", 0, 0, 0, 0],
+          ["Marketing", 0, 1, 0, 5],
+          ["R&D Satellite", 0, 0, 0, 0],
+          ["Sales", 0, 2, 0, 5]
+        ]
+      }
+    ]
   }
 ];
 
