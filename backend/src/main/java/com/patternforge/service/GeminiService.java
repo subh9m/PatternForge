@@ -188,11 +188,13 @@ public class GeminiService {
                 + "- Observations Draft: " + userObservations + "\n"
                 + "- Brute Force Idea: " + userBruteForce + "\n"
                 + "- Chosen Final Approach: " + userApproach + "\n\n"
-                + "Compare user's values against expected. Award a score out of 100 for every single parameter. Output a JSON object containing:\n"
-                + "1. 'patternsMatch': String indicating correctness along with score out of 100. Format: 'Correct (Score: X/100)', 'Partially Correct (Score: X/100)', or 'Incorrect (Score: 0/100)' (e.g. 'Correct (Score: 90/100)').\n"
-                + "2. 'timeComplexityMatch': String indicating correctness along with score out of 100. Format: 'Correct (Score: 100/100)' or 'Incorrect (Score: 0/100)'.\n"
-                + "3. 'spaceComplexityMatch': String indicating correctness along with score out of 100. Format: 'Correct (Score: 100/100)' or 'Incorrect (Score: 0/100)'.\n"
-                + "4. 'feedback': A detailed markdown review string explaining:\n"
+                + "Compare user's values against expected. Award a score out of 100 for every single parameter.\n"
+                + "You MUST structure your response EXACTLY as follows (do not use JSON, just plain text with these exact headers):\n\n"
+                + "PATTERNS_MATCH: [Correct/Partially Correct/Incorrect (Score: X/100)]\n"
+                + "TIME_COMPLEXITY_MATCH: [Correct/Incorrect (Score: X/100)]\n"
+                + "SPACE_COMPLEXITY_MATCH: [Correct/Incorrect (Score: X/100)]\n\n"
+                + "FEEDBACK_START\n"
+                + "[Detailed feedback text in markdown...]\n"
                 + "   - A clear score breakdown for each of the parameters out of 100.\n"
                 + "   - A thorough verification of the user's written explanation of the solution (from 'Final Approach'). Compare it against the optimal logic, cross-verify its correctness, highlight any logical bugs/flaws or missing edge cases in their description, and award an 'Explanation Score' out of 100 for logic clarity and correctness.\n"
                 + "   - Why their patterns guesses are correct/incorrect relative to " + optimalPattern + ".\n"
@@ -208,10 +210,7 @@ public class GeminiService {
                     + "  \"parts\": [{"
                     + "    \"text\": \"" + escapedPrompt + "\""
                     + "  }]"
-                    + "}],"
-                    + "\"generationConfig\": {"
-                    + "  \"responseMimeType\": \"application/json\""
-                    + "}"
+                    + "}]"
                     + "}";
 
             String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
@@ -229,13 +228,53 @@ public class GeminiService {
             }
 
             String responseBody = response.body();
-            String jsonText = extractCandidateText(responseBody);
+            String rawText = extractCandidateText(responseBody);
             
-            if (jsonText == null || jsonText.trim().isEmpty()) {
+            if (rawText == null || rawText.trim().isEmpty()) {
                 throw new RuntimeException("Gemini returned invalid response body.");
             }
 
-            return objectMapper.readValue(jsonText, Map.class);
+            String patternsMatch = "Partially Correct";
+            String timeComplexityMatch = "Correct";
+            String spaceComplexityMatch = "Correct";
+            String feedback = rawText;
+
+            String[] lines = rawText.split("\n");
+            StringBuilder feedbackBuilder = new StringBuilder();
+            boolean foundStart = false;
+
+            for (String line : lines) {
+                String trimmed = line.trim();
+                if (trimmed.toUpperCase().startsWith("PATTERNS_MATCH:")) {
+                    patternsMatch = line.substring(line.indexOf(":") + 1).trim();
+                } else if (trimmed.toUpperCase().startsWith("TIME_COMPLEXITY_MATCH:")) {
+                    timeComplexityMatch = line.substring(line.indexOf(":") + 1).trim();
+                } else if (trimmed.toUpperCase().startsWith("SPACE_COMPLEXITY_MATCH:")) {
+                    spaceComplexityMatch = line.substring(line.indexOf(":") + 1).trim();
+                } else if (trimmed.equalsIgnoreCase("FEEDBACK_START") || trimmed.toUpperCase().startsWith("FEEDBACK:")) {
+                    foundStart = true;
+                } else {
+                    if (foundStart) {
+                        feedbackBuilder.append(line).append("\n");
+                    } else if (!trimmed.isEmpty() && 
+                               !trimmed.toUpperCase().startsWith("PATTERNS_MATCH:") && 
+                               !trimmed.toUpperCase().startsWith("TIME_COMPLEXITY_MATCH:") && 
+                               !trimmed.toUpperCase().startsWith("SPACE_COMPLEXITY_MATCH:")) {
+                        feedbackBuilder.append(line).append("\n");
+                    }
+                }
+            }
+
+            if (feedbackBuilder.length() > 0) {
+                feedback = feedbackBuilder.toString().trim();
+            }
+
+            return Map.of(
+                    "patternsMatch", patternsMatch,
+                    "timeComplexityMatch", timeComplexityMatch,
+                    "spaceComplexityMatch", spaceComplexityMatch,
+                    "feedback", feedback
+            );
         } catch (Exception e) {
             log.error("Failed to check approach evaluation via Gemini API", e);
             return Map.of(

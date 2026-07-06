@@ -521,16 +521,16 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   return (
     <div className="space-y-6">
       {/* Header controls bar */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-4 gap-3">
         <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-xs font-bold text-slate-400 hover:text-slate-200 transition-smooth"
+          className="flex items-center space-x-2 text-xs font-bold text-slate-400 hover:text-slate-200 transition-smooth self-start"
         >
           <ArrowLeft className="h-4.5 w-4.5" />
           <span>Back to catalog</span>
         </button>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Streak or Timer status pill */}
           {timerRunning && (
             <div className="flex items-center space-x-2 bg-blue-500/10 border border-blue-500/30 shadow-glow-blue px-3.5 py-1.5 rounded-full text-blue-400 font-mono text-xs font-bold select-none animate-pulse">
