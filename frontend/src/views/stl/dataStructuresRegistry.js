@@ -1086,138 +1086,177 @@ salary_id | emp_id | amount     | effective_date
     ]
   },
   {
-    id: "sql_filter_basics",
-    num: "SQL.101",
-    title: "Lesson 101-103: SELECT, FROM, WHERE Filtering",
-    desc: "Retrieve and filter database rows based on scalar matching criteria.",
-    declaration: `-- Syntax:\nSELECT column_name FROM table_name WHERE condition;`,
-    internalImplementation: `-- Retrieve names and salaries of employees in R&D making over $70K\nSELECT first_name, last_name, salary\nFROM employees\nWHERE department = 'R&D'\n  AND salary > 70000;`,
-    methods: [
-      { method: "SELECT", syntax: "SELECT col1, col2", params: "columns", output: "ResultSet", complexity: "O(1) per row", desc: "Defines the columns to retrieve." },
-      { method: "FROM", syntax: "FROM table_name", params: "table", output: "Table rows", complexity: "O(1)", desc: "Specifies target table for matching." },
-      { method: "WHERE", syntax: "WHERE column = value", params: "logical condition", output: "Boolean", complexity: "O(n) table scan", desc: "Filters rows dynamically based on condition criteria." }
+    id: "sql_topic1",
+    num: "SQL.2.1",
+    title: "Topic 1: SELECT, FROM, WHERE — The Retrieval Core",
+    desc: "Projection over a relation with filter predicates. WHERE filters raw table rows row-by-row before any aggregation or SELECT aliases are processed.",
+    declaration: `-- Syntax:\nSELECT column1, column2 FROM table_name WHERE condition;`,
+    internalImplementation: `/* 
+OPTIMIZER EXECUTION STAGES:
+1. Parse SQL into Logical plan.
+2. Select Physical access path (Table Scan vs Index Scan/Seek).
+3. Evaluate Predicate (WHERE filters out non-qualifying rows).
+4. Project selected columns (Materializes output layout).
+*/
+
+-- Example Query Walkthrough
+SELECT first_name, last_name
+FROM employees
+WHERE dept_id = 1 AND hire_date > '2020-01-01';`,
+    queries: [
+      {
+        sql: "-- Find all Engineering employees (dept_id = 1)\nSELECT first_name, last_name, job_title\nFROM employees\nWHERE dept_id = 1;",
+        columns: ["first_name", "last_name", "job_title"],
+        rows: [
+          ["Ravi", "Sharma", "VP Engineering"],
+          ["Anita", "Verma", "Engineering Manager"],
+          ["Alex", "Kim", "Senior Software Engineer"],
+          ["Priya", "Nair", "Software Engineer"],
+          ["Alex", "Kim", "Software Engineer"],
+          ["Divya", "Rao", "Junior Engineer"],
+          ["Karan", "Mehta", "Junior Engineer"],
+          ["Sneha", "Iyer", "QA Engineer"],
+          ["Tarun", "Oberoi", "Software Engineer"],
+          ["Bhavna", "Rathi", "Software Engineer"]
+        ]
+      },
+      {
+        sql: "-- Walkthrough: Filtering with multiple conditions\nSELECT first_name, last_name\nFROM employees\nWHERE dept_id = 1 AND hire_date > '2020-01-01';",
+        columns: ["first_name", "last_name"],
+        rows: [
+          ["Divya", "Rao"],
+          ["Karan", "Mehta"],
+          ["Sneha", "Iyer"],
+          ["Tarun", "Oberoi"],
+          ["Bhavna", "Rathi"]
+        ]
+      }
     ]
   },
   {
-    id: "sql_logical_ops",
-    num: "SQL.104",
-    title: "Lesson 104-106: Logical Operators & Ranges (AND, OR, NOT, BETWEEN, IN)",
-    desc: "Combines multiple search criteria and filters data within lists or ranges.",
-    declaration: `-- Syntax:\nSELECT cols FROM table WHERE col BETWEEN low AND high AND col2 IN (v1, v2);`,
-    internalImplementation: `-- Retrieve products in price range and specific categorizations\nSELECT product_id, name, price, stock\nFROM products\nWHERE price BETWEEN 10.00 AND 50.00\n  AND category_id IN (2, 4, 7)\n  AND NOT discontinued;`,
-    methods: [
-      { method: "AND", syntax: "cond1 AND cond2", params: "conditions", output: "Boolean", complexity: "O(1)", desc: "Evaluates true only if both expressions are true." },
-      { method: "OR", syntax: "cond1 OR cond2", params: "conditions", output: "Boolean", complexity: "O(1)", desc: "Evaluates true if at least one expression is true." },
-      { method: "NOT", syntax: "NOT condition", params: "condition", output: "Boolean", complexity: "O(1)", desc: "Inverts the truth value of the evaluation." },
-      { method: "BETWEEN", syntax: "col BETWEEN low AND high", params: "boundaries", output: "Boolean", complexity: "O(1)", desc: "Filters rows matching inclusive range (low <= val <= high)." },
-      { method: "IN", syntax: "col IN (v1, v2, ...)", params: "values list", output: "Boolean", complexity: "O(m) list size", desc: "Checks if a value exists within a comma-separated list." }
+    id: "sql_topic2",
+    num: "SQL.2.2",
+    title: "Topic 2: Logical Operators & Ranges (AND, OR, NOT, BETWEEN, IN)",
+    desc: "Boolean/set predicates combined with three-valued logic. Beware: NOT IN subqueries containing NULLs return zero records.",
+    declaration: `-- Range checking (Inclusive)\nSELECT cols FROM table WHERE col BETWEEN low AND high;\n\n-- Set membership\nSELECT cols FROM table WHERE col IN (v1, v2);`,
+    internalImplementation: `/*
+EDGE CASES:
+1. NOT IN + NULL trap: x NOT IN (1, NULL) evaluates to x <> 1 AND x <> NULL. Since comparison with NULL is UNKNOWN, the entire condition evaluates to UNKNOWN and yields 0 rows.
+2. BETWEEN on dates: BETWEEN '2024-01-01' AND '2024-01-31' truncates to '2024-01-31 00:00:00'. Ongoing project date scopes can be missed.
+*/`,
+    queries: [
+      {
+        sql: "-- Find Engineering employees hired between 2019 and 2021\nSELECT first_name, last_name, hire_date\nFROM employees\nWHERE dept_id = 1 AND hire_date BETWEEN '2019-01-01' AND '2021-12-31';",
+        columns: ["first_name", "last_name", "hire_date"],
+        rows: [
+          ["Alex", "Kim", "2019-07-01"],
+          ["Divya", "Rao", "2020-01-15"],
+          ["Karan", "Mehta", "2021-03-22"]
+        ]
+      },
+      {
+        sql: "-- NOT IN NULL Trap (returns 0 rows because planned projects have NULL dept_id)\nSELECT first_name, last_name FROM employees \nWHERE dept_id NOT IN (SELECT dept_id FROM projects WHERE status = 'Planned');",
+        columns: ["first_name", "last_name"],
+        rows: []
+      }
     ]
   },
   {
-    id: "sql_like_order",
-    num: "SQL.107",
-    title: "Lesson 107-109: Pattern Matching & Sorting (LIKE, ORDER BY)",
-    desc: "Performs string wildcard pattern matching and sorts output datasets.",
-    declaration: `-- Syntax:\nSELECT cols FROM table WHERE col LIKE 'pat%' ORDER BY col1 DESC;`,
-    internalImplementation: `-- Retrieve customers with domains ending in gmail.com, sorted by registration date\nSELECT customer_id, email, signup_date\nFROM customers\nWHERE email LIKE '%@gmail.com'\nORDER BY signup_date DESC;`,
-    methods: [
-      { method: "LIKE", syntax: "col LIKE 'pattern'", params: "pattern with wildcards", output: "Boolean", complexity: "O(n) string scan", desc: "Matches strings using wildcards: % (any characters), _ (exactly one character)." },
-      { method: "ORDER BY", syntax: "ORDER BY col1 ASC, col2 DESC", params: "columns, sort flags", output: "Sorted rows", complexity: "O(n log n)", desc: "Sorts query output dataset by columns in ascending (ASC) or descending (DESC) order." }
+    id: "sql_topic3",
+    num: "SQL.2.3",
+    title: "Topic 3: Pattern Matching & Sorting (LIKE, ORDER BY)",
+    desc: "Wildcard string scans and result sorting. Trailing wildcards can utilize indexes, whereas leading wildcards force a full scan.",
+    declaration: `-- Prefix range scan matching\nSELECT cols FROM table WHERE col LIKE 'pat%';\n\n-- Suffix full scan matching\nSELECT cols FROM table WHERE col LIKE '%pat';`,
+    internalImplementation: `/* 
+SORTING CONSIDERATIONS:
+- B-Tree indexes satisfy sorted order checks for free.
+- Explicit Sort operations trigger memory buffers (or disk spills if work_mem threshold is exceeded).
+- Default placement of NULLs is database collation specific.
+*/`,
+    queries: [
+      {
+        sql: "-- Prefix match for Alex Kim records, sorted alphabetically\nSELECT first_name, last_name, email\nFROM employees\nWHERE email LIKE 'alex.kim%'\nORDER BY last_name ASC, first_name ASC;",
+        columns: ["first_name", "last_name", "email"],
+        rows: [
+          ["Alex", "Kim", "alex.kim1@np.com"],
+          ["Alex", "Kim", "alex.kim2@np.com"]
+        ]
+      }
     ]
   },
   {
-    id: "sql_aggregation",
-    num: "SQL.201",
-    title: "Lesson 201-204: Aggregation & Grouping (SUM, AVG, GROUP BY, HAVING)",
-    desc: "Transitions from scalar evaluations to group-level analytics and summary metrics.",
-    declaration: `-- Syntax:\nSELECT col, AVG(col2) FROM table GROUP BY col HAVING AVG(col2) > limit;`,
-    internalImplementation: `-- Calculate average sales per department exceeding $50,000 threshold\nSELECT department_id, AVG(sales_amount) as avg_sales, COUNT(employee_id) as emp_count\nFROM sales\nGROUP BY department_id\nHAVING AVG(sales_amount) > 50000.00;`,
-    methods: [
-      { method: "SUM()", syntax: "SUM(col)", params: "numeric column", output: "Numeric", complexity: "O(n)", desc: "Calculates the summation of a column's values." },
-      { method: "AVG()", syntax: "AVG(col)", params: "numeric column", output: "Numeric", complexity: "O(n)", desc: "Calculates the arithmetic mean." },
-      { method: "COUNT()", syntax: "COUNT(col) or COUNT(*)", params: "column or wildcard", output: "Integer", complexity: "O(n)", desc: "Counts non-null elements or rows." },
-      { method: "GROUP BY", syntax: "GROUP BY col1, col2", params: "columns", output: "Summary rows", complexity: "O(n) sorting/hashing", desc: "Groups rows sharing identical values into summary structures." },
-      { method: "HAVING", syntax: "HAVING aggregate_cond", params: "aggregate filter", output: "Boolean", complexity: "O(n)", desc: "Filters grouped datasets based on aggregate evaluation criteria (runs after GROUP BY)." }
+    id: "sql_topic4",
+    num: "SQL.2.4",
+    title: "Topic 4: LIMIT / OFFSET (Pagination)",
+    desc: "Result set limits and skipped offsets. Offset pagination scales poorly (O(m+n)) due to discard scans; keyset pagination solves it.",
+    declaration: `-- Offset based limits\nSELECT cols FROM table ORDER BY col LIMIT n OFFSET m;`,
+    internalImplementation: `/*
+KEYSET PAGINATION ALTERNATIVE:
+Instead of skipping records via OFFSET:
+WHERE id > last_seen_id
+ORDER BY id LIMIT n;
+
+This allows the query optimizer to leap directly to the offset index position via seek (O(log n)).
+*/`,
+    queries: [
+      {
+        sql: "-- Find the second highest salary using OFFSET\nSELECT DISTINCT amount\nFROM salaries\nORDER BY amount DESC\nLIMIT 1 OFFSET 1;",
+        columns: ["amount"],
+        rows: [
+          ["5500000.00"]
+        ]
+      }
     ]
   },
   {
-    id: "sql_math",
-    num: "SQL.205",
-    title: "Lesson 205-208: Uniqueness & Mathematical Functions",
-    desc: "Wipes out duplicates, resolves float division, and applies algebraic rounding.",
-    declaration: `-- Syntax:\nSELECT DISTINCT col1, CEIL(col2::FLOAT / col3) FROM table;`,
-    internalImplementation: `-- Calculate unique profit margins rounding up to integers\nSELECT DISTINCT order_id, CEIL((revenue - cost)::FLOAT / revenue * 100) AS profit_margin\nFROM order_details;`,
-    methods: [
-      { method: "DISTINCT", syntax: "SELECT DISTINCT col1", params: "columns", output: "Unique rows", complexity: "O(n log n)", desc: "Filters out duplicate records from a query result set." },
-      { method: "CEIL()", syntax: "CEIL(num)", params: "numeric", output: "Integer", complexity: "O(1)", desc: "Rounds a value up to the nearest whole integer." },
-      { method: "FLOOR()", syntax: "FLOOR(num)", params: "numeric", output: "Integer", complexity: "O(1)", desc: "Rounds a value down to the nearest whole integer." },
-      { method: "ROUND()", syntax: "ROUND(num, decimals)", params: "numeric, scale", output: "Numeric", complexity: "O(1)", desc: "Rounds a number to a designated decimal precision." }
+    id: "sql_topic5",
+    num: "SQL.2.5",
+    title: "Topic 5: NULL Handling — IS NULL, COALESCE, NULLIF",
+    desc: "Three-valued logic state checking. Null is treated as UNKNOWN. Aggregates count or skip null values differently.",
+    declaration: `-- Testing NULL values\nSELECT cols FROM table WHERE col IS NULL;\n\n-- Display fallbacks\nSELECT COALESCE(col1, 'default_val') FROM table;`,
+    internalImplementation: `/*
+THREE-VALUED LOGIC TRUTH TABLES (AND/OR/NOT):
+- TRUE AND UNKNOWN  => UNKNOWN
+- FALSE AND UNKNOWN => FALSE
+- TRUE OR UNKNOWN   => TRUE
+- FALSE OR UNKNOWN  => UNKNOWN
+- NOT UNKNOWN       => UNKNOWN
+*/`,
+    queries: [
+      {
+        sql: "-- List top heads & contractors, formatting missing emails\nSELECT emp_id, first_name, last_name, COALESCE(email, 'no-email@np.com') AS email\nFROM employees\nWHERE manager_id IS NULL;",
+        columns: ["emp_id", "first_name", "last_name", "email"],
+        rows: [
+          [1, "Ravi", "Sharma", "ravi.sharma@np.com"],
+          [9, "Arjun", "Gupta", "arjun.gupta@np.com"],
+          [10, "Meera", "Pillai", "meera.pillai@np.com"],
+          [16, "Pooja", "Bhatt", "pooja.bhatt@np.com"],
+          [21, "Deepak", "Malhotra", "deepak.malhotra@np.com"],
+          [25, "Amitabh", "Sinha", "amitabh.sinha@np.com"],
+          [29, "Harish", "Pandey", "harish.pandey@np.com"],
+          [34, "Simran", "Chadha", "no-email@np.com"],
+          [35, "Zoya", "Khan", "zoya.khan@np.com"]
+        ]
+      }
     ]
   },
   {
-    id: "sql_null_case",
-    num: "SQL.209",
-    title: "Lesson 209-210: Nulls & Conditional Case Logic",
-    desc: "Evaluates missing fields and implements procedural logical paths.",
-    declaration: `-- Syntax:\nSELECT CASE WHEN cond THEN outcome ELSE default_outcome END FROM table WHERE col IS NULL;`,
-    internalImplementation: `-- Map score brackets to grades and catch missing submissions\nSELECT student_id,\n       CASE \n           WHEN score >= 90 THEN 'A'\n           WHEN score >= 80 THEN 'B'\n           WHEN score IS NULL THEN 'MISSING_SUBMISSION'\n           ELSE 'C'\n       END AS final_grade\nFROM grades;`,
-    methods: [
-      { method: "IS NULL", syntax: "col IS NULL", params: "column", output: "Boolean", complexity: "O(1)", desc: "Evaluates true if a database field has no assigned value." },
-      { method: "IS NOT NULL", syntax: "col IS NOT NULL", params: "column", output: "Boolean", complexity: "O(1)", desc: "Evaluates true if a database field contains an assigned value." },
-      { method: "CASE", syntax: "CASE WHEN c1 THEN o1 ELSE o2 END", params: "conditional branches", output: "Scalar", complexity: "O(1) per branch", desc: "Implements if-then-else logical checks inside SQL queries." }
-    ]
-  },
-  {
-    id: "sql_joins_dates",
-    num: "SQL.211",
-    title: "Lesson 211-212: Multi-Table Joins & Date Parsing",
-    desc: "Combines attributes across tables and extracts precise chronological periods.",
-    declaration: `-- Syntax:\nSELECT t1.col, t2.col FROM t1 LEFT JOIN t2 ON t1.id = t2.t1_id;`,
-    internalImplementation: `-- Retrieve customer order counts registered during June 2026\nSELECT c.customer_name, COUNT(o.order_id) AS order_count\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nWHERE EXTRACT(YEAR FROM o.order_date) = 2026\n  AND EXTRACT(MONTH FROM o.order_date) = 6\nGROUP BY c.customer_name;`,
-    methods: [
-      { method: "INNER JOIN", syntax: "t1 INNER JOIN t2 ON t1.id = t2.id", params: "joining key", output: "Joined rows", complexity: "O(n + m) hash join", desc: "Returns records only when matching keys exist in both tables." },
-      { method: "LEFT JOIN", syntax: "t1 LEFT JOIN t2 ON t1.id = t2.id", params: "joining key", output: "Joined rows", complexity: "O(n + m)", desc: "Returns all records from the left table and matching rows from the right table (nulls if missing)." },
-      { method: "EXTRACT()", syntax: "EXTRACT(MONTH FROM date)", params: "date field", output: "Integer", complexity: "O(1)", desc: "Extracts structural fields (year, month, day) from a timestamp." }
-    ]
-  },
-  {
-    id: "sql_ctes_windows",
-    num: "SQL.301",
-    title: "Lesson 301-303: CTEs & Window Functions",
-    desc: "Constructs modular named datasets and evaluates window frame slices.",
-    declaration: `-- Syntax:\nWITH cte AS (SELECT col FROM t) SELECT SUM(col) OVER(PARTITION BY col) FROM cte;`,
-    internalImplementation: `-- Find employees earning more than their department's average salary\nWITH DeptAverage AS (\n    SELECT department_id, AVG(salary) AS avg_sal\n    FROM employees\n    GROUP BY department_id\n)\nSELECT e.first_name, e.salary, d.avg_sal\nFROM employees e\nINNER JOIN DeptAverage d ON e.department_id = d.department_id\nWHERE e.salary > d.avg_sal;`,
-    methods: [
-      { method: "WITH (CTE)", syntax: "WITH name AS (SELECT ...)", params: "nested query", output: "Temporary table", complexity: "O(1) catalog mapping", desc: "Declares a Common Table Expression for modular code organization." },
-      { method: "OVER()", syntax: "FUNC() OVER(PARTITION BY col)", params: "window criteria", output: "Computed metrics", complexity: "O(n log n) sorting", desc: "Defines a window partition context for row-level aggregate checks without grouping." }
-    ]
-  },
-  {
-    id: "sql_ranking_position",
-    num: "SQL.304",
-    title: "Lesson 304-306: Ranking, Positioning & Self-Joins",
-    desc: "Classifies records inside partition slots and scans surrounding records.",
-    declaration: `-- Syntax:\nSELECT col, DENSE_RANK() OVER(ORDER BY col DESC), LEAD(col) OVER(...) FROM table;`,
-    internalImplementation: `-- List employee salary ranks and fetch salaries of the next higher earner\nSELECT first_name, salary,\n       DENSE_RANK() OVER(ORDER BY salary DESC) AS sal_rank,\n       LEAD(salary, 1) OVER(ORDER BY salary DESC) AS next_higher_salary\nFROM employees;`,
-    methods: [
-      { method: "DENSE_RANK()", syntax: "DENSE_RANK() OVER(...)", params: "window ordering", output: "Integer rank", complexity: "O(n log n)", desc: "Assigns ranks to tie values consecutively without creating sequential index gaps." },
-      { method: "ROW_NUMBER()", syntax: "ROW_NUMBER() OVER(...)", params: "window ordering", output: "Integer count", complexity: "O(n log n)", desc: "Assigns a unique incremented integer rank to each row in a partition." },
-      { method: "LEAD()", syntax: "LEAD(col, offset)", params: "column, index_offset", output: "Scalar", complexity: "O(1)", desc: "Retrieves value from a subsequent row within the partition." },
-      { method: "LAG()", syntax: "LAG(col, offset)", params: "column, index_offset", output: "Scalar", complexity: "O(1)", desc: "Retrieves value from a preceding row within the partition." }
-    ]
-  },
-  {
-    id: "sql_advanced_review",
-    num: "SQL.307",
-    title: "Lesson 307-312: Set Operations, Pivoting & Pipeline Execution",
-    desc: "Merges queries vertically, rotates records into columns, and reviews RDBMS pipelines.",
-    declaration: `-- Syntax:\nSELECT col FROM t1 UNION ALL SELECT col FROM t2;`,
-    internalImplementation: `-- Pivot monthly sales logs into dynamic column variables\nSELECT product_id,\n       SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 1 THEN amount ELSE 0 END) AS sales_jan,\n       SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 2 THEN amount ELSE 0 END) AS sales_feb\nFROM sales\nGROUP BY product_id;`,
-    methods: [
-      { method: "UNION", syntax: "q1 UNION q2", params: "select queries", output: "Unique stacked rows", complexity: "O(n log n)", desc: "Combines result sets vertically, sorting and removing duplicate rows." },
-      { method: "UNION ALL", syntax: "q1 UNION ALL q2", params: "select queries", output: "Stacked rows", complexity: "O(n)", desc: "Appends result sets vertically directly, preserving duplicate rows." },
-      { method: "PIVOTING", syntax: "SUM(CASE WHEN type = 'A' THEN val ELSE 0 END)", params: "pivoting logic", output: "Aggregated columns", complexity: "O(n)", desc: "Rotates row-level records horizontally into distinct column fields." }
-    ]
+    id: "sql_topic6",
+    num: "SQL.2.6",
+    title: "Topic 6: SQL Execution Order",
+    desc: "The database engine processes clauses in a distinct logical order, which differs from the written syntactic order.",
+    declaration: `1. FROM       (and JOINs)
+2. WHERE      (filtering raw table rows)
+3. GROUP BY   (aggregates rows)
+4. HAVING     (filters group aggregates)
+5. SELECT     (computes expressions / window functions / aliases)
+6. DISTINCT   (deduplication)
+7. ORDER BY   (sorts results)
+8. LIMIT      (restricts final output rows count)`,
+    internalImplementation: `/*
+WHY IT MATTERS:
+Because SELECT runs at step 5 (after WHERE in step 2), aliases defined in the SELECT clause (e.g. SELECT name AS n) cannot be referenced inside the WHERE clause.
+*/`
   }
 ];
 

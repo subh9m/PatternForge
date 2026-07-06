@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Braces, Code } from 'lucide-react';
+import { ChevronDown, ChevronUp, Braces, Code, Play } from 'lucide-react';
 
 // Single-pass regex syntax highlighter
 function highlightCode(code) {
@@ -29,6 +29,12 @@ function highlightCode(code) {
 export default function DataStructureCard({ data }) {
   const [showDeclaration, setShowDeclaration] = useState(false);
   const [showInternal, setShowInternal] = useState(false);
+  const [selectedQueryIdx, setSelectedQueryIdx] = useState(0);
+  const [executed, setExecuted] = useState(false);
+
+  const handleRunQuery = () => {
+    setExecuted(true);
+  };
 
   return (
     <section 
@@ -108,6 +114,93 @@ export default function DataStructureCard({ data }) {
           </div>
         )}
       </div>
+
+      {/* Interactive Query Playground */}
+      {data.queries && data.queries.length > 0 && (
+        <div className="p-6 md:p-8 bg-gray-50/20 dark:bg-neutral-950/10 border-b border-gray-200 dark:border-[#333]">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center font-mono uppercase tracking-wider">
+            <Play className="h-4 w-4 text-emerald-500 mr-2" />
+            Interactive Query Playground
+          </h3>
+          
+          {/* Query Selector */}
+          {data.queries.length > 1 && (
+            <div className="mb-4">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5 font-mono">Select Query Pattern:</label>
+              <select 
+                value={selectedQueryIdx}
+                onChange={(e) => {
+                  setSelectedQueryIdx(parseInt(e.target.value));
+                  setExecuted(false);
+                }}
+                className="w-full bg-white dark:bg-black border border-gray-200 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-3 py-2 rounded-lg focus:outline-none focus:border-red-500"
+              >
+                {data.queries.map((q, idx) => (
+                  <option key={idx} value={idx}>Query {idx + 1}: {q.sql.split('\n')[0].replace('-- ', '')}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          
+          {/* Query Display Block */}
+          <div className="relative mb-4">
+            <pre className="bg-gray-100/90 dark:bg-black/90 text-gray-800 dark:text-gray-300 p-4 font-mono text-xs overflow-x-auto border border-gray-200 dark:border-[#333] select-all leading-relaxed rounded-xl pr-28">
+              <code dangerouslySetInnerHTML={{ __html: highlightCode(data.queries[selectedQueryIdx].sql) }} />
+            </pre>
+            <button
+              onClick={handleRunQuery}
+              className="absolute right-3 top-3 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] font-extrabold uppercase rounded-md tracking-wider flex items-center space-x-1 cursor-pointer transition-all duration-300 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+            >
+              <Play className="h-3 w-3 fill-current" />
+              <span>Run Query</span>
+            </button>
+          </div>
+          
+          {/* Output Results Pane */}
+          {executed && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 transition-all duration-500 animate-fadeIn">
+              <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2 mb-3">
+                <span className="text-[10px] font-black text-emerald-500 font-mono tracking-wider">QUERY EXECUTION SUCCESSFUL</span>
+                <span className="text-[9px] text-slate-400 font-mono">Time: 0.08ms | Rows: {data.queries[selectedQueryIdx].rows.length}</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono text-gray-800 dark:text-gray-300">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-neutral-800">
+                      {data.queries[selectedQueryIdx].columns.map((col) => (
+                        <th key={col} className="pb-2 font-bold text-gray-500 dark:text-gray-400">{col}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.queries[selectedQueryIdx].rows.length === 0 ? (
+                      <tr>
+                        <td colSpan={data.queries[selectedQueryIdx].columns.length} className="py-4 text-center text-slate-400 italic">
+                          Empty set (0 rows returned)
+                        </td>
+                      </tr>
+                    ) : (
+                      data.queries[selectedQueryIdx].rows.map((row, i) => (
+                        <tr key={i} className="border-b border-gray-100/50 dark:border-neutral-900/50 last:border-0 hover:bg-emerald-500/5">
+                          {row.map((cell, j) => (
+                            <td key={j} className="py-1.5 pr-4 text-gray-850 dark:text-gray-250">
+                              {cell === null ? (
+                                <span className="text-red-400 font-bold text-[10px] bg-red-400/5 px-1 py-0.5 rounded-sm">NULL</span>
+                              ) : (
+                                cell
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Member Functions Table */}
       {data.methods && data.methods.length > 0 && (
