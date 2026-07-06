@@ -172,7 +172,7 @@ const AuthScreen: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder=""
                   className="w-full glass-input rounded-lg pl-4 pr-10 py-2.5 text-sm"
                 />
                 <button
