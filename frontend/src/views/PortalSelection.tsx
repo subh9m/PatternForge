@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon } from 'lucide-react';
+import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon, GitBranch } from 'lucide-react';
 
 interface PortalSelectionProps {
-  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os') => void;
+  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git') => void;
 }
 
 const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => {
@@ -137,8 +137,8 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
             </div>
           </div>
 
-          {/* Centered Second Row for OS Card */}
-          <div className="flex justify-center">
+          {/* Centered Second Row for OS and Git Cards */}
+          <div className="flex flex-col md:flex-row justify-center gap-6">
             <div
               onClick={() => onSelectPortal('os')}
               className="w-full md:w-[calc(33.333333%-16px)] p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
@@ -156,6 +156,27 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
               </div>
               <span className="text-xs font-bold text-amber-400 group-hover:text-amber-300 transition-smooth flex items-center space-x-1 pt-2">
                 <span>REVISE</span>
+                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+              </span>
+            </div>
+
+            <div
+              onClick={() => onSelectPortal('git')}
+              className="w-full md:w-[calc(33.333333%-16px)] p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            >
+              <div className="w-full">
+                <div className="h-10 w-10 bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 mb-4 group-hover:shadow-glow-rose transition-smooth">
+                  <GitBranch className="h-5 w-5" />
+                </div>
+                <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                  Git & GitHub
+                </h2>
+                <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                  Revise version control architectures, object models, stash recovery, and merge conflicts.
+                </p>
+              </div>
+              <span className="text-xs font-bold text-red-400 group-hover:text-red-300 transition-smooth flex items-center space-x-1 pt-2">
+                <span>COMMIT</span>
                 <span className="transform group-hover:translate-x-1 transition-transform">→</span>
               </span>
             </div>

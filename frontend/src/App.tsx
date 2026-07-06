@@ -10,12 +10,13 @@ import PortalSelection from './views/PortalSelection';
 import StlGuide from './views/stl/StlGuide';
 import SqlGuide from './views/sql/SqlGuide';
 import OsGuide from './views/os/OsGuide';
+import GitGuide from './views/git/GitGuide';
 
 const MainApp: React.FC = () => {
   const { user, loading } = useAuth();
-  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl' | 'sql' | 'os'>(() => {
+  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl' | 'sql' | 'os' | 'git'>(() => {
     const saved = localStorage.getItem('activePortal');
-    return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os') ? saved : 'selection';
+    return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git') ? saved : 'selection';
   });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings'>('dashboard');
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
@@ -71,6 +72,17 @@ const MainApp: React.FC = () => {
   if (activePortal === 'os') {
     return (
       <OsGuide
+        onBackToPortal={() => {
+          localStorage.removeItem('activePortal');
+          setActivePortal('selection');
+        }}
+      />
+    );
+  }
+
+  if (activePortal === 'git') {
+    return (
+      <GitGuide
         onBackToPortal={() => {
           localStorage.removeItem('activePortal');
           setActivePortal('selection');
