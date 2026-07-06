@@ -132,38 +132,23 @@ const JavaNavLinks = () => (
   </nav>
 );
 
-// 1. Receives 'activeView' and 'toggleView' props
-export default function Sidebar({ isOpen, activeView, toggleView }) {
+export default function Sidebar({ isOpen, activeView }) {
   return (
     <aside
-      className={`fixed top-0 left-0 z-40 h-screen w-64 
+      className={`fixed top-16 left-0 z-35 h-[calc(100vh-64px)] w-64 
                   bg-white/80 dark:bg-black/80 backdrop-blur-md 
                   border-r border-gray-200 dark:border-[#333]
                   transform transition-all duration-500 ease-in-out
                   ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
     >
       <div className="h-full px-3 py-4 overflow-y-auto">
-        {/* 2. Title is now dynamic */}
+        {/* Title */}
         <h2 className="p-4 text-2xl font-medium uppercase tracking-wider 
                        text-gray-900 dark:text-white font-mono">
           {activeView === 'cpp' ? 'C++ STL' : 'Java Collections'}
         </h2>
-
-        {/* 3. The new button with the 'onClick' handler */}
-        <div className="px-4">
-          <button
-            onClick={toggleView}
-            className="w-full border border-red-500 text-red-500 px-4 py-2 rounded-lg
-                       text-sm font-medium
-                       hover:bg-red-500 hover:text-black dark:hover:text-black
-                       hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] 
-                       transition-all duration-300 ease-in-out"
-          >
-            {activeView === 'cpp' ? 'Switch to Java' : 'Switch to C++'}
-          </button>
-        </div>
         
-        {/* 4. Conditionally render navigation links */}
+        {/* Conditionally render navigation links */}
         {activeView === 'cpp' ? <CppNavLinks /> : <JavaNavLinks />}
       </div>
     </aside>
