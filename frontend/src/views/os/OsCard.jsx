@@ -141,7 +141,7 @@ export default function OsCard({ data }) {
       </div>
 
       {/* Visual / Execution Diagrams Section */}
-      {data.internalImplementation && (
+      {(data.diagramUrl || data.internalImplementation) && (
         <div className="border-b border-gray-200 dark:border-[#222]">
           <button
             onClick={() => setShowInternal(!showInternal)}
@@ -152,10 +152,30 @@ export default function OsCard({ data }) {
           </button>
           
           {showInternal && (
-            <div className="p-6 bg-black/95 text-gray-300 border-t border-gray-250 dark:border-[#222] overflow-x-auto">
-              <pre className="text-[11px] font-mono leading-relaxed whitespace-pre">
-                <code dangerouslySetInnerHTML={{ __html: highlightCode(data.internalImplementation) }} />
-              </pre>
+            <div className="border-t border-gray-250 dark:border-[#222] bg-black/90 dark:bg-black/90 p-6 flex flex-col items-center space-y-6 overflow-x-auto">
+              {data.diagramUrl && (
+                <div className="flex flex-col items-center w-full max-w-2xl">
+                  <img 
+                    src={data.diagramUrl} 
+                    alt={`${data.title} Diagram`}
+                    className="max-w-full rounded-xl shadow-2xl border border-neutral-800"
+                  />
+                  <span className="text-[10px] text-gray-500 font-mono mt-3 uppercase tracking-wider text-center">
+                    Figure: {data.title} System Schematic Map
+                  </span>
+                </div>
+              )}
+
+              {data.internalImplementation && (
+                <div className="w-full text-left">
+                  <span className="block text-[9px] font-black text-amber-500/80 uppercase tracking-widest font-mono mb-2">
+                    Console Flowchart Representation
+                  </span>
+                  <pre className="text-[11px] font-mono leading-relaxed text-gray-300 whitespace-pre">
+                    <code dangerouslySetInnerHTML={{ __html: highlightCode(data.internalImplementation) }} />
+                  </pre>
+                </div>
+              )}
             </div>
           )}
         </div>

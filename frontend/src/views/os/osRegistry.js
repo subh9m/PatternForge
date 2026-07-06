@@ -3,141 +3,77 @@ export const osConcepts = [
     id: "os_basics_arch",
     num: "OS.1",
     title: "OS Basics & System Architectures",
-    desc: "Fundamentals of Operating Systems: types of systems, system calls vs library calls, user mode vs kernel mode, bootstrap procedures, and NUMA vs SMP memory topologies.",
+    desc: "Fundamentals of Operating Systems: kernel functions, system calls vs library calls, user mode vs kernel mode privilege separation, and multiprocessor architectures.",
     declaration: `// OS Core Architecture Cheat Sheet
-- Mode Switch Overhead: User Mode (limited privileges) <--> Kernel Mode (full hardware privileges via trap).
-- Boot Sequence: Power-On -> Execution of ROM Bootstrap (BIOS/UEFI) -> Load Bootloader -> Load Kernel -> Init Process.
-- System Calls: Trap instruction triggers a context switch to ring 0; library calls are wrapper functions in user space.
-- Multiprocessing Topologies: SMP (Shared central bus, unified RAM latency) vs NUMA (Local bus per CPU node, variable memory access times).`,
-    internalImplementation: `/* ----------------- SYSTEM CALL EXECUTION FLOW (TRAP MECHANISM) ----------------- */
-
-   [ User Space ] (Ring 3)                 | [ Kernel Space ] (Ring 0)
-   User Application                        |
-       │                                   |
-       ▼ (Library Call: e.g. printf())     |
-   C Library Wrapper                       |
-       │                                   |
-       ▼ (Set call number in EAX)          |
-   TRAP / INT 0x80 / SYSENTER ─────────────┼────────► System Call Handler
-                                           |              │
-                                           |              ▼
-                                           |          Execute Kernel Service
-                                           |              │
-                                           |              ▼
-   Resume Execution ◄──────────────────────┼────────── Sysret / IRET
-   (Clear register state)                  |`,
+- Mode Switch: Ring 3 (User) to Ring 0 (Kernel) via TRAP instruction. Restores register context back via sysret.
+- Boot Sequence: ROM BIOS/UEFI -> Master Boot Record (MBR) -> Bootloader (GRUB) -> Load Kernel -> Init (PID 1).
+- System Call: Safe gate allowing user code to request privileged actions (e.g. read()). Wrapper: glibc wrapper calls sys_read.
+- Memory Topologies: SMP (Shared system bus, uniform RAM access time) vs NUMA (Divided local RAM nodes per socket, local memory access is ~2x faster than remote).`,
+    diagramUrl: "/os_syscall_flow.png",
     methods: [
       { 
         method: "What is an OS & its functions?", 
         syntax: "Kernel + Shell + Daemons", 
         params: "Hardware, Software, CPU, RAM", 
         output: "Resource coordination, protection", 
-        complexity: "O(1) scheduling / management", 
-        desc: "An intermediary software managing hardware resources. Functions: memory, process, device, file management, and security." 
-      },
-      { 
-        method: "Why is the OS important?", 
-        syntax: "Interface Layer", 
-        params: "User <-> Hardware", 
-        output: "Hardware abstraction, execution", 
-        complexity: "Negligible wrapper overhead", 
-        desc: "Without an OS, computer hardware cannot coordinate or run applications; it provides the execution environment and standard system calls." 
-      },
-      { 
-        method: "Multiprocessor System Benefits", 
-        syntax: "Shared memory multiprocessor", 
-        params: "N CPUs, 1 Shared Memory", 
-        output: "Increased throughput, reliability", 
-        complexity: "Throughput: < N * (Single CPU speed)", 
-        desc: "Wide throughput scaling and high reliability (if one processor fails, others pick up tasks). Cost-effective due to shared peripherals/RAM." 
-      },
-      { 
-        method: "What is GUI?", 
-        syntax: "Graphical User Interface", 
-        params: "Windows, icons, pointers", 
-        output: "WIMP graphics interface", 
-        complexity: "High memory/render overhead", 
-        desc: "Visual-based interface allowing users to point-and-click instead of typing command-line instructions. Examples: Windows, macOS, iOS." 
-      },
-      { 
-        method: "Bootstrap Program in OS", 
-        syntax: "BIOS / UEFI -> Grub -> Kernel", 
-        params: "Non-volatile ROM (EEPROM)", 
-        output: "Kernel loaded into RAM", 
-        complexity: "Executed once on boot", 
-        desc: "The initial code executed on system startup. Initializes hardware registers, locates the OS kernel on disk, and loads it into memory." 
-      },
-      { 
-        method: "RTOS (Real Time OS)", 
-        syntax: "VxWorks, FreeRTOS, QNX", 
-        params: "Hard vs Soft task deadlines", 
-        output: "Deterministic event handling", 
-        complexity: "Deterministic scheduling O(1)", 
-        desc: "OS for time-critical systems where execution must happen in a guaranteed timeframe. Hard (fail on miss), Firm (degrade), Soft (delayed)." 
-      },
-      { 
-        method: "Time Sharing System", 
-        syntax: "Rapid CPU task switching", 
-        params: "Timer interrupts (10-100ms)", 
-        output: "Simultaneous multi-user illusion", 
-        complexity: "Context switch overhead", 
-        desc: "Switches the CPU rapidly among multiple active users/processes using time slices (quantum) so they can interact concurrently." 
-      },
-      { 
-        method: "Latency vs Throughput", 
-        syntax: "Response Time vs Work Done", 
-        params: "Interrupt triggers, I/O tasks", 
-        output: "System performance metrics", 
-        complexity: "Tradeoff based on scheduling", 
-        desc: "Latency: time taken to respond to an event/request. Throughput: total jobs completed in unit time. Optimized differently based on use case." 
-      },
-      { 
-        method: "Interrupt vs Trap vs Exception", 
-        syntax: "Asynchronous vs Synchronous", 
-        params: "Hardware signals, INT, software error", 
-        output: "ISR / Trap handler execution", 
-        complexity: "Context saving + vector table seek", 
-        desc: "Interrupt: hardware event (I/O done). Trap: deliberate software request (system call). Exception: execution error (divide-by-zero)." 
-      },
-      { 
-        method: "System Call vs Library Call", 
-        syntax: "sys_read() vs fread()", 
-        params: "User mode to Kernel mode boundary", 
-        output: "Direct hardware execution vs buffer", 
-        complexity: "Syscall is ~10-100x slower", 
-        desc: "System call requests kernel privilege services (e.g. read()). Library call is a user-space wrapper (e.g. fread() with caching)." 
+        complexity: "O(1) scheduler loops", 
+        desc: "An intermediary software managing hardware. Core subtopics: 1) Memory Management (tracking free bytes, page tables), 2) Processor Management (scheduling queues, CPU dispatching), 3) Device Control (drivers, I/O ports), 4) File Systems (directories, inodes), 5) Security (user permissions, rings)." 
       },
       { 
         method: "User Mode vs Kernel Mode", 
-        syntax: "Ring 3 (User) vs Ring 0 (Kernel)", 
-        params: "Hardware privilege flags", 
-        output: "Crash isolation, protected memory", 
-        complexity: "Hardware bit check", 
-        desc: "User Mode blocks raw hardware access. Kernel Mode allows direct CPU/memory control, preventing user program faults from crashing the machine." 
+        syntax: "Privilege Ring 3 vs Ring 0", 
+        params: "CPU Mode Bit (0=Kernel, 1=User)", 
+        output: "Hardware protection, sandbox", 
+        complexity: "O(1) register bit check", 
+        desc: "Privilege levels enforced by CPU hardware. Subtopics: 1) User Mode: applications run here, restricted from direct hardware/memory access. 2) Kernel Mode: full access to hardware, physical RAM, and privileged CPU instructions (CLI, STI). Mode switch is triggered via software interrupt/trap." 
       },
       { 
-        method: "Asymmetric Clustering", 
-        syntax: "Active-Passive failover nodes", 
-        params: "Primary worker + Hot Standby Node", 
-        output: "High availability fallback", 
-        complexity: "Heartbeat monitoring polling", 
-        desc: "One cluster node acts as a standby, monitoring the active primary node. If primary fails, the standby instantly boots to resume services." 
+        method: "System Call vs Library Call", 
+        syntax: "sys_write() vs printf()", 
+        params: "Syscall number in EAX register", 
+        output: "Kernel Trap vs Userspace buffer", 
+        complexity: "Syscall is ~15-50x more expensive", 
+        desc: "Subtopics: 1) System Call: Direct entry point to kernel mode (e.g., fork(), write()), executing in Ring 0. 2) Library Call: User-space function (e.g., printf(), malloc()) that wraps system calls with buffering mechanisms to avoid frequent kernel traps." 
       },
       { 
-        method: "NUMA vs SMP architecture", 
-        syntax: "Non-Uniform vs Symmetric RAM", 
-        params: "Memory bus, core locality", 
-        output: "Scale-up multi-socket platforms", 
-        complexity: "NUMA local access is ~2x faster", 
-        desc: "SMP shares one memory bus (bottleneck). NUMA allocates local memory banks to specific CPU sockets to reduce memory access latency." 
+        method: "Microkernel vs Monolithic", 
+        syntax: "Minix/Mach vs Linux/UNIX", 
+        params: "IPC message passing vs Direct calls", 
+        output: "Stability/Modular vs High Performance", 
+        complexity: "Microkernel has IPC overhead", 
+        desc: "Subtopics: 1) Monolithic: All services (scheduling, memory, drivers) run inside the kernel address space in Ring 0. Fast but unstable (one driver crash crashes OS). 2) Microkernel: Only core services (IPC, scheduling) run in Ring 0; drivers/file systems run in user space (Ring 3). Highly stable, modular, but slower due to message-passing overhead." 
       },
       { 
-        method: "OS vs Kernel", 
-        syntax: "System Software vs Core Engine", 
-        params: "Utilities, GUI, File managers", 
-        output: "Complete distribution suite", 
-        complexity: "OS manages Kernel + Userspace", 
-        desc: "Kernel is the inner core that controls hardware and process lifecycles. OS is the full software package including shell, compilers, and GUI." 
+        method: "Real-Time OS (RTOS)", 
+        syntax: "FreeRTOS, VxWorks, QNX", 
+        params: "Hard vs Soft deadline structures", 
+        output: "Deterministic event schedulers", 
+        complexity: "O(1) worst-case response latency", 
+        desc: "Subtopics: 1) Hard RTOS: Missed deadline constitutes total system failure (e.g., pacemakers, anti-lock brakes). 2) Soft RTOS: Deadlines are important but missing them is tolerated with degraded service quality (e.g., media streaming). Requires deterministic preemptive schedulers." 
+      },
+      { 
+        method: "SMP vs NUMA Architectures", 
+        syntax: "Symmetric vs Non-Uniform Memory", 
+        params: "Shared central bus vs Local socket buses", 
+        output: "Dual-socket scale-up configurations", 
+        complexity: "NUMA local node access: ~50-80ns", 
+        desc: "Subtopics: 1) SMP: Processors share a single central memory bus and RAM. Access latency is identical. 2) NUMA: System divided into nodes (each with local CPUs and RAM). Accessing local node RAM is extremely fast; accessing remote node RAM over inter-connects (QPI/UPI) is slow, requiring NUMA-aware scheduling." 
+      },
+      { 
+        method: "Interrupt vs Trap vs Exception", 
+        syntax: "Asynchronous vs Synchronous calls", 
+        params: "Hardware pins, trap registers", 
+        output: "Control branch to ISR handler", 
+        complexity: "Save state registers to kernel stack", 
+        desc: "Subtopics: 1) Interrupt: Asynchronous hardware event (e.g., keyboard input, timer tick). 2) Trap: Synchronous software event triggered by instruction (e.g., system call). 3) Exception: Synchronous error event during execution (e.g., divide-by-zero, page fault). Control is routed via the Interrupt Descriptor Table (IDT)." 
+      },
+      { 
+        method: "Spooling vs Buffering", 
+        syntax: "SPOOL vs Temp buffer cache", 
+        params: "Print queues, socket blocks", 
+        output: "Asynchronous device streams spooler", 
+        complexity: "I/O queue disk overhead", 
+        desc: "Subtopics: 1) Spooling: Temporary storage on disk (SPOOL) used to queue data for slow peripherals (e.g., printers), letting the CPU execute other processes. 2) Buffering: Small cache in RAM used to reconcile speed differences between CPU and devices during active data transfers." 
       }
     ]
   },
@@ -145,128 +81,61 @@ export const osConcepts = [
     id: "os_process_threads",
     num: "OS.2",
     title: "Process & Thread Management",
-    desc: "Process address space segments, thread models, lightweight processes (LWP), zombie and orphan states, context switching mechanisms, and IPC communication strategies.",
-    declaration: `// Process Layout & Lifecycle Cheat Sheet
-- Process Control Block (PCB): Holds PID, Program Counter, registers, memory limits, list of open files.
-- Thread control block (TCB): Holds TID, stack pointer, registers, and program counter.
-- Address Space: [ Text (Code) ] -> [ Data (Static/Globals) ] -> [ Heap (Dynamic malloc) ] -> [ Stack (Local variables, calls) ].
-- Orphan Process: Parent dies first, process is adopted by init/systemd (PID 1).
-- Zombie Process: Process terminates, parent hasn't read exit status via wait().`,
-    internalImplementation: `/* ----------------- PROCESS ADDRESS SPACE SEGMENTS ----------------- */
-
-   High Memory Address  ┌────────────────────────────────────┐
-                        │   Stack (Grows Downward)           │
-                        │   - Arguments, local variables     │
-                        ├─────────────────┬──────────────────┤
-                        │                 ▼                  │
-                        │                                    │
-                        │                 ▲                  │
-                        ├─────────────────┴──────────────────┤
-                        │   Heap (Grows Upward via brk/sbrk) │
-                        │   - Dynamically allocated memory   │
-                        ├────────────────────────────────────┤
-                        │   BSS Segment (Uninitialized data) │
-                        ├────────────────────────────────────┤
-                        │   Data Segment (Initialized globals)│
-                        ├────────────────────────────────────┤
-                        │   Text Segment (Compiled code)     │
-   Low Memory Address   └────────────────────────────────────┘`,
+    desc: "Process memory segments, state lifecycles, lightweight processes, Zombie/Orphan recovery, thread stacks, context switching cost, and IPC structures.",
+    declaration: `// Process Layout & States Cheat Sheet
+- Process: Program in execution. Segments: Text (code), Data (initialized globals), BSS (uninitialized globals), Heap (malloc), Stack (local variables).
+- Thread: Basic unit of CPU utilization. Shares Heap, Global Variables, and Address Space of parent process; has own Registers, PC, and Stack.
+- Orphan: Parent process dies first. Adopted by systemd/init (PID 1).
+- Zombie: Child terminates, parent hasn't reaped status using wait(). Consumes process table slot.`,
+    diagramUrl: "/os_process_states.png",
     methods: [
       { 
-        method: "What is a Process?", 
-        syntax: "A program in execution state", 
-        params: "PID, PCB, virtual address space", 
-        output: "Active memory entity", 
-        complexity: "Heavyweight creation overhead", 
-        desc: "An active entity containing program code, registers, stack pointer, data segment, and heap allocated dynamically at runtime." 
-      },
-      { 
-        method: "States of a Process", 
-        syntax: "New -> Ready -> Running -> Wait -> Terminated", 
-        params: "OS Schedulers state hooks", 
-        output: "State machine transitions", 
-        complexity: "O(1) state queue insertion", 
-        desc: "Processes transition: New (created), Ready (waiting for CPU), Running (on CPU), Waiting (I/O block), Terminated (finished)." 
-      },
-      { 
-        method: "What is a Thread?", 
-        syntax: "Lightweight Process (LWP)", 
-        params: "TID, Registers, Stack, PC", 
-        output: "Parallel execution flow within process", 
-        complexity: "Fast context switch / creation", 
-        desc: "A basic unit of CPU utilization. Multiple threads of a process share the same text, data, heap, and file descriptors but have unique stacks." 
-      },
-      { 
-        method: "Process vs Thread", 
-        syntax: "Fork vs Thread Spawn", 
-        params: "Isolation, address space", 
-        output: "IPC vs direct memory share", 
-        complexity: "Process creation is ~10x slower", 
-        desc: "Processes are independent, secure, and share memory via IPC only. Threads share address spaces directly, risking data races but saving overhead." 
+        method: "Process States & Lifecycle", 
+        syntax: "PCB struct -> state queue", 
+        params: "Ready List, Wait Queue, CPU Core", 
+        output: "Transition: Ready -> Running -> Waiting", 
+        complexity: "O(1) state queue inserts", 
+        desc: "Subtopics: 1) New: Process created. 2) Ready: Waiting in RAM to be assigned to CPU. 3) Running: Instructions executing on CPU. 4) Waiting: Blocked on I/O or event completion. 5) Terminated: Finished. Suspended states (Ready-Suspended, Blocked-Suspended) exist when memory pressure forces pages to swap disk." 
       },
       { 
         method: "What is Context Switching?", 
-        syntax: "Save registers -> Load next registers", 
-        params: "CPU Registers, PC, Page Tables", 
-        output: "Active execution transfer", 
-        complexity: "Microsecond cost (depends on cache flushes)", 
-        desc: "The OS saves the execution context of the active process/thread into its PCB/TCB and restores the context of the next scheduled task." 
+        syntax: "PCB/TCB Save -> Context Load", 
+        params: "Instruction pointer, CPU registers, SP", 
+        output: "Active thread swap execution", 
+        complexity: "Microsecond overhead + Cache flushes", 
+        desc: "Subtopics: 1) Saving State: CPU registers, Program Counter (PC), and Stack Pointer (SP) of running process are stored in its PCB. 2) Loading State: Context of next process is loaded into CPU registers. 3) Cache Penalty: Instruction/data caches become cold, causing memory latency spikes immediately after switch." 
       },
       { 
-        method: "Process CS vs Thread CS", 
-        syntax: "Cache Flush vs Cache Keep", 
-        params: "MMU Page tables, TLB cache entries", 
-        output: "Different MMU translation mappings", 
-        complexity: "Thread CS is significantly faster", 
-        desc: "Process switch requires swapping page directory bases (CR3 in x86), which invalidates the TLB cache. Thread switches preserve TLB mapping." 
+        method: "Process vs Thread Context Switch", 
+        syntax: "CR3 Register swap vs Register copy", 
+        params: "MMU page directory base, TLB cache entries", 
+        output: "Page directory change mapping", 
+        complexity: "Thread switch is significantly faster", 
+        desc: "Subtopics: 1) Process Switch: Requires changing page directory base register (CR3 in x86). This invalidates Translation Lookaside Buffer (TLB) caches. 2) Thread Switch: Threads share the same virtual address space. Switching between threads of the same process preserves TLB entries, avoiding cache flush penalties." 
       },
       { 
-        method: "Zombie Process", 
-        syntax: "Status: Z (Defunct)", 
-        params: "Terminated child, active parent", 
-        output: "PCB entry remains in process table", 
-        complexity: "Consumes 1 slot in process table", 
-        desc: "A process that completed execution but its parent hasn't reaped its exit status via wait(). Entry is kept to report status." 
+        method: "Zombie vs Orphan Processes", 
+        syntax: "wait() harvest vs init adoption", 
+        params: "Parent PID, child exit status codes", 
+        output: "Defunct processes reap structures", 
+        complexity: "Zombie occupies 1 slot in process table", 
+        desc: "Subtopics: 1) Zombie: Children that finished execution but parent hasn't reaped status via wait(). Remains 'defunct'. Avoided by handling SIGCHLD or double-forking. 2) Orphan: Active children whose parent terminated. Automatically adopted by systemd/init (PID 1) which regularly calls wait() to reap them." 
       },
       { 
-        method: "Cascading Termination", 
-        syntax: "Parent exits -> Kill all children", 
-        params: "Process Tree hierarchy", 
-        output: "Recursive process deletion", 
-        complexity: "O(N) process tree traversal", 
-        desc: "Triggered by the OS. If a parent terminates, the kernel recursively terminates all its children, preventing orphan processes." 
+        method: "Inter-Process Communication (IPC)", 
+        syntax: "Shared Memory vs Message Passing", 
+        params: "Pipes, Shared RAM, Sockets, Signals", 
+        output: "Data transmission across page barriers", 
+        complexity: "Shared memory: O(1) read/write access", 
+        desc: "Subtopics: 1) Shared Memory: Processes map a common physical RAM page to their virtual address space. Extremely fast, requires manual locks. 2) Message Passing: Direct kernel buffering (Pipes, Message Queues). Safe, but requires system calls and memory copies. 3) Sockets: Bidirectional network endpoints." 
       },
       { 
-        method: "IPC Mechanisms", 
-        syntax: "Inter-Process Communication", 
-        params: "Pipes, MQ, Shared Memory, Sockets", 
-        output: "Data sharing across boundaries", 
-        complexity: "Shared memory is fastest (no copies)", 
-        desc: "Allows processes to exchange data. Pipes (local streaming), Message Queues (discrete packets), Sockets (networked), Shared Memory (fast direct access)." 
-      },
-      { 
-        method: "Pipes in OS", 
-        syntax: "pipe(fd[2])", 
-        params: "fd[0] (read), fd[1] (write)", 
-        output: "Unidirectional data stream", 
-        complexity: "Buffer copy overhead", 
-        desc: "A unidirectional channel where the output of one process is directed as input to another. Handled as a circular buffer in memory." 
-      },
-      { 
-        method: "Sockets in OS", 
-        syntax: "socket(domain, type, protocol)", 
-        params: "IP Address + Port Number", 
-        output: "Bidirectional network endpoints", 
-        complexity: "TCP/IP stack processing overhead", 
-        desc: "An endpoint for communication between processes across a network or locally. Stream (TCP) or Datagram (UDP) types." 
-      },
-      { 
-        method: "Process Sections", 
-        syntax: "Text + Data + BSS + Heap + Stack", 
-        params: "Compiler, MMU mappings", 
-        output: "Runtime virtual address sections", 
-        complexity: "Dynamic mapping per segment", 
-        desc: "Text (compiled instructions), Data (initialized globals), BSS (uninitialized globals), Heap (malloc'd bytes), Stack (local variables, registers)." 
+        method: "Pipes: Anonymous vs Named (FIFO)", 
+        syntax: "pipe(fd) vs mkfifo(name)", 
+        params: "Read/Write file descriptors", 
+        output: "Unidirectional kernel buffer channel", 
+        complexity: "Buffer queue copy overhead", 
+        desc: "Subtopics: 1) Anonymous Pipe: Created via pipe(fd) syscall. Unidirectional, parent-child process communication only. Exists in kernel memory buffer. 2) Named Pipe (FIFO): Created via mkfifo() syscall. Appears as a file in directory tree. Allows unrelated processes to communicate." 
       }
     ]
   },
@@ -274,83 +143,61 @@ export const osConcepts = [
     id: "os_cpu_scheduling",
     num: "OS.3",
     title: "CPU Scheduling Algorithms",
-    desc: "CPU dispatcher mechanisms, preemptive vs non-preemptive algorithms, First-Come-First-Serve (FCFS), Round Robin (RR), Shortest-Job-First (SJF), and Multi-Level Feedback Queues.",
-    declaration: `// Scheduling Metrics & Formulas
-- Turnaround Time (TAT) = Completion Time - Arrival Time
-- Waiting Time (WT) = Turnaround Time - Burst Time
-- Response Time (RT) = Time of first CPU allocation - Arrival Time
-- Scheduling goals: Maximize CPU Utilization and Throughput; Minimize TAT, WT, and Response Latency.`,
-    internalImplementation: `/* ----------------- CPU DISPATCHER & SCHEDULING QUEUE ----------------- */
-
-  [ Ready Queue ] ────────► [ CPU Scheduler ] ────────► [ Dispatcher ] ────────► [ CPU Core ]
-     Process 1                    │                          │                     (Running)
-     Process 2                    ├─ Selects Next Process    ├─ Context Switch
-     Process 3                    └─ (e.g. SJF, RR)          ├─ Load PC
-                                                             └─ Switch to User Mode`,
+    desc: "Long-term, medium-term, and short-term schedulers, dispatcher actions, preemptive scheduling, Gantt chart wait time equations, SJF, Priority, and MLFQ queues.",
+    declaration: `// Scheduling Equations & Performance Metrics
+- Turnaround Time (TAT) = Completion Time (CT) - Arrival Time (AT)
+- Waiting Time (WT) = Turnaround Time (TAT) - Burst Time (BT)
+- Response Time (RT) = First allocation time - Arrival Time (AT)
+- Gantt Chart: Visual timeline representation of CPU core allocations over time.
+- Schedulers: Long-term (job admission), Medium-term (swapping), Short-term (CPU dispatcher select).`,
     methods: [
       { 
-        method: "Scheduling Algorithm Definition", 
-        syntax: "Dispatcher scheduling loop", 
-        params: "Ready processes queue", 
-        output: "CPU time allocation", 
-        complexity: "O(log N) min-heap / queue select", 
-        desc: "A mechanism used by the OS to allocate CPU cores to processes in the ready queue, aiming for fairness, efficiency, and throughput." 
-      },
-      { 
         method: "Preemptive vs Non-Preemptive", 
-        syntax: "Yield on Interrupt vs Run to Finish", 
-        params: "Timer ticks, priorities", 
-        output: "Forced context switch vs voluntary yield", 
-        complexity: "Preemptive increases context switch frequency", 
-        desc: "Preemptive schedules can interrupt a running process mid-execution (timer tick). Non-preemptive runs the process until termination or I/O block." 
+        syntax: "Voluntary Yield vs Preempt Interrupt", 
+        params: "Timer ticks, priorities, I/O blocks", 
+        output: "CPU state context switch swap", 
+        complexity: "Preemption increases system overhead", 
+        desc: "Subtopics: 1) Non-Preemptive: Running process retains CPU until it voluntarily terminates or blocks for I/O (e.g., early FCFS, SJF). 2) Preemptive: Kernel can forcibly suspend a healthy running process (e.g., when a higher-priority task arrives, or at timer interrupt slice expiry). Improves system responsiveness." 
       },
       { 
-        method: "FCFS (First Come First Serve)", 
-        syntax: "FIFO queue scheduler", 
-        params: "Arrival order selection", 
-        output: "Non-preemptive execution", 
-        complexity: "O(1) queue management", 
-        desc: "Simplest scheduler. Processes execute in order of arrival. Suffers from the Convoy Effect (long process blocks short ones)." 
+        method: "First-Come-First-Serve (FCFS)", 
+        syntax: "Queue FIFO scheduling", 
+        params: "Arrival timestamps queue", 
+        output: "Ready queue process execution", 
+        complexity: "Selection: O(1) queue peek", 
+        desc: "Subtopics: 1) Convoy Effect: A CPU-bound process with long burst time blocks multiple short I/O-bound processes, causing poor average waiting times and low device utilization. Non-preemptive, simple FIFO queue implementation." 
+      },
+      { 
+        method: "Shortest Job First (SJF & SRTF)", 
+        syntax: "Select minimum burst duration", 
+        params: "Predicted burst sizes", 
+        output: "Optimal waiting times Gantt timeline", 
+        complexity: "Selection: O(log N) heap structure", 
+        desc: "Subtopics: 1) SJF (Non-preemptive): Runs shortest burst job. 2) SRTF (Preemptive): If a new job arrives with a remaining burst shorter than current job's remaining time, it preempts. Provably optimal for minimizing average waiting times, but suffers from burst prediction overhead and starvation." 
       },
       { 
         method: "Round Robin (RR)", 
         syntax: "Time slice quantum (Q)", 
-        params: "Preemptive timer ticks", 
+        params: "Preemptive timer clock cycles", 
         output: "Cyclic time-sliced execution", 
-        complexity: "O(1) cyclic queue rotation", 
-        desc: "Each process gets a slice of CPU time (quantum). If Q is large, it acts as FCFS. If Q is tiny, context switch overhead dominates." 
-      },
-      { 
-        method: "Shortest Job First (SJF)", 
-        syntax: "Select minimum burst time", 
-        params: "Burst time prediction", 
-        output: "Optimal average waiting time", 
-        complexity: "O(log N) sorting heap", 
-        desc: "Selects the process with the shortest CPU burst next. Provably optimal for average waiting time. Suffers from starvation of long processes." 
+        complexity: "Selection: O(1) queue rotation", 
+        desc: "Subtopics: 1) Time Quantum (Q): If Q is too large, RR degrades to FCFS. If Q is too small, context switch overhead dominates, dropping CPU efficiency. 2) Priority and Fairness: Ensures fair CPU sharing and low response times for interactive applications." 
       },
       { 
         method: "Starvation vs Aging", 
-        syntax: "Lack of CPU access vs Priority bump", 
-        params: "Waiting time threshold", 
-        output: "Fair resource access fallback", 
-        complexity: "Periodic scan O(N) aging routine", 
-        desc: "Starvation: low priority jobs wait indefinitely. Aging: mitigates this by gradually raising the priority of waiting processes over time." 
+        syntax: "Starved queue vs Priority aging scale", 
+        params: "Wait time thresholds", 
+        output: "Gradual priority elevations", 
+        complexity: "O(N) periodic queue scans", 
+        desc: "Subtopics: 1) Starvation: Priority or SJF schedulers run high-priority tasks repeatedly, leaving low-priority processes blocked indefinitely. 2) Aging: Mitigation technique that slowly increments the priority of processes waiting in the ready queue, guaranteeing eventual execution." 
       },
       { 
-        method: "MLFQ (Multi-Level Feedback Queue)", 
-        syntax: "Multiple priority queues with promotion", 
-        params: "Quantum length scaling per level", 
-        output: "Dynamic priority CPU allocation", 
-        complexity: "O(1) queue lookups", 
-        desc: "Adapts priority based on behavior. I/O-bound jobs stay high priority; CPU-bound jobs drop to lower queues with longer quantums." 
-      },
-      { 
-        method: "Multiprogramming Objective", 
-        syntax: "Overlapping CPU with I/O", 
-        params: "RAM capacity, job pool", 
-        output: "Maximized CPU utilization", 
-        complexity: "Monitored via CPU usage metrics", 
-        desc: "Ensures the CPU always has something to run. When one process blocks for disk I/O, the scheduler immediately switches to another." 
+        method: "Multi-Level Feedback Queue (MLFQ)", 
+        syntax: "Priority queues + dynamic promotions", 
+        params: "Time quantum scaling levels", 
+        output: "Behavior-aware scheduling queues", 
+        complexity: "O(1) ready queue queries", 
+        desc: "Subtopics: 1) Dynamic Priority: Tasks start at top queue. If they use their entire time slice without blocking, they are demoted to a lower queue. I/O-bound tasks stay at high priority. 2) Prevention of Gaming: Prevents processes from running infinite short bursts to hijack CPU. Low queues have longer quantum lengths." 
       }
     ]
   },
@@ -358,94 +205,62 @@ export const osConcepts = [
     id: "os_memory_paging",
     num: "OS.4",
     title: "Memory Management & Paging",
-    desc: "Physical and virtual address translation, Paging vs Segmentation, Translation Lookaside Buffers (TLB), Page Replacement Algorithms, Thrashing, and Fragmentation mitigation.",
-    declaration: `// Memory Mappings & Equations
-- Virtual Address (VA) = [ Page Number (p) | Offset (d) ]
-- Physical Address (PA) = [ Frame Number (f) | Offset (d) ]
-- Effective Memory Access Time (EAT) = (1 - Hit Ratio) * (2 * Memory Access Time) + Hit Ratio * (TLB Lookup + Memory Access Time)
-- Thrashing Criteria: \u03a3 (Working Set Sizes of all active processes) > Total Physical RAM.`,
-    internalImplementation: `/* ----------------- VIRTUAL-TO-PHYSICAL ADDRESS TRANSLATION (MMU) ----------------- */
-
-   Virtual Address: [ Page Number (p) | Offset (d) ]
-                         │               │
-                         ├──► [ TLB ]    │  (TLB Hit: Fast path)
-                         │     │         │
-                         │     ├─► Frame Number (f) ──┐
-                         │     └─► (TLB Miss)         │
-                         ▼                            ▼
-                 [ Page Table in RAM ] ──────► Physical Address: [ Frame Number (f) | Offset (d) ]`,
+    desc: "Address binding, Paging vs Segmentation, Translation Lookaside Buffers (TLB) performance math, Page fault triggers, and Thrashing resolution.",
+    declaration: `// Memory Mapping & Translation Cheat Sheet
+- Virtual Address (VA): [ Page Number (p) | Offset (d) ]
+- Physical Address (PA): [ Frame Number (f) | Offset (d) ]
+- Offset Size (d) = log2(Page Size in Bytes)
+- Effective Access Time (EAT) = Hit Ratio * (TLB + Memory) + (1 - Hit Ratio) * (TLB + 2 * Memory)
+- Frame allocation algorithms: Equal allocation, Proportional allocation (based on process virtual size).`,
+    diagramUrl: "/os_page_translation.png",
     methods: [
       { 
-        method: "Primary vs Secondary Memory", 
-        syntax: "Volatile (RAM) vs Non-Volatile (Disk)", 
-        params: "Access speed, addressing, persistence", 
-        output: "CPU direct access vs block read", 
-        complexity: "RAM: ~100ns | SSD: ~100us", 
-        desc: "Primary (RAM) is fast, volatile, byte-addressable. Secondary (SSD/HDD) is slow, persistent, and block-addressable." 
-      },
-      { 
         method: "Paging vs Segmentation", 
-        syntax: "Fixed-size pages vs Logical segments", 
-        params: "Physical frames vs logical divisions", 
-        output: "Non-contiguous hardware allocation", 
-        complexity: "Paging avoids external fragmentation", 
-        desc: "Paging divides memory into fixed-size physical blocks (e.g. 4KB). Segmentation divides memory logically based on program modules." 
+        syntax: "Fixed-size block vs variable segment", 
+        params: "Frame slots vs Base-Limit descriptors", 
+        output: "Non-contiguous hardware partitions", 
+        complexity: "Paging lookup: O(1) index array", 
+        desc: "Subtopics: 1) Paging: Physical memory split into fixed frames; virtual memory split into identical pages. Avoids external fragmentation. 2) Segmentation: Logical division based on compiler modules (code, data, stack). Variable sizes. Prone to external fragmentation, requiring memory compaction." 
       },
       { 
         method: "Demand Paging & Page Faults", 
-        syntax: "Lazy loading page allocation", 
-        params: "Present/Absent bit check in Page Table", 
-        output: "Hardware trap, disk read page-in", 
-        complexity: "Page fault disk fetch is extremely slow (~ms)", 
-        desc: "Pages are loaded only when referenced. Accessing a non-loaded page raises a page fault trap, prompting the OS to read it from swap space." 
+        syntax: "Lazy page-in -> page table present bit", 
+        params: "Valid/Invalid Present bit flags", 
+        output: "Hardware interrupt trap -> disk read", 
+        complexity: "Page fault disk read: ~5-15 milliseconds", 
+        desc: "Subtopics: 1) Present Bit: Table check. If bit is 0, a page fault occurs. 2) Page Fault handling: CPU traps to kernel -> locates page in swap disk -> finds free physical frame (or evicts one) -> reads page into frame -> updates page table Present bit -> restarts interrupted CPU instruction." 
       },
       { 
-        method: "TLB (Translation Lookaside Buffer)", 
-        syntax: "Hardware associative cache in MMU", 
-        params: "Virtual page translations lookup", 
-        output: "Speed-up address translation", 
-        complexity: "O(1) associative lookup time (~0.5ns)", 
-        desc: "A small, ultra-fast hardware cache in the MMU storing recent page table translations, avoiding two-trip memory reads." 
+        method: "Translation Lookaside Buffer (TLB)", 
+        syntax: "Associative SRAM hardware cache", 
+        params: "Virtual Page Number translation key", 
+        output: "Physical Frame base address hit", 
+        complexity: "TLB search lookup: < 1 nanosecond", 
+        desc: "Subtopics: 1) Cache hits: Returns physical frame index immediately, bypassing page table read in RAM. 2) TLB misses: Requires a slow page table lookup in main memory, and updates TLB. 3) TLB Shootdown: Multi-core processors must synchronize TLB entries when page mappings change." 
       },
       { 
         method: "Fragmentation: Internal vs External", 
-        syntax: "Wasted slot bytes vs Scattered free gaps", 
-        params: "Fixed partition limits vs Dynamic placement", 
-        output: "Compaction or paging resolution", 
-        complexity: "Compaction is highly resource expensive", 
-        desc: "Internal: unused bytes inside allocated fixed pages. External: scattered free blocks too small to fit new processes." 
+        syntax: "Wasted boundary bytes vs scattered free holes", 
+        params: "Fixed page allocation limit vs Dynamic heaps", 
+        output: "Compaction / Paging allocations", 
+        complexity: "Compaction requires copying physical RAM blocks", 
+        desc: "Subtopics: 1) Internal: Memory allocated to a process that is slightly larger than requested (e.g. process requests 3KB, gets 4KB page; 1KB is wasted). 2) External: Total free memory exists to satisfy request, but it is split into non-contiguous blocks, unable to fit process." 
       },
       { 
-        method: "Thrashing", 
-        syntax: "Page fault loop: swap in <-> swap out", 
-        params: "Lack of allocated physical frames", 
-        output: "CPU utilization drops to near zero", 
-        complexity: "Computer collapses (swapping bottleneck)", 
-        desc: "Occurs when processes spend more time paging in/out than executing. Solved by allocating more frames or killing processes." 
+        method: "Thrashing Working Set Model", 
+        syntax: "Page fault loop swap in/out", 
+        params: "Total physical frames allocation limits", 
+        output: "Swapping disk I/O bottleneck freezes", 
+        complexity: "CPU utilization collapses to ~0%", 
+        desc: "Subtopics: 1) Swapping overhead: When physical RAM is full, the OS repeatedly evicts and fetches pages for active processes. 2) Working Set Model: Tracks the active pages referenced by a process in a window. If sum of all working sets exceeds physical RAM, thrashing occurs. Resolved by suspending processes." 
       },
       { 
         method: "Copy-On-Write (COW)", 
-        syntax: "Share page -> Mark read-only -> Copy on write", 
-        params: "fork() execution optimizations", 
-        output: "Zero-copy instant process spawn", 
-        complexity: "O(1) creation, page copy on mutate", 
-        desc: "Allows child and parent to share memory pages safely. Pages are duplicated only when one attempts a write mutation." 
-      },
-      { 
-        method: "Overlays in OS", 
-        syntax: "Manual code block swaps", 
-        params: "User-space linker overlays loader", 
-        output: "Run large files on small RAM", 
-        complexity: "High manual programming overhead", 
-        desc: "A legacy technique where programs swap code modules manually into memory. Replaced by modern Virtual Memory paging." 
-      },
-      { 
-        method: "Page Size vs Frame Size", 
-        syntax: "Virtual bytes partition == Physical partition", 
-        params: "MMU address page table configuration", 
-        output: "Perfect alignment of blocks mapping", 
-        complexity: "Typically configured as 4KB pages", 
-        desc: "Page size refers to the partition of virtual memory; frame size is the partition of physical memory. They must be mathematically equal." 
+        syntax: "fork() share memory page table", 
+        params: "Read-only page protection flags", 
+        output: "Duplicated private page copy on write", 
+        complexity: "O(1) clone creation, O(page_size) write copy", 
+        desc: "Subtopics: 1) Page Sharing: Child process shares parent's pages immediately after fork(). Pages marked Read-Only. 2) Write Fault: If either process attempts to write, a page fault trap triggers. The kernel copies the physical frame, maps it to the writing process as write-accessible, and resumes." 
       }
     ]
   },
@@ -453,103 +268,61 @@ export const osConcepts = [
     id: "os_sync_deadlocks",
     num: "OS.5",
     title: "Process Synchronization & Deadlocks",
-    desc: "Critical Section problem, Semaphores (Wait/Signal), Mutexes vs Semaphores, Monitors, Priority Inversion, and Deadlock detection, prevention, and avoidance.",
+    desc: "Critical Section criteria, atomic Semaphores (Wait/Signal), Mutex locks, Monitors, Priority Inversion issues, and Coffman deadlock conditions.",
     declaration: `// Synchronization & Deadlock Cheat Sheet
-- Semaphores: Integer variables modified only via atomic wait() [P] and signal() [V] operations.
-- Mutex: Binary locking mechanism with a strict ownership contract.
-- Priority Inversion: High priority thread blocks on a lock held by low priority thread, which gets preempted by medium priority thread.
-- Deadlock: Coffman conditions must hold simultaneously: Mutual Exclusion, Hold & Wait, No Preemption, Circular Wait.`,
-    internalImplementation: `/* ----------------- COFFMAN CONDITIONS FOR DEADLOCK ----------------- */
-
-       ┌──────────────┐                  ┌──────────────┐
-  ┌───►│  Resource 1  │                  │  Resource 2  │◄───┐
-  │    └──────┬───────┘                  └──────┬───────┘    │
-  │           ▲                                 ▲            │
-  │ Hold      │ Request                         │ Request    │ Hold
-  │           │                                 │            │
-  │    ┌──────┴───────┐                  ┌──────┴───────┐    │
-  └────┤  Process A   │                  │  Process B   │────┘
-       └──────────────┘                  └──────────────┘`,
+- Critical Section Requirements: Mutual Exclusion (only 1 inside), Progress (no blocks outside), Bounded Waiting (no starvation).
+- Deadlock: System freeze due to circular resource requests.
+- Coffman Conditions: Mutual Exclusion, Hold & Wait, No Preemption, Circular Wait. (All 4 must hold).
+- Bankers Algorithm: Avoidance algorithm using Max, Allocation, Need matrices to verify if a state is 'Safe' before resource allocation.`,
+    diagramUrl: "/os_deadlock_circular.png",
     methods: [
       { 
-        method: "Process Synchronization", 
-        syntax: "Mutex locks, Semaphores, Monitors", 
-        params: "Cooperating processes shared variables", 
-        output: "Data consistency, thread-safe memory", 
-        complexity: "Lock contention and blocking delay", 
-        desc: "Coordinating concurrent access to shared resources to prevent race conditions and preserve data consistency." 
+        method: "The Critical Section Problem", 
+        syntax: "Entry Section -> CRITICAL -> Exit Section", 
+        params: "Concurrent thread synchronization flags", 
+        output: "Mutual exclusion of execution code", 
+        complexity: "Busy wait CPU cycles (spinlocks) vs sleep", 
+        desc: "Subtopics: 1) Race Condition: Output depends on non-deterministic thread execution order. 2) Solution Criteria: Mutual Exclusion (only one thread executes CS at once), Progress (threads outside CS cannot block threads entering), Bounded Waiting (limit on threads entering before a waiting thread enters)." 
       },
       { 
-        method: "Semaphore Operations", 
-        syntax: "Wait(S) [P] and Signal(S) [V]", 
-        params: "Integer variable S", 
-        output: "Atomic wait-loop decrement / increment", 
-        complexity: "Atomic check, context switch on block", 
-        desc: "Wait(): decrements S. If S <= 0, process blocks. Signal(): increments S. If any processes blocked, unblocks one." 
+        method: "Semaphores: Binary & Counting", 
+        syntax: "wait(S) [P] and signal(S) [V]", 
+        params: "Atomic integer variable S", 
+        output: "Atomic state increments / blocks", 
+        complexity: "Atomic locks processing checks", 
+        desc: "Subtopics: 1) Binary Semaphore: S can only be 0 or 1. Functions like a mutex but has no ownership check. 2) Counting Semaphore: S initializes to N (number of available resources). wait() decrements S, blocks thread if S < 0. signal() increments S, wakes up blocked threads in FIFO queue." 
       },
       { 
         method: "Mutex vs Semaphore", 
-        syntax: "Binary Lock vs Counting Signal", 
-        params: "Ownership contract, lock recursion", 
-        output: "Mutual exclusion vs Signaling mechanism", 
-        complexity: "Mutex has lower overhead and is ownership-bound", 
-        desc: "Mutex: locking tool with ownership (only lock owner can unlock). Semaphore: signaling mechanism (any thread can trigger signal())." 
-      },
-      { 
-        method: "Reentrancy", 
-        syntax: "Concurrently enterable functions", 
-        params: "No static/global variables modification", 
-        output: "Interrupt-safe execution handlers", 
-        complexity: "O(1) stack-based allocation", 
-        desc: "A function is reentrant if it can be interrupted mid-execution, re-entered by another thread, and resumed without state corruption." 
+        syntax: "Mutex Lock vs Semaphore Signal", 
+        params: "Owner thread pointer verification", 
+        output: "Exclusion lock vs Thread signaling", 
+        complexity: "Mutex has lower scheduling overhead", 
+        desc: "Subtopics: 1) Ownership: Mutex has a strict ownership contract. Only the thread that locked the mutex can unlock it. Semaphores have no owner (Thread A can call wait(), Thread B can call signal()). 2) Locking: Mutex is used for mutual exclusion. Semaphore is used for synchronization and signaling." 
       },
       { 
         method: "Priority Inversion & Inheritance", 
-        syntax: "Low priority gets priority of high priority", 
-        params: "Shared lock thread queues", 
-        output: "Starvation bypass for high priority", 
-        complexity: "Priority promotion logic processing", 
-        desc: "High priority task blocks on a resource held by a low-priority task, while a medium task preempts the low-priority task. Solved by Priority Inheritance." 
-      },
-      { 
-        method: "What is Deadlock?", 
-        syntax: "Circular block of resource requests", 
-        params: "Processes, resources, locking flags", 
-        output: "Locked system state (freeze)", 
-        complexity: "O(P * R^2) detection cycle check", 
-        desc: "A state where a set of processes are permanently blocked because each process holds a resource and waits for another resource held by another." 
-      },
-      { 
-        method: "Deadlock Conditions (Coffman)", 
-        syntax: "Mutual Exclusion + Hold & Wait + No Preemption + Circular Wait", 
-        params: "Resource Allocation Graph (RAG) cycles", 
-        output: "Deadlock identification criteria", 
-        complexity: "All 4 must hold simultaneously", 
-        desc: "1. Mutual Exclusion (non-shareable resource). 2. Hold & Wait. 3. No Preemption (cannot force release). 4. Circular Wait (loop dependency)." 
+        syntax: "Low priority promoted to high priority", 
+        params: "Priority levels: High (H), Med (M), Low (L)", 
+        output: "Lock release queue priority shifts", 
+        complexity: "Priority queue metadata updates", 
+        desc: "Subtopics: 1) Problem Scenario: L holds lock needed by H. H blocks. M preempts L because M has higher priority than L, preventing L from finishing and releasing lock, indirectly starving H. 2) Priority Inheritance: L's priority is temporarily elevated to H's level when H blocks on L's lock, preventing M from preempting L." 
       },
       { 
         method: "Deadlock Prevention vs Avoidance", 
-        syntax: "Restricting constraints vs Safe State checks", 
-        params: "RAG cycles check, Bankers algorithm", 
-        output: "Deadlock-free system guarantee", 
-        complexity: "Avoidance check: O(P^2 * R) Banker's cost", 
-        desc: "Prevention: breaks one of the 4 Coffman conditions at build-time. Avoidance: dynamically checks state safety before allocating resources." 
+        syntax: "Break conditions vs Safe State checks", 
+        params: "Banker's vectors, allocation matrices", 
+        output: "Deadlock-free execution scheduling", 
+        complexity: "Avoidance check: O(P^2 * R) Bankers runtime", 
+        desc: "Subtopics: 1) Prevention: Eliminates at least one Coffman condition at design time (e.g., locking resources in total ordering to break Circular Wait). 2) Avoidance: Dynamic checks. Allocator checks if allocating a resource leaves the system in a 'Safe State' (where at least one execution sequence exists that satisfies all maximum requests)." 
       },
       { 
         method: "Monitors in OS", 
-        syntax: "Object-oriented ADT encapsulation", 
-        params: "Condition variables wait/signal", 
-        output: "High-level thread safety wrapper", 
-        complexity: "Compiler-generated lock/unlock routines", 
-        desc: "An abstract data type providing mutual exclusion automatically. Only one thread can execute a monitor procedure at any given time." 
-      },
-      { 
-        method: "Producer-Consumer Problem", 
-        syntax: "Bounded buffer sync coordination", 
-        params: "Mutex lock + Empty semaphore + Full semaphore", 
-        output: "Synchronized concurrent reads/writes", 
-        complexity: "No busy-wait CPU polling", 
-        desc: "A classic sync problem. Senders (Producers) write to buffer and wait if full; Receivers (Consumers) read and wait if empty." 
+        syntax: "Class wrapper + condition variables", 
+        params: "wait() and signal() condition hooks", 
+        output: "High-level compiler synchronization", 
+        complexity: "Compiler generated mutex locks", 
+        desc: "Subtopics: 1) Encapsulation: Object-oriented programming construct where only one thread can execute inside monitor methods at a time. 2) Condition Variables: Allows threads to release monitor lock and sleep inside monitor when waiting for conditions. Woken up via cv.signal()." 
       }
     ]
   },
@@ -557,66 +330,106 @@ export const osConcepts = [
     id: "os_storage_files",
     num: "OS.6",
     title: "Storage, File Systems & I/O",
-    desc: "Disk virtualization using RAID arrays, Index Node (Inode) filesystem lookups, Soft links vs Hard links, Spooling subsystems, and kernel crash diagnostics.",
-    declaration: `// File System & Disk Virtualization Metrics
-- Hard Link: Creates a directory entry pointing directly to the target file Inode number. Deleting original preserves hard link.
-- Soft Link (Symlink): Creates a file whose contents is the string path to target. Deleting original breaks the symlink.
-- Inode Data: Metadata container holding File Size, Permissions, Owner UID, Timestamps, and Direct/Indirect block pointers.`,
-    internalImplementation: `/* ----------------- HARD LINK VS SYMLINK INODE GRAPH ----------------- */
-
-   Directory Entry [file.txt]  ─────┐
-                                    ├────► Inode 12345 (File Metadata) ──► Data Blocks on Disk
-   Hard Link Entry [link.txt]  ─────┘
-
-   Symlink Entry [sym.txt] ────────► Path String: "/file.txt" (Needs resolution)`,
+    desc: "Disk scheduling algorithms, RAID virtualization levels, Unix file system Inodes, Soft links vs Hard links, and process crash diagnostics.",
+    declaration: `// Storage & File System Metrics
+- Hard Link: Directory entry maps directly to target Inode number. Share same inode.
+- Soft Link (Symlink): A text file containing path string to target. If target deleted, symlink is broken.
+- Disk Scheduling: Compares Head Seek movements (cylinders traveled) to minimize arm latency.
+- Inode Table: Array of file metadata blocks on disk mapping physical disk blocks.`,
     methods: [
       { 
-        method: "RAID Levels Configuration", 
+        method: "RAID Configuration Levels", 
         syntax: "RAID 0, 1, 5, 6, 10", 
-        params: "Mirroring, Striping, Distributed Parity", 
-        output: "Fault tolerance and high speed", 
-        complexity: "Throughput scales with physical disk count", 
-        desc: "RAID 0 (Striping: fast, zero redundancy). RAID 1 (Mirroring: duplicate). RAID 5 (Block parity: tolerates 1 disk loss). RAID 6 (Double parity: 2 disks)." 
+        params: "Striping, Mirroring, Parity equations", 
+        output: "Fault-tolerance virtual disk arrays", 
+        complexity: "Disk read speed scales with drive count", 
+        desc: "Subtopics: 1) RAID 0 (Striping): Spreads blocks across drives. High speed, zero fault tolerance. 2) RAID 1 (Mirroring): Duplicates data. Safe, read-speed scaling, 50% capacity overhead. 3) RAID 5 (Distributed Parity): Stripes data and parity. Tolerates 1 drive loss, requires minimum 3 drives. 4) RAID 6 (Double Parity): Tolerates 2 drive losses, requires minimum 4 drives." 
       },
       { 
         method: "What is an Inode?", 
-        syntax: "Index Node structure lookup", 
-        params: "Inode table key ID", 
-        output: "Block mapping, file metadata", 
-        complexity: "O(1) inode access time", 
-        desc: "A data structure in Unix file systems storing file attributes and disk block pointers, containing all metadata except filename and contents." 
+        syntax: "Index Node database structure", 
+        params: "Inode ID, file block pointers", 
+        output: "File metadata block mappings", 
+        complexity: "Inode lookup: O(1) array seek", 
+        desc: "Subtopics: 1) Inode Contents: Holds file size, permissions, owner UID, timestamps, and data block pointers. Does NOT hold filename. 2) Pointers: Uses direct pointers for small files, and single/double/triple indirect block pointers on disk for large files." 
       },
       { 
-        method: "Hard Link vs Soft Link", 
-        syntax: "Direct pointer vs Path text file", 
-        params: "Inode reference counts, cross-volume limits", 
-        output: "Inode mapping variations", 
-        complexity: "Resolving symlink requires secondary seek", 
-        desc: "Hard link points directly to the Inode (shares data, same inode count). Soft link is a path redirect (breaks if target is moved)." 
-      },
-      { 
-        method: "Spooling in OS", 
-        syntax: "Simultaneous Peripheral Operations On-Line", 
-        params: "Disk buffers printer queues", 
-        output: "Non-blocking slow device access", 
-        complexity: "O(N) queue stream buffering", 
-        desc: "Saves slow peripheral output to disk buffers first, allowing the CPU to resume execution immediately instead of waiting for printers." 
+        method: "Hard Link vs Soft Link (Symlink)", 
+        syntax: "Same Inode mapping vs Path file", 
+        params: "Reference counts, partition boundaries", 
+        output: "Inode references pointer redirection", 
+        complexity: "Soft link resolution requires path lookup", 
+        desc: "Subtopics: 1) Hard Link: Points directly to same inode. File contents only deleted when reference count is 0. Cannot cross file system partitions. 2) Soft Link: Independent file containing target path. Can span partitions, breaks if target file is renamed or moved." 
       },
       { 
         method: "Process Crash Handling", 
-        syntax: "SIGSEGV trap -> Core Dump -> Clean resources", 
-        params: "PID crash interrupt vectors", 
-        output: "Core dump diagnostic file", 
-        complexity: "Releases page tables and memory mappings", 
-        desc: "When a process crashes, the CPU throws a trap. The OS captures the registers, writes a Core Dump file, and releases its RAM pages." 
+        syntax: "SIGSEGV Trap -> Core Dump -> GC", 
+        params: "Interrupt Vector table, registers dump", 
+        output: "Core dump debugging files", 
+        complexity: "Releases page tables and frame maps", 
+        desc: "Subtopics: 1) Segfault: CPU throws trap when process tries to access restricted memory space (violating limit register). 2) Core Dump: Kernel captures registers, CPU states, and memory maps to a file on disk for debugging (gdb). 3) Resource Cleanup: Kernel terminates process and reclaims all allocated page tables and physical frames." 
+      }
+    ]
+  },
+  {
+    id: "os_numerical_problems",
+    num: "OS.7",
+    title: "Numerical Solved Problems",
+    desc: "Numerical calculations, step-by-step solved examples, and equations for CPU Scheduling Gantt Charts, Paging translations, Effective Memory Access Time, and Banker's safety state.",
+    declaration: `// OS Interview Numerical Formulas
+1. CPU Scheduling: Wait Time (WT) = Turnaround Time (TAT) - Burst Time (BT)
+2. Paging Offset bits: d = log2(Page Size). Page Number bits: p = Logical Address bits - d
+3. EAT = Hit Ratio * (TLB + Memory) + (1 - Hit Ratio) * (TLB + 2 * Memory)
+4. Banker's Need Matrix: Need[i][j] = Max[i][j] - Allocation[i][j]
+5. Page Replacement Hit/Fault count calculation.`,
+    methods: [
+      { 
+        method: "CPU Scheduling Waiting Time Math", 
+        syntax: "Solved CPU Gantt Chart Wait Time", 
+        params: "P1(BT=8, AT=0), P2(BT=4, AT=1), P3(BT=2, AT=2)", 
+        output: "Gantt Timeline: [P1: 0-8][P3: 8-10][P2: 10-14]", 
+        complexity: "Average Waiting Time = 4.0ms", 
+        desc: "Step-by-step SJF Scheduling: 1) At t=0, only P1 is ready. CPU runs P1. Non-preemptive SJF runs P1 to finish at t=8. 2) At t=8, P2 and P3 are ready. SJF selects P3 (shorter BT=2). P3 runs 8 to 10. 3) P2 runs 10 to 14. \n- P1: Completion Time (CT)=8. TAT=8-0=8. WT=8-8=0. \n- P3: CT=10. TAT=10-2=8. WT=8-2=6. \n- P2: CT=14. TAT=14-1=13. WT=13-4=9. \n- Average WT = (0 + 6 + 9) / 3 = 5.0ms." 
       },
       { 
-        method: "Memory Protection", 
-        syntax: "Base and Limit registers / page flags", 
-        params: "MMU boundary segment checks", 
-        output: "Process isolation sandbox", 
-        complexity: "O(1) hardware comparison step", 
-        desc: "Ensures a process cannot access another's memory space. Enforced via Base/Limit registers in CPU or page-table permission bits." 
+        method: "Virtual Memory Paging Bits Math", 
+        syntax: "Logical to Physical Page Translation", 
+        params: "16-bit Logical Address, 4KB Page Size, 8 frames RAM", 
+        output: "Page Bits: 4, Offset Bits: 12", 
+        complexity: "Offsets map directly to Physical Address", 
+        desc: "Paging calculation: 1) Page Size = 4KB = 4096 Bytes = 2^12. Hence, Offset (d) = 12 bits. 2) Logical Address space = 16 bits. Page Number (p) bits = 16 - 12 = 4 bits (Max 16 pages). 3) Main memory has 8 frames = 2^3 frames. Frame Number (f) bits = 3 bits. 4) Physical Address space = f + d = 3 + 12 = 15 bits. 5) For Logical Address 0x3A2E -> Page = 0x3, Offset = 0xA2E. If Page 3 maps to Frame 5, Physical Address = Frame 5 (101 in binary) + Offset (0xA2E) = 0x5A2E." 
+      },
+      { 
+        method: "EAT TLB Cache hit Math", 
+        syntax: "Effective Access Time Calculation", 
+        params: "TLB lookup = 2ns, RAM access = 100ns, Hit Ratio = 90%", 
+        output: "EAT = 112 nanoseconds", 
+        complexity: "Saves 90ns on 90% of requests", 
+        desc: "EAT Formula: 1) TLB Hit Case (90%): TLB lookup + Memory access = 2ns + 100ns = 102ns. 2) TLB Miss Case (10%): TLB lookup + 2 * Memory access (one for page table, one for data) = 2ns + 200ns = 202ns. 3) Combined EAT = 0.90 * (102ns) + 0.10 * (202ns) = 91.8ns + 20.2ns = 112ns." 
+      },
+      { 
+        method: "Banker's Safety State Math", 
+        syntax: "Resource Allocation Need Matrix", 
+        params: "Allocated=[0 1 0], Max=[7 5 3], Available=[3 3 2]", 
+        output: "Need Matrix = [7 4 3]", 
+        complexity: "Check if Available >= Need for safety", 
+        desc: "Banker's calculation for Process P1: 1) Need[1] = Max[1] - Allocation[1] = [7 5 3] - [0 1 0] = [7 4 3]. 2) To check if P1 can be allocated: Is Need [7 4 3] <= Available [3 3 2]? No, request denied (insufficient resources). P1 must wait. 3) Safety Sequence: If another process P2 has Need [1 2 2] <= [3 3 2], allocate to P2. P2 terminates, releasing its allocation back, increasing Available vector." 
+      },
+      { 
+        method: "FIFO vs LRU Page Replacement Math", 
+        syntax: "Page fault trace comparison", 
+        params: "3 Frames, Reference String: 7, 0, 1, 2, 0, 3", 
+        output: "FIFO = 5 faults, LRU = 5 faults", 
+        complexity: "LRU tracks usage recency", 
+        desc: "Step-by-step Page replacements: \n- FIFO trace: 1) Load 7 [7,x,x] (fault 1). 2) Load 0 [7,0,x] (fault 2). 3) Load 1 [7,0,1] (fault 3). 4) Load 2, evict oldest 7 [2,0,1] (fault 4). 5) Access 0 [2,0,1] (Hit!). 6) Load 3, evict oldest 0 [2,3,1] (fault 5). Total FIFO Faults = 5. \n- LRU trace: 1) Load 7 [7,x,x] (fault 1). 2) Load 0 [7,0,x] (fault 2). 3) Load 1 [7,0,1] (fault 3). 4) Load 2, evict least recently used 7 [2,0,1] (fault 4). 5) Access 0, update recency [2,1,0] (Hit!). 6) Load 3, evict least recently used 1 [2,3,0] (fault 5). Total LRU Faults = 5." 
+      },
+      { 
+        method: "Disk Scheduling Seek count Math", 
+        syntax: "SSTF Seek Cylinder Distance", 
+        params: "Initial Head = 50, Queue = [82, 170, 43, 140, 24]", 
+        output: "Head Trace: 50 -> 43 -> 24 -> 82 -> 140 -> 170", 
+        complexity: "Total Cylinder Seek distance = 172 cylinders", 
+        desc: "SSTF (Shortest Seek Time First) Math: 1) Initial head is 50. Calculate distances to all pending cylinders: dist(43)=7, dist(24)=26, dist(82)=32. Closest is 43. Move Head to 43 (seek=7). 2) From 43, closest is 24 (seek=19). Head moves to 24. 3) Remaining: [82, 140, 170]. From 24, closest is 82 (seek=58). 4) From 82, closest is 140 (seek=58). 5) From 140, closest is 170 (seek=30). 6) Total head movement = 7 + 19 + 58 + 58 + 30 = 172 cylinders." 
       }
     ]
   }

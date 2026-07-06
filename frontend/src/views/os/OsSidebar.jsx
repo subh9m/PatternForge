@@ -83,6 +83,12 @@ export default function OsSidebar({ isOpen, activeTab, onTabChange }) {
                 <li><NavItem href="#os_storage_files">OS.6 Storage & FS</NavItem></li>
               </ul>
             </div>
+            <div>
+              <NavHeading>7. Practice Numericals</NavHeading>
+              <ul className="space-y-1">
+                <li><NavItem href="#os_numerical_problems">OS.7 Solved Calculations</NavItem></li>
+              </ul>
+            </div>
           </nav>
         </div>
       </aside>
