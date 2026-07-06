@@ -348,9 +348,13 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
                               setSelectedDay(day === selectedDay ? null : day);
                             }
                           }}
-                          className={`h-[11px] w-[11px] rounded-[2px] cursor-pointer transition-smooth ${bgClass}`}
-                          title={`${day.date}: ${count} solved`}
-                        />
+                          className={`h-[11px] w-[11px] rounded-[2px] cursor-pointer transition-smooth flex items-center justify-center ${bgClass}`}
+                          title={`${day.date}: ${count} solved (Daily Goal Target: ${stats.todayGoalTarget})`}
+                        >
+                          {count > stats.todayGoalTarget && (
+                            <span className="text-[7.5px] text-amber-300 leading-none select-none font-bold">★</span>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
