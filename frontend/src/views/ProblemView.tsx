@@ -977,10 +977,23 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                             </div>
                           ) : (
                             <div className="space-y-2">
-                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Reference Code (Python):</span>
-                              <pre className="p-4 rounded-xl bg-slate-955 border border-slate-900 text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre">
-                                {details.referenceSolution}
-                              </pre>
+                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Reference Code (C++):</span>
+                              <div className="h-64 rounded-xl overflow-hidden border border-slate-900 bg-[#1e1e1e]">
+                                <MonacoEditor
+                                  height="100%"
+                                  language="cpp"
+                                  theme="vs-dark"
+                                  value={details.referenceSolution || '// Code not available.'}
+                                  options={{
+                                    readOnly: true,
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    automaticLayout: true,
+                                    fontSize: 12,
+                                    fontFamily: "'Fira Code', 'Courier New', monospace",
+                                  }}
+                                />
+                              </div>
                             </div>
                           )}
                         </div>
@@ -1576,12 +1589,26 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                     {/* Reference code display */}
                     <div className="space-y-2">
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">Solution Code:</span>
-                      <pre className="p-4 rounded-xl bg-[#1e1e1e] border border-slate-900 text-[11.5px] font-mono text-emerald-300 overflow-x-auto whitespace-pre custom-scrollbar max-h-80">
-                        {currentSol.code && currentSol.code[solutionLanguage]
-                          ? currentSol.code[solutionLanguage]
-                          : "# Reference solution code not available for this language."
-                        }
-                      </pre>
+                      <div className="h-80 rounded-xl overflow-hidden border border-slate-900 bg-[#1e1e1e]">
+                        <MonacoEditor
+                          height="100%"
+                          language={solutionLanguage === 'cpp' ? 'cpp' : 'java'}
+                          theme="vs-dark"
+                          value={
+                            currentSol.code && currentSol.code[solutionLanguage]
+                              ? currentSol.code[solutionLanguage]
+                              : '// Reference solution code not available for this language.'
+                          }
+                          options={{
+                            readOnly: true,
+                            minimap: { enabled: false },
+                            scrollBeyondLastLine: false,
+                            automaticLayout: true,
+                            fontSize: 12.5,
+                            fontFamily: "'Fira Code', 'Courier New', monospace",
+                          }}
+                        />
+                      </div>
                     </div>
 
                     {/* Explanation details */}
