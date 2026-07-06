@@ -68,93 +68,97 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
         </div>
 
         {/* Modules Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* DSA Workspace */}
-          <div
-            onClick={() => onSelectPortal('dsa')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
-          >
-            <div className="w-full">
-              <div className="h-10 w-10 bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 group-hover:shadow-glow-blue transition-smooth">
-                <Code2 className="h-5 w-5" />
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* DSA Workspace */}
+            <div
+              onClick={() => onSelectPortal('dsa')}
+              className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            >
+              <div className="w-full">
+                <div className="h-10 w-10 bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 group-hover:shadow-glow-blue transition-smooth">
+                  <Code2 className="h-5 w-5" />
+                </div>
+                <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                  DSA Practice
+                </h2>
+                <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                  Solve pattern-based algorithm tasks, run code tests, and build streak statistics.
+                </p>
               </div>
-              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
-                DSA Practice
-              </h2>
-              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
-                Solve pattern-based algorithm tasks, run code tests, and build streak statistics.
-              </p>
+              <span className="text-xs font-bold text-blue-400 group-hover:text-blue-300 transition-smooth flex items-center space-x-1 pt-2">
+                <span>LAUNCH</span>
+                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+              </span>
             </div>
-            <span className="text-xs font-bold text-blue-400 group-hover:text-blue-300 transition-smooth flex items-center space-x-1 pt-2">
-              <span>LAUNCH</span>
-              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-            </span>
+
+            {/* STL / Collections Reference */}
+            <div
+              onClick={() => onSelectPortal('stl')}
+              className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            >
+              <div className="w-full">
+                <div className="h-10 w-10 bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4 group-hover:shadow-glow-emerald transition-smooth">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                  STL & Collections
+                </h2>
+                <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                  Lookup C++ standard template library and Java collections specifications and complexities.
+                </p>
+              </div>
+              <span className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300 transition-smooth flex items-center space-x-1 pt-2">
+                <span>EXPLORE</span>
+                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+              </span>
+            </div>
+
+            {/* SQL Reference Playground */}
+            <div
+              onClick={() => onSelectPortal('sql')}
+              className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            >
+              <div className="w-full">
+                <div className="h-10 w-10 bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-4 group-hover:shadow-glow-purple transition-smooth">
+                  <Database className="h-5 w-5" />
+                </div>
+                <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                  SQL Playground
+                </h2>
+                <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                  Execute relational queries, inspect corporate databases, and practice advanced commands.
+                </p>
+              </div>
+              <span className="text-xs font-bold text-purple-400 group-hover:text-purple-300 transition-smooth flex items-center space-x-1 pt-2">
+                <span>QUERY</span>
+                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+              </span>
+            </div>
           </div>
 
-          {/* STL / Collections Reference */}
-          <div
-            onClick={() => onSelectPortal('stl')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
-          >
-            <div className="w-full">
-              <div className="h-10 w-10 bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4 group-hover:shadow-glow-emerald transition-smooth">
-                <BookOpen className="h-5 w-5" />
+          {/* Centered Second Row for OS Card */}
+          <div className="flex justify-center">
+            <div
+              onClick={() => onSelectPortal('os')}
+              className="w-full md:w-[calc(33.333333%-16px)] p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            >
+              <div className="w-full">
+                <div className="h-10 w-10 bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-4 group-hover:shadow-glow-amber transition-smooth">
+                  <Cpu className="h-5 w-5" />
+                </div>
+                <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                  OS Revision
+                </h2>
+                <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                  Revise CPU scheduling, virtual memory paging, deadlocks, and disk RAID virtualizations.
+                </p>
               </div>
-              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
-                STL & Collections
-              </h2>
-              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
-                Lookup C++ standard template library and Java collections specifications and complexities.
-              </p>
+              <span className="text-xs font-bold text-amber-400 group-hover:text-amber-300 transition-smooth flex items-center space-x-1 pt-2">
+                <span>REVISE</span>
+                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+              </span>
             </div>
-            <span className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300 transition-smooth flex items-center space-x-1 pt-2">
-              <span>EXPLORE</span>
-              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-            </span>
-          </div>
-
-          {/* SQL Reference Playground */}
-          <div
-            onClick={() => onSelectPortal('sql')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
-          >
-            <div className="w-full">
-              <div className="h-10 w-10 bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-4 group-hover:shadow-glow-purple transition-smooth">
-                <Database className="h-5 w-5" />
-              </div>
-              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
-                SQL Playground
-              </h2>
-              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
-                Execute relational queries, inspect corporate databases, and practice advanced commands.
-              </p>
-            </div>
-            <span className="text-xs font-bold text-purple-400 group-hover:text-purple-300 transition-smooth flex items-center space-x-1 pt-2">
-              <span>QUERY</span>
-              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-            </span>
-          </div>
-
-          {/* OS Revision */}
-          <div
-            onClick={() => onSelectPortal('os')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
-          >
-            <div className="w-full">
-              <div className="h-10 w-10 bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-4 group-hover:shadow-glow-amber transition-smooth">
-                <Cpu className="h-5 w-5" />
-              </div>
-              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
-                OS Revision
-              </h2>
-              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
-                Revise CPU scheduling, virtual memory paging, deadlocks, and disk RAID virtualizations.
-              </p>
-            </div>
-            <span className="text-xs font-bold text-amber-400 group-hover:text-amber-300 transition-smooth flex items-center space-x-1 pt-2">
-              <span>REVISE</span>
-              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-            </span>
           </div>
         </div>
       </div>
