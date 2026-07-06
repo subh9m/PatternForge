@@ -82,11 +82,11 @@ body {
 :root.light .bg-slate-800,
 :root.light .bg-slate-700,
 :root.light .bg-slate-955,
-:root.light .bg-slate-900\/40,
-:root.light .bg-slate-900\/60,
-:root.light .bg-slate-955\/20,
-:root.light .bg-slate-955\/40,
-:root.light .bg-slate-955\/60 {
+:root.light [class*="bg-slate-950/"],
+:root.light [class*="bg-slate-900/"],
+:root.light [class*="bg-slate-850/"],
+:root.light [class*="bg-slate-800/"],
+:root.light [class*="bg-slate-700/"] {
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
 }
@@ -97,11 +97,7 @@ body {
 :root.light button.bg-slate-850,
 :root.light button.bg-slate-800,
 :root.light button.bg-slate-700,
-:root.light button.bg-slate-900\/40,
-:root.light button.bg-slate-900\/60,
-:root.light button.bg-slate-955\/20,
-:root.light button.bg-slate-955\/40,
-:root.light button.bg-slate-955\/60 {
+:root.light button[class*="bg-slate-"] {
   background-color: #cbd5e1 !important;
   color: #0f172a !important;
   border: 1px solid #94a3b8 !important;
@@ -112,20 +108,58 @@ body {
 :root.light button.bg-slate-850:hover,
 :root.light button.bg-slate-800:hover,
 :root.light button.bg-slate-700:hover,
-:root.light button.bg-slate-900\/40:hover,
-:root.light button.bg-slate-900\/60:hover,
-:root.light button.bg-slate-955\/20:hover,
-:root.light button.bg-slate-955\/40:hover,
-:root.light button.bg-slate-955\/60:hover {
+:root.light button[class*="bg-slate-"]:hover {
   background-color: #94a3b8 !important;
   color: #ffffff !important;
   border-color: #64748b !important;
 }
 
-:root.light .bg-slate-955\/20 *,
-:root.light .bg-slate-955\/40 *,
-:root.light .bg-slate-955\/60 * {
-  color: #0f172a !important;
+:root.light [class*="bg-slate-950/"] *,
+:root.light [class*="bg-slate-900/"] *,
+:root.light [class*="bg-slate-850/"] *,
+:root.light [class*="bg-slate-800/"] *,
+:root.light [class*="bg-slate-700/"] *,
+:root.light .bg-slate-950 *,
+:root.light .bg-slate-900 *,
+:root.light .bg-slate-850 *,
+:root.light .bg-slate-800 *,
+:root.light .bg-slate-700 * {
+  /* Inherit text color from parent slate grey containers unless overridden by status classes */
+  color: inherit;
+}
+
+/* High-contrast status text colors for Light Mode readability */
+:root.light .text-blue-400,
+:root.light .text-blue-500 {
+  color: #1d4ed8 !important; /* Royal blue */
+}
+:root.light .text-emerald-400,
+:root.light .text-emerald-500 {
+  color: #047857 !important; /* Emerald green */
+}
+:root.light .text-amber-400,
+:root.light .text-amber-500 {
+  color: #b45309 !important; /* Amber yellow */
+}
+:root.light .text-red-400,
+:root.light .text-red-500,
+:root.light .text-accent {
+  color: #b91c1c !important; /* Red */
+}
+
+/* Background opacity contrast overrides for status badges in light mode */
+:root.light .bg-blue-500\/10 {
+  background-color: rgba(29, 78, 216, 0.1) !important;
+}
+:root.light .bg-emerald-500\/10 {
+  background-color: rgba(4, 120, 87, 0.1) !important;
+}
+:root.light .bg-amber-500\/10 {
+  background-color: rgba(180, 83, 9, 0.1) !important;
+}
+:root.light .bg-red-500\/10,
+:root.light .bg-accent\/10 {
+  background-color: rgba(185, 28, 28, 0.1) !important;
 }
 
 /* Light mode specific inline code contrast adjustments */
