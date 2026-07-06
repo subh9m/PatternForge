@@ -32,79 +32,86 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-955 px-4 relative py-12">
-      {/* Theme Toggler & Logout buttons in top-right */}
-      <div className="absolute top-6 right-6 flex items-center space-x-3">
+    <div className="h-screen w-screen flex items-center justify-center bg-background px-4 relative overflow-hidden select-none">
+      {/* Floating Theme Toggle & Sign Out on the top-right of page */}
+      <div className="absolute top-6 right-6 flex items-center space-x-3 z-50">
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-text-primary text-text-primary hover:text-white transition-smooth flex items-center justify-center cursor-pointer shadow-md"
+          className="p-2 rounded-xl bg-surface/60 border border-border hover:border-text-primary text-text-secondary hover:text-text-primary transition-smooth flex items-center justify-center cursor-pointer shadow-md"
           title="Toggle Theme"
         >
           {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
         <button
           onClick={logout}
-          className="px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-red-500 hover:text-red-400 text-slate-400 transition-smooth flex items-center space-x-2 text-xs font-extrabold cursor-pointer"
+          className="px-4 py-2 rounded-xl bg-surface/60 border border-border hover:border-red-500 hover:text-red-400 text-text-secondary transition-smooth flex items-center space-x-2 text-xs font-extrabold cursor-pointer"
         >
           <LogOut className="h-4 w-4" />
           <span>SIGN OUT</span>
         </button>
       </div>
 
-      {/* Brand / Greeting */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent uppercase font-heading">
-          PatternForge
-        </h1>
-        <p className="mt-3 text-sm text-slate-400 font-medium">
-          Welcome back, <span className="text-slate-200 font-extrabold uppercase">{user?.username}</span>. Select your module to get started.
-        </p>
-      </div>
+      {/* Decorative Blur Spheres */}
+      <div className="absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-blue-500/5 blur-[90px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 h-64 w-64 rounded-full bg-emerald-500/5 blur-[90px] pointer-events-none"></div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-        {/* DSA Workspace Portal Card */}
-        <div
-          onClick={() => onSelectPortal('dsa')}
-          className="glass-panel glass-panel-hover flex flex-col justify-between items-start text-left cursor-pointer group p-8"
-        >
-          <div className="w-full">
-            <div className="h-12 w-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-6 group-hover:shadow-glow-blue transition-smooth">
-              <Code2 className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-black text-slate-100 uppercase tracking-wider mb-3">
-              DSA Workspace
-            </h2>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium mb-6">
-              Solve curated DSA pattern problems, analyze edge cases, write code drafts, and trace dynamic progress stats with our interactive compiler.
-            </p>
-          </div>
-          <span className="text-xs font-bold text-blue-400 group-hover:text-blue-300 transition-smooth flex items-center space-x-1.5 pt-2">
-            <span>ENTER WORKSPACE</span>
-            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-          </span>
+      {/* Unified Single Central Card */}
+      <div className="glass-panel w-full max-w-3xl p-8 sm:p-10 shadow-2xl border border-border relative z-10">
+        {/* Header / Branding */}
+        <div className="text-center mb-8 border-b border-border pb-6">
+          <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent uppercase font-heading">
+            PatternForge
+          </h1>
+          <p className="mt-2 text-xs text-text-secondary font-medium">
+            Welcome, <span className="text-text-primary font-bold uppercase">{user?.username}</span>. Select your active workspace.
+          </p>
         </div>
 
-        {/* STL/Java Collections Portal Card */}
-        <div
-          onClick={() => onSelectPortal('stl')}
-          className="glass-panel glass-panel-hover flex flex-col justify-between items-start text-left cursor-pointer group p-8"
-        >
-          <div className="w-full">
-            <div className="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6 group-hover:shadow-glow-emerald transition-smooth">
-              <BookOpen className="h-6 w-6" />
+        {/* Modules Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* DSA Workspace */}
+          <div
+            onClick={() => onSelectPortal('dsa')}
+            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+          >
+            <div className="w-full">
+              <div className="h-10 w-10 bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 group-hover:shadow-glow-blue transition-smooth">
+                <Code2 className="h-5 w-5" />
+              </div>
+              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                DSA Practice
+              </h2>
+              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                Solve pattern-based algorithm tasks, run code tests, and build streak statistics.
+              </p>
             </div>
-            <h2 className="text-xl font-black text-slate-100 uppercase tracking-wider mb-3">
-              STL & Java Collections
-            </h2>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium mb-6">
-              Access the ultimate reference guide for C++ Standard Template Library algorithms and Java Collections Framework structures with syntax examples.
-            </p>
+            <span className="text-xs font-bold text-blue-400 group-hover:text-blue-300 transition-smooth flex items-center space-x-1 pt-2">
+              <span>LAUNCH</span>
+              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+            </span>
           </div>
-          <span className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300 transition-smooth flex items-center space-x-1.5 pt-2">
-            <span>OPEN REFERENCE SHEET</span>
-            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-          </span>
+
+          {/* STL / Collections Reference */}
+          <div
+            onClick={() => onSelectPortal('stl')}
+            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+          >
+            <div className="w-full">
+              <div className="h-10 w-10 bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4 group-hover:shadow-glow-emerald transition-smooth">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                STL Reference
+              </h2>
+              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                Lookup C++ standard library structures and Java collections implementations.
+              </p>
+            </div>
+            <span className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300 transition-smooth flex items-center space-x-1 pt-2">
+              <span>EXPLORE</span>
+              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
