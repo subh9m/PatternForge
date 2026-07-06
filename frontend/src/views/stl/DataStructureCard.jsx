@@ -104,12 +104,141 @@ export default function DataStructureCard({ data }) {
             </button>
             
             {showInternal && (
-              <div className="border-x border-b border-gray-200 dark:border-[#333] bg-gray-50/40 dark:bg-neutral-950/40 p-4">
-                <pre 
-                  className="bg-gray-100/80 dark:bg-black/80 text-gray-800 dark:text-gray-300 p-4 font-mono text-xs overflow-x-auto border border-gray-200 dark:border-[#333] leading-relaxed max-h-[400px] select-all"
-                  dangerouslySetInnerHTML={{ __html: highlightCode(data.internalImplementation) }}
-                />
-              </div>
+              data.id === 'sql_practice_db' ? (
+                <div className="border-x border-b border-gray-200 dark:border-[#333] bg-gray-50/40 dark:bg-neutral-950/40 p-6 md:p-8 space-y-8">
+                  {/* ER Diagram Section */}
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 font-mono">Entity-Relationship (ER) Diagram</h4>
+                    <div className="bg-black/20 dark:bg-black/60 border border-gray-200 dark:border-[#333] rounded-xl p-4 flex justify-center">
+                      <img 
+                        src="/northpeak_er_diagram.png" 
+                        alt="NorthPeak Corp ER Diagram" 
+                        className="max-w-full h-auto rounded-lg shadow-md border border-gray-250 dark:border-neutral-800"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Seed Data Tables Section */}
+                  <div className="space-y-6">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider font-mono">Seed Data Entries Reference</h4>
+                    
+                    {/* 1. Departments Sample Table */}
+                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                      <div className="px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 border-b border-gray-200 dark:border-[#333] flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">TABLE: DEPARTMENTS (8 rows)</span>
+                      </div>
+                      <div className="overflow-x-auto text-[11px] font-mono">
+                        <table className="w-full text-left">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                            <tr>
+                              <th className="px-4 py-2 font-bold text-gray-500">dept_id (PK)</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">dept_name</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">location</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">budget</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                            <tr><td className="px-4 py-2">1</td><td className="px-4 py-2 font-bold">Engineering</td><td className="px-4 py-2">Bengaluru</td><td className="px-4 py-2 text-emerald-500">5000000.00</td></tr>
+                            <tr><td className="px-4 py-2">2</td><td className="px-4 py-2 font-bold">Sales</td><td className="px-4 py-2">Mumbai</td><td className="px-4 py-2 text-emerald-500">2000000.00</td></tr>
+                            <tr><td className="px-4 py-2">3</td><td className="px-4 py-2 font-bold">Marketing</td><td className="px-4 py-2">Delhi</td><td className="px-4 py-2 text-emerald-500">1200000.00</td></tr>
+                            <tr><td className="px-4 py-2">4</td><td className="px-4 py-2 font-bold">HR</td><td className="px-4 py-2">Bengaluru</td><td className="px-4 py-2 text-emerald-500">800000.00</td></tr>
+                            <tr><td className="px-4 py-2">5</td><td className="px-4 py-2 font-bold">Finance</td><td className="px-4 py-2">Mumbai</td><td className="px-4 py-2 text-emerald-500">1500000.00</td></tr>
+                            <tr><td className="px-4 py-2">6</td><td className="px-4 py-2 font-bold">Customer Support</td><td className="px-4 py-2">Pune</td><td className="px-4 py-2 text-emerald-500">900000.00</td></tr>
+                            <tr><td className="px-4 py-2">7</td><td className="px-4 py-2 font-bold text-gray-400">Legal</td><td className="px-4 py-2">Delhi</td><td className="px-4 py-2 text-emerald-500">600000.00</td></tr>
+                            <tr><td className="px-4 py-2">8</td><td className="px-4 py-2 font-bold text-gray-400">R&D Satellite</td><td className="px-4 py-2">Hyderabad</td><td className="px-4 py-2 text-red-400 font-bold">NULL</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* 2. Employees Sample Table */}
+                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                      <div className="px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 border-b border-gray-200 dark:border-[#333] flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">TABLE: EMPLOYEES (Sample of 40 rows)</span>
+                      </div>
+                      <div className="overflow-x-auto text-[11px] font-mono">
+                        <table className="w-full text-left">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                            <tr>
+                              <th className="px-4 py-2 font-bold text-gray-500">emp_id</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">name</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">email</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">dept_id</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">manager_id</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">job_title</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                            <tr><td className="px-4 py-2">1</td><td className="px-4 py-2">Ravi Sharma</td><td className="px-4 py-2">ravi.sharma@np.com</td><td className="px-4 py-2">1</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2 font-bold">VP Engineering</td></tr>
+                            <tr><td className="px-4 py-2">2</td><td className="px-4 py-2">Anita Verma</td><td className="px-4 py-2">anita.verma@np.com</td><td className="px-4 py-2">1</td><td className="px-4 py-2">1</td><td className="px-4 py-2">Engineering Manager</td></tr>
+                            <tr><td className="px-4 py-2">3</td><td className="px-4 py-2">Alex Kim</td><td className="px-4 py-2">alex.kim1@np.com</td><td className="px-4 py-2">1</td><td className="px-4 py-2">2</td><td className="px-4 py-2">Senior Software Engineer</td></tr>
+                            <tr><td className="px-4 py-2">6</td><td className="px-4 py-2">Divya Rao</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2">1</td><td className="px-4 py-2">3</td><td className="px-4 py-2">Junior Engineer</td></tr>
+                            <tr><td className="px-4 py-2">34</td><td className="px-4 py-2">Simran Chadha</td><td className="px-4 py-2">simran.chadha@np.com</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2">Contractor</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* 3. Salaries Sample Table */}
+                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                      <div className="px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 border-b border-gray-200 dark:border-[#333] flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">TABLE: SALARIES (Sample of 48 rows)</span>
+                      </div>
+                      <div className="overflow-x-auto text-[11px] font-mono">
+                        <table className="w-full text-left">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                            <tr>
+                              <th className="px-4 py-2 font-bold text-gray-500">salary_id</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">emp_id</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">amount</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">effective_date</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                            <tr><td className="px-4 py-2">1</td><td className="px-4 py-2">1</td><td className="px-4 py-2 text-emerald-500">4500000.00</td><td className="px-4 py-2">2015-03-01</td></tr>
+                            <tr><td className="px-4 py-2">2</td><td className="px-4 py-2">1</td><td className="px-4 py-2 text-emerald-500">5200000.00</td><td className="px-4 py-2">2020-01-01 (Raise)</td></tr>
+                            <tr><td className="px-4 py-2">8</td><td className="px-4 py-2">4</td><td className="px-4 py-2 text-emerald-500">1500000.00</td><td className="px-4 py-2">2018-02-20</td></tr>
+                            <tr><td className="px-4 py-2">10</td><td className="px-4 py-2">5</td><td className="px-4 py-2 text-emerald-500">1500000.00</td><td className="px-4 py-2">2019-07-01 (Tie)</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* 4. Projects Table */}
+                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                      <div className="px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 border-b border-gray-200 dark:border-[#333] flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">TABLE: PROJECTS (Sample of 12 rows)</span>
+                      </div>
+                      <div className="overflow-x-auto text-[11px] font-mono">
+                        <table className="w-full text-left">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                            <tr>
+                              <th className="px-4 py-2 font-bold text-gray-500">project_id</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">project_name</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">dept_id</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">start_date</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">end_date</th>
+                              <th className="px-4 py-2 font-bold text-gray-500">status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                            <tr><td className="px-4 py-2">1</td><td className="px-4 py-2 font-bold">Checkout Revamp</td><td className="px-4 py-2">1</td><td className="px-4 py-2">2023-01-01</td><td className="px-4 py-2">2023-08-01</td><td className="px-4 py-2 text-blue-400">Completed</td></tr>
+                            <tr><td className="px-4 py-2">2</td><td className="px-4 py-2 font-bold">Mobile App v2</td><td className="px-4 py-2">1</td><td className="px-4 py-2">2023-06-01</td><td className="px-4 py-2 text-red-400 font-bold">NULL</td><td className="px-4 py-2 text-emerald-450">Active</td></tr>
+                            <tr><td className="px-4 py-2">12</td><td className="px-4 py-2 font-bold">Unassigned Research</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2">2024-01-01</td><td className="px-4 py-2 text-red-400">NULL</td><td className="px-4 py-2 text-yellow-500">Planned</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-x border-b border-gray-200 dark:border-[#333] bg-gray-50/40 dark:bg-neutral-950/40 p-4">
+                  <pre 
+                    className="bg-gray-100/80 dark:bg-black/80 text-gray-800 dark:text-gray-300 p-4 font-mono text-xs overflow-x-auto border border-gray-200 dark:border-[#333] leading-relaxed max-h-[400px] select-all"
+                    dangerouslySetInnerHTML={{ __html: highlightCode(data.internalImplementation) }}
+                  />
+                </div>
+              )
             )}
           </div>
         )}
