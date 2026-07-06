@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Terminal, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { Terminal, ShieldCheck, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 
 const AuthScreen: React.FC = () => {
   const { login, register } = useAuth();
@@ -11,6 +11,28 @@ const AuthScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+      document.documentElement.classList.add('light');
+      return 'light';
+    }
+    document.documentElement.classList.remove('light');
+    return 'dark';
+  });
+
+  const toggleTheme = () => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('light');
+      localStorage.setItem('theme', 'light');
+      setTheme('light');
+    } else {
+      document.documentElement.classList.remove('light');
+      localStorage.setItem('theme', 'dark');
+      setTheme('dark');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +59,16 @@ const AuthScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12 sm:px-6 lg:px-8 relative">
+      {/* Floating Theme Toggle */}
+      <button
+        onClick={toggleTheme}
+        className="absolute top-6 right-6 p-2 bg-slate-900/60 border border-slate-800 hover:border-text-primary text-text-primary hover:text-white transition-smooth flex items-center justify-center cursor-pointer shadow-md rounded-xl"
+        title="Toggle Theme"
+      >
+        {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+      </button>
+
       {/* Decorative Blur Spheres */}
       <div className="absolute top-1/4 left-1/4 h-72 w-72 rounded-full bg-blue-500/10 blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 h-72 w-72 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none"></div>
