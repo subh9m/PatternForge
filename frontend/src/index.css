@@ -187,6 +187,9 @@ body {
 .shadow-glow-rose {
   box-shadow: 0 0 15px rgba(239, 68, 68, 0.45) !important;
 }
+.shadow-glow-purple {
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.45) !important;
+}
 
 /* Scrollbars - Minimalist Monochrome */
 ::-webkit-scrollbar {

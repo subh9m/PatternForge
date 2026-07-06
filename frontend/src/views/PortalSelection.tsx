@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Code2, BookOpen, Database, LogOut, Sun, Moon } from 'lucide-react';
+import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon } from 'lucide-react';
 
 interface PortalSelectionProps {
-  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql') => void;
+  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os') => void;
 }
 
 const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => {
@@ -68,7 +68,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
         </div>
 
         {/* Modules Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* DSA Workspace */}
           <div
             onClick={() => onSelectPortal('dsa')}
@@ -131,6 +131,28 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
             </div>
             <span className="text-xs font-bold text-purple-400 group-hover:text-purple-300 transition-smooth flex items-center space-x-1 pt-2">
               <span>QUERY</span>
+              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+            </span>
+          </div>
+
+          {/* OS Revision */}
+          <div
+            onClick={() => onSelectPortal('os')}
+            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+          >
+            <div className="w-full">
+              <div className="h-10 w-10 bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-4 group-hover:shadow-glow-amber transition-smooth">
+                <Cpu className="h-5 w-5" />
+              </div>
+              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                OS Revision
+              </h2>
+              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                Revise CPU scheduling, virtual memory paging, deadlocks, and disk RAID virtualizations.
+              </p>
+            </div>
+            <span className="text-xs font-bold text-amber-400 group-hover:text-amber-300 transition-smooth flex items-center space-x-1 pt-2">
+              <span>REVISE</span>
               <span className="transform group-hover:translate-x-1 transition-transform">→</span>
             </span>
           </div>
