@@ -183,8 +183,8 @@ export default function AimlPlayground() {
           onClick={() => setActivePlayground('nn')}
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'nn' 
-              ? 'bg-red-500/10 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-red-500/20'}`}
+              ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
+              : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-indigo-500/20'}`}
         >
           <Brain className="h-4 w-4" />
           <span>Neural Network Simulator</span>
@@ -193,8 +193,8 @@ export default function AimlPlayground() {
           onClick={() => setActivePlayground('rag')}
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'rag' 
-              ? 'bg-red-500/10 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-red-500/20'}`}
+              ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
+              : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-indigo-500/20'}`}
         >
           <Database className="h-4 w-4" />
           <span>RAG Pipeline Simulator</span>
@@ -217,7 +217,7 @@ export default function AimlPlayground() {
             <div className="flex gap-2">
               <button
                 onClick={resetNNWeights}
-                className="flex items-center space-x-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/25 text-red-500 border border-red-500/20 rounded-lg text-xs font-mono font-black cursor-pointer transition-colors"
+                className="flex items-center space-x-2 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-500 border border-indigo-500/20 rounded-lg text-xs font-mono font-black cursor-pointer transition-colors"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Reset</span>
@@ -225,7 +225,7 @@ export default function AimlPlayground() {
               <button
                 onClick={handleTrainStep}
                 disabled={isNNTraining}
-                className="flex items-center space-x-2 px-4 py-1.5 bg-red-650 hover:bg-red-500 text-white rounded-lg text-xs font-mono font-black cursor-pointer transition-colors shadow-lg hover:shadow-red-500/20 disabled:bg-gray-400"
+                className="flex items-center space-x-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-mono font-black cursor-pointer transition-colors shadow-lg hover:shadow-indigo-500/20 disabled:bg-gray-400"
               >
                 <Play className="h-3.5 w-3.5 fill-current" />
                 <span>{isNNTraining ? 'Training...' : 'Train Cycle'}</span>
@@ -245,14 +245,14 @@ export default function AimlPlayground() {
                 <div className="flex items-center space-x-3">
                   <button 
                     onClick={() => hiddenNodes > 2 && setHiddenNodes(prev => prev - 1)}
-                    className="p-1 border border-gray-200 dark:border-neutral-800 rounded hover:border-red-500 cursor-pointer"
+                    className="p-1 border border-gray-200 dark:border-neutral-800 rounded hover:border-indigo-500 cursor-pointer"
                   >
                     <Minus className="h-3 w-3" />
                   </button>
                   <span className="font-mono text-xs font-black text-gray-800 dark:text-gray-250">{hiddenNodes}</span>
                   <button 
                     onClick={() => hiddenNodes < 5 && setHiddenNodes(prev => prev + 1)}
-                    className="p-1 border border-gray-200 dark:border-neutral-800 rounded hover:border-red-500 cursor-pointer"
+                    className="p-1 border border-gray-200 dark:border-neutral-800 rounded hover:border-indigo-500 cursor-pointer"
                   >
                     <Plus className="h-3 w-3" />
                   </button>
@@ -265,7 +265,7 @@ export default function AimlPlayground() {
                 <select
                   value={activation}
                   onChange={(e) => setActivation(e.target.value)}
-                  className="w-full bg-white dark:bg-black border border-gray-200 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-2 py-1.5 rounded-lg focus:outline-none focus:border-red-500"
+                  className="w-full bg-white dark:bg-black border border-gray-200 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-2 py-1.5 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
                   <option value="relu">ReLU</option>
                   <option value="sigmoid">Sigmoid</option>
@@ -278,7 +278,7 @@ export default function AimlPlayground() {
                 <select
                   value={learningRate}
                   onChange={(e) => setLearningRate(parseFloat(e.target.value))}
-                  className="w-full bg-white dark:bg-black border border-gray-200 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-2 py-1.5 rounded-lg focus:outline-none focus:border-red-500"
+                  className="w-full bg-white dark:bg-black border border-gray-200 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-2 py-1.5 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
                   <option value={0.5}>0.5 (Fast/Noisy)</option>
                   <option value={0.1}>0.1 (Recommended)</option>
@@ -292,13 +292,13 @@ export default function AimlPlayground() {
                 <div className="grid grid-cols-2 gap-2 font-mono text-xs">
                   <button 
                     onClick={() => setNnInput1(prev => prev === 1 ? 0 : 1)}
-                    className={`py-1.5 border rounded-lg transition-all cursor-pointer ${nnInput1 === 1 ? 'bg-red-500/10 border-red-500 text-red-500' : 'border-gray-200 dark:border-neutral-800 text-gray-400'}`}
+                    className={`py-1.5 border rounded-lg transition-all cursor-pointer ${nnInput1 === 1 ? 'bg-indigo-500/10 border-indigo-500 text-indigo-500' : 'border-gray-200 dark:border-neutral-800 text-gray-400'}`}
                   >
                     Input X1: {nnInput1}
                   </button>
                   <button 
                     onClick={() => setNnInput2(prev => prev === 1 ? 0 : 1)}
-                    className={`py-1.5 border rounded-lg transition-all cursor-pointer ${nnInput2 === 1 ? 'bg-red-500/10 border-red-500 text-red-500' : 'border-gray-200 dark:border-neutral-800 text-gray-400'}`}
+                    className={`py-1.5 border rounded-lg transition-all cursor-pointer ${nnInput2 === 1 ? 'bg-indigo-500/10 border-indigo-500 text-indigo-500' : 'border-gray-200 dark:border-neutral-800 text-gray-400'}`}
                   >
                     Input X2: {nnInput2}
                   </button>
@@ -401,7 +401,7 @@ export default function AimlPlayground() {
                 </div>
                 <div className="flex space-x-4">
                   <span>Epochs: <strong className="text-white">{nnEpoch}</strong></span>
-                  <span>Loss: <strong className="text-red-400">{nnLoss.toFixed(4)}</strong></span>
+                  <span>Loss: <strong className="text-indigo-400">{nnLoss.toFixed(4)}</strong></span>
                 </div>
               </div>
             </div>
@@ -427,7 +427,7 @@ export default function AimlPlayground() {
                   return (
                     <div 
                       key={i} 
-                      className="w-4 bg-red-500/80 rounded-t"
+                      className="w-4 bg-indigo-500/80 rounded-t"
                       style={{ height: `${height}%` }}
                       title={`Loss: ${l.toFixed(4)}`}
                     />
@@ -455,7 +455,7 @@ export default function AimlPlayground() {
             <button
               onClick={runRagPipeline}
               disabled={isRagRunning}
-              className="flex items-center space-x-2 px-4 py-1.5 bg-red-650 hover:bg-red-500 text-white rounded-lg text-xs font-mono font-black cursor-pointer transition-colors shadow-lg hover:shadow-red-500/20 disabled:bg-gray-400"
+              className="flex items-center space-x-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-mono font-black cursor-pointer transition-colors shadow-lg hover:shadow-indigo-500/20 disabled:bg-gray-400"
             >
               <Play className="h-3.5 w-3.5 fill-current" />
               <span>{isRagRunning ? 'Pipeline Running...' : 'Query Database'}</span>
@@ -472,7 +472,7 @@ export default function AimlPlayground() {
                 value={ragDoc}
                 onChange={(e) => setRagDoc(e.target.value)}
                 rows={5}
-                className="w-full p-2.5 bg-neutral-950 text-gray-300 font-mono text-xs border border-neutral-900 rounded-lg focus:outline-none focus:border-red-500 leading-normal resize-none"
+                className="w-full p-2.5 bg-neutral-950 text-gray-300 font-mono text-xs border border-neutral-900 rounded-lg focus:outline-none focus:border-indigo-500 leading-normal resize-none"
                 placeholder="Insert documents here..."
               />
               
@@ -482,7 +482,7 @@ export default function AimlPlayground() {
                   type="text"
                   value={ragQuery}
                   onChange={(e) => setRagQuery(e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs bg-neutral-950 border border-neutral-900 rounded-lg font-mono text-white focus:outline-none focus:border-red-500"
+                  className="w-full px-2.5 py-1.5 text-xs bg-neutral-950 border border-neutral-900 rounded-lg font-mono text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -493,25 +493,25 @@ export default function AimlPlayground() {
               
               <div className="flex-1 flex flex-col justify-center space-y-3.5 font-mono text-[10.5px] py-4">
                 {/* Step 1: Chunking */}
-                <div className={`flex items-center space-x-3 p-2 rounded-lg transition-all ${ragStep === 1 ? 'bg-red-500/10 border border-red-500/20 text-red-500' : 'text-gray-500'}`}>
+                <div className={`flex items-center space-x-3 p-2 rounded-lg transition-all ${ragStep === 1 ? 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-500' : 'text-gray-500'}`}>
                   <span className="px-1.5 py-0.2 border border-current rounded text-[9px]">STEP 1</span>
                   <span>Text Chunk Splitting</span>
                 </div>
 
                 {/* Step 2: Embedding */}
-                <div className={`flex items-center space-x-3 p-2 rounded-lg transition-all ${ragStep === 2 ? 'bg-red-500/10 border border-red-500/20 text-red-500' : 'text-gray-500'}`}>
+                <div className={`flex items-center space-x-3 p-2 rounded-lg transition-all ${ragStep === 2 ? 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-500' : 'text-gray-500'}`}>
                   <span className="px-1.5 py-0.2 border border-current rounded text-[9px]">STEP 2</span>
                   <span>Dense Embedding Mapping</span>
                 </div>
 
                 {/* Step 3: DB search similarity */}
-                <div className={`flex items-center space-x-3 p-2 rounded-lg transition-all ${ragStep === 3 ? 'bg-red-500/10 border border-red-500/20 text-red-500' : 'text-gray-500'}`}>
+                <div className={`flex items-center space-x-3 p-2 rounded-lg transition-all ${ragStep === 3 ? 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-500' : 'text-gray-500'}`}>
                   <span className="px-1.5 py-0.2 border border-current rounded text-[9px]">STEP 3</span>
                   <span>Cosine Similarity Match</span>
                 </div>
 
                 {/* Step 4: Generation */}
-                <div className={`flex items-center space-x-3 p-2 rounded-lg transition-all ${ragStep === 4 ? 'bg-red-500/10 border border-red-500/20 text-red-500' : 'text-gray-500'}`}>
+                <div className={`flex items-center space-x-3 p-2 rounded-lg transition-all ${ragStep === 4 ? 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-500' : 'text-gray-500'}`}>
                   <span className="px-1.5 py-0.2 border border-current rounded text-[9px]">STEP 4</span>
                   <span>LLM Answer Generation</span>
                 </div>
@@ -523,7 +523,7 @@ export default function AimlPlayground() {
               <div>
                 <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Retrieved Database Chunk</span>
                 {retrievedChunk ? (
-                  <div className="p-3 bg-red-500/[0.04] border border-red-500/20 rounded-xl mt-3 font-sans text-xs text-gray-700 dark:text-gray-300 italic">
+                  <div className="p-3 bg-indigo-500/[0.04] border border-indigo-500/20 rounded-xl mt-3 font-sans text-xs text-gray-700 dark:text-gray-300 italic">
                     "{retrievedChunk}"
                   </div>
                 ) : (

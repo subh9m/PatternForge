@@ -22,8 +22,8 @@ const renderDiagram = (conceptId) => {
                   <span className="px-2 py-0.5 bg-purple-500/10 text-purple-500 text-[8px] font-mono font-black uppercase rounded mb-2 inline-block">DL (Sub-subset)</span>
                   <p className="text-[11.5px] font-bold text-gray-700 dark:text-gray-300 mb-3">Deep Learning: Deep multi-layered neural network feature representations.</p>
                   
-                  <div className="border border-red-200 dark:border-red-950 p-4 rounded-xl bg-red-500/[0.01]">
-                    <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-mono font-black uppercase rounded mb-1 inline-block">GenAI (Core Core)</span>
+                  <div className="border border-indigo-250 dark:border-indigo-950 p-4 rounded-xl bg-indigo-500/[0.01]">
+                    <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-500 text-[8px] font-mono font-black uppercase rounded mb-1 inline-block">GenAI (Core Core)</span>
                     <p className="text-[11.5px] font-bold text-gray-700 dark:text-gray-300">Generative AI: Probability distribution modeling to generate original samples.</p>
                   </div>
                 </div>
@@ -123,8 +123,8 @@ const renderDiagram = (conceptId) => {
               </div>
               <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
 
-              <div className="p-3 bg-red-500/5 border border-red-500/25 rounded-lg text-center shadow-sm">
-                <strong className="text-red-500">Self-Attention Grid</strong>
+              <div className="p-3 bg-indigo-500/5 border border-indigo-500/25 rounded-lg text-center shadow-sm">
+                <strong className="text-indigo-500">Self-Attention Grid</strong>
                 <span className="block text-[9px] text-gray-400 mt-1">Multi-head attention matrices</span>
               </div>
               <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
@@ -229,7 +229,7 @@ const renderDiagram = (conceptId) => {
           <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-200 dark:border-neutral-900 rounded-xl space-y-4">
             <div className="flex flex-col sm:flex-row items-center justify-around gap-4 font-mono text-xs text-center">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full sm:w-1/4">
-                <strong className="text-red-500 block">1. Agent Planner</strong>
+                <strong className="text-indigo-500 block">1. Agent Planner</strong>
                 <span className="text-[10px] text-gray-400">Decodes goal directives</span>
               </div>
               
@@ -275,8 +275,8 @@ const renderDiagram = (conceptId) => {
                 <p className="text-[10px] text-gray-500">Bypasses LLM model generation. Latency: ~10ms, Cost: $0.</p>
               </div>
 
-              <div className="p-4 border border-red-500/20 bg-red-500/[0.01] rounded-xl text-center space-y-1">
-                <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-mono font-black uppercase rounded">MISS (Sim &lt; 0.96)</span>
+              <div className="p-4 border border-indigo-500/20 bg-indigo-500/[0.01] rounded-xl text-center space-y-1">
+                <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-500 text-[8px] font-mono font-black uppercase rounded">MISS (Sim &lt; 0.96)</span>
                 <h5 className="text-xs font-bold text-gray-800 dark:text-gray-200">Call LLM API Endpoint</h5>
                 <p className="text-[10px] text-gray-500">Runs full model token inference, saves output to cache. Latency: &gt;1s.</p>
               </div>
@@ -403,12 +403,12 @@ export default function AimlCard({ data }) {
   return (
     <section 
       id={data.id}
-      className="w-full bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#222] rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-red-500/25 relative"
+      className="w-full bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#222] rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-indigo-500/25 relative"
     >
       {/* Section Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-150 dark:border-[#333]">
         <div className="flex items-center space-x-3">
-          <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[10px] font-black uppercase font-mono tracking-wider rounded-md">
+          <span className="px-3 py-1 bg-indigo-500/10 text-indigo-500 text-[10px] font-black uppercase font-mono tracking-wider rounded-md">
             {data.num}
           </span>
           <h2 className="text-xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
@@ -444,7 +444,7 @@ export default function AimlCard({ data }) {
                 className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-55/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
-                  <span className="h-2 w-2 rounded-full bg-red-500"></span>
+                  <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
                   <span className="text-sm font-bold text-gray-800 dark:text-gray-250">{sub.name}</span>
                 </div>
                 {isExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
@@ -455,10 +455,10 @@ export default function AimlCard({ data }) {
                 <div className="p-5 border-t border-gray-200 dark:border-neutral-900 space-y-6 animate-fadeIn">
                   
                   {/* Highlighted One-Liner */}
-                  <div className="p-3.5 bg-red-500/[0.03] border-l-3 border-red-500 text-gray-700 dark:text-gray-300 rounded-r-lg font-sans text-xs flex items-center space-x-3 leading-relaxed">
-                    <Sparkles className="h-4 w-4 text-red-500 flex-shrink-0" />
+                  <div className="p-3.5 bg-indigo-500/[0.03] border-l-3 border-indigo-500 text-gray-700 dark:text-gray-300 rounded-r-lg font-sans text-xs flex items-center space-x-3 leading-relaxed">
+                    <Sparkles className="h-4 w-4 text-indigo-500 flex-shrink-0" />
                     <div>
-                      <span className="font-mono text-[9px] font-black text-red-500 uppercase tracking-widest block mb-0.5">Interview One-Liner</span>
+                      <span className="font-mono text-[9px] font-black text-indigo-500 uppercase tracking-widest block mb-0.5">Interview One-Liner</span>
                       <blockquote className="italic">"{sub.oneLiner}"</blockquote>
                     </div>
                   </div>

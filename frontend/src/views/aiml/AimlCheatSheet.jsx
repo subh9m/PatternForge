@@ -131,7 +131,7 @@ export default function AimlCheatSheet() {
             placeholder="Search keywords or definitions..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs bg-gray-50/50 dark:bg-black/40 border border-gray-200 dark:border-neutral-800 rounded-xl font-mono text-gray-800 dark:text-gray-300 focus:outline-none focus:border-red-500 transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs bg-gray-50/50 dark:bg-black/40 border border-gray-200 dark:border-neutral-800 rounded-xl font-mono text-gray-800 dark:text-gray-300 focus:outline-none focus:border-indigo-500 transition-all"
           />
         </div>
 
@@ -144,8 +144,8 @@ export default function AimlCheatSheet() {
               onClick={() => setCategory(cat)}
               className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg border transition-all cursor-pointer
                 ${category === cat 
-                  ? 'bg-red-500/10 text-red-500 border-red-500/30' 
-                  : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-red-500/20'}`}
+                  ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30' 
+                  : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-indigo-500/20'}`}
             >
               {cat}
             </button>
@@ -159,12 +159,12 @@ export default function AimlCheatSheet() {
           filtered.map((item, idx) => (
             <div 
               key={idx}
-              className="p-5 border border-gray-200 dark:border-neutral-900 bg-white/40 dark:bg-neutral-950/20 hover:border-red-500/30 rounded-xl flex flex-col justify-between space-y-4 hover:shadow-md transition-all group relative"
+              className="p-5 border border-gray-200 dark:border-neutral-900 bg-white/40 dark:bg-neutral-950/20 hover:border-indigo-500/30 rounded-xl flex flex-col justify-between space-y-4 hover:shadow-md transition-all group relative"
             >
               {/* Top Row */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-mono font-black uppercase rounded">
+                  <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-500 text-[8px] font-mono font-black uppercase rounded">
                     {item.category}
                   </span>
                   <button
@@ -195,8 +195,8 @@ export default function AimlCheatSheet() {
 
               {/* Speak ready summary */}
               <div>
-                <span className="block text-[8px] font-mono text-red-400/80 uppercase tracking-widest font-black mb-0.5">🗣️ Speak-ready Answer</span>
-                <p className="text-[10.5px] font-mono font-bold text-red-500/90 leading-normal">
+                <span className="block text-[8px] font-mono text-indigo-400/80 uppercase tracking-widest font-black mb-0.5">🗣️ Speak-ready Answer</span>
+                <p className="text-[10.5px] font-mono font-bold text-indigo-500/90 leading-normal">
                   {item.oneLiner}
                 </p>
               </div>

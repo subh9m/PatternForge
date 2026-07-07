@@ -27,8 +27,8 @@ export default function AimlMainContent({ isOpen, toggleSidebar, activeTab }) {
                     bg-white/60 dark:bg-black/60 backdrop-blur-md 
                     border border-gray-200 dark:border-[#333] 
                     rounded-full text-gray-700 dark:text-gray-300 
-                    hover:text-red-500 dark:hover:text-red-500 
-                    hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]
+                    hover:text-indigo-500 dark:hover:text-indigo-500 
+                    hover:shadow-[0_0_20px_rgba(99,102,241,0.4)]
                     transition-all duration-500 ease-in-out
                     ${isOpen ? 'left-1/2 -translate-x-1/2 sm:left-64 sm:ml-4 sm:translate-x-0' : 'left-6 translate-x-0'}`}
       >
