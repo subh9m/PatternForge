@@ -12,12 +12,13 @@ import SqlGuide from './views/sql/SqlGuide';
 import OsGuide from './views/os/OsGuide';
 import GitGuide from './views/git/GitGuide';
 import AimlGuide from './views/aiml/AimlGuide';
+import CnGuide from './views/cn/CnGuide';
 
 const MainApp: React.FC = () => {
   const { user, loading } = useAuth();
-  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml'>(() => {
+  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn'>(() => {
     const saved = localStorage.getItem('activePortal');
-    return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml') ? saved : 'selection';
+    return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml' || saved === 'cn') ? saved : 'selection';
   });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings'>('dashboard');
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
@@ -95,6 +96,17 @@ const MainApp: React.FC = () => {
   if (activePortal === 'aiml') {
     return (
       <AimlGuide
+        onBackToPortal={() => {
+          localStorage.removeItem('activePortal');
+          setActivePortal('selection');
+        }}
+      />
+    );
+  }
+
+  if (activePortal === 'cn') {
+    return (
+      <CnGuide
         onBackToPortal={() => {
           localStorage.removeItem('activePortal');
           setActivePortal('selection');

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon, GitBranch, Brain } from 'lucide-react';
+import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon, GitBranch, Brain, Globe } from 'lucide-react';
 
 interface PortalSelectionProps {
-  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml') => void;
+  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn') => void;
 }
 
 const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => {
@@ -197,6 +197,28 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
             </div>
             <span className="text-xs font-bold text-indigo-400 group-hover:text-indigo-300 transition-smooth flex items-center space-x-1 pt-2">
               <span>INTEGRATE</span>
+              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+            </span>
+          </div>
+
+          {/* CN Revision Card */}
+          <div
+            onClick={() => onSelectPortal('cn')}
+            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+          >
+            <div className="w-full">
+              <div className="h-10 w-10 bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-4 group-hover:shadow-glow-cyan transition-smooth">
+                <Globe className="h-5 w-5" />
+              </div>
+              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                CN Revision
+              </h2>
+              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                Master TCP handshakes, OSI reference layers, DNS routing, subnet address spaces, and SSL/TLS handshakes.
+              </p>
+            </div>
+            <span className="text-xs font-bold text-cyan-400 group-hover:text-cyan-300 transition-smooth flex items-center space-x-1 pt-2">
+              <span>CONNECT</span>
               <span className="transform group-hover:translate-x-1 transition-transform">→</span>
             </span>
           </div>
