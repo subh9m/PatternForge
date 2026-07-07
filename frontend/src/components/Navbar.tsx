@@ -18,8 +18,10 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
     const saved = localStorage.getItem('theme');
     if (saved === 'light') {
       document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
       return 'light';
     }
+    document.documentElement.classList.add('dark');
     document.documentElement.classList.remove('light');
     return 'dark';
   });
@@ -27,9 +29,11 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
   const toggleTheme = () => {
     if (theme === 'dark') {
       document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
       setTheme('light');
     } else {
+      document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
       localStorage.setItem('theme', 'dark');
       setTheme('dark');
