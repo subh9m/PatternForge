@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, RotateCcw, Cpu, Network, ArrowRight } from 'lucide-react';
+import { Play, RotateCcw, ArrowRight } from 'lucide-react';
 
 export default function ProjectsPlayground() {
   const [scenario, setScenario] = useState('ocr'); // 'ocr', 'jwt', 'cron'

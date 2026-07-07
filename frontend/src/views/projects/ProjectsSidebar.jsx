@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import { FolderGit2, Compass, Layers, ShieldAlert, Cpu } from 'lucide-react';
+// No icons needed in sidebar
 
 export const ProjectsSidebarContext = createContext({ activeTab: '', onTabChange: () => {} });
 

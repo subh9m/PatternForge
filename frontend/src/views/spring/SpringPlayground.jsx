@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Play, RotateCcw, Cpu, Database, Network, ArrowRight, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, RotateCcw, Cpu, Database, Network, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function SpringPlayground() {

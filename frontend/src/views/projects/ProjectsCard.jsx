@@ -2,12 +2,9 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function ProjectsCard({ data, activeTab }) {
-  const [expandedQa, setExpandedQa] = useState(null);
   const [expandedTech, setExpandedTech] = useState(null);
-
-  const toggleQa = (idx) => {
-    setExpandedQa(expandedQa === idx ? null : idx);
-  };
+  const [expandedQaSection, setExpandedQaSection] = useState(null);
+  const [expandedQaItem, setExpandedQaItem] = useState(null);
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -389,31 +386,65 @@ export default function ProjectsCard({ data, activeTab }) {
           <div className="border-b border-gray-150 dark:border-[#333] pb-4">
             <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[9px] font-mono font-black uppercase rounded">Systems Review</span>
             <h2 className="text-xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide mt-1.5">L5 Technical Interview Prep</h2>
+            <p className="text-xs text-gray-500 mt-1 font-sans">Grouped study checklist covering all 12 key architecture sections. Click on a category to expand individual questions, follow-up cross-questions, and answers.</p>
           </div>
 
           <div className="space-y-4">
-            {data.interviewQA.map((item, idx) => {
-              const isExpanded = expandedQa === idx;
+            {data.interviewQA.map((sec, secIdx) => {
+              const isSectionExpanded = expandedQaSection === secIdx;
               return (
                 <div 
-                  key={idx}
-                  className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10"
+                  key={secIdx} 
+                  className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-white/40 dark:bg-neutral-950/20"
                 >
                   <button
-                    onClick={() => toggleQa(idx)}
+                    onClick={() => setExpandedQaSection(isSectionExpanded ? null : secIdx)}
                     className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-55/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
                   >
                     <div className="flex items-center space-x-3">
                       <span className="h-2 w-2 rounded-full bg-fuchsia-500"></span>
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-255">Q: {item.q}</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200">{sec.section}</span>
                     </div>
-                    {isExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+                    {isSectionExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
                   </button>
 
-                  {isExpanded && (
-                    <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-white/50 dark:bg-black/40 text-xs text-gray-600 dark:text-gray-300 leading-relaxed font-light font-sans space-y-2">
-                      <span className="block text-[8px] font-mono text-fuchsia-500 uppercase tracking-widest font-black">Google L5 Answer</span>
-                      <p>{item.a}</p>
+                  {isSectionExpanded && (
+                    <div className="p-4 border-t border-gray-200 dark:border-neutral-900 space-y-3 bg-gray-50/5 dark:bg-black/20">
+                      {sec.questions.map((item, itemIdx) => {
+                        const itemKey = `${secIdx}-${itemIdx}`;
+                        const isItemExpanded = expandedQaItem === itemKey;
+                        return (
+                          <div 
+                            key={itemIdx} 
+                            className="border border-gray-200 dark:border-neutral-900 rounded-lg overflow-hidden bg-white/50 dark:bg-black/40"
+                          >
+                            <button
+                              onClick={() => setExpandedQaItem(isItemExpanded ? null : itemKey)}
+                              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-900/20 transition-all text-left cursor-pointer"
+                            >
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Q: {item.q}</span>
+                              {isItemExpanded ? <ChevronUp className="h-3.5 w-3.5 text-gray-400" /> : <ChevronDown className="h-3.5 w-3.5 text-gray-400" />}
+                            </button>
+
+                            {isItemExpanded && (
+                              <div className="p-4 border-t border-gray-200 dark:border-neutral-900 text-xs space-y-3 bg-white/70 dark:bg-black/60 font-sans">
+                                {item.followups && item.followups.length > 0 && (
+                                  <div className="space-y-1">
+                                    <span className="block text-[8px] font-mono text-gray-400 uppercase tracking-widest">Follow-up Cross-questions</span>
+                                    <ul className="list-disc pl-4 text-gray-500 dark:text-neutral-400 space-y-1 font-light">
+                                      {item.followups.map((fo, fidx) => <li key={fidx}>{fo}</li>)}
+                                    </ul>
+                                  </div>
+                                )}
+                                <div className="space-y-1 border-t border-dashed border-gray-200 dark:border-neutral-800 pt-2.5">
+                                  <span className="block text-[8px] font-mono text-fuchsia-500 uppercase tracking-widest font-black">Google L5 Answer</span>
+                                  <p className="text-gray-650 dark:text-gray-200 leading-relaxed font-light">{item.a}</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
