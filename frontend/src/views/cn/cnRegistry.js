@@ -2,105 +2,236 @@ export const cnConcepts = [
   {
     id: "cn_fundamentals",
     num: "CN.1",
-    title: "Network Classifications & Topologies",
-    desc: "The hardware blueprints of connectivity. This section covers network definitions, nodes and links, geographic classifications (LAN, WAN, MAN), and physical topologies.",
-    declaration: `// Network Structural Entities
-const topologySchema = {
-  elements: ["Nodes (Hosts, Switches)", "Links (Copper, Fiber)"],
-  classes: ["PAN", "LAN", "MAN", "WAN"],
-  topologies: ["Bus", "Star", "Ring", "Mesh", "Tree"]
+    title: "Networking Fundamentals & Topologies",
+    desc: "The basic components and physical blueprints of data exchange. Covers network performance metrics (throughput, latency components, jitter), geographic scopes, unicast/multicast/broadcast schemes, and physical/logical network topologies.",
+    declaration: `// Network Performance & Topology Config
+const fundamentals = {
+  criteria: ["Performance", "Reliability", "Security"], // PRS
+  latencyComponents: ["Transmission", "Propagation", "Queuing", "Processing"],
+  scopes: ["PAN (~1m)", "LAN (Building)", "MAN (City)", "WAN (Global)"],
+  topologies: {
+    meshLinks: (n) => (n * (n - 1)) / 2,
+    meshPorts: (n) => n - 1
+  }
 };`,
-    internalImplementation: `/* ----------------- TOPOLOGY SCHEMATICS -----------------
-   Star:   [Node 1] ──┐
-   		            ├──► [Central Switch/Hub] ◄── [Node 3]
-           [Node 2] ──┘
-   Mesh:   [Node A] ◄───► [Node B]
-             ▲              ▲
-             └──────────────┘
+    internalImplementation: `/* ----------------- PERFORMANCE METRICS & TOPOLOGIES -----------------
+   Latency = (L / B) + (d / v) + Queuing + Processing
+   Unicast   : [1 -> 1]  (Client ──► Server)
+   Multicast : [1 -> N]  (Client ──► Subnet Group)
+   Broadcast : [1 -> All](Client ──► LAN Broadcast ID)
+
+   Full Mesh (n=4):  [A]───[B] (Links = 4 * 3 / 2 = 6)
+                      │╲   /│
+                      │  ╳  │
+                      │/   ╲│
+                     [D]───[C]
 */`,
     subtopics: [
       {
-        name: "Network & Nodes/Links",
-        oneLiner: "A network is an interconnected group of nodes sharing data over communication links.",
-        definition: "A computer network is a system of interconnected host devices (nodes) connected by communication channels (links) that share resources and exchange information using standard protocols.",
-        whyNeed: "Without networks, computers are isolated silos. Networks enable dynamic data sharing, distributed cloud architectures, and real-time collaboration.",
-        example: "A corporate office network connecting laptops, print servers, and file databases over local switches.",
-        devPerspective: "SDEs design applications that exchange data over sockets. Every network connection maps back to a client node opening a channel to a server node.",
+        name: "Core Terminology & Metrics",
+        oneLiner: "A network is an interconnected group of nodes sharing data over communication links, judged by PRS (Performance, Reliability, Security).",
+        definition: "A network consists of hosts (nodes) connected by transmission links. Key parameters include Bandwidth (theoretical capacity, bps), Throughput (actual speed, bps), Latency (total time delay), and Jitter (packet arrival time variations).",
+        whyNeed: "Critical for designing SLAs. Bandwidth is the highway's width, throughput is the actual number of cars passing, and jitter affects real-time services like video streaming and VoIP.",
+        example: "A fiber link with 10 Gbps bandwidth delivering 8.5 Gbps throughput during peak office hours with < 5ms jitter.",
+        devPerspective: "SDEs optimize network calls: compress payloads to reduce transmission delay, locate servers near users (CDN) to drop propagation delay, and choose UDP over TCP for VoIP to tolerate jitter.",
         questions: [
-          "What is a computer network and what are its core components?",
-          "Differentiate between nodes and links in a network diagram.",
-          "What are client nodes vs server nodes?"
+          "Differentiate between bandwidth, throughput, and latency.",
+          "What are the three essential criteria for a good network?",
+          "Explain the difference between point-to-point and multipoint configurations."
         ],
         followups: [
-          "Explain the difference between point-to-point and broadcast links.",
-          "What are the parameters used to measure network performance (throughput, latency)?"
+          "What is Jitter, and why is it problematic for real-time traffic?",
+          "Why is throughput almost always less than or equal to the link bandwidth?"
         ],
         confusions: [
-          "Nodes vs Clients: All hosts are nodes (including printers and switches), but not all nodes are active users/clients requesting files."
+          "Bandwidth vs Latency: Having a 1 Gbps connection does not speed up propagation latency; it only increases the volume of packets pushed per second."
         ],
         takeaways: [
-          "A node is any device capable of communicating.",
-          "A link is the communication medium (wired/wireless).",
-          "Protocols govern how nodes communicate over links."
+          "PRS: Performance, Reliability, Security.",
+          "Throughput ≤ Bandwidth.",
+          "Jitter is the standard deviation/variation of packet latency."
         ]
       },
       {
-        name: "Network Classifications (LAN/WAN/MAN)",
-        oneLiner: "Networks are classified by geographic size, from local rooms to global infrastructure.",
-        definition: "The categorization of networks based on their geographic span: LAN (Local Area Network - single building/home), MAN (Metropolitan Area Network - city size), and WAN (Wide Area Network - country/global scale).",
-        whyNeed: "Geographic scale determines the wiring medium, routing requirements, speeds, and costs. A LAN uses cheap local switches; a WAN requires internet service providers (ISPs) and routers.",
-        example: "Your home Wi-Fi is a LAN; the internet is the ultimate global WAN connecting local networks.",
-        devPerspective: "SDEs must design apps keeping network speeds in mind: LAN operations are low-latency (~1ms), while WAN requests (e.g. cross-region database queries) introduce high latency (100ms+).",
+        name: "Latency Components & Formulas",
+        oneLiner: "Total Latency = Transmission + Propagation + Queuing + Processing delay.",
+        definition: "Transmission Delay (L/B) is the time to push all packet bits onto the wire. Propagation Delay (d/v) is the time for a bit to travel the physical distance. Queuing delay is buffer wait time, and Processing delay is router header parsing time.",
+        whyNeed: "Allows engineers to target the bottleneck: long-distance links are dominated by propagation delay (speed of light), while saturated routers are dominated by queuing delay.",
+        example: "Satellite networks have low transmission delay (high bandwidth) but high propagation delay due to orbital distance (~36,000 km).",
+        devPerspective: "When deploying globally, database replication times are restricted by propagation delay (approx 1ms per 100 miles over fiber).",
         questions: [
-          "How are networks classified based on geographical distribution?",
-          "Explain LAN, MAN, and WAN with examples.",
-          "What is an Enterprise Network?"
+          "Explain the four types of delays in a computer network.",
+          "What is the mathematical formula for Transmission Delay? How does it differ from Propagation Delay?",
+          "What factors cause queuing delay in switch buffers?"
         ],
         followups: [
-          "Compare wired LAN (Ethernet) vs wireless LAN (Wi-Fi) in terms of security and collision domains.",
-          "What is PAN (Personal Area Network) and when is it used?"
+          "Calculate transmission delay for a 1 KB packet over a 1 Mbps link. [1024 bytes * 8 / 1,000,000 bps = 8.19 ms]",
+          "How does the medium's propagation velocity affect overall latency?"
         ],
         confusions: [
-          "WAN = Internet: The internet is a public WAN, but companies also build private WANs to connect remote branches securely."
+          "Propagation vs Transmission: Transmission depends on bandwidth and packet size; propagation depends on distance and the physical speed of the medium."
         ],
         takeaways: [
-          "LAN: Small area, high speed, cheap setup.",
-          "WAN: Large area, slower speed, requires ISPs and routing protocols.",
-          "WLAN utilizes Wi-Fi (802.11 standards)."
+          "Transmission = L / B (Packet length / Bandwidth).",
+          "Propagation = d / v (Distance / Signal velocity).",
+          "Queuing is variable; processing is usually fixed and small."
         ]
       },
       {
-        name: "Network Topologies",
-        oneLiner: "Topologies define the physical or logical layout of nodes and connection cables.",
-        definition: "The physical or logical arrangement of devices, links, and nodes in a network, including Bus, Star, Ring, Mesh, Tree, and Hybrid structures.",
-        whyNeed: "Topology affects fault tolerance, cost, and cabling complexity. Mesh provides maximum redundancy but is expensive; Star is robust and easy to troubleshoot but has a single point of failure.",
-        example: "Modern offices use Star topology connected to central switches. If one ethernet cord breaks, only that laptop loses connection.",
-        devPerspective: "Infrastructure SDEs map physical servers in database clusters using tree or hybrid topologies to ensure high availability and route efficiency.",
+        name: "Network Types & Transmission Modes",
+        oneLiner: "Networks range from PAN (~1m) to WAN (Global). Modes range from Simplex to Full-Duplex.",
+        definition: "Networks are grouped by geographic span: PAN (Personal Area Network, Bluetooth), LAN (Local Area Network), MAN (Metropolitan Area Network), and WAN (Wide Area Network). Transmission is Simplex (one-way), Half-Duplex (two-way, alternating), or Full-Duplex (simultaneous two-way).",
+        whyNeed: "Geographic scale dictates routing protocols, medium limits, and costs. Duplex modes determine collision potential on media.",
+        example: "A home Wi-Fi is a LAN operating in half-duplex, while a fiber link between data centers is a WAN operating in full-duplex.",
+        devPerspective: "WebSockets enable full-duplex communication over a single TCP connection, replacing half-duplex HTTP polling loops.",
         questions: [
-          "Define network topology and name its primary types.",
-          "Explain Star topology. Why is it the most popular in corporate offices?",
-          "Compare Ring topology vs Mesh topology."
+          "Classify networks based on their geographical distribution.",
+          "Differentiate between Simplex, Half-Duplex, and Full-Duplex transmission with examples.",
+          "Explain Unicast, Multicast, and Broadcast modes."
         ],
         followups: [
-          "What is the formula for the number of links in a fully connected mesh network with N nodes? [N*(N-1)/2]",
-          "What is a hybrid topology?"
+          "Is a walkie-talkie half-duplex or full-duplex? Why? [Half-duplex; cannot transmit and receive on the same frequency at the exact same time]",
+          "What is PAN and how does it relate to wearable tech?"
         ],
         confusions: [
-          "Logical vs Physical: A network can have a physical Star layout (cables to a hub) but act logically as a Bus (broadcasting signals)."
+          "APIPA address range: If a client fails to reach a DHCP server, it auto-assigns an address from the 169.254.0.0/16 private subnet."
         ],
         takeaways: [
-          "Star topology is the modern standard for local offices.",
-          "Mesh topology provides maximum redundancy at high cost.",
-          "If the central hub in a Star network fails, the entire segment collapses."
+          "Simplex is one-way only.",
+          "Half-duplex is both ways, but not at the same time.",
+          "Full-duplex is simultaneous two-way communication."
+        ]
+      },
+      {
+        name: "Network Topologies & Comparison",
+        oneLiner: "Topologies map nodes physically or logically; star is modern standard, mesh is fully redundant.",
+        definition: "Arrangement of links and nodes: Bus (single backbone with terminators, uses CSMA/CD), Star (central hub/switch), Ring (token-passing, no collisions), Mesh (fully interconnected), and Tree/Hybrid (hierarchical systems).",
+        whyNeed: "Determines cabling cost, installation complexity, and fault tolerance. In a star network, a node drop doesn't affect others, making it highly serviceable.",
+        example: "Modern offices use Star topology connected to switches. The global internet backbone runs a partial mesh for redundancy.",
+        devPerspective: "Cloud architects deploy VPC subnets in redundant layouts, treating availability zones as logical Star setups mapping to a Mesh backbone.",
+        questions: [
+          "Compare Star, Bus, Ring, and Mesh topologies.",
+          "Write the formula for the number of links in a fully connected mesh network of N nodes.",
+          "What are the pros and cons of Mesh topology?"
+        ],
+        followups: [
+          "If a full mesh network has 6 nodes, how many physical cables are required? [6 * 5 / 2 = 15 cables]",
+          "Explain Tree topology and when it is deployed."
+        ],
+        confusions: [
+          "Hub vs Switch topology: A hub-based network is physically a Star but logically a Bus because all signals are broadcast to all ports."
+        ],
+        takeaways: [
+          "Mesh links = N * (N - 1) / 2.",
+          "Bus topology relies on terminators to prevent signal reflection.",
+          "Star topology has a single central point of failure (switch)."
+        ]
+      }
+    ]
+  },
+  {
+    id: "osi_tcpip",
+    num: "CN.2",
+    title: "Reference Models & Network Layers",
+    desc: "The structural architecture of communication. Compares the 7 layers of the OSI model with the 4 layers of the TCP/IP model, detailing headers, encapsulation workflows, and protocol data units (PDUs).",
+    declaration: `// OSI vs TCP/IP Mapping
+const layersMap = {
+  osiMnemonics: {
+    topDown: "All People Seem To Need Data Processing",
+    bottomUp: "Please Do Not Throw Sausage Pizza Away"
+  },
+  pdus: ["Bit (L1)", "Frame (L2)", "Packet (L3)", "Segment/Datagram (L4)", "Data (L5-7)"]
+};`,
+    internalImplementation: `/* ----------------- ENCAPSULATION PROCESS -----------------
+   [Application] Data  (HTTP, DNS, SMTP)
+   [Transport]   Segment = [TCP Header] + Data
+   [Network]     Packet  = [IP Header] + Segment
+   [Data Link]   Frame   = [MAC Header] + Packet + [Trailer (CRC)]
+   [Physical]    Bits    = 01011001 on transmission medium
+*/`,
+    subtopics: [
+      {
+        name: "OSI 7-Layer Architecture",
+        oneLiner: "OSI is a 7-layer theoretical reference framework standardizing open network communications.",
+        definition: "Divided into 7 layers: Physical (bits/repeater), Data Link (frames/switch), Network (packets/router), Transport (segments/end-to-end), Session (synchronization), Presentation (encryption/compression), and Application (user interface).",
+        whyNeed: "Provides modularity. A hardware manufacturer can build a network interface card (L1/L2) without needing to understand web browser software (L7).",
+        example: "A secure website transaction passes from L7 (browser) through L6 (TLS encryption) down to L1 (Ethernet fiber transceiver).",
+        devPerspective: "SDEs use layer separation for debugging: a connection timeout is a L3/L4 issue; a syntax parsing failure or TLS handshake failure is a L5/L6 issue.",
+        questions: [
+          "List the 7 layers of the OSI model in order (bottom-up and top-down).",
+          "What is the PDU (Protocol Data Unit) at each of the 7 OSI layers?",
+          "Explain the roles of the Presentation and Session layers."
+        ],
+        followups: [
+          "State the mnemonic to remember the OSI layers.",
+          "Which layer is responsible for translating, encrypting, and compressing data? [Presentation Layer]"
+        ],
+        confusions: [
+          "Reference vs Protocol: OSI is a reference model; no operating system implements it literally. Operating systems implement the TCP/IP model."
+        ],
+        takeaways: [
+          "OSI: Physical, Data Link, Network, Transport, Session, Presentation, Application.",
+          "Mnemonics: 'Please Do Not Throw Sausage Pizza Away'.",
+          "L1=Bits, L2=Frames, L3=Packets, L4=Segments, L5-7=Data."
+        ]
+      },
+      {
+        name: "TCP/IP 4-Layer Model",
+        oneLiner: "TCP/IP is a 4-layer practical framework developed by DARPA that runs the actual internet.",
+        definition: "Consists of 4 layers: Network Access (Physical & Data Link), Internet (Network/IP), Transport (TCP/UDP), and Application (Session, Presentation, & Application combined).",
+        whyNeed: "Simplicity and execution speed. By folding administrative layers into the application space, performance is optimized for actual operating system kernels.",
+        example: "The Unix kernel implements the socket API mapping directly to the TCP/IP stack layers.",
+        devPerspective: "SDEs configure TCP parameters (e.g. TCP keepalive, window scaling) directly in Linux configurations to optimize server capacity.",
+        questions: [
+          "Describe the 4 layers of the TCP/IP model.",
+          "Map the 7 OSI layers to the 4 TCP/IP layers.",
+          "What are the major differences between the OSI and TCP/IP models?"
+        ],
+        followups: [
+          "Which model came first historically? [TCP/IP was developed before the OSI model became a standard]",
+          "Why did TCP/IP combine OSI's top three layers?"
+        ],
+        confusions: [
+          "Network Access Layer: Also called Link Layer. It handles physical hardware connections as well as MAC address framing."
+        ],
+        takeaways: [
+          "TCP/IP is the practical architecture of the internet.",
+          "Layers: Network Access, Internet, Transport, Application.",
+          "Session and Presentation layers are merged into Application."
+        ]
+      },
+      {
+        name: "Encapsulation & Decapsulation",
+        oneLiner: "Encapsulation wraps data with headers downward; decapsulation strips headers upward.",
+        definition: "The process where each layer adds control headers (and trailers at L2) to the PDU of the layer above it during transmission. Decapsulation is the reverse process at the receiver.",
+        whyNeed: "Allows routers, switches, and hosts to process traffic at their designated layers without reading the inner payload.",
+        example: "A Layer 2 switch reads only the MAC header of an Ethernet frame to forward it, ignoring the IP payload inside.",
+        devPerspective: "SDEs must keep MTU (Maximum Transmission Unit, typically 1500 bytes) in mind. Encapsulation headers consume bytes; exceeding MTU causes IP packet fragmentation.",
+        questions: [
+          "Explain the process of encapsulation and decapsulation.",
+          "What information does the Network Layer add during encapsulation? [Source and Destination IP addresses]",
+          "What is an Ethernet trailer and what does it contain? [Contains CRC checksum for error detection]"
+        ],
+        followups: [
+          "Describe how a router decapsulates a frame to read IP headers.",
+          "What is MTU and how does encapsulation overhead impact it?"
+        ],
+        confusions: [
+          "Switch processing: A standard L2 switch does not decapsulate the IP header; it only decapsulates up to the MAC frame header."
+        ],
+        takeaways: [
+          "Encapsulation adds headers downward.",
+          "Decapsulation strips headers upward.",
+          "Frame trailers contain the Cyclic Redundancy Check (CRC)."
         ]
       }
     ]
   },
   {
     id: "ip_addressing",
-    num: "CN.2",
+    num: "CN.3",
     title: "IP Addressing & Subnetting",
-    desc: "Targeting nodes in a global matrix. Covers IPv4 routing classes, private IP reserves, subnet masks, CIDR blocks, IPv6 transitions, and NAT translating.",
+    desc: "Targeting nodes in a global matrix. Covers IPv4 classes, private and special IP reserves, subnet calculations, CIDR slash prefixes, NAT port mapping, and IPv6 differences.",
     declaration: `// IP Variable Matrix
 const ipConfig = {
   ipv4Bits: 32,
@@ -109,7 +240,7 @@ const ipConfig = {
   specialIPs: { loopback: "127.0.0.1" }
 };`,
     internalImplementation: `/* ----------------- NETWORK ADDRESS TRANSLATION -----------------
-   Private IP [192.168.1.10:8000] ──► [NAT Router (maps port)] ──► Public IP [203.0.113.5:80]
+   Private IP [192.168.1.10:8000] ──► [NAT Router (maps port)] ──► Public IP [203.0.113.5:1425]
 */`,
     subtopics: [
       {
@@ -240,97 +371,6 @@ const ipConfig = {
     ]
   },
   {
-    id: "osi_tcpip",
-    num: "CN.3",
-    title: "Reference Models & Network Layers",
-    desc: "The stack of protocols organizing traffic. Differentiate between the 7-layer OSI model and the 4-layer TCP/IP framework, mapping packet conversions.",
-    declaration: `// Layer Mapping Configurations
-const modelsMap = {
-  osi: ["Physical", "DataLink", "Network", "Transport", "Session", "Presentation", "Application"],
-  tcpip: ["Network Access", "Internet", "Transport", "Application"]
-};`,
-    internalImplementation: `/* ----------------- LAYER DATA ENCAPSULATION -----------------
-   [Application Data] ──► [Segment (TCP)] ──► [Packet (IP)] ──► [Frame (Ethernet)] ──► Bits
-*/`,
-    subtopics: [
-      {
-        name: "OSI Reference Model",
-        oneLiner: "The OSI model is a 7-layer theoretical blueprint standardizing open network communications.",
-        definition: "A conceptual framework developed by the ISO dividing network communication into seven layers: Physical, Data Link, Network, Transport, Session, Presentation, and Application.",
-        whyNeed: "Standardizes development. Software engineers and hardware vendors can implement protocols at specific layers that plug-and-play together.",
-        example: "A web browser runs at the Application layer, calling the Transport layer (TCP) to send byte arrays down to physical cables.",
-        devPerspective: "SDEs use the OSI model to diagnose bugs: 'Connection refused' points to the Transport layer; 'JSON parsing error' is at the Presentation/Application layer.",
-        questions: [
-          "What is the OSI model and why is it used?",
-          "List the 7 layers of the OSI model in order.",
-          "Differentiate between physical layer data (bits) and data link layer data (frames)."
-        ],
-        followups: [
-          "Which layer is responsible for routing? [Network layer]",
-          "What is error detection at the Data Link layer? [CRC/checksum checks]"
-        ],
-        confusions: [
-          "Practical implementation: The OSI model is a theoretical framework. Real operating systems implement the simpler TCP/IP model."
-        ],
-        takeaways: [
-          "7 layers: Physical, DataLink, Network, Transport, Session, Presentation, Application.",
-          "Encapsulation wraps data with headers at each downward layer.",
-          "Decapsulation strips headers at each upward layer."
-        ]
-      },
-      {
-        name: "TCP/IP Reference Model",
-        oneLiner: "The TCP/IP model is a 4-layer practical framework powering the actual internet.",
-        definition: "The core protocol suite of the internet, dividing network structures into four functional layers: Network Access, Internet, Transport, and Application.",
-        whyNeed: "Provides a lightweight, performant framework. Condenses the OSI model's top three layers into one Application layer and bottom two layers into Network Access.",
-        example: "The Linux kernel network stack implements TCP/IP configurations directly to route server web traffic.",
-        devPerspective: "Understanding TCP/IP is key when configuring backend system parameters like TCP socket backlogs or maximum segment sizes (MSS) in deployment.",
-        questions: [
-          "Describe the TCP/IP Reference Model.",
-          "List the 4 layers of the TCP/IP model.",
-          "How does the TCP/IP model compare to the OSI model?"
-        ],
-        followups: [
-          "Explain the roles of TCP and IP protocols in this model.",
-          "What is the Network Access layer responsible for?"
-        ],
-        confusions: [
-          "TCP/IP name: Although named after TCP and IP, the model also encompasses other protocols like UDP, ICMP, DNS, and HTTP."
-        ],
-        takeaways: [
-          "The practical model that runs the internet.",
-          "Combines Session, Presentation, and Application into the 'Application' layer.",
-          "Highly efficient and implementable in hardware drivers."
-        ]
-      },
-      {
-        name: "Gateways vs Routers",
-        oneLiner: "Routers forward packets between similar networks; Gateways translate dissimilar protocol stacks.",
-        definition: "A router is a L3 device forwarding data packets based on IP addresses. A gateway is a protocol translator connecting distinct network architectures.",
-        whyNeed: "Connecting home LANs to public ISP lines needs a router. Connecting distinct protocols (like corporate mainframe protocols to HTTP web servers) needs a gateway.",
-        example: "An API gateway translating HTTP client queries into internal gRPC microservice messages.",
-        devPerspective: "SDEs use Cloud API Gateways (Kong, AWS API Gateway) to manage client security, rate limiting, and route translations before requests reach microservices.",
-        questions: [
-          "What is a router and how does it function?",
-          "How is a gateway different from a router?",
-          "What is the default gateway in network configuration?"
-        ],
-        followups: [
-          "What layer does a router operate at? [Network layer - Layer 3]",
-          "Can a gateway operate across all seven OSI layers? [Yes, since it performs protocol translations]"
-        ],
-        confusions: [
-          "Home routers: Consumer home boxes are routers, switches, gateways, and access points combined into a single physical shell."
-        ],
-        takeaways: [
-          "Routers connect networks using similar IP stacks.",
-          "Gateways translate protocols between dissimilar structures.",
-          "Default gateway is the outbound portal for local subnets."
-        ]
-      }
-    ]
-  },
-  {
     id: "protocols_ports",
     num: "CN.4",
     title: "Protocols & Sockets",
@@ -427,119 +467,151 @@ const portMapping = {
   {
     id: "routing_delivery",
     num: "CN.5",
-    title: "Data Transmission & Protocols",
-    desc: "How packets travel across routers. Covers hardware (Switches, Routers, Bridges), network latency delays, ping diagnostics, and TLS handshakes.",
-    declaration: `// Transmission Parameters
-const travelSpec = {
-  diagnosticTools: ["ping", "traceroute"],
-  delays: ["Propagation", "Transmission", "Processing", "Queuing"],
-  securityTunnel: "SSL / TLS Handshake"
+    title: "Transmission, Media & Switching",
+    desc: "The hardware mechanics of routing packets. Covers network devices (hubs, switches, bridges, routers, gateways), switch forwarding modes, STP, transmission media specs, wireless bands, data limits (Nyquist/Shannon), and modulation metrics.",
+    declaration: `// Physical & Link Layer Transmission Specifications
+const transportSpec = {
+  dataLimits: {
+    nyquist: "Max Rate = 2 * B * log2(V)",
+    shannon: "Capacity = B * log2(1 + SNR)"
+  },
+  devices: ["Hub (L1)", "Switch (L2)", "Router (L3)", "Gateway (L4-7)"],
+  mediaCat: ["Cat 5 (100 Mbps)", "Cat 5e (1 Gbps)", "Cat 6 (10 Gbps)"],
+  fiberTypes: ["Single-mode (laser)", "Multi-mode (LED)"]
 };`,
-    internalImplementation: `/* ----------------- TLS HANDSHAKE STAGES -----------------
-   Client ──► [ClientHello: cipher list] ──► Server
-   Client ◄── [ServerHello + CA Cert + PubKey] ◄── Server
-   Client ──► [Verify Cert + Send SessionKey (Encrypted)] ──► Server
-   Client ◄──► [Symmetric Encrypted Session] ◄──► Server
+    internalImplementation: `/* ----------------- DATA RATE LIMITS & STP -----------------
+   Noiseless Nyquist Rate = 2 * B * log2(V)
+   Noisy Shannon Capacity = B * log2(1 + SNR)
+   SNR(dB) = 10 * log10(SNR) (+10 dB = SNR * 10)
+
+   STP Port Transition States:
+   [Blocking] ──► [Listening] ──► [Learning] ──► [Forwarding]
+   (No Tx, BPDU)  (Assess path)   (MAC build)    (Normal Tx)
 */`,
     subtopics: [
       {
-        name: "Switch vs Router vs Bridge",
-        oneLiner: "Switches connect local LAN devices; Routers connect separate IP networks.",
-        definition: "A bridge connects two L2 segments; a switch is a multiport bridge connecting LAN devices using MAC addresses; a router is a L3 device routing packets between IP networks.",
-        whyNeed: "Local computers share files via high-speed switches. Connecting those computers to other offices globally requires routers resolving IP destinations.",
-        example: "A local office switch forwards local prints to print-servers; the office router forwards browser requests to Google servers.",
-        devPerspective: "SDEs deploying database replicas inside AWS partition nodes across different subnets, routing sync traffic through Virtual Routers.",
+        name: "Network Hardware & Domains",
+        oneLiner: "Switches connect local LANs (L2 MAC); Routers route across networks (L3 IP); Hubs duplicate bits (L1).",
+        definition: "Classification of devices: Hubs (L1, half-duplex broadcasts), Bridges (L2 software filters), Switches (L2 hardware filters, CAM table), Routers (L3, IP routing tables, separates broadcast domains), and Gateways (L4-7 protocol translators).",
+        whyNeed: "Required to construct logical segments. Swapping hubs for switches eliminates network collision loops; adding routers limits broadcast packet storm propagation.",
+        example: "An enterprise LAN with 24-port switches connected to a central router directing traffic to the internet gateway.",
+        devPerspective: "Understanding device limits helps in deploying Kubernetes clusters. Pod communication uses virtual bridges (L2) while routing between nodes uses flannel/calico (L3).",
         questions: [
-          "What is the difference between a switch, a router, and a bridge?",
-          "At what layers of the OSI model do switches and routers operate?",
-          "Explain a MAC address table in switches."
+          "Compare Hub, Switch, Bridge, Router, and Gateway.",
+          "Explain the difference between Collision Domains and Broadcast Domains.",
+          "How many collision and broadcast domains does an 8-port switch have? [8 collision, 1 broadcast]"
         ],
         followups: [
-          "What is a Layer 3 switch and how does it merge switching with routing?",
-          "Why did switches replace hubs in local area networks? [Switches prevent collision domains]"
+          "Do routers forward broadcast packets by default? Why? [No, routers block L2/L3 broadcasts to prevent internet congestion]",
+          "What is the function of a Repeater?"
         ],
         confusions: [
-          "Bridge vs Switch: Bridges are software-based and have few ports; switches are hardware-based (ASIC chips) and support many ports."
+          "Switch vs Router: Standard switches route internally within the same IP subnet using MACs; routers route externally between subnets using IPs."
         ],
         takeaways: [
-          "Switch/Bridge: Layer 2 (MAC addressing).",
-          "Router: Layer 3 (IP addressing).",
-          "Switches segment collision domains; routers segment broadcast domains."
+          "Hub: 1 collision, 1 broadcast domain.",
+          "Switch: Separate collision domain per port, 1 broadcast domain.",
+          "Router: Separate collision and broadcast domains per interface."
         ]
       },
       {
-        name: "Network Delays & Latency",
-        oneLiner: "Latency is the sum of transmission, propagation, processing, and queuing delays.",
-        definition: "The total time required for a packet to travel from source to destination, computed as: Latency = Transmission + Propagation + Processing + Queuing delay.",
-        whyNeed: "Performance optimization requires identifying network bottlenecks. High propagation delay needs CDNs; high queuing delay indicates server overload.",
-        example: "Ping latency is high over satellite internet because of propagation delay (distance to space).",
-        devPerspective: "SDEs optimize app latency by compressing payloads (reducing transmission delay) and using cache pools (reducing server processing delays).",
+        name: "Switch Internals, VLANs & STP",
+        oneLiner: "Switches map MACs to ports using CAM tables, split VLAN segments, and run STP to block loops.",
+        definition: "Switch CAM table stores MAC-to-port bindings (aging timer ~300s). Forwarding is Store-and-Forward (checks CRC), Cut-Through (checks dest MAC), or Fragment-Free (checks 64 bytes). VLANs isolate L2 broadcast zones (802.1Q tags). STP (Spanning Tree) prevents loops by blocking redundant links.",
+        whyNeed: "CAM tables enable wire-speed forwarding. STP is required to prevent loop storms in networks with redundant cables, maintaining a loop-free layout.",
+        example: "A switch detecting a link loop blocks Port 5, changing state from Listening to Blocking to save the network from collapsing.",
+        devPerspective: "VLAN mapping allows SDEs to logically isolate staging, production, and corporate test environments sharing the same hardware rack switches.",
         questions: [
-          "What are the four components of network delay?",
-          "Explain the difference between propagation delay and transmission delay.",
-          "What causes queuing delay?"
+          "What happens when a switch's CAM table is fully saturated? [Acts as a hub, floods all ports]",
+          "Compare Store-and-Forward, Cut-Through, and Fragment-Free forwarding modes.",
+          "Explain Spanning Tree Protocol (STP) and its port states."
         ],
         followups: [
-          "How does distance affect propagation delay?",
-          "Differentiate bandwidth from latency using the highway analogy. [Bandwidth = lanes, Latency = speed limit]"
+          "Explain 802.1Q tagging on trunk links. How many bits are allocated for VLAN ID? [12 bits, support 4096 VLANs]",
+          "What are the port states in STP? [Blocking, Listening, Learning, Forwarding, Disabled]"
         ],
         confusions: [
-          "Bandwidth vs Latency: High bandwidth (large network pipeline) does not decrease the physical time a single packet takes to travel to the moon and back."
+          "MAC flooding attack: Attacker fills CAM table with random dummy MACs, forcing the switch to fail-open and act as a hub, exposing packets."
         ],
         takeaways: [
-          "Propagation delay = Distance / Speed of Medium.",
-          "Transmission delay = Packet Length / Bandwidth.",
-          "Queuing delay depends on traffic congestion and buffer size."
+          "Store-and-Forward checks entire frame CRC; Cut-Through is fastest.",
+          "VLAN ID is 12 bits (4094 usable).",
+          "STP elects a Root Bridge based on the lowest Bridge ID (Priority + MAC)."
         ]
       },
       {
-        name: "Diagnostics (Ping, TTL, Traceroute)",
-        oneLiner: "Ping validates reachability; TTL prevents infinite loops; Traceroute maps routers.",
-        definition: "Utilities for network diagnostics. Ping checks node reachability; TTL (Time to Live) is a packet hop counter; Traceroute registers the path of routers to a host.",
-        whyNeed: "Debugging outages needs trace points. Ping tells you if a server is online; Traceroute locates the specific router node where packets are being dropped.",
-        example: "Running `ping 8.8.8.8` sends ICMP requests, getting replies back with round-trip milliseconds.",
-        devPerspective: "SDEs run ping scripts inside status health checks to trigger automated failovers if host servers fail to respond for consecutive cycles.",
+        name: "Transmission Media & Wireless",
+        oneLiner: "Guided media includes Copper (UTP/STP Cat 3-7) and Optical Fiber (Single/Multi-mode).",
+        definition: "Twisted pair (UTP/STP Cat 5e/6/7) twisted to cancel EMI. Coaxial cable offers shielding. Fiber Optic uses total internal reflection (Single-mode has a small core for long-distance laser; Multi-mode has a wider core for LED LANs). Wireless uses Radio, Microwave (line-of-sight), or Infrared.",
+        whyNeed: "Media dictates speed limits and maximum runs. UTP is limited to 100m; Multi-mode fiber spans ~2km; Single-mode spans 100+km without repeaters.",
+        example: "Deploying Cat 6a cables in an office for 10 Gbps speeds, and using single-mode fiber to link the building to the regional carrier.",
+        devPerspective: "Choosing the correct media affects cloud data replication speeds: fiber lines enable cross-region database synching with light-speed limits.",
         questions: [
-          "What is a ping command and what protocol does it use? [ICMP]",
-          "What is TTL and why is it essential?",
-          "How does traceroute work under the hood using TTL increments?"
+          "Explain twisted-pair cabling. Why are the wires twisted?",
+          "Differentiate between Single-mode and Multi-mode optical fiber.",
+          "Compare UTP Category 5, 5e, and 6 cabling capacities."
         ],
         followups: [
-          "If ping works but HTTP requests fail, what does this indicate? [L3 connectivity is fine, but L7 app/port is blocked]",
-          "What is a SYN flood attack?"
+          "Why is fiber optic immune to electromagnetic interference (EMI)? [Uses light photons instead of electrical copper currents]",
+          "Explain the difference between Ground, Sky, and Line-of-Sight wireless propagation."
         ],
         confusions: [
-          "Ping block: Some secure production firewalls block ICMP packets, so a server can be running fine even if it blocks ping replies."
+          "Fiber cladding: The cladding around the fiber core has a lower refractive index than the core itself to ensure total internal reflection."
         ],
         takeaways: [
-          "Ping uses ICMP Echo Request/Reply.",
-          "TTL decreases by 1 at each router; drops at 0 to prevent circular loop storms.",
-          "Traceroute lists router hops by incrementing TTL starting from 1."
+          "All standard UTP cabling is rated for 100m max distance.",
+          "Single-mode fiber: Small core, laser, long distance.",
+          "Multi-mode fiber: Large core, LED, short distance."
         ]
       },
       {
-        name: "TLS / SSL Handshake",
-        oneLiner: "The TLS handshake performs key exchange to establish secure symmetric encryption.",
-        definition: "A protocol process establishing a secure session, executing asymmetric encryption to safely exchange keys, and then utilizing symmetric encryption for subsequent data.",
-        whyNeed: "Safely transfers private keys over public, unencrypted channels. Allows client and server to verify identities and agree on encryption algorithms.",
-        example: "Loading an HTTPS site runs a handshake in milliseconds, showing a padlock icon once keys match.",
-        devPerspective: "SDEs optimize TLS latency by enabling TLS Session Resumption, reducing subsequent handshake steps for recurring clients.",
+        name: "Physical Limits, Modulation & Multiplexing",
+        oneLiner: "Nyquist limits noiseless rates; Shannon limits noisy capacities. MUX combines lines via FDM/TDM.",
+        definition: "Nyquist formula: 2 * B * log2(V). Shannon formula: B * log2(1 + SNR). Modulation encodes data by shifting carrier waves: ASK (amplitude), FSK (frequency), PSK (phase), or QAM (amplitude + phase). Multiplexing joins channels: FDM (analog frequency), TDM (digital time slots), WDM (wavelength color), or CDMA.",
+        whyNeed: "Defines hardware limits. Shows why we cannot send infinite data over noisy lines. Modulation enables wireless networks like 4G (QAM-64) and 5G (QAM-256).",
+        example: "A telephone copper line with 3000 Hz bandwidth and 30 dB SNR has a Shannon capacity limit of ~30 Kbps.",
+        devPerspective: "SDEs deploying video streaming apps must compress streams when client networks drop to low-QAM connections (low SNR).",
         questions: [
-          "Explain the steps of a TLS/SSL handshake in detail.",
-          "Why is asymmetric encryption used during the handshake and symmetric encryption used for data transfer?",
-          "What is a Certificate Authority (CA)?"
+          "State Nyquist and Shannon's channel capacity theorems.",
+          "Differentiate between ASK, FSK, PSK, and QAM modulation.",
+          "Explain the difference between Synchronous and Statistical TDM."
         ],
         followups: [
-          "Differentiate TLS 1.2 vs TLS 1.3 handshakes in terms of round-trip times (RTTs). [1.3 reduces handshake to 1 RTT]",
-          "How does a client verify a server's SSL certificate?"
+          "If Baud rate is 2000 and QAM-16 modulation is used, what is the Bit rate? [2000 * log2(16) = 8000 bps]",
+          "What is the transmission speed of T1 and E1 carrier lines? [T1 = 1.544 Mbps, E1 = 2.048 Mbps]"
         ],
         confusions: [
-          "Asymmetric speed: Asymmetric encryption is computationally expensive, which is why it is only used to agree on the session key, not to encrypt the main body of site data."
+          "Baud rate vs Bit rate: Baud rate is the frequency of signal changes per second; Bit rate is the number of actual binary bits transmitted per second."
         ],
         takeaways: [
+          "Nyquist = noiseless channels; Shannon = noisy channels.",
+          "Bit Rate = Baud Rate * log2(V).",
+          "TDM splits time; FDM splits frequency; WDM splits optical light colors."
+        ]
+      },
+      {
+        name: "Diagnostics & TLS Handshake",
+        oneLiner: "Ping uses ICMP; Traceroute logs router hops via TTL; TLS handshake securely exchanges keys.",
+        definition: "Ping validates reachability. TTL limits packet lifespan to prevent loop storms. Traceroute maps path hops. TLS Handshake establishes secure communication (asymmetric key exchange for key sync, followed by symmetric encryption for session data transfer).",
+        whyNeed: "Core SDE troubleshooting tools. Allows developers to verify L3 connection paths and audit TLS cryptographic performance.",
+        example: "Troubleshooting a slow website response: ping confirms L3 host availability, traceroute finds where packets drop, and curl audits TLS handshake speed.",
+        devPerspective: "SDEs configure servers to handle TLS Session Resumption, saving round-trip times (RTT) for returning clients.",
+        questions: [
+          "How does traceroute use incrementing TTL to identify router hops?",
+          "Explain the difference between symmetric and asymmetric encryption in a TLS handshake.",
+          "What happens if ping responds successfully but HTTP requests fail?"
+        ],
+        followups: [
+          "What protocol does ping rely on? [ICMP - Internet Control Message Protocol]",
+          "Differentiate TLS 1.2 vs TLS 1.3 handshakes. [1.3 completes key exchange in 1 RTT instead of 2 RTTs]"
+        ],
+        confusions: [
+          "Firewall blocks: Some security configurations block ICMP packets, meaning ping might fail even if the server's web service is running fine."
+        ],
+        takeaways: [
+          "Traceroute starts with TTL = 1, incrementing by 1 on timeout responses.",
           "Asymmetric is used for key exchange; symmetric is used for session transfer.",
-          "Handshake steps: ClientHello -> ServerHello + Cert -> Key exchange -> Finished.",
-          "Protects against packet interception and eavesdropping."
+          "TTL prevents packet loops from running forever."
         ]
       }
     ]
