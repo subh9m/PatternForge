@@ -9,7 +9,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             Spring IoC Container Lifecycle Stages
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-center font-mono text-[10.5px]">
               <div className="p-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-lg">
                 <span className="px-1.5 py-0.2 bg-green-500/10 text-green-500 rounded block font-bold mb-1">1. Scan & Register</span>
@@ -38,7 +38,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             Spring Bean Initialization Pipeline
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
             <div className="flex flex-col md:flex-row items-center justify-around gap-2 font-mono text-[10px] text-center">
               <div className="p-2.5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full md:w-1/5">
                 <strong className="text-gray-800 dark:text-gray-200 block font-bold">1. Constructor</strong>
@@ -70,7 +70,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             DispatcherServlet Routing Flow Pipeline
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
             <div className="flex flex-col space-y-3 font-mono text-[10.5px]">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-green-500/10 text-green-500 rounded">1. Intercept</span>
@@ -99,7 +99,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             @SpringBootApplication Composite Metadata
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center font-mono text-[10.5px]">
               <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2">
                 <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[8px] font-bold uppercase rounded inline-block">@SpringBootConfiguration</span>
@@ -124,7 +124,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             JPA Entity Lifecycle State Transitions
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
             <table className="w-full text-left font-mono text-[10.5px] border-collapse min-w-[500px]">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-450">
@@ -166,7 +166,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             Spring Testing Layer Comparison
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center font-mono text-[10.5px]">
               <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2">
                 <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[8px] font-bold uppercase rounded inline-block">Unit Test (Mockito)</span>
@@ -194,7 +194,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             Spring AOP Runtime Proxy Flow
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
             <div className="flex flex-col md:flex-row items-center justify-around gap-2 font-mono text-[10px] text-center">
               <div className="p-2.5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full md:w-1/4">
                 <strong className="text-gray-800 dark:text-gray-200 block font-bold">1. Caller</strong>
@@ -267,12 +267,12 @@ export default function SpringCard({ data }) {
           return (
             <div 
               key={idx}
-              className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10"
+              className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-white/10 dark:bg-neutral-900/10"
             >
               {/* Accordion Toggle */}
               <button
                 onClick={() => setExpandedSubtopic(isExpanded ? null : idx)}
-                className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-white/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
                   <span className="h-2 w-2 rounded-full bg-green-500"></span>

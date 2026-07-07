@@ -50,11 +50,11 @@ export default function ProjectsMainContent({ isOpen, toggleSidebar, activeProje
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 gap-4 text-center font-mono">
-            <div className="p-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl">
+            <div className="p-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl">
               <span className="text-[9px] text-neutral-500 dark:text-neutral-400 block uppercase">Language</span>
               <strong className="text-xs text-neutral-800 dark:text-neutral-200 dark:text-neutral-700 dark:text-neutral-300">Java / TS</strong>
             </div>
-            <div className="p-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl">
+            <div className="p-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl">
               <span className="text-[9px] text-neutral-500 dark:text-neutral-400 block uppercase">Review Tier</span>
               <strong className="text-xs text-fuchsia-500 font-black">Google L5</strong>
             </div>

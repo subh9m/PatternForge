@@ -9,7 +9,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             Network Topology Schematics
           </span>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             {/* Star Topology */}
             <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2 text-center">
               <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-500 text-[8px] font-mono font-black uppercase rounded inline-block">Star Topology</span>
@@ -45,7 +45,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             Network Address Translation (NAT) Mapping
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
             <div className="flex flex-col sm:flex-row items-center justify-around gap-4 font-mono text-xs text-center">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
                 <strong className="text-gray-800 dark:text-gray-200 block">Private local IP</strong>
@@ -76,7 +76,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             OSI 7-Layer vs TCP/IP 4-Layer Mapping
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
             <table className="w-full text-left font-mono text-[10.5px] border-collapse min-w-[500px]">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-450">
@@ -118,7 +118,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             DNS Domain Translation Lookup Flow
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
             <div className="flex flex-col sm:flex-row items-center justify-around gap-4 font-mono text-xs text-center">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
                 <strong className="text-gray-800 dark:text-gray-200 block">Browser Request</strong>
@@ -149,7 +149,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             SSL / TLS Handshake Sequence
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
             <div className="flex flex-col space-y-3 font-mono text-[10.5px]">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-cyan-500/10 text-cyan-500 rounded">1. ClientHello</span>
@@ -216,12 +216,12 @@ export default function CnCard({ data }) {
           return (
             <div 
               key={idx}
-              className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10"
+              className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-white/10 dark:bg-neutral-900/10"
             >
               {/* Accordion Toggle */}
               <button
                 onClick={() => setExpandedSubtopic(isExpanded ? null : idx)}
-                className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-white/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
                   <span className="h-2 w-2 rounded-full bg-cyan-500"></span>

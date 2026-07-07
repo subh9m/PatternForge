@@ -164,7 +164,7 @@ export default function ProjectsPlayground() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Scenarios Sidebar */}
-        <div className="lg:col-span-1 bg-neutral-100/15 dark:bg-neutral-900/30 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
+        <div className="lg:col-span-1 bg-white/15 dark:bg-neutral-900/30 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
           <span className="text-[10px] font-black text-neutral-500 dark:text-neutral-400 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Subsystem Scenario</span>
           <div className="flex flex-col space-y-2">
             <label className={`flex items-center space-x-2 p-2 rounded-lg border cursor-pointer transition-all

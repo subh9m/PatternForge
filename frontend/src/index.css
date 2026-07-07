@@ -19,7 +19,7 @@
 :root.light {
   --bg-color: #ffffff;
   --bg-grid: rgba(0, 0, 0, 0.02);
-  --surface-color: #f9fafb;
+  --surface-color: #ffffff;
   --border-color: #e5e7eb;
   --border-hover: #111827;
   --text-primary: #111827;
@@ -87,7 +87,7 @@ body {
 :root.light [class*="bg-slate-850/"],
 :root.light [class*="bg-slate-800/"],
 :root.light [class*="bg-slate-700/"] {
-  background-color: #f9fafb !important;
+  background-color: #ffffff !important;
   color: #111827 !important;
 }
 

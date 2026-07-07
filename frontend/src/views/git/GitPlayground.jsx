@@ -910,7 +910,7 @@ export default function GitPlayground() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           
           {/* File Explorer (Left sidebar in Directory Panel) */}
-          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
+          <div className="bg-white/80 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-2 mb-3">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">📂 File Explorer</span>
@@ -963,7 +963,7 @@ export default function GitPlayground() {
           </div>
 
           {/* Interactive Code Editor (Center pane in Directory Panel) */}
-          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between min-h-[220px]">
+          <div className="bg-white/80 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between min-h-[220px]">
             <div>
               <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-2 mb-3">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">📝 Code Editor: {selectedFile}</span>
@@ -998,7 +998,7 @@ export default function GitPlayground() {
           </div>
 
           {/* Staging Index (Right pane in Directory Panel) */}
-          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
+          <div className="bg-white/80 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-2 mb-3">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">📦 Staging Area (Index)</span>

@@ -124,7 +124,7 @@ export default function SqlCard({ data }) {
 
       {/* SQL DDL / DML Schema Table Preview */}
       {isPracticeDb && data.methods && (
-        <div className="mb-6 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl p-5">
+        <div className="mb-6 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl p-5">
           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-4 flex items-center space-x-2">
             <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full"></span>
             <span>Relational Schema (Click table name to view all records)</span>
@@ -159,7 +159,7 @@ export default function SqlCard({ data }) {
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
         </div>
-        <pre className="bg-neutral-100/50 dark:bg-neutral-900/50 text-neutral-800 dark:text-neutral-300 p-5 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl pr-14 leading-relaxed">
+        <pre className="bg-white/50 dark:bg-neutral-900/50 text-neutral-800 dark:text-neutral-300 p-5 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl pr-14 leading-relaxed">
           <code dangerouslySetInnerHTML={{ __html: highlightCode(data.declaration) }} />
         </pre>
       </div>
@@ -205,7 +205,7 @@ export default function SqlCard({ data }) {
           
           {/* Query Display Block */}
           <div className="relative mb-4">
-            <pre className="bg-neutral-100/90 dark:bg-neutral-900/90 text-neutral-800 dark:text-neutral-300 p-4 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 select-all leading-relaxed rounded-xl pr-28">
+            <pre className="bg-white/90 dark:bg-neutral-900/90 text-neutral-800 dark:text-neutral-300 p-4 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 select-all leading-relaxed rounded-xl pr-28">
               <code dangerouslySetInnerHTML={{ __html: highlightCode(data.queries[selectedQueryIdx].sql) }} />
             </pre>
             <button
@@ -227,7 +227,7 @@ export default function SqlCard({ data }) {
               
               <div className="overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg">
                 <table className="w-full text-left text-xs font-mono text-neutral-800 dark:text-neutral-300">
-                  <thead className="bg-neutral-100/50 dark:bg-neutral-900/50 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
+                  <thead className="bg-white/50 dark:bg-neutral-900/50 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                     <tr>
                       {data.queries[selectedQueryIdx].columns.map((col, idx) => (
                         <th key={idx} className="px-4 py-2 font-bold uppercase tracking-wider text-[10px] text-gray-500 font-bold">
@@ -273,7 +273,7 @@ export default function SqlCard({ data }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
             {/* Modal Header */}
-            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
+            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/50 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase">
                   Table View: {activeFullTable.toUpperCase()}
@@ -291,7 +291,7 @@ export default function SqlCard({ data }) {
             </div>
             
             {/* Search filter bar */}
-            <div className="p-4 bg-gray-55/20 dark:bg-neutral-950/20 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
+            <div className="p-4 bg-white/20 dark:bg-neutral-950/20 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
               <input
                 type="text"
                 placeholder={`Search records in ${activeFullTable}...`}
@@ -323,7 +323,7 @@ export default function SqlCard({ data }) {
                       </tr>
                     ) : (
                       filteredRows.map((row, i) => (
-                        <tr key={i} className="hover:bg-red-500/5 dark:hover:bg-red-500/5 even:bg-gray-50/10 dark:even:bg-neutral-900/10">
+                        <tr key={i} className="hover:bg-red-500/5 dark:hover:bg-red-500/5 even:bg-white/10 dark:even:bg-neutral-900/10">
                           {tableHeaders[activeFullTable].map(col => {
                             const val = row[col];
                             return (
@@ -354,7 +354,7 @@ export default function SqlCard({ data }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
             {/* Modal Header */}
-            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
+            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/50 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase">
                   Complete Seed Script (DDL & DML)

@@ -221,7 +221,7 @@ export default function GitCard({ data }) {
       <div className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-850">
         <button
           onClick={() => setShowDeclaration(!showDeclaration)}
-          className="w-full flex items-center justify-between p-5 bg-gray-50/50 dark:bg-[#111]/30 hover:bg-gray-100/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-neutral-800 dark:text-neutral-300"
+          className="w-full flex items-center justify-between p-5 bg-white/80 dark:bg-[#111]/30 hover:bg-white/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-neutral-800 dark:text-neutral-300"
         >
           <span className="flex items-center space-x-2">
             <span>🚀 Module Core Quick Revision Summary</span>
@@ -243,7 +243,7 @@ export default function GitCard({ data }) {
         <div className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-850">
           <button
             onClick={() => setShowInternal(!showInternal)}
-            className="w-full flex items-center justify-between p-5 bg-gray-50/50 dark:bg-[#111]/30 hover:bg-gray-100/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-neutral-800 dark:text-neutral-300"
+            className="w-full flex items-center justify-between p-5 bg-white/80 dark:bg-[#111]/30 hover:bg-white/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-neutral-800 dark:text-neutral-300"
           >
             <span>📊 Architectural Diagrams & Executions</span>
             {showInternal ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -295,7 +295,7 @@ export default function GitCard({ data }) {
                 className={`border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl overflow-hidden transition-all duration-300
                   ${isExpanded 
                     ? 'bg-amber-500/[0.01] dark:bg-amber-500/[0.01] border-amber-500/20 shadow-md' 
-                    : 'bg-neutral-50/50 dark:bg-neutral-950/30 hover:border-amber-500/10'
+                    : 'bg-white/80 dark:bg-neutral-950/30 hover:border-amber-500/10'
                   }`}
               >
                 {/* Accordion Trigger */}
@@ -337,28 +337,28 @@ export default function GitCard({ data }) {
 
                     {/* Micro-Stats Parameter Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
+                      <div className="p-3 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
                         <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Mechanic / Command</span>
                         <span className="block text-[11px] font-mono font-semibold text-amber-600 dark:text-amber-400 mt-1 break-words">
                           {row.syntax}
                         </span>
                       </div>
                       
-                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
+                      <div className="p-3 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
                         <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Inputs / Context</span>
                         <span className="block text-[11px] font-sans font-medium text-neutral-700 dark:text-neutral-300 mt-1 break-words">
                           {row.params}
                         </span>
                       </div>
                       
-                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
+                      <div className="p-3 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
                         <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Result / Output</span>
                         <span className="block text-[11px] font-mono text-neutral-700 dark:text-neutral-300 mt-1 break-words">
                           {row.output}
                         </span>
                       </div>
                       
-                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
+                      <div className="p-3 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
                         <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Overhead / Complexity</span>
                         <span className="block text-[11px] font-mono font-bold text-gray-800 dark:text-gray-200 mt-1 break-words">
                           {row.complexity}

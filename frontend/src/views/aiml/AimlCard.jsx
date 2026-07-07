@@ -9,7 +9,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Intelligence Paradigm Hierarchy
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             <div className="border border-neutral-300 dark:border-neutral-800 p-4 rounded-xl bg-white dark:bg-neutral-950">
               <span className="px-2 py-0.5 bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-350 text-[8px] font-mono font-black uppercase rounded mb-2 inline-block">AI (Broadest Field)</span>
               <p className="text-[11.5px] font-bold text-neutral-700 dark:text-neutral-300 mb-3">Artificial Intelligence: Heuristic and algorithmic cognitive simulation.</p>
@@ -39,7 +39,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Model Input & parameter variables pipeline
           </span>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             {/* Column 1: Input Data */}
             <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-950 space-y-3">
               <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-[8px] font-mono font-black uppercase rounded inline-block">Dataset Structures</span>
@@ -79,7 +79,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Classic ML Boundaries & Outputs
           </span>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             {/* Linear Regression */}
             <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-950 space-y-2">
               <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[8px] font-mono font-black uppercase rounded inline-block">Linear Regression</span>
@@ -109,7 +109,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Transformer Self-Attention Data Flow
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
             <div className="flex items-center space-x-3 text-xs font-mono min-w-[600px] py-2">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg text-center shadow-sm">
                 <strong>Input Tokens</strong>
@@ -150,7 +150,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             LLM Training Stages Pipeline
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
             {/* Step 1 */}
             <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl relative flex items-start space-x-4">
               <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-mono font-black rounded-lg">1</span>
@@ -191,7 +191,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Semantic Retrieval Index Lookup
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
             <div className="flex items-center space-x-4 text-xs font-mono min-w-[550px] py-1">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg shadow-sm text-center">
                 <strong>Input Query</strong>
@@ -226,7 +226,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Autonomous Agent Reasoning Loop
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
             <div className="flex flex-col sm:flex-row items-center justify-around gap-4 font-mono text-xs text-center">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full sm:w-1/4">
                 <strong className="text-indigo-500 block">1. Agent Planner</strong>
@@ -261,7 +261,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Semantic Caching Decision Boundary
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
             <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg text-center font-mono text-xs">
               <strong>Incoming Prompt Query</strong>
               <ArrowDown className="h-4 w-4 mx-auto text-gray-400 my-1" />
@@ -291,7 +291,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Speech-To-Text Transcription Pipeline
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
             <div className="flex items-center space-x-4 text-xs font-mono min-w-[550px] py-1">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg shadow-sm text-center">
                 <strong>Audio Input</strong>
@@ -326,7 +326,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Collaborative Filtering Matrix Matching
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             <div className="flex flex-col sm:flex-row items-center justify-around gap-4 font-mono text-xs">
               <div className="space-y-2 w-full sm:w-1/3">
                 <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg text-center shadow-sm">
@@ -363,7 +363,7 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Distributed LLM Pipeline Parallelism
           </span>
-          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
+          <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
             <div className="flex items-center space-x-4 text-xs font-mono min-w-[550px] py-1">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg shadow-sm text-center">
                 <strong>Training Inputs</strong>
@@ -436,12 +436,12 @@ export default function AimlCard({ data }) {
           return (
             <div 
               key={idx}
-              className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10"
+              className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-white/10 dark:bg-neutral-900/10"
             >
               {/* Accordion Toggle */}
               <button
                 onClick={() => setExpandedSubtopic(isExpanded ? null : idx)}
-                className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-white/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
                   <span className="h-2 w-2 rounded-full bg-indigo-500"></span>

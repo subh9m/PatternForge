@@ -131,7 +131,7 @@ export default function AimlCheatSheet() {
             placeholder="Search keywords or definitions..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl font-mono text-neutral-800 dark:text-neutral-300 focus:outline-none focus:border-indigo-500 transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl font-mono text-neutral-800 dark:text-neutral-300 focus:outline-none focus:border-indigo-500 transition-all"
           />
         </div>
 
