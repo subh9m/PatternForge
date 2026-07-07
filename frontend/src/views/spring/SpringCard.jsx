@@ -160,6 +160,69 @@ const renderDiagram = (conceptId) => {
         </div>
       );
 
+    case 'spring_testing':
+      return (
+        <div className="space-y-3">
+          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+            Spring Testing Layer Comparison
+          </span>
+          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-250 dark:border-neutral-900 rounded-xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center font-mono text-[10.5px]">
+              <div className="p-4 border border-gray-250 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2">
+                <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[8px] font-bold uppercase rounded inline-block">Unit Test (Mockito)</span>
+                <p className="text-[10px] text-gray-500">Speed: 🚀 Ultra Fast (~ms)</p>
+                <p className="text-[9px] text-gray-400">Loads NO context. Stub outputs using pure Mockito extensions.</p>
+              </div>
+              <div className="p-4 border border-gray-250 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2">
+                <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[8px] font-bold uppercase rounded inline-block">Slice Test (@WebMvcTest)</span>
+                <p className="text-[10px] text-gray-500">Speed: ⚡ Fast (~100ms)</p>
+                <p className="text-[9px] text-gray-400">Loads partial layer beans. Tests controllers or db mapping queries.</p>
+              </div>
+              <div className="p-4 border border-green-500/25 bg-green-500/5 rounded-xl space-y-2 text-green-500 font-bold">
+                <span className="px-2 py-0.5 bg-green-500 text-white text-[8px] font-bold uppercase rounded inline-block">Integration Test (@SpringBootTest)</span>
+                <p className="text-[10px] text-gray-700 dark:text-gray-300">Speed: 🐢 Slower (~seconds)</p>
+                <p className="text-[9px] text-gray-400">Loads full context. Runs real API paths using Testcontainers.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'spring_aop':
+      return (
+        <div className="space-y-3">
+          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+            Spring AOP Runtime Proxy Flow
+          </span>
+          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-250 dark:border-neutral-900 rounded-xl space-y-3">
+            <div className="flex flex-col md:flex-row items-center justify-around gap-2 font-mono text-[10px] text-center">
+              <div className="p-2.5 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full md:w-1/4">
+                <strong className="text-gray-800 dark:text-gray-200 block font-bold">1. Caller</strong>
+                <span className="text-gray-400">Requests bean method</span>
+              </div>
+              <ArrowRight className="h-4.5 w-4.5 text-green-500 hidden md:block" />
+              <div className="p-2.5 bg-green-500/5 border border-green-500/25 rounded-lg w-full md:w-1/4 shadow-sm">
+                <strong className="text-green-500 block font-black">2. Spring Proxy</strong>
+                <span className="text-gray-400">JDK dynamic / CGLIB wrapper</span>
+              </div>
+              <ArrowRight className="h-4.5 w-4.5 text-green-500 hidden md:block" />
+              <div className="p-2.5 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full md:w-1/4">
+                <strong className="text-gray-800 dark:text-gray-200 block font-bold">3. Aspect Advice</strong>
+                <span className="text-purple-500 font-bold">Runs custom Aspects</span>
+              </div>
+              <ArrowRight className="h-4.5 w-4.5 text-green-500 hidden md:block" />
+              <div className="p-2.5 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full md:w-1/4">
+                <strong className="text-gray-800 dark:text-gray-200 block font-bold">4. Target Bean</strong>
+                <span className="text-gray-450">Executes real code</span>
+              </div>
+            </div>
+            <div className="p-3 bg-amber-500/5 border border-amber-500/25 rounded-lg text-center font-mono text-[9.5px] text-amber-500">
+              ⚠️ <strong>Proxy Limitation:</strong> Intra-class calls (self-invocation) bypass the proxy completely, disabling @Transactional, @Async, and @Cacheable!
+            </div>
+          </div>
+        </div>
+      );
+
     default:
       return null;
   }

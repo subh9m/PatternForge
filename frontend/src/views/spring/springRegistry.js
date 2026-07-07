@@ -434,5 +434,180 @@ public class Customer {
         ]
       }
     ]
+  },
+  {
+    id: "spring_testing",
+    num: "SP.6",
+    title: "Testing Frameworks & Mocks",
+    desc: "Validating microservices. Cover JUnit 5 unit testing strategies, Mockito stubbing methods (@Mock, @InjectMocks, @MockBean), web layer slices (@WebMvcTest, MockMvc), and database containers.",
+    declaration: `// Mockito Unit Test Execution
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
+    @Mock PaymentService paymentService;
+    @InjectMocks OrderService orderService;
+
+    @Test
+    void testCreateOrder() {
+        when(paymentService.charge(any())).thenReturn(true);
+        assertTrue(orderService.processOrder(new Order()));
+    }
+}`,
+    internalImplementation: `/* ----------------- SPRING TESTING LAYER STRATEGY -----------------
+   Unit Test       ──► Pure Java + Mockito (Very Fast, isolation)
+   Slice Test      ──► @WebMvcTest / @DataJpaTest (Fast, partial context loaded)
+   Integration Test──► @SpringBootTest + Testcontainers (Slower, full context loaded)
+*/`,
+    subtopics: [
+      {
+        name: "Mockito Unit Testing",
+        oneLiner: "Mockito mocks dependencies, allowing isolated testing without loading Spring contexts.",
+        definition: "A mocking library integrated with JUnit 5. Mocks are configured using `@Mock`, injected into targets using `@InjectMocks`, and checked using mock verifications (`verify()`).",
+        whyNeed: "Isolates the class under test. Speeds up execution by removing DB calls, networking checks, and file system tasks.",
+        example: "Testing OrderService logic by stubbing PaymentService returns without executing actual bank APIs.",
+        devPerspective: "SDEs use pure Mockito tests for business rules to get fast feedback. They only use `@MockBean` when loading partial or full Spring contexts is required.",
+        questions: [
+          "Differentiate @Mock vs @MockBean in Spring Boot testing.",
+          "How do you verify a mock method was called a specific number of times in Mockito?",
+          "What is the purpose of @InjectMocks?"
+        ],
+        followups: [
+          "Explain how ArgumentCaptors are used to assert parameter values in stubbed methods.",
+          "What is mock stubbing and how do you mock void methods? [Using doNothing() or doThrow()]"
+        ],
+        confusions: [
+          "Mock vs Spy: A Mock creates a completely dummy object with null/default returns. A Spy wraps a real object, executing real code unless explicitly stubbed."
+        ],
+        takeaways: [
+          "@Mock is for pure JUnit tests; @MockBean replaces beans inside the Spring Context.",
+          "@InjectMocks instantiates the target and injects declared @Mocks.",
+          "Mockito Extension is enabled via @ExtendWith(MockitoExtension.class)."
+        ]
+      },
+      {
+        name: "Slice & Integration Testing",
+        oneLiner: "@WebMvcTest tests the MVC slice; @SpringBootTest executes the full context on a port.",
+        definition: "Slice testing (@WebMvcTest, @DataJpaTest) loads specific beans to keep tests fast. @SpringBootTest loads the entire context for complete integration runs.",
+        whyNeed: "Enables fast validation of web controllers or db schemas. Full integration tests with dynamic ports simulate real-world API traffic.",
+        example: "Testing validation rules using `@WebMvcTest` with MockMvc without spinning up database tables.",
+        devPerspective: "For database integration tests, SDEs avoid H2 in-memory databases and run Testcontainers to execute tests against a real docker instance of PostgreSQL.",
+        questions: [
+          "What is a slice test? Give examples of slice annotations.",
+          "Explain how MockMvc is used to test REST controllers in isolation.",
+          "How do you configure @SpringBootTest to run on a random port for true integration testing?"
+        ],
+        followups: [
+          "What is Testcontainers and why is it preferred over H2 for database tests? [Guarantees tests run on the exact same DB engine as production]",
+          "How do you test JPA repositories using @DataJpaTest? [Loads only entities and repositories, rolling back transactions automatically]"
+        ],
+        confusions: [
+          "Data clean: H2 databases sometimes leak schemas between test classes. Use `@DirtiesContext` or transaction-rollback strategies to reset the environment state."
+        ],
+        takeaways: [
+          "@WebMvcTest loads only Web layers; use @MockBean to satisfy services.",
+          "MockMvc asserts status codes, headers, and JSON content paths.",
+          "Use @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT) for full tests."
+        ]
+      }
+    ]
+  },
+  {
+    id: "spring_aop",
+    num: "SP.7",
+    title: "AOP & Systems Layer",
+    desc: "Aspects, caching, and SOAP. Understand Aspect-Oriented Programming (Aspects, JoinPoints, Pointcuts), proxy self-invocation limitations, caching providers, and SOAP services.",
+    declaration: `// AOP Logging Aspect Example
+@Aspect
+@Component
+public class LoggingAspect {
+    @Around("execution(* com.example.service.*.*(..))")
+    public Object audit(ProceedingJoinPoint pjp) throws Throwable {
+        long start = System.currentTimeMillis();
+        Object output = pjp.proceed(); // execute target method
+        System.out.println("Execution time: " + (System.currentTimeMillis() - start) + "ms");
+        return output;
+    }
+}`,
+    internalImplementation: `/* ----------------- SPRING AOP PROXY DESIGN -----------------
+   Caller ──► [Spring JDK/CGLIB Proxy] ──► [Aspect Execution] ──► [Real Bean Method]
+   Note: If a bean invokes its own method internally, the call bypasses the Proxy, 
+   causing @Transactional, @Async, and @Cacheable declarations to be IGNORED!
+*/`,
+    subtopics: [
+      {
+        name: "Aspect-Oriented Programming",
+        oneLiner: "AOP isolates cross-cutting concerns (logging, security) from primary business logic.",
+        definition: "A system of modularizing cross-cutting concerns. Aspects isolate concerns, Pointcuts match target classes, and Advices (@Before, @After, @Around) inject the logic.",
+        whyNeed: "Removes duplicate code. Logging, auditing, performance metrics, and security checks are kept in one file instead of scattered across services.",
+        example: "A metrics Aspect timing method executions to log latency spikes across all service components.",
+        devPerspective: "Spring AOP uses runtime proxies (JDK dynamic proxies or CGLIB). Calls within the same class bypass the proxy, disabling transaction and async annotations.",
+        questions: [
+          "Define Aspect, Join Point, Pointcut, and Advice in AOP.",
+          "Compare Spring AOP vs AspectJ.",
+          "Explain the self-invocation proxy bypass issue in Spring AOP."
+        ],
+        followups: [
+          "What are the types of advice available in AOP? Which is the most powerful? [@Around]",
+          "How does Spring choose between JDK dynamic proxies and CGLIB proxies? [JDK for interfaces, CGLIB for classes]"
+        ],
+        confusions: [
+          "AOP self-invocation: If ServiceA.method1() calls this.method2(), and method2 has @Transactional, the transaction will NOT run because the internal call doesn't pass through the Spring proxy."
+        ],
+        takeaways: [
+          "AOP isolates cross-cutting concerns like logging and transactions.",
+          "Pointcuts define *where* logic applies; Advice defines *what* runs.",
+          "JDK proxies wrap interfaces; CGLIB sub-classes target beans."
+        ]
+      },
+      {
+        name: "Caching & Async Execution",
+        oneLiner: "@Cacheable stores returned values to speed up queries; @Async runs tasks on background threads.",
+        definition: "Spring Cache abstracts providers to cache returns. @Async runs methods asynchronously on configured ThreadPoolTaskExecutors.",
+        whyNeed: "Speeds up response times and frees up resources. Caching skips expensive DB reads; async processes slow tasks (e.g. emails) in the background.",
+        example: "Caching static product details on Redis and sending welcome emails in background threads.",
+        devPerspective: "For @Async to work, developers must declare `@EnableAsync` and configure a thread pool bean, avoiding default simple executors which don't limit thread counts.",
+        questions: [
+          "Explain @Cacheable, @CachePut, and @CacheEvict.",
+          "How does @Async work under the hood? What are its rules and constraints?",
+          "How do you define a custom executor pool for async tasks?"
+        ],
+        followups: [
+          "What is the default caching provider in Spring Boot if no external one is defined? [ConcurrentHashMap]",
+          "Can an @Async method return a value? [Yes, wrapped inside CompletableFuture or Future]"
+        ],
+        confusions: [
+          "Async return types: If you return a raw object instead of Future/CompletableFuture from an @Async method, the caller cannot retrieve the result asynchronously."
+        ],
+        takeaways: [
+          "@Cacheable retrieves from cache; @CacheEvict removes stale data.",
+          "@Async executes methods on a background thread pool.",
+          "Self-invocation bypass affects @Cacheable and @Async identically."
+        ]
+      },
+      {
+        name: "SOAP Web Services",
+        oneLiner: "SOAP is a strict XML protocol defined by a WSDL schema, using contract-first designs.",
+        definition: "A message exchange protocol using XML schemas (XSD) and service descriptors (WSDL). Spring WS supports contract-first endpoint setups.",
+        whyNeed: "Required in legacy systems, financial backends, and government APIs where WS-Security, formal contracts, and ACID guarantees are needed.",
+        example: "A banking system querying client profiles using structured XML envelopes over HTTPS.",
+        devPerspective: "SDEs use maven plugins to generate Java objects from XSD files (JAXB models), then write `@Endpoint` classes to process SOAP requests.",
+        questions: [
+          "Differentiate SOAP vs REST.",
+          "What is a WSDL and what components does it contain?",
+          "What is contract-first web service development?"
+        ],
+        followups: [
+          "What is the role of MessageDispatcherServlet in Spring WS?",
+          "How does SOAP handle error responses? [Via SOAP Fault structures inside the XML payload]"
+        ],
+        confusions: [
+          "SOAP complexity: SOAP requires XML parsers, strict schemas, and envelope overhead. It is heavier than REST but offers built-in validation rules and standards."
+        ],
+        takeaways: [
+          "SOAP uses XML and is defined by a WSDL contract.",
+          "Contract-first means writing the XSD schema first, then generating Java models.",
+          "Spring WS uses MessageDispatcherServlet to route SOAP envelopes."
+        ]
+      }
+    ]
   }
 ];

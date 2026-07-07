@@ -77,7 +77,15 @@ export default function SpringSidebar({ isOpen, activeTab, onTabChange }) {
             </div>
 
             <div>
-              <NavHeading>5. Glossary & Sandbox</NavHeading>
+              <NavHeading>5. Testing & Advanced AOP</NavHeading>
+              <ul className="space-y-0.5">
+                <li><NavItem href="#spring_testing">SP.6 Testing & Mocks</NavItem></li>
+                <li><NavItem href="#spring_aop">SP.7 AOP & Systems Layer</NavItem></li>
+              </ul>
+            </div>
+
+            <div>
+              <NavHeading>6. Glossary & Sandbox</NavHeading>
               <ul className="space-y-0.5">
                 <li><NavItem href="#spring_cheat_sheet">📋 Key Annotations Reference</NavItem></li>
                 <li><NavItem href="#spring_playground">🎮 Spring Container Sandbox</NavItem></li>
