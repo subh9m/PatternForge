@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon, GitBranch, Brain, Globe, Coffee } from 'lucide-react';
+import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon, GitBranch, Brain, Globe, Coffee, Atom } from 'lucide-react';
 
 interface PortalSelectionProps {
-  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring') => void;
+  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react') => void;
 }
 
 const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => {
@@ -241,6 +241,28 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
             </div>
             <span className="text-xs font-bold text-green-400 group-hover:text-green-300 transition-smooth flex items-center space-x-1 pt-2">
               <span>BOOT</span>
+              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+            </span>
+          </div>
+
+          {/* React JS Card */}
+          <div
+            onClick={() => onSelectPortal('react')}
+            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+          >
+            <div className="w-full">
+              <div className="h-10 w-10 bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mb-4 group-hover:shadow-glow-sky transition-smooth">
+                <Atom className="h-5 w-5" />
+              </div>
+              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                React JS
+              </h2>
+              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                Master Virtual DOM reconciliations, hook closures, useMemo reference metrics, Portals escaping hierarchies, and runtime error boundaries.
+              </p>
+            </div>
+            <span className="text-xs font-bold text-sky-400 group-hover:text-sky-300 transition-smooth flex items-center space-x-1 pt-2">
+              <span>RENDER</span>
               <span className="transform group-hover:translate-x-1 transition-transform">→</span>
             </span>
           </div>

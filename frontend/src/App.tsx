@@ -14,12 +14,13 @@ import GitGuide from './views/git/GitGuide';
 import AimlGuide from './views/aiml/AimlGuide';
 import CnGuide from './views/cn/CnGuide';
 import SpringGuide from './views/spring/SpringGuide';
+import ReactGuide from './views/react/ReactGuide';
 
 const MainApp: React.FC = () => {
   const { user, loading } = useAuth();
-  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring'>(() => {
+  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react'>(() => {
     const saved = localStorage.getItem('activePortal');
-    return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml' || saved === 'cn' || saved === 'spring') ? saved : 'selection';
+    return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml' || saved === 'cn' || saved === 'spring' || saved === 'react') ? saved : 'selection';
   });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings'>('dashboard');
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
@@ -119,6 +120,17 @@ const MainApp: React.FC = () => {
   if (activePortal === 'spring') {
     return (
       <SpringGuide
+        onBackToPortal={() => {
+          localStorage.removeItem('activePortal');
+          setActivePortal('selection');
+        }}
+      />
+    );
+  }
+
+  if (activePortal === 'react') {
+    return (
+      <ReactGuide
         onBackToPortal={() => {
           localStorage.removeItem('activePortal');
           setActivePortal('selection');
