@@ -17,13 +17,13 @@
 }
 
 :root.light {
-  --bg-color: #f7f7f7;
-  --bg-grid: rgba(0, 0, 0, 0.04);
-  --surface-color: #ffffff;
-  --border-color: #cccccc;
-  --border-hover: #000000;
-  --text-primary: #000000;
-  --text-secondary: #555555;
+  --bg-color: #ffffff;
+  --bg-grid: rgba(0, 0, 0, 0.02);
+  --surface-color: #f9fafb;
+  --border-color: #e5e7eb;
+  --border-hover: #111827;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
   --accent-color: #ff3b30;
   --accent-hover: #e0241b;
   --glass-bg: rgba(255, 255, 255, 0.85);
@@ -87,8 +87,8 @@ body {
 :root.light [class*="bg-slate-850/"],
 :root.light [class*="bg-slate-800/"],
 :root.light [class*="bg-slate-700/"] {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
+  background-color: #f9fafb !important;
+  color: #111827 !important;
 }
 
 /* Ensure buttons stand out with darker backgrounds and distinct borders in light mode */
