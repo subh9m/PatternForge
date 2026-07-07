@@ -858,7 +858,14 @@ public class ProblemController {
                     problem.setSimplifiedStatement(res.get("simplifiedStatement"));
                 }
                 if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
-                    problem.setSimplifiedApproach(res.get("simplifiedApproach"));
+                    Map<String, String> approachMap = new HashMap<>();
+                    approachMap.put("optimal", res.get("simplifiedOptimal"));
+                    approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
+                    approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
+                    
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    String serialized = mapper.writeValueAsString(approachMap);
+                    problem.setSimplifiedApproach(serialized);
                 }
                 problemRepository.save(problem);
             } catch (Exception e) {
@@ -866,7 +873,7 @@ public class ProblemController {
                     problem.setSimplifiedStatement("Solve the coding puzzle for " + problem.getName() + ".");
                 }
                 if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
-                    problem.setSimplifiedApproach("Optimal solution using standard categories.");
+                    problem.setSimplifiedApproach("{\"optimal\":\"Optimal solution using standard categories.\",\"better\":\"\",\"bruteForce\":\"\"}");
                 }
                 problemRepository.save(problem);
             }

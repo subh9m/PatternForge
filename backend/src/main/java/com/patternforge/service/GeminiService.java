@@ -462,10 +462,12 @@ public class GeminiService {
                 + fullStatement + "\n\n"
                 + "Optimal Solution/Approach Context:\n"
                 + solutionDetailsJson + "\n\n"
-                + "Generate a simplified response in JSON format. Provide exactly these two fields:\n"
+                + "Generate a simplified response in JSON format. Provide exactly these fields:\n"
                 + "1. 'simplifiedStatement': A very brief and simple description of the problem statement (2-3 lines in simple, plain, easy-to-understand words, focusing only on the core goal).\n"
-                + "2. 'simplifiedApproach': A very brief explanation of the optimal strategy/approach in simple, plain words (2-3 lines explaining the core pattern or intuition).\n\n"
-                + "Return a single JSON object with only these two string properties.";
+                + "2. 'simplifiedOptimal': A very brief explanation of the optimal strategy/approach in simple, plain words (2-3 lines explaining the core pattern or intuition).\n"
+                + "3. 'simplifiedBetter': A very brief explanation of the better/improved strategy/approach if it exists in the details (else empty/null).\n"
+                + "4. 'simplifiedBrute': A very brief explanation of the brute force strategy/approach if it exists in the details (else empty/null).\n\n"
+                + "Return a single JSON object with these properties.";
 
         try {
             String escapedPrompt = escapeJsonString(prompt);
@@ -505,7 +507,9 @@ public class GeminiService {
             log.error("Failed to generate simplified problem statement and approach via Gemini", e);
             return Map.of(
                 "simplifiedStatement", "Please solve " + problemName + ".",
-                "simplifiedApproach", "Implement the optimal DSA pattern for this category."
+                "simplifiedOptimal", "Optimal solution using standard patterns.",
+                "simplifiedBetter", "",
+                "simplifiedBrute", ""
             );
         }
     }

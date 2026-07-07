@@ -30,7 +30,11 @@ const MainApp: React.FC = () => {
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
 
   // Focus mode session state
-  const [focusSession, setFocusSession] = useState<{ module: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects'; duration: number } | null>(null);
+  const [focusSession, setFocusSession] = useState<{ 
+    module: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects'; 
+    duration: number;
+    remainingSeconds?: number;
+  } | null>(null);
 
   const renderFocusTimer = () => {
     if (focusSession && focusSession.module === activePortal) {
@@ -38,6 +42,7 @@ const MainApp: React.FC = () => {
         <FocusTimerOverlay
           module={focusSession.module}
           initialDurationMins={focusSession.duration}
+          initialRemainingSecs={focusSession.remainingSeconds}
           onExit={() => {
             setFocusSession(null);
             localStorage.removeItem('activePortal');
@@ -67,9 +72,9 @@ const MainApp: React.FC = () => {
   if (activePortal === 'master_dashboard') {
     return (
       <MasterDashboard
-        onEnterFocusMode={(portal, duration) => {
+        onEnterFocusMode={(portal, duration, remainingSeconds) => {
           localStorage.setItem('activePortal', portal);
-          setFocusSession({ module: portal, duration });
+          setFocusSession({ module: portal, duration, remainingSeconds });
           setActivePortal(portal);
         }}
         onGoToModules={() => {

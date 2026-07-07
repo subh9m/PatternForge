@@ -38,4 +38,8 @@ public class DailyTask {
     // JSON or comma-separated target durations in minutes corresponding to the selected modules (e.g., "dsa:30,stl:25")
     @Column(columnDefinition = "TEXT")
     private String targetDurations;
+
+    // Comma-separated list of remaining durations in seconds (e.g., "dsa:940,stl:1500")
+    @Column(columnDefinition = "TEXT")
+    private String remainingDurations;
 }

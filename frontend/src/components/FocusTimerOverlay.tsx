@@ -5,6 +5,7 @@ import { Pause, Award, RefreshCw, AlertTriangle } from 'lucide-react';
 interface FocusTimerOverlayProps {
   module: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects';
   initialDurationMins: number;
+  initialRemainingSecs?: number;
   onExit: () => void;
 }
 
@@ -21,8 +22,12 @@ const MODULE_NAMES: Record<string, string> = {
   projects: 'Projects Architecture'
 };
 
-const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDurationMins, onExit }) => {
-  const [secondsRemaining, setSecondsRemaining] = useState(initialDurationMins * 60);
+const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDurationMins, initialRemainingSecs, onExit }) => {
+  const [secondsRemaining, setSecondsRemaining] = useState(
+    initialRemainingSecs !== undefined && initialRemainingSecs > 0
+      ? initialRemainingSecs
+      : initialDurationMins * 60
+  );
   const [isFocusActive, setIsFocusActive] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [savingProgress, setSavingProgress] = useState(false);
@@ -105,7 +110,15 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
     });
   };
 
-  const handlePauseAndExit = async () => {
+  const saveProgressAndExit = async () => {
+    if (secondsRemaining > 0 && !isCompleted) {
+      try {
+        await api.post(`/daily-tasks/today/pause`, { module, remainingSeconds: secondsRemaining });
+      } catch (err) {
+        console.error("Failed to save paused progress", err);
+      }
+    }
+
     if (document.fullscreenElement) {
       try {
         await document.exitFullscreen();
@@ -152,7 +165,7 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
 
             {/* Pause controls */}
             <button
-              onClick={handlePauseAndExit}
+              onClick={saveProgressAndExit}
               className="px-3 py-1 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 font-extrabold uppercase rounded-lg text-[9px] flex items-center space-x-1 cursor-pointer transition-smooth"
             >
               <Pause className="h-3 w-3" />
@@ -185,7 +198,7 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
                 Resume Focus Mode
               </button>
               <button
-                onClick={onExit}
+                onClick={saveProgressAndExit}
                 className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 font-extrabold uppercase text-xs rounded-xl transition-smooth cursor-pointer"
               >
                 Pause Timer & Exit Session
@@ -213,7 +226,7 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
             </div>
 
             <button
-              onClick={onExit}
+              onClick={saveProgressAndExit}
               disabled={savingProgress}
               className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-xs rounded-xl transition-smooth shadow-glow-primary cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-2"
             >

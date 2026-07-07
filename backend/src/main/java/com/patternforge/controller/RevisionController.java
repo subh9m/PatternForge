@@ -68,6 +68,7 @@ public class RevisionController {
             item.put("language", language);
             item.put("timeComplexity", timeComplexity);
             item.put("isRevisedToday", isRevisedToday);
+            item.put("solutionDetails", p.getSolutionDetailsJson() != null ? p.getSolutionDetailsJson() : "{}");
             
             response.add(item);
         }

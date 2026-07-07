@@ -26,10 +26,15 @@ interface DailyTaskData {
   selectedModules: string;
   completedModules: string;
   targetDurations: string;
+  remainingDurations?: string;
 }
 
 interface MasterDashboardProps {
-  onEnterFocusMode: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects', duration: number) => void;
+  onEnterFocusMode: (
+    portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects',
+    duration: number,
+    remainingSeconds?: number
+  ) => void;
   onGoToModules: () => void;
   onLogout: () => void;
 }
@@ -228,7 +233,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     setShowWarningModal(true);
   };
 
-  const handleAcceptFocusMode = () => {
+  const handleAcceptFocusMode = (usePausedSession: boolean = false) => {
     if (!pendingModule) return;
     setShowWarningModal(false);
     
@@ -240,8 +245,16 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
         duration = parseInt(match.split(':')[1]) || 25;
       }
     }
+
+    let remainingSeconds = undefined;
+    if (usePausedSession && dailyTask.remainingDurations) {
+      const match = dailyTask.remainingDurations.split(',').find(item => item.startsWith(`${pendingModule}:`));
+      if (match) {
+        remainingSeconds = parseInt(match.split(':')[1]);
+      }
+    }
     
-    onEnterFocusMode(pendingModule, duration);
+    onEnterFocusMode(pendingModule, duration, remainingSeconds);
   };
 
   if (loading) {
@@ -539,7 +552,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                 <div 
                   key={mod.id}
                   className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between space-y-4 ${
-                    isCompleted ? 'bg-emerald-950/10 border-emerald-500/30' :
+                    isCompleted ? 'bg-emerald-950/20 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]' :
                     isSelected ? 'bg-slate-900/50 border-slate-700' :
                     'bg-slate-900/20 border-slate-900 hover:border-slate-800'
                   }`}
@@ -576,8 +589,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                       
                       <input
                         type="range"
-                        min="25"
-                        max="50"
+                        min="20"
+                        max="45"
                         disabled={isCompleted}
                         value={currentDuration}
                         onChange={(e) => handleDurationChange(mod.id, parseInt(e.target.value))}
@@ -641,12 +654,54 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
               </ul>
             </div>
 
-            <button
-              onClick={handleAcceptFocusMode}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs rounded-xl transition-smooth shadow-glow-emerald cursor-pointer"
-            >
-              Enter Focus Mode & Start Timer
-            </button>
+            {(() => {
+              let pausedRemainingSecs = 0;
+              if (pendingModule && dailyTask.remainingDurations) {
+                const match = dailyTask.remainingDurations.split(',').find(item => item.startsWith(`${pendingModule}:`));
+                if (match) {
+                  pausedRemainingSecs = parseInt(match.split(':')[1]) || 0;
+                }
+              }
+
+              if (pausedRemainingSecs > 0) {
+                const mins = Math.floor(pausedRemainingSecs / 60);
+                const rSecs = pausedRemainingSecs % 60;
+                const formatted = `${mins}m ${rSecs}s`;
+
+                return (
+                  <div className="space-y-4">
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center space-x-2 text-xs text-amber-400 font-semibold font-mono">
+                      <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
+                      <span>We detected a paused session with <strong className="text-slate-100">{formatted}</strong> remaining.</span>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleAcceptFocusMode(true)}
+                        className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[10px] tracking-wider rounded-xl transition-smooth shadow-glow-emerald cursor-pointer"
+                      >
+                        Continue Session
+                      </button>
+                      <button
+                        onClick={() => handleAcceptFocusMode(false)}
+                        className="flex-1 py-2.5 bg-slate-905 hover:bg-slate-850 border border-slate-800 text-slate-300 font-extrabold uppercase text-[10px] tracking-wider rounded-xl transition-smooth cursor-pointer"
+                      >
+                        Start Fresh
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <button
+                  onClick={() => handleAcceptFocusMode(false)}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs rounded-xl transition-smooth shadow-glow-emerald cursor-pointer"
+                >
+                  Enter Focus Mode & Start Timer
+                </button>
+              );
+            })()}
           </div>
         </div>
       )}
