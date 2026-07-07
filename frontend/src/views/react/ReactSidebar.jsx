@@ -70,7 +70,16 @@ export default function ReactSidebar({ isOpen, activeTab, onTabChange }) {
             </div>
 
             <div>
-              <NavHeading>4. Reference & Sandbox</NavHeading>
+              <NavHeading>4. Systems & Testing</NavHeading>
+              <ul className="space-y-0.5">
+                <li><NavItem href="#react_routing_state">RE.5 Routing & State</NavItem></li>
+                <li><NavItem href="#react_testing">RE.6 React Testing & RTL</NavItem></li>
+                <li><NavItem href="#react_ssr_perf">RE.7 SSR & Next.js Core</NavItem></li>
+              </ul>
+            </div>
+
+            <div>
+              <NavHeading>5. Reference & Sandbox</NavHeading>
               <ul className="space-y-0.5">
                 <li><NavItem href="#react_cheat_sheet">📋 Key Hooks Reference</NavItem></li>
                 <li><NavItem href="#react_playground">🎮 Virtual DOM Sandbox</NavItem></li>

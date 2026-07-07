@@ -284,5 +284,216 @@ return ReactDOM.createPortal(
         ]
       }
     ]
+  },
+  {
+    id: "react_routing_state",
+    num: "RE.5",
+    title: "Routing & State Managers",
+    desc: "Application routing and global data stores. Analyze React Router routes mappings, and compare state managers: Redux vs. Context API vs. Zustand.",
+    declaration: `// Zustand global store hooks
+import create from 'zustand';
+const useStore = create(set => ({
+  count: 0,
+  inc: () => set(state => ({ count: state.count + 1 }))
+}));`,
+    internalImplementation: `/* ----------------- STATE MANAGER PROFILES -----------------
+   Context API  ──► Good for low-frequency variables (Theme, Auth). Re-renders ALL consumers.
+   Redux Toolkit──► Highly structured, global actions. Uses selector pools to map exact fields.
+   Zustand      ──► Simple hooks, minimal boilerplate, out-of-box selector tracking.
+*/`,
+    subtopics: [
+      {
+        name: "React Router Mechanics",
+        oneLiner: "React Router intercepts URL requests, matching paths to components via nested router outlets.",
+        definition: "A declarative routing engine matching URL paths to components using HTML5 history APIs, supporting parameters, query hooks, and nested layouts.",
+        whyNeed: "Creates SPA (Single Page Application) navigation experiences, maintaining logical paths without full browser document reloads.",
+        example: "Typing `/users/15` parses route parameters using `useParams()` to query user details dynamically.",
+        devPerspective: "Using `<Outlet />` allows layout structures to nest child sub-routes seamlessly, preserving the nav header state between page transitions.",
+        questions: [
+          "How does client-side routing differ from server-side routing?",
+          "Explain the purpose of the <Outlet /> component in React Router.",
+          "Compare useNavigate() and <Link /> for route navigation."
+        ],
+        followups: [
+          "What is the difference between path params (useParams) and query strings (useSearchParams)?",
+          "Explain route lazy loading with React.lazy and Suspense."
+        ],
+        confusions: [
+          "Link reload: Using standard `<a href=\"...\">` tags bypasses React Router, executing a full document reload. Always use `<Link to=\"...\">` to preserve SPA state caches."
+        ],
+        takeaways: [
+          "Client routing uses HTML5 History pushState APIs.",
+          "<Outlet /> renders child route viewports dynamically.",
+          "Lazy routes split bundles to speed up initial loads."
+        ]
+      },
+      {
+        name: "Global State Managers",
+        oneLiner: "Choose Context for static config data; choose Zustand or Redux for high-frequency updates.",
+        definition: "Libraries (Zustand, Redux) that store data in global pools, allowing components to subscribe to slices using custom selectors.",
+        whyNeed: "Context API triggers re-renders on all consumer components whenever the value changes. Specialized managers isolate renders via shallow selector checks.",
+        example: "Selecting only the user avatar from a Zustand store avoids re-rendering the component when the user updates their notification preferences.",
+        devPerspective: "SDEs use Context for themes, locales, and authentication. For complex business modules like a checkout basket or chat, they use Zustand or Redux.",
+        questions: [
+          "Compare Redux Toolkit, Zustand, and Context API.",
+          "Why does Context API cause performance issues on high-frequency state updates?",
+          "What is a selector in state management and why is it important?"
+        ],
+        followups: [
+          "How does Zustand achieve state subscription updates without wrapping components in Providers?",
+          "Explain unidirectional data flow in Redux (Action -> Dispatcher -> Reducer -> Store)."
+        ],
+        confusions: [
+          "Context is not state management: Context is a transport pipeline for values; the actual state lives inside a useState/useReducer hook on the Provider component."
+        ],
+        takeaways: [
+          "Context causes all subscribed consumers to re-render.",
+          "Zustand uses selector tracking for surgical rendering updates.",
+          "Redux is useful for large teams needing trace logs."
+        ]
+      }
+    ]
+  },
+  {
+    id: "react_testing",
+    num: "RE.6",
+    title: "React Testing & RTL",
+    desc: "Validating user interfaces. Covers React Testing Library query hierarchies (getBy, queryBy, findBy), mocking user events, and stubbing mock servers with MSW.",
+    declaration: `// React Testing Library rendering test
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+test('renders and clicks button', async () => {
+  render(<Button label="Submit" />);
+  const btn = screen.getByRole('button', { name: /submit/i });
+  await userEvent.click(btn);
+});`,
+    internalImplementation: `/* ----------------- RTL QUERY PRIORITY MATRIX -----------------
+   1. Queries accessible to all ──► getByRole, getByLabelText, getByText
+   2. Semantic HTML selectors   ──► getByAltText, getByTitle
+   3. Testing Escape Hatches    ──► getByTestId (use only when text/role matches fail)
+*/`,
+    subtopics: [
+      {
+        name: "RTL Query Strategies",
+        oneLiner: "Use getBy for elements that must exist; queryBy for missing items; findBy for async elements.",
+        definition: "Query methods provided by React Testing Library. getBy raises errors on missing elements; queryBy returns null; findBy resolves promises asynchronously.",
+        whyNeed: "Ensures testing suites match user accessible queries (text/role matching) instead of brittle HTML structure selectors.",
+        example: "Using `screen.queryByText(/loading/i)` to assert that the spinner is successfully removed from the DOM after data loads.",
+        devPerspective: "SDEs write queries targeting semantic roles (e.g. `getByRole('button')`) to ensure the application conforms to accessibility (ARIA) standards.",
+        questions: [
+          "Compare getBy, queryBy, and findBy query types in React Testing Library.",
+          "Why is selecting elements by role preferred over selecting by class name or id?",
+          "When is it acceptable to use getByTestId?"
+        ],
+        followups: [
+          "What is the difference between fireEvent and userEvent libraries? [userEvent simulates full browser user event sequences, including focus changes]",
+          "How do you test error responses thrown from async operations using findBy queries?"
+        ],
+        confusions: [
+          "Testing implementation details: Do not assert state values directly inside test cases. Assert what the user actually sees on screen (e.g. text blocks or modal headers)."
+        ],
+        takeaways: [
+          "getBy fails instantly if the element is not found.",
+          "queryBy is required to assert that elements are not in the DOM.",
+          "findBy runs async, checking up to a default 1000ms timeout."
+        ]
+      },
+      {
+        name: "Mocking & MSW (Mock Service Worker)",
+        oneLiner: "MSW intercepts network calls at the browser layer, returning stable mock responses.",
+        definition: "A network mocking tool that intercepts HTTP queries using Service Worker APIs, avoiding mocking raw fetch or axios packages directly.",
+        whyNeed: "Mocking axios directly leaks implementation details. MSW mocks the actual network boundary, allowing tests to run unchanged if libraries swap.",
+        example: "Configuring a mock server handler to return a 500 Server Error response when testing error boundary widgets.",
+        devPerspective: "SDEs run MSW handlers inside Jest/Vitest setups (`beforeAll`, `afterEach`, `afterAll`) to clean handlers between tests, avoiding test leaks.",
+        questions: [
+          "What is Mock Service Worker (MSW) and why is it preferred over mocking fetch/axios?",
+          "How do you verify loading, success, and error states inside a React data component?",
+          "Explain how to mock third-party libraries (like react-router-dom) in Vitest."
+        ],
+        followups: [
+          "How do you handle mock cleanup between test assertions to prevent leakage?",
+          "What is screen.debug() and how do you use it to trace HTML trees during failures?"
+        ],
+        confusions: [
+          "Mock scopes: Fetch mocking must be cleaned after every test case run. Otherwise, a mocked profile response might leak and cause unrelated tests to fail."
+        ],
+        takeaways: [
+          "MSW intercepts HTTP calls at the browser level.",
+          "Avoid mocking fetch directly; mock the network boundary instead.",
+          "Clean mock states between tests to prevent test leakage."
+        ]
+      }
+    ]
+  },
+  {
+    id: "react_ssr_perf",
+    num: "RE.7",
+    title: "SSR & Next.js Core",
+    desc: "Modern React frameworks. Learn Client-Side Rendering vs Server-Side Rendering (SSR), React Server Components (RSC) patterns, and how to debug hydration mismatches.",
+    declaration: `// React Server Component (Default in Next.js App Router)
+async function ServerProfile({ userId }) {
+  const user = await db.getUser(userId); // Runs directly on server
+  return <ProfileCard name={user.name} />;
+}`,
+    internalImplementation: `/* ----------------- HYDRATION MISMATCH CRITERIA -----------------
+   Renders static HTML on server (e.g. Server Date)
+     ├──► Client receives HTML tree
+     │      ├──► Client compares HTML with first JS render output
+     │      └──► Date mismatch (Time updated on client) -> Hydration Error!
+   Fix: Keep server/client markup matching. Use useEffect for client-only changes.
+*/`,
+    subtopics: [
+      {
+        name: "CSR vs SSR vs Server Components",
+        oneLiner: "SSR pre-renders HTML per request; Server Components execute on the server, sending static nodes without JS weight.",
+        definition: "CSR renders views in the browser. SSR renders HTML on the server on demand. React Server Components (RSC) fetch data and render directly on the server, removing dependency code from the client bundle.",
+        whyNeed: "CSR causes slow initial page loads and poor SEO indexings. Server Components stream UI elements, shrinking the JavaScript package size sent to the client.",
+        example: "A database-heavy dashboard page fetches data and renders layout panels on the server, leaving only interactive buttons as client components.",
+        devPerspective: "In Next.js, components are Server Components by default. You add the `'use client'` directive at the top to declare state or hooks (Client Components).",
+        questions: [
+          "Compare Client-Side Rendering (CSR), Server-Side Rendering (SSR), and Static Site Generation (SSG).",
+          "What are React Server Components (RSC)? How do they differ from SSR?",
+          "Explain the difference between Server Components and Client Components ('use client')."
+        ],
+        followups: [
+          "Can a Server Component import a Client Component? Can a Client Component import a Server Component? [Yes, but Server Components must be passed as children props to Client Components]",
+          "How does data caching behave in Server Components compared to client requests?"
+        ],
+        confusions: [
+          "'use client' executes on server: The `'use client'` directive does NOT mean the component only runs in the browser. It is still pre-rendered to static HTML on the server before client-side hydration."
+        ],
+        takeaways: [
+          "Server components reduce client JavaScript bundle size.",
+          "SSR renders HTML per request; SSG renders once at build time.",
+          "Use Client Components for events, state, and browser APIs."
+        ]
+      },
+      {
+        name: "Hydration Mismatches",
+        oneLiner: "Hydration matches HTML markup between server and client; date/time shifts trigger mismatches.",
+        definition: "Hydration is the client-side process where React binds event listeners to the server-rendered HTML. A mismatch happens if the client's first render output differs from the server HTML.",
+        whyNeed: "Understanding hydration prevents blank screen flashes and React runtime console errors that break page interactions.",
+        example: "Rendering the current local timestamp (`new Date()`) directly in JSX. The server and client will evaluate different seconds, causing a hydration error.",
+        devPerspective: "To render client-specific values (like window sizes or timestamps), SDEs check `mounted` state inside useEffect, rendering placeholder layouts until the client runs.",
+        questions: [
+          "What is Hydration in React SSR?",
+          "What causes a Hydration Mismatch error? Give 3 common examples.",
+          "How do you resolve hydration errors caused by rendering client-specific dates/timezones?"
+        ],
+        followups: [
+          "How can you temporarily bypass a hydration mismatch check on a specific element? [Use suppressHydrationWarning prop]",
+          "Explain how window or document access crashes Server-Side Rendering environments."
+        ],
+        confusions: [
+          "Window access: Referencing `window` or `document` directly in global scope crashes the Node.js server. Always place these checks inside `useEffect` or behind `typeof window !== 'undefined'` checks."
+        ],
+        takeaways: [
+          "Hydration attaches event bindings to static HTML trees.",
+          "Timezones, dates, and random numbers trigger hydration warnings.",
+          "Run client-only logic inside useEffect after the component mounts."
+        ]
+      }
+    ]
   }
 ];

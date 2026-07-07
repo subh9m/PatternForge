@@ -83,21 +83,87 @@ const renderDiagram = (conceptId) => {
         </div>
       );
 
-    case 'react_advanced':
+    case 'react_routing_state':
       return (
         <div className="space-y-3">
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
-            React Portals Escaping Layout Hierarchies
+            State Management Tool Profiles Comparison
           </span>
-          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-250 dark:border-neutral-900 rounded-xl space-y-4">
-            <div className="flex flex-col space-y-3 font-mono text-[10.5px]">
-              <div className="p-3 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
-                <span className="px-1.5 py-0.2 bg-sky-500/10 text-sky-500 rounded">Code Tree</span>
-                <span className="text-gray-500">Component resides nested deep inside App tree (maintains events & Context hierarchy).</span>
+          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-250 dark:border-neutral-900 rounded-xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center font-mono text-[10.5px]">
+              <div className="p-4 border border-gray-250 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2">
+                <span className="px-2 py-0.5 bg-sky-500/10 text-sky-500 text-[8px] font-bold uppercase rounded inline-block">Context API</span>
+                <p className="text-[10px] text-gray-500">Frequency: 🔴 Low (Theme, Auth)</p>
+                <p className="text-[9px] text-gray-400">Triggers re-render for all consumers on value change.</p>
               </div>
-              <div className="p-3 bg-sky-500/5 border border-sky-500/25 rounded-xl flex items-start space-x-3">
-                <span className="px-1.5 py-0.2 bg-sky-500 text-white rounded font-bold">DOM Output</span>
-                <span className="text-gray-700 dark:text-gray-300 font-bold">Portals output nodes outside parent CSS overflows, rendering at the document root level.</span>
+              <div className="p-4 border border-gray-250 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2">
+                <span className="px-2 py-0.5 bg-sky-500/10 text-sky-500 text-[8px] font-bold uppercase rounded inline-block">Zustand</span>
+                <p className="text-[10px] text-gray-500">Frequency: 🟢 High (Cart, Filters)</p>
+                <p className="text-[9px] text-gray-400">Simple hooks with selector-driven surgical updates.</p>
+              </div>
+              <div className="p-4 border border-sky-500/25 bg-sky-500/5 rounded-xl space-y-2 text-sky-500 font-bold">
+                <span className="px-2 py-0.5 bg-sky-500 text-white text-[8px] font-bold uppercase rounded inline-block">Redux Toolkit</span>
+                <p className="text-[10px] text-gray-700 dark:text-gray-300">Frequency: 🟢 High (Enterprise)</p>
+                <p className="text-[9px] text-gray-400">Unidirectional flow, global actions, devtools log traces.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'react_testing':
+      return (
+        <div className="space-y-3">
+          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+            React Testing Library Query Priority Flow
+          </span>
+          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-250 dark:border-neutral-900 rounded-xl space-y-3">
+            <div className="flex flex-col md:flex-row items-center justify-around gap-2 font-mono text-[10px] text-center">
+              <div className="p-2.5 bg-sky-500/5 border border-sky-500/25 rounded-lg w-full md:w-1/3 shadow-sm">
+                <strong className="text-sky-500 block font-black">1. Accessible to All</strong>
+                <span className="text-gray-400">getByRole, getByLabelText, getByText</span>
+              </div>
+              <ArrowRight className="h-4.5 w-4.5 text-sky-500 hidden md:block" />
+              <div className="p-2.5 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full md:w-1/3">
+                <strong className="text-gray-800 dark:text-gray-200 block font-bold">2. Semantic HTML</strong>
+                <span className="text-gray-400">getByAltText, getByTitle</span>
+              </div>
+              <ArrowRight className="h-4.5 w-4.5 text-sky-500 hidden md:block" />
+              <div className="p-2.5 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full md:w-1/3">
+                <strong className="text-gray-800 dark:text-gray-200 block font-bold">3. Test Escape Hatch</strong>
+                <span className="text-red-500 font-bold">getByTestId (fallback only)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'react_ssr_perf':
+      return (
+        <div className="space-y-3">
+          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+            React SSR Page Hydration Pipeline
+          </span>
+          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-250 dark:border-neutral-900 rounded-xl space-y-3">
+            <div className="flex flex-col md:flex-row items-center justify-around gap-2 font-mono text-[10px] text-center">
+              <div className="p-2.5 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full md:w-1/4">
+                <strong className="text-gray-800 dark:text-gray-200 block font-bold">1. Build Server HTML</strong>
+                <span className="text-gray-400">Renders nodes to static layout</span>
+              </div>
+              <ArrowRight className="h-4.5 w-4.5 text-sky-500 hidden md:block" />
+              <div className="p-2.5 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full md:w-1/4">
+                <strong className="text-gray-800 dark:text-gray-200 block font-bold">2. Send bytes to client</strong>
+                <span className="text-gray-400">Fast visual paint (FCP)</span>
+              </div>
+              <ArrowRight className="h-4.5 w-4.5 text-sky-500 hidden md:block" />
+              <div className="p-2.5 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full md:w-1/4">
+                <strong className="text-gray-800 dark:text-gray-200 block font-bold">3. Load JavaScript</strong>
+                <span className="text-gray-400">Browser downloads bundles</span>
+              </div>
+              <ArrowRight className="h-4.5 w-4.5 text-sky-500 hidden md:block" />
+              <div className="p-2.5 bg-sky-500/5 border border-sky-500/25 rounded-lg w-full md:w-1/4 shadow-sm">
+                <strong className="text-sky-500 block font-black">4. Hydration Active</strong>
+                <span className="text-gray-400">React binds handlers to HTML</span>
               </div>
             </div>
           </div>

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Play, RotateCcw, Cpu, Database, Network, ArrowRight, Check } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Play, RotateCcw, Cpu, Network, ArrowRight } from 'lucide-react';
 
 export default function ReactPlayground() {
   const [activeTab, setActiveTab] = useState('diff'); // 'diff' or 'perf'
