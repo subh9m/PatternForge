@@ -32,7 +32,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
   };
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-background px-4 relative overflow-hidden select-none">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-background px-4 py-12 md:py-20 relative overflow-y-auto select-none">
       {/* Floating Theme Toggle & Sign Out on the top-right of page */}
       <div className="absolute top-6 right-6 flex items-center space-x-3 z-50">
         <button
