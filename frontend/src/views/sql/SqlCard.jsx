@@ -30,6 +30,9 @@ function highlightCode(code) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
+  // Highlight numbers first (before we introduce any span tags containing class numbers like 500, 400, 650)
+  escaped = escaped.replace(/\b(\d+)\b/g, '<span class="text-purple-650 dark:text-violet-400">$1</span>');
+
   // Highlight keywords
   keywords.forEach(kw => {
     const reg = new RegExp(`\\b(${kw})\\b`, 'gi');
@@ -39,9 +42,6 @@ function highlightCode(code) {
   // Highlight comments
   escaped = escaped.replace(/(--.*)/g, '<span class="text-gray-400 dark:text-slate-500 italic">$1</span>');
   escaped = escaped.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="text-gray-400 dark:text-slate-500 italic">$1</span>');
-
-  // Highlight numbers
-  escaped = escaped.replace(/\b(\d+)\b/g, '<span class="text-purple-650 dark:text-violet-400">$1</span>');
 
   return escaped;
 }
