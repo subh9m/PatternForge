@@ -90,6 +90,14 @@ export default function GitSidebar({ isOpen, activeTab, onTabChange }) {
                 <li><NavItem href="#git_interview_qa_best">GIT.14 Q&As & Practice</NavItem></li>
               </ul>
             </div>
+
+            <div>
+              <NavHeading>6. Tools & Sandbox</NavHeading>
+              <ul className="space-y-0.5">
+                <li><NavItem href="#git_cheat_sheet">📋 Interactive Cheat Sheet</NavItem></li>
+                <li><NavItem href="#git_playground">🎮 Git Visual Playground</NavItem></li>
+              </ul>
+            </div>
           </nav>
         </div>
       </aside>

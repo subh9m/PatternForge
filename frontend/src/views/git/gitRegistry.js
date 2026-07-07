@@ -5,11 +5,11 @@ export const gitConcepts = [
     title: "Introduction & Git vs GitHub",
     desc: "Understanding Version Control Systems (VCS), the history of Git, and key architectural differences between local version software and cloud hosting portals.",
     declaration: `// Git Basics & VCS Summary
-- Local VCS: Local delta patches. High risk (disk failure = total loss).
+- Local VCS: Stored patches. High risk (disk failure = total loss).
 - Centralized VCS (CVCS): Single master server (SVN, Perforce). Single point of failure, no offline work.
 - Distributed VCS (DVCS): Every developer has a complete clone of the repository history (Git, Mercurial). Offline-safe, fast.
 - Git: Local Command Line engine. GitHub: Remote Cloud hosting, pull request web UI, issues, actions.`,
-    diagramUrl: "/images/git_vcs_types.png",
+    diagramUrl: null,
     methods: [
       { 
         method: "What is Version Control?", 
@@ -18,6 +18,28 @@ export const gitConcepts = [
         output: "Safe history, revision recovery", 
         complexity: "Git check: O(1) commit pointer reads", 
         desc: `Version Control systems coordinate and restore file histories over time.
+<br/>
+<div class="my-4 p-4 bg-amber-500/[0.03] border border-amber-500/20 rounded-xl">
+  <strong class="text-amber-500 text-xs font-mono uppercase tracking-wider block mb-2">📊 VCS Evolution Model</strong>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div class="p-3 bg-red-500/5 border border-red-500/20 rounded-lg text-center">
+      <span class="block text-xs font-bold text-red-500">1. Local VCS</span>
+      <span class="block text-[10px] text-gray-500 dark:text-gray-400 mt-1">Local delta patches</span>
+      <span class="block text-[9px] text-red-400/80 italic mt-2">Risk: Local Disk Failure = Total Loss</span>
+    </div>
+    <div class="p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg text-center">
+      <span class="block text-xs font-bold text-yellow-500">2. Centralized VCS (SVN)</span>
+      <span class="block text-[10px] text-gray-500 dark:text-gray-400 mt-1">Single server database</span>
+      <span class="block text-[9px] text-yellow-400/80 italic mt-2">Risk: Offline Blocked & Server Downtime</span>
+    </div>
+    <div class="p-3 bg-green-500/5 border border-green-500/20 rounded-lg text-center">
+      <span class="block text-xs font-bold text-green-500">3. Distributed VCS (Git)</span>
+      <span class="block text-[10px] text-gray-500 dark:text-gray-400 mt-1">Full clone on every client</span>
+      <span class="block text-[9px] text-green-400/80 italic mt-2">Advantage: Fast, Full Offline, High Safety</span>
+    </div>
+  </div>
+</div>
+
 <table class="prose-table">
   <thead>
     <tr><th>VCS Model</th><th>Data Storage Method</th><th>Single Point of Failure?</th><th>Offline Mode?</th></tr>
@@ -27,7 +49,11 @@ export const gitConcepts = [
     <tr><td>Centralized VCS (SVN)</td><td>Database on single central server</td><td>Yes (Server crash = all blocked)</td><td>No (Requires network)</td></tr>
     <tr><td>Distributed VCS (Git)</td><td>Full repository mirrors on every client</td><td>No (Any clone is a complete backup)</td><td>Yes (Full offline history)</td></tr>
   </tbody>
-</table>`
+</table>
+
+<br/>
+<strong class="text-gray-900 dark:text-white font-mono text-xs block mb-1">🚀 Why Git Became Popular:</strong>
+Created by Linus Torvalds in 2005 for Linux kernel development. It is blazingly fast, supports non-linear development (thousands of parallel branches), and handles large projects efficiently.`
       },
       { 
         method: "Git vs GitHub: Core Differences", 
@@ -47,7 +73,16 @@ export const gitConcepts = [
     <tr><td>Connectivity</td><td>Works completely offline</td><td>Requires active internet connection</td></tr>
     <tr><td>Alternatives</td><td>Mercurial, SVN, Perforce</td><td>GitLab, Bitbucket, Azure DevOps</td></tr>
   </tbody>
-</table>`
+</table>
+
+<div class="mt-4 p-4 bg-blue-500/[0.04] border-l-2 border-blue-500 rounded-r-lg">
+  <span class="block text-[9px] font-black text-blue-500 uppercase tracking-widest font-mono mb-1">💡 SDE Tip: When are the alternatives used?</span>
+  <ul class="list-disc pl-4 text-xs text-gray-600 dark:text-gray-400 space-y-1">
+    <li><strong>GitLab:</strong> Popular for built-in, robust enterprise CI/CD pipelines.</li>
+    <li><strong>Bitbucket:</strong> Atlassian product; integrates perfectly with Jira.</li>
+    <li><strong>Azure DevOps:</strong> Used by Microsoft-centric enterprise ecosystems.</li>
+  </ul>
+</div>`
       }
     ]
   },
@@ -61,7 +96,7 @@ export const gitConcepts = [
 - Staging Area (Index): Draft file index specifying what will go into the next commit snapshot.
 - Local Repository: The hidden .git folder housing all commit objects, refs, and hashes.
 - Remote Repository: Cloud repository (origin) shared among teams on GitHub.`,
-    diagramUrl: "/images/git_four_areas.png",
+    diagramUrl: null,
     methods: [
       { 
         method: "The Four Git Working Zones", 
@@ -70,6 +105,28 @@ export const gitConcepts = [
         output: "Synchronized project nodes", 
         complexity: "Transition calls: O(1) object references", 
         desc: `How data moves between areas in Git.
+<br/>
+<div class="my-4 p-4 bg-neutral-900/40 border border-neutral-800 rounded-xl">
+  <strong class="text-amber-500 text-xs font-mono uppercase tracking-wider block mb-3 text-center">🔄 Git Zone Transfers</strong>
+  <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="p-2.5 bg-blue-500/10 border border-blue-500/30 rounded-lg text-center w-full md:w-1/4">
+      <span class="block text-xs font-mono font-bold text-blue-400">Working Dir</span>
+    </div>
+    <span class="text-gray-500 text-xs font-mono">git add ➔</span>
+    <div class="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg text-center w-full md:w-1/4">
+      <span class="block text-xs font-mono font-bold text-amber-400">Staging (Index)</span>
+    </div>
+    <span class="text-gray-500 text-xs font-mono">git commit ➔</span>
+    <div class="p-2.5 bg-green-500/10 border border-green-500/30 rounded-lg text-center w-full md:w-1/4">
+      <span class="block text-xs font-mono font-bold text-green-400">Local Repo</span>
+    </div>
+    <span class="text-gray-500 text-xs font-mono">git push ➔</span>
+    <div class="p-2.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-center w-full md:w-1/4">
+      <span class="block text-xs font-mono font-bold text-purple-400">Remote Repo</span>
+    </div>
+  </div>
+</div>
+
 <table class="prose-table">
   <thead>
     <tr><th>Git Area</th><th>Logical Purpose</th><th>Typical Commands Triggered</th></tr>
@@ -101,7 +158,8 @@ export const gitConcepts = [
   </tbody>
 </table>
 <br/>
-<img src='/images/git_object_model.png' alt='Git Internal Object Model Graph' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-950/10 p-2' />`
+<strong class="text-gray-900 dark:text-white font-mono text-xs block mb-1">🔑 Hashing & Integrity:</strong>
+Every object in Git is checksummed using a 40-character <strong>SHA-1 hash</strong>. It guarantees data integrity.`
       }
     ]
   },
@@ -312,8 +370,10 @@ It is safe. It will not destroy existing commits or overwrite files; it simply r
   </tbody>
 </table>
 <br/>
-<b>⚠️ Warning: What happens in a Detached HEAD state?</b><br/>
-If you commit code in a Detached HEAD state, those commits are not tied to any branch. If you switch back to 'main', those new commits will be orphaned and eventually removed by Git's garbage collector. To save them, immediately run: 'git switch -c &lt;new-branch-name&gt;'.`
+<div class="p-3 bg-red-500/[0.05] border-l-2 border-red-500 text-xs">
+  <strong>⚠️ Detached HEAD Alert:</strong>
+  If you commit code in a Detached HEAD state, those commits are not tied to any branch. If you switch branches, those commits will be orphaned and eventually garbage collected. To save them, run: <code>git switch -c &lt;new-branch-name&gt;</code> immediately.
+</div>`
       }
     ]
   },
@@ -326,7 +386,7 @@ If you commit code in a Detached HEAD state, those commits are not tied to any b
 - git merge <branch>: Joins two branch histories with a new "Merge Commit".
 - git rebase <branch>: Reposition base of current branch onto the tip of target.
 - git cherry-pick <sha>: Copies one specific commit from another branch onto current HEAD.`,
-    diagramUrl: "/images/git_object_model.png",
+    diagramUrl: null,
     methods: [
       { 
         method: "Integrating Code: Merge, Rebase, Cherry-Pick", 
@@ -438,7 +498,7 @@ If you commit code in a Detached HEAD state, those commits are not tied to any b
     declaration: `// Rebase Rule
 "NEVER rebase a public branch that other developers are collaborating on."
 Rebasing public branches rewrites commit histories, causing teammates to experience duplicate commits and divergent histories.`,
-    diagramUrl: "/images/git_object_model.png",
+    diagramUrl: null,
     methods: [
       { 
         method: "Comparing Merge & Rebase Mechanics", 
@@ -457,7 +517,14 @@ Rebasing public branches rewrites commit histories, causing teammates to experie
     <tr><td>Traceability</td><td>Preserves true chronological context</td><td>Alters history (dates/hashes are rewritten)</td></tr>
     <tr><td>Safety profile</td><td>Safe for any branch</td><td><b>Dangerous!</b> Violates identity if run on public branches</td></tr>
   </tbody>
-</table>`
+</table>
+
+<div class="mt-4 p-4 bg-red-500/[0.04] border-l-2 border-red-500 rounded-r-lg">
+  <span class="block text-[9px] font-black text-red-500 uppercase tracking-widest font-mono mb-1">⚠️ Golden Rule of Rebasing</span>
+  <p class="text-xs text-gray-600 dark:text-gray-400">
+    NEVER rebase a public branch that other developers are working on. Rebase is destructive because it rewrites SHA-1 hashes, which forces teammates to manually untangle duplicate commits if they pull your branch.
+  </p>
+</div>`
       }
     ]
   },
@@ -472,7 +539,7 @@ Rebasing public branches rewrites commit histories, causing teammates to experie
 =======
 [Teammate's incoming code changes]
 >>>>>>> branch-name`,
-    diagramUrl: "/images/git_merge_conflict.png",
+    diagramUrl: null,
     methods: [
       { 
         method: "Why Conflicts Occur & How to Fix Them", 
@@ -505,7 +572,7 @@ Rebasing public branches rewrites commit histories, causing teammates to experie
 2. Clone fork locally.
 3. Commit and push modifications to fork.
 4. Open a Pull Request (PR) from fork to upstream repository.`,
-    diagramUrl: "/images/git_pr_workflow.png",
+    diagramUrl: null,
     methods: [
       { 
         method: "HTTPS vs SSH authentication protocols", 
@@ -513,7 +580,7 @@ Rebasing public branches rewrites commit histories, causing teammates to experie
         params: "URL formats, credentials", 
         output: "Authenticated secure transmission", 
         complexity: "Setup: SSH takes minutes. Connection speed: Identical.", 
-        desc: `Comparing HTTPS and SSH remote repository connections.
+        desc: `Comparing HTTPS and SSH remote repository connections:
 <table class="prose-table">
   <thead>
     <tr><th>Feature</th><th>🌐 HTTPS Protocol</th><th>🔑 SSH Protocol</th></tr>
@@ -541,7 +608,7 @@ Run: <code>ssh-keygen -t ed25519 -C "your_email@example.com"</code>. Copy the **
 - git revert <hash>: Creates a new commit that rolls back target commit changes.
 - git reset --soft HEAD~1: Uncommits last commit, keeps changes in Staging index.
 - git reset --hard HEAD~1: Destroys last commit, resets Staging index & working directory.`,
-    diagramUrl: "/images/git_undo_decision.png",
+    diagramUrl: null,
     methods: [
       { 
         method: "The Big 4 Undo Options", 
@@ -608,7 +675,7 @@ Run: <code>ssh-keygen -t ed25519 -C "your_email@example.com"</code>. Copy the **
   <tbody>
     <tr><td><b>What is git reflog?</b></td><td>A local journal tracking every HEAD change. Useful for recovering deleted branches or commits from accidental <code>git reset --hard</code> runs.</td></tr>
     <tr><td><b>How does git bisect work?</b></td><td>A binary search tool to find which commit introduced a bug. You label a commit 'good' and 'bad', and Git splits commits to find the exact source.</td></tr>
-    <tr><td><b>What is git stash?</b></td><td>Temporarily shelves dirty working directory changes, returning index to clean HEAD, so you can switch branches without committing unfinished work.</td></tr>
+    <li><b>What is git stash?</b></td><td>Temporarily shelves dirty working directory changes, returning index to clean HEAD, so you can switch branches without committing unfinished work.</td></tr>
     <tr><td><b>How does git gc work?</b></td><td>Garbage collector that removes unreachable orphaned objects, packs commits, and compresses metadata database into packfiles to optimize speed.</td></tr>
   </tbody>
 </table>`

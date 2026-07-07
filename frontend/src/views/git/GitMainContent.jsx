@@ -1,5 +1,7 @@
 import React from 'react';
 import GitCard from './GitCard';
+import GitCheatSheet from './GitCheatSheet';
+import GitPlayground from './GitPlayground';
 import { gitConcepts } from './gitRegistry';
 
 const MenuIcon = ({ isOpen }) => (
@@ -9,6 +11,8 @@ const MenuIcon = ({ isOpen }) => (
 );
 
 export default function GitMainContent({ isOpen, toggleSidebar, activeTab }) {
+  const isCheatSheet = activeTab === 'git_cheat_sheet';
+  const isPlayground = activeTab === 'git_playground';
   const ds = gitConcepts.find(item => item.id === activeTab) || gitConcepts[0];
 
   return (
@@ -23,7 +27,7 @@ export default function GitMainContent({ isOpen, toggleSidebar, activeTab }) {
         onClick={toggleSidebar}
         className={`fixed top-20 z-40 p-3 
                     bg-white/60 dark:bg-black/60 backdrop-blur-md 
-                    border border-gray-200 dark:border-[#333] 
+                    border border-gray-250 dark:border-[#333] 
                     rounded-full text-gray-700 dark:text-gray-300 
                     hover:text-amber-500 dark:hover:text-amber-500 
                     hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]
@@ -35,7 +39,13 @@ export default function GitMainContent({ isOpen, toggleSidebar, activeTab }) {
 
       {/* Content Grid */}
       <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8">
-        {ds ? <GitCard key={ds.id} data={ds} /> : null}
+        {isCheatSheet ? (
+          <GitCheatSheet />
+        ) : isPlayground ? (
+          <GitPlayground />
+        ) : ds ? (
+          <GitCard key={ds.id} data={ds} />
+        ) : null}
       </div>
     </main>
   );
