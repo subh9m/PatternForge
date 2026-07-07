@@ -196,6 +196,9 @@ body {
 .shadow-glow-cyan {
   box-shadow: 0 0 15px rgba(6, 182, 212, 0.45) !important;
 }
+.shadow-glow-green {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.45) !important;
+}
 
 /* Scrollbars - Minimalist Monochrome */
 ::-webkit-scrollbar {
