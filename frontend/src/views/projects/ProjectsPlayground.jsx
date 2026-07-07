@@ -130,15 +130,15 @@ export default function ProjectsPlayground() {
   };
 
   return (
-    <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-255 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+    <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
       
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-250 dark:border-neutral-800 pb-4">
         <div>
-          <h2 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
+          <h2 className="text-lg font-black text-neutral-950 dark:text-neutral-50 font-mono uppercase tracking-wide">
             ⚙️ Interactive Request Lifecycle Trace Simulator
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 font-light leading-relaxed">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5 font-light leading-relaxed">
             Select a project subsystem scenario and trigger an end-to-end traversal across architectural boundaries.
           </p>
         </div>
@@ -164,8 +164,8 @@ export default function ProjectsPlayground() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Scenarios Sidebar */}
-        <div className="lg:col-span-1 bg-gray-55/15 dark:bg-neutral-900/30 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
-          <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Subsystem Scenario</span>
+        <div className="lg:col-span-1 bg-neutral-100/15 dark:bg-neutral-900/30 dark:bg-neutral-900/30 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
+          <span className="text-[10px] font-black text-neutral-500 dark:text-neutral-400 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Subsystem Scenario</span>
           <div className="flex flex-col space-y-2">
             <label className={`flex items-center space-x-2 p-2 rounded-lg border cursor-pointer transition-all
               ${scenario === 'ocr' ? 'border-fuchsia-500/30 bg-fuchsia-500/5 text-fuchsia-500' : 'border-transparent text-gray-400'}`}>

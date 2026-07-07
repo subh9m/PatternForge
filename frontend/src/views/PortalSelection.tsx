@@ -72,7 +72,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* DSA Workspace */}
           <div
             onClick={() => onSelectPortal('dsa')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-blue-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(59,130,246,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 group-hover:shadow-glow-blue transition-smooth">
@@ -94,7 +94,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* STL / Collections Reference */}
           <div
             onClick={() => onSelectPortal('stl')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-emerald-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4 group-hover:shadow-glow-emerald transition-smooth">
@@ -116,7 +116,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* SQL Reference Playground */}
           <div
             onClick={() => onSelectPortal('sql')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-purple-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-4 group-hover:shadow-glow-purple transition-smooth">
@@ -138,7 +138,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* OS Revision */}
           <div
             onClick={() => onSelectPortal('os')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-amber-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(245,158,11,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-4 group-hover:shadow-glow-amber transition-smooth">
@@ -160,7 +160,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* Git & GitHub */}
           <div
             onClick={() => onSelectPortal('git')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-red-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(239,68,68,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 mb-4 group-hover:shadow-glow-rose transition-smooth">
@@ -182,7 +182,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* AI/ML Revision Card */}
           <div
             onClick={() => onSelectPortal('aiml')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-indigo-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(99,102,241,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4 group-hover:shadow-glow-indigo transition-smooth">
@@ -204,7 +204,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* CN Revision Card */}
           <div
             onClick={() => onSelectPortal('cn')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-cyan-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(6,182,212,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-4 group-hover:shadow-glow-cyan transition-smooth">
@@ -226,7 +226,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* Spring & Spring Boot Card */}
           <div
             onClick={() => onSelectPortal('spring')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-green-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(34,197,94,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-455 mb-4 group-hover:shadow-glow-green transition-smooth">
@@ -248,7 +248,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* React JS Card */}
           <div
             onClick={() => onSelectPortal('react')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-sky-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(14,165,233,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mb-4 group-hover:shadow-glow-sky transition-smooth">
@@ -270,7 +270,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
           {/* System Architecture / Projects Card */}
           <div
             onClick={() => onSelectPortal('projects')}
-            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+            className="p-6 border border-border hover:border-fuchsia-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(217,70,239,0.12)]"
           >
             <div className="w-full">
               <div className="h-10 w-10 bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 mb-4 group-hover:shadow-glow-fuchsia transition-smooth">
