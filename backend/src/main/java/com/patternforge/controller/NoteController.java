@@ -55,6 +55,7 @@ public class NoteController {
                     .patternsMatchResult("")
                     .timeComplexityResult("")
                     .spaceComplexityResult("")
+                    .explanationScore("N/A")
                     .build());
         }
 
@@ -76,6 +77,7 @@ public class NoteController {
                 .patternsMatchResult(n.getPatternsMatchResult())
                 .timeComplexityResult(n.getTimeComplexityResult())
                 .spaceComplexityResult(n.getSpaceComplexityResult())
+                .explanationScore(n.getExplanationScore())
                 .build());
     }
 

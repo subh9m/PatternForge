@@ -67,6 +67,7 @@ public class Note {
     private String patternsMatchResult;
     private String timeComplexityResult;
     private String spaceComplexityResult;
+    private String explanationScore;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

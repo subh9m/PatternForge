@@ -25,4 +25,5 @@ public class NoteDto {
     private String patternsMatchResult;
     private String timeComplexityResult;
     private String spaceComplexityResult;
+    private String explanationScore;
 }

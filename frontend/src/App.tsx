@@ -7,6 +7,8 @@ import ProblemView from './views/ProblemView';
 import Settings from './views/Settings';
 import AuthScreen from './views/AuthScreen';
 import PortalSelection from './views/PortalSelection';
+import MasterDashboard from './views/MasterDashboard';
+import FocusTimerOverlay from './components/FocusTimerOverlay';
 import StlGuide from './views/stl/StlGuide';
 import SqlGuide from './views/sql/SqlGuide';
 import OsGuide from './views/os/OsGuide';
@@ -18,13 +20,33 @@ import ReactGuide from './views/react/ReactGuide';
 import ProjectsGuide from './views/projects/ProjectsGuide';
 
 const MainApp: React.FC = () => {
-  const { user, loading } = useAuth();
-  const [activePortal, setActivePortal] = useState<'selection' | 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects'>(() => {
+  const { user, logout, loading } = useAuth();
+  const [activePortal, setActivePortal] = useState<'selection' | 'master_dashboard' | 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects'>(() => {
     const saved = localStorage.getItem('activePortal');
-    return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml' || saved === 'cn' || saved === 'spring' || saved === 'react' || saved === 'projects') ? saved : 'selection';
+    return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml' || saved === 'cn' || saved === 'spring' || saved === 'react' || saved === 'projects' || saved === 'selection' || saved === 'master_dashboard') ? saved : 'master_dashboard';
   });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings'>('dashboard');
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
+
+  // Focus mode session state
+  const [focusSession, setFocusSession] = useState<{ module: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects'; duration: number } | null>(null);
+
+  const renderFocusTimer = () => {
+    if (focusSession && focusSession.module === activePortal) {
+      return (
+        <FocusTimerOverlay
+          module={focusSession.module}
+          initialDurationMins={focusSession.duration}
+          onExit={() => {
+            setFocusSession(null);
+            localStorage.removeItem('activePortal');
+            setActivePortal('master_dashboard');
+          }}
+        />
+      );
+    }
+    return null;
+  };
 
   if (loading) {
     return (
@@ -41,6 +63,23 @@ const MainApp: React.FC = () => {
     return <AuthScreen />;
   }
 
+  if (activePortal === 'master_dashboard') {
+    return (
+      <MasterDashboard
+        onSelectPortal={(portal) => {
+          localStorage.setItem('activePortal', portal);
+          setActivePortal(portal);
+        }}
+        onEnterFocusMode={(portal, duration) => {
+          localStorage.setItem('activePortal', portal);
+          setFocusSession({ module: portal, duration });
+          setActivePortal(portal);
+        }}
+        onLogout={logout}
+      />
+    );
+  }
+
   if (activePortal === 'selection') {
     return (
       <PortalSelection
@@ -54,100 +93,127 @@ const MainApp: React.FC = () => {
 
   if (activePortal === 'stl') {
     return (
-      <StlGuide
-        onBackToPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('selection');
-        }}
-      />
+      <>
+        {renderFocusTimer()}
+        <StlGuide
+          onBackToPortal={() => {
+            localStorage.removeItem('activePortal');
+            setActivePortal('selection');
+          }}
+        />
+      </>
     );
   }
 
   if (activePortal === 'sql') {
     return (
-      <SqlGuide
-        onBackToPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('selection');
-        }}
-      />
+      <>
+        {renderFocusTimer()}
+        <SqlGuide
+          onBackToPortal={() => {
+            localStorage.removeItem('activePortal');
+            setActivePortal('selection');
+          }}
+        />
+      </>
     );
   }
 
   if (activePortal === 'os') {
     return (
-      <OsGuide
-        onBackToPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('selection');
-        }}
-      />
+      <>
+        {renderFocusTimer()}
+        <OsGuide
+          onBackToPortal={() => {
+            localStorage.removeItem('activePortal');
+            setActivePortal('selection');
+          }}
+        />
+      </>
     );
   }
 
   if (activePortal === 'git') {
     return (
-      <GitGuide
-        onBackToPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('selection');
-        }}
-      />
+      <>
+        {renderFocusTimer()}
+        <GitGuide
+          onBackToPortal={() => {
+            localStorage.removeItem('activePortal');
+            setActivePortal('selection');
+          }}
+        />
+      </>
     );
   }
 
   if (activePortal === 'aiml') {
     return (
-      <AimlGuide
-        onBackToPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('selection');
-        }}
-      />
+      <>
+        {renderFocusTimer()}
+        <AimlGuide
+          onBackToPortal={() => {
+            localStorage.removeItem('activePortal');
+            setActivePortal('selection');
+          }}
+        />
+      </>
     );
   }
 
   if (activePortal === 'cn') {
     return (
-      <CnGuide
-        onBackToPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('selection');
-        }}
-      />
+      <>
+        {renderFocusTimer()}
+        <CnGuide
+          onBackToPortal={() => {
+            localStorage.removeItem('activePortal');
+            setActivePortal('selection');
+          }}
+        />
+      </>
     );
   }
 
   if (activePortal === 'spring') {
     return (
-      <SpringGuide
-        onBackToPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('selection');
-        }}
-      />
+      <>
+        {renderFocusTimer()}
+        <SpringGuide
+          onBackToPortal={() => {
+            localStorage.removeItem('activePortal');
+            setActivePortal('selection');
+          }}
+        />
+      </>
     );
   }
 
   if (activePortal === 'react') {
     return (
-      <ReactGuide
-        onBackToPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('selection');
-        }}
-      />
+      <>
+        {renderFocusTimer()}
+        <ReactGuide
+          onBackToPortal={() => {
+            localStorage.removeItem('activePortal');
+            setActivePortal('selection');
+          }}
+        />
+      </>
     );
   }
 
   if (activePortal === 'projects') {
     return (
-      <ProjectsGuide
-        onBackToPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('selection');
-        }}
-      />
+      <>
+        {renderFocusTimer()}
+        <ProjectsGuide
+          onBackToPortal={() => {
+            localStorage.removeItem('activePortal');
+            setActivePortal('selection');
+          }}
+        />
+      </>
     );
   }
 
@@ -158,12 +224,13 @@ const MainApp: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent">
+      {renderFocusTimer()}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         onSwitchPortal={() => {
           localStorage.removeItem('activePortal');
-          setActivePortal('selection');
+          setActivePortal('master_dashboard');
         }}
       />
       

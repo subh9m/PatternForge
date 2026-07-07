@@ -26,19 +26,22 @@ public class DashboardController {
     private final SubmissionRepository submissionRepository;
     private final RevisionRepository revisionRepository;
     private final SettingsRepository settingsRepository;
+    private final DailyTaskRepository dailyTaskRepository;
 
     public DashboardController(ProblemRepository problemRepository,
                                TopicRepository topicRepository,
                                AttemptRepository attemptRepository,
                                SubmissionRepository submissionRepository,
                                RevisionRepository revisionRepository,
-                               SettingsRepository settingsRepository) {
+                               SettingsRepository settingsRepository,
+                               DailyTaskRepository dailyTaskRepository) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
         this.submissionRepository = submissionRepository;
         this.revisionRepository = revisionRepository;
         this.settingsRepository = settingsRepository;
+        this.dailyTaskRepository = dailyTaskRepository;
     }
 
     @GetMapping
@@ -74,10 +77,34 @@ public class DashboardController {
                         Collectors.counting()
                 ));
 
+        // Load all daily tasks for the user to factor into streak
+        List<DailyTask> allDailyTasks = dailyTaskRepository.findByUserIdAndDateBetween(
+                userId, LocalDate.now().minusYears(2), LocalDate.now());
+        Map<LocalDate, DailyTask> dailyTaskMapAll = allDailyTasks.stream()
+                .collect(Collectors.toMap(DailyTask::getDate, t -> t));
+
         Set<LocalDate> activityDates = new HashSet<>();
         solvedCountByDate.forEach((date, count) -> {
             if (count >= dailyGoal) {
-                activityDates.add(date);
+                // If they have selected modules for this day, they MUST complete them to count the day!
+                DailyTask dt = dailyTaskMapAll.get(date);
+                if (dt == null || dt.getSelectedModules() == null || dt.getSelectedModules().trim().isEmpty()) {
+                    activityDates.add(date);
+                }
+            }
+        });
+
+        // Add daily tasks completions
+        dailyTaskMapAll.forEach((date, dt) -> {
+            if (dt.getSelectedModules() != null && !dt.getSelectedModules().trim().isEmpty()) {
+                Set<String> selectedSet = new HashSet<>(Arrays.asList(dt.getSelectedModules().split(",")));
+                Set<String> completedSet = new HashSet<>();
+                if (dt.getCompletedModules() != null && !dt.getCompletedModules().trim().isEmpty()) {
+                    completedSet.addAll(Arrays.asList(dt.getCompletedModules().split(",")));
+                }
+                if (completedSet.containsAll(selectedSet)) {
+                    activityDates.add(date);
+                }
             }
         });
 
@@ -152,7 +179,7 @@ public class DashboardController {
         }
 
         // Submissions activity (calendar heatmap with problem arrays for selected year)
-        List<Map<String, Object>> monthlyHeatmap = getHeatmapData(attempts, year);
+        List<Map<String, Object>> monthlyHeatmap = getHeatmapData(userId, attempts, year);
 
         // Weekly activity (last 7 days counts)
         List<Map<String, Object>> weeklyActivity = getWeeklyActivityData(attempts);
@@ -221,7 +248,7 @@ public class DashboardController {
         return currentStreak;
     }
 
-    private List<Map<String, Object>> getHeatmapData(List<Attempt> attempts, Integer selectedYear) {
+    private List<Map<String, Object>> getHeatmapData(UUID userId, List<Attempt> attempts, Integer selectedYear) {
         LocalDate today = LocalDate.now();
         int activeYear = (selectedYear != null) ? selectedYear : today.getYear();
 
@@ -243,6 +270,10 @@ public class DashboardController {
                         a -> a.getLastAttemptedAt().toLocalDate(),
                         Collectors.mapping(Attempt::getProblem, Collectors.toList())
                 ));
+
+        List<DailyTask> dailyTasks = dailyTaskRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+        Map<LocalDate, DailyTask> dailyTaskMap = dailyTasks.stream()
+                .collect(Collectors.toMap(DailyTask::getDate, t -> t));
 
         List<Map<String, Object>> heatmapList = new ArrayList<>();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -267,6 +298,31 @@ public class DashboardController {
 
             cell.put("count", problemDetailsList.size());
             cell.put("problems", problemDetailsList);
+
+            DailyTask dt = dailyTaskMap.get(date);
+            boolean hasDailyTask = false;
+            boolean isDailyTaskCompleted = false;
+            String selectedModulesStr = "";
+            String completedModulesStr = "";
+
+            if (dt != null && dt.getSelectedModules() != null && !dt.getSelectedModules().trim().isEmpty()) {
+                hasDailyTask = true;
+                selectedModulesStr = dt.getSelectedModules();
+                completedModulesStr = dt.getCompletedModules() != null ? dt.getCompletedModules() : "";
+
+                Set<String> selectedSet = new HashSet<>(Arrays.asList(dt.getSelectedModules().split(",")));
+                Set<String> completedSet = new HashSet<>();
+                if (dt.getCompletedModules() != null && !dt.getCompletedModules().trim().isEmpty()) {
+                    completedSet.addAll(Arrays.asList(dt.getCompletedModules().split(",")));
+                }
+                isDailyTaskCompleted = completedSet.containsAll(selectedSet);
+            }
+
+            cell.put("hasDailyTask", hasDailyTask);
+            cell.put("isDailyTaskCompleted", isDailyTaskCompleted);
+            cell.put("selectedModules", selectedModulesStr);
+            cell.put("completedModules", completedModulesStr);
+
             heatmapList.add(cell);
         }
         return heatmapList;

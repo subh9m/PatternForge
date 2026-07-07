@@ -46,6 +46,7 @@ interface NoteData {
   patternsMatchResult: string;
   timeComplexityResult: string;
   spaceComplexityResult: string;
+  explanationScore?: string;
 }
 
 interface SolutionTabInfo {
@@ -117,6 +118,12 @@ const isPlatformAvailable = (platform: 'leetcode' | 'gfg' | 'tuf', masterNumber:
   return false;
 };
 
+const isComplexityMatch = (guess: string, optimal: string) => {
+  if (!guess || !optimal) return false;
+  const clean = (s: string) => s.toLowerCase().replace(/\s+/g, '').replace(/[*_]/g, '');
+  return clean(guess) === clean(optimal);
+};
+
 const getLeetCodeUrl = (name: string) => {
   const slug = name.toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
@@ -136,14 +143,28 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [problem, setProblem] = useState<ProblemDetails | null>(null);
   const [details, setDetails] = useState<ProblemDetailsJson | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(true);
+  const [loadingSolutions, setLoadingSolutions] = useState(true);
   
   const [notes, setNotes] = useState<NoteData>({
     observations: '', bruteForce: '', possiblePatterns: '', chosenPattern: '',
     timeComplexityGuess: '', spaceComplexityGuess: '', approach: '',
     mistakes: '', optimizedIdea: '', alternativeSolution: '', futureReminder: '',
     thinkingChecked: false, aiFeedback: '', patternsMatchResult: '',
-    timeComplexityResult: '', spaceComplexityResult: ''
+    timeComplexityResult: '', spaceComplexityResult: '',
+    explanationScore: ''
   });
+
+  const renderSolutionLoadingPlaceholder = () => (
+    <div className="p-4 border-t border-slate-900 flex flex-col space-y-3 animate-pulse">
+      <div className="h-2 bg-slate-900 rounded w-3/4 animate-pulse"></div>
+      <div className="h-2 bg-slate-900 rounded w-5/6 animate-pulse"></div>
+      <div className="h-2 bg-slate-900 rounded w-2/3 animate-pulse"></div>
+      <div className="flex items-center space-x-2 pt-2">
+        <div className="h-3.5 w-3.5 animate-spin rounded-full border border-emerald-500 border-t-transparent"></div>
+        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono">Loading solutions in background...</span>
+      </div>
+    </div>
+  );
   
   // Workspace UI states
   const [activeTab, setActiveTab] = useState<'approach' | 'coding' | 'solutions' | 'reflections'>('approach');
@@ -323,13 +344,34 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
           setActiveTab('coding');
         }
 
-        // Fetch LeetCode details (Gemini description)
-        const detailsData = await api.get<ProblemDetailsJson>(`/problems/${problemId}/details`);
-        setDetails(detailsData);
+        // 1. Fetch basic details (fast description render)
+        setLoadingDetails(true);
+        api.get<ProblemDetailsJson>(`/problems/${problemId}/basic-details`)
+          .then(data => {
+            setDetails(prev => prev ? { ...prev, ...data } : data);
+            setLoadingDetails(false);
+          })
+          .catch(err => {
+            console.error("Failed to load basic details", err);
+            setLoadingDetails(false);
+          });
+
+        // 2. Fetch solution details in background (complexities, approach)
+        setLoadingSolutions(true);
+        api.get<ProblemDetailsJson>(`/problems/${problemId}/solution-details`)
+          .then(data => {
+            setDetails(prev => prev ? { ...prev, ...data } : data);
+            setLoadingSolutions(false);
+          })
+          .catch(err => {
+            console.error("Failed to load solution details", err);
+            setLoadingSolutions(false);
+          });
+
       } catch (e) {
         console.error("Failed to load problem workspace data", e);
-      } finally {
         setLoadingDetails(false);
+        setLoadingSolutions(false);
       }
     };
     loadData();
@@ -1035,9 +1077,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'observation' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'observation' && (
-                        <div className="p-4 border-t border-slate-900 text-xs text-slate-355 leading-relaxed font-sans">
-                          {renderMarkdown(details.observation)}
-                        </div>
+                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                          <div className="p-4 border-t border-slate-900 text-xs text-slate-355 leading-relaxed font-sans">
+                            {renderMarkdown(details.observation)}
+                          </div>
+                        )
                       )}
                     </div>
 
@@ -1054,9 +1098,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'pattern' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'pattern' && (
-                        <div className="p-4 border-t border-slate-900 text-xs text-slate-200 font-bold font-sans">
-                          Optimal Pattern: <span className="text-blue-400">{details.pattern}</span>
-                        </div>
+                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                          <div className="p-4 border-t border-slate-900 text-xs text-slate-200 font-bold font-sans">
+                            Optimal Pattern: <span className="text-blue-400">{details.pattern}</span>
+                          </div>
+                        )
                       )}
                     </div>
 
@@ -1073,9 +1119,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'approach' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'approach' && (
-                        <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
-                          {renderMarkdown(details.approach)}
-                        </div>
+                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                          <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
+                            {renderMarkdown(details.approach)}
+                          </div>
+                        )
                       )}
                     </div>
 
@@ -1092,10 +1140,12 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'complexity' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'complexity' && (
-                        <div className="p-4 border-t border-slate-900 text-xs space-y-2 font-mono">
-                          <div className="text-slate-300">Time Complexity: <span className="text-emerald-400 font-bold">{details.optimalTimeComplexity}</span></div>
-                          <div className="text-slate-300">Space Complexity: <span className="text-emerald-400 font-bold">{details.optimalSpaceComplexity}</span></div>
-                        </div>
+                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                          <div className="p-4 border-t border-slate-900 text-xs space-y-2 font-mono">
+                            <div className="text-slate-300">Time Complexity: <span className="text-emerald-400 font-bold">{details.optimalTimeComplexity}</span></div>
+                            <div className="text-slate-300">Space Complexity: <span className="text-emerald-400 font-bold">{details.optimalSpaceComplexity}</span></div>
+                          </div>
+                        )
                       )}
                     </div>
 
@@ -1112,9 +1162,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'explanation' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'explanation' && (
-                        <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
-                          {renderMarkdown(details.fullExplanation)}
-                        </div>
+                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                          <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
+                            {renderMarkdown(details.fullExplanation)}
+                          </div>
+                        )
                       )}
                     </div>
 
@@ -1131,38 +1183,40 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'solution' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'solution' && (
-                        <div className="p-4 border-t border-slate-900 space-y-4">
-                          {!revealSolution ? (
-                            <div className="text-center py-2">
-                              <button
-                                onClick={() => setRevealSolution(true)}
-                                className="px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/35 text-xs font-bold text-emerald-400 transition-smooth"
-                              >
-                                Reveal Reference Solution
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Reference Code (C++):</span>
-                              <div className="h-64 rounded-xl overflow-hidden border border-slate-900 bg-[#1e1e1e]">
-                                <MonacoEditor
-                                  height="100%"
-                                  language="cpp"
-                                  theme="vs-dark"
-                                  value={details.referenceSolution || '// Code not available.'}
-                                  options={{
-                                    readOnly: true,
-                                    minimap: { enabled: false },
-                                    scrollBeyondLastLine: false,
-                                    automaticLayout: true,
-                                    fontSize: 12,
-                                    fontFamily: "'Fira Code', 'Courier New', monospace",
-                                  }}
-                                />
+                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                          <div className="p-4 border-t border-slate-900 space-y-4">
+                            {!revealSolution ? (
+                              <div className="text-center py-2">
+                                <button
+                                  onClick={() => setRevealSolution(true)}
+                                  className="px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/35 text-xs font-bold text-emerald-400 transition-smooth"
+                                >
+                                  Reveal Reference Solution
+                                </button>
                               </div>
-                            </div>
-                          )}
-                        </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Reference Code (C++):</span>
+                                <div className="h-64 rounded-xl overflow-hidden border border-slate-900 bg-[#1e1e1e]">
+                                  <MonacoEditor
+                                    height="100%"
+                                    language="cpp"
+                                    theme="vs-dark"
+                                    value={details.referenceSolution || '// Code not available.'}
+                                    options={{
+                                      readOnly: true,
+                                      minimap: { enabled: false },
+                                      scrollBeyondLastLine: false,
+                                      automaticLayout: true,
+                                      fontSize: 12,
+                                      fontFamily: "'Fira Code', 'Courier New', monospace",
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
                       )}
                     </div>
 
@@ -1354,7 +1408,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       {/* AI Review Match Banner if checked */}
                       {notes.thinkingChecked && notes.aiFeedback && (
                         <div className="bg-slate-955 border border-slate-900 rounded-xl p-4 space-y-3">
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             <div className="bg-slate-900/50 border border-slate-855 p-2.5 rounded-lg text-center">
                               <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Pattern Match</span>
                               <span className={`text-[10px] font-black block mt-0.5 ${
@@ -1378,6 +1432,12 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                                 notes.spaceComplexityResult?.toLowerCase().includes('incorrect') ? 'text-red-400' : 'text-emerald-400'
                               }`}>
                                 {notes.spaceComplexityResult || 'N/A'}
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/50 border border-slate-855 p-2.5 rounded-lg text-center col-span-2 md:col-span-1">
+                              <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Explanation Score</span>
+                              <span className="text-[10px] font-black block mt-0.5 text-blue-400">
+                                {notes.explanationScore || 'N/A'}
                               </span>
                             </div>
                           </div>
@@ -1435,28 +1495,33 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                             {notes.thinkingChecked && details ? (
                               <div className="space-y-1">
                                 <div className={`w-full rounded-xl px-3 py-2 text-xs font-bold font-mono border flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 ${
-                                  notes.timeComplexityGuess === details.optimalTimeComplexity
+                                  isComplexityMatch(notes.timeComplexityGuess, details.optimalTimeComplexity)
                                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                                     : 'bg-orange-500/10 border-orange-500/30 text-orange-400'
                                 }`}>
-                                  <span>Selected: {notes.timeComplexityGuess || 'None'}</span>
-                                  {notes.timeComplexityGuess !== details.optimalTimeComplexity && (
-                                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-extrabold">Correct: {details.optimalTimeComplexity}</span>
+                                  <span>Guessed: {notes.timeComplexityGuess || 'None'}</span>
+                                  {!isComplexityMatch(notes.timeComplexityGuess, details.optimalTimeComplexity) && (
+                                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-extrabold font-mono">Correct: {details.optimalTimeComplexity}</span>
                                   )}
                                 </div>
                               </div>
                             ) : (
-                              <select
-                                disabled={notes.thinkingChecked}
-                                value={notes.timeComplexityGuess}
-                                onChange={(e) => setNotes({ ...notes, timeComplexityGuess: e.target.value })}
-                                className="w-full glass-input rounded-xl px-3 py-2 text-xs font-bold font-sans"
-                              >
-                                <option value="" className="bg-slate-950">Select Time</option>
-                                {COMPLEXITY_GUESSES.map(cg => (
-                                  <option key={cg} value={cg} className="bg-slate-950">{cg}</option>
-                                ))}
-                              </select>
+                              <>
+                                <input
+                                  type="text"
+                                  list="time-guesses"
+                                  disabled={notes.thinkingChecked}
+                                  value={notes.timeComplexityGuess}
+                                  onChange={(e) => setNotes({ ...notes, timeComplexityGuess: e.target.value })}
+                                  className="w-full glass-input rounded-xl px-3 py-2 text-xs font-bold font-sans outline-none focus:border-emerald-500/40"
+                                  placeholder="Select or type..."
+                                />
+                                <datalist id="time-guesses">
+                                  {COMPLEXITY_GUESSES.filter(cg => cg !== "Other").map(cg => (
+                                    <option key={cg} value={cg} />
+                                  ))}
+                                </datalist>
+                              </>
                             )}
                           </div>
 
@@ -1465,28 +1530,33 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                             {notes.thinkingChecked && details ? (
                               <div className="space-y-1">
                                 <div className={`w-full rounded-xl px-3 py-2 text-xs font-bold font-mono border flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 ${
-                                  notes.spaceComplexityGuess === details.optimalSpaceComplexity
+                                  isComplexityMatch(notes.spaceComplexityGuess, details.optimalSpaceComplexity)
                                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                                     : 'bg-orange-500/10 border-orange-500/30 text-orange-400'
                                 }`}>
-                                  <span>Selected: {notes.spaceComplexityGuess || 'None'}</span>
-                                  {notes.spaceComplexityGuess !== details.optimalSpaceComplexity && (
-                                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-extrabold">Correct: {details.optimalSpaceComplexity}</span>
+                                  <span>Guessed: {notes.spaceComplexityGuess || 'None'}</span>
+                                  {!isComplexityMatch(notes.spaceComplexityGuess, details.optimalSpaceComplexity) && (
+                                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-extrabold font-mono">Correct: {details.optimalSpaceComplexity}</span>
                                   )}
                                 </div>
                               </div>
                             ) : (
-                              <select
-                                disabled={notes.thinkingChecked}
-                                value={notes.spaceComplexityGuess}
-                                onChange={(e) => setNotes({ ...notes, spaceComplexityGuess: e.target.value })}
-                                className="w-full glass-input rounded-xl px-3 py-2 text-xs font-bold font-sans"
-                              >
-                                <option value="" className="bg-slate-950">Select Space</option>
-                                {SPACE_COMPLEXITY_GUESSES.map(cg => (
-                                  <option key={cg} value={cg} className="bg-slate-950">{cg}</option>
-                                ))}
-                              </select>
+                              <>
+                                <input
+                                  type="text"
+                                  list="space-guesses"
+                                  disabled={notes.thinkingChecked}
+                                  value={notes.spaceComplexityGuess}
+                                  onChange={(e) => setNotes({ ...notes, spaceComplexityGuess: e.target.value })}
+                                  className="w-full glass-input rounded-xl px-3 py-2 text-xs font-bold font-sans outline-none focus:border-emerald-500/40"
+                                  placeholder="Select or type..."
+                                />
+                                <datalist id="space-guesses">
+                                  {SPACE_COMPLEXITY_GUESSES.filter(cg => cg !== "Other").map(cg => (
+                                    <option key={cg} value={cg} />
+                                  ))}
+                                </datalist>
+                              </>
                             )}
                           </div>
                         </div>
@@ -1642,8 +1712,14 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
               )}
 
               {/* TAB 3: SOLUTIONS WORKSPACE */}
-              {activeTab === 'solutions' && details && (() => {
-                const optimalCpp = (details.optimal?.code?.cpp || details.referenceSolutions?.cpp || details.referenceSolution || '').trim();
+              {activeTab === 'solutions' && (
+                loadingSolutions ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 animate-pulse">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider font-mono">Generating optimal reference codes...</p>
+                  </div>
+                ) : details && (() => {
+                    const optimalCpp = (details.optimal?.code?.cpp || details.referenceSolutions?.cpp || details.referenceSolution || '').trim();
                 const optimalApproach = (details.optimal?.approach || details.approach || '').trim();
 
                 const bruteCpp = (details.bruteForce?.code?.cpp || '').trim();
@@ -1793,7 +1869,8 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                     </div>
                   </div>
                 );
-              })()}
+              })()
+            )}
 
               {/* TAB 4: REFLECTION NOTES (SEPARATE ROOT TAB) */}
               {activeTab === 'reflections' && (

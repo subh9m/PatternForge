@@ -40,4 +40,34 @@ public class Problem {
 
     @Column(columnDefinition = "TEXT")
     private String problemDetailsJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String basicDetailsJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String solutionDetailsJson;
+
+    public String getEffectiveProblemStatement() {
+        if (basicDetailsJson != null && !basicDetailsJson.trim().isEmpty()) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(basicDetailsJson);
+                if (node.has("problemStatement")) {
+                    return node.get("problemStatement").asText();
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        if (problemDetailsJson != null && !problemDetailsJson.trim().isEmpty()) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(problemDetailsJson);
+                if (node.has("problemStatement")) {
+                    return node.get("problemStatement").asText();
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return "Problem details not loaded.";
+    }
 }

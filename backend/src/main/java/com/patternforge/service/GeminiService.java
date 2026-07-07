@@ -74,13 +74,34 @@ public class GeminiService {
     /**
      * Generate LeetCode description, examples, constraints, hints, solution JSON on the fly for caching.
      */
-    public String generateProblemDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
+    public static String cleanJsonString(String rawJson) {
+        if (rawJson == null) return "";
+        String trimmed = rawJson.trim();
+        if (trimmed.startsWith("```")) {
+            int firstNewline = trimmed.indexOf("\n");
+            if (firstNewline != -1) {
+                trimmed = trimmed.substring(firstNewline + 1);
+            } else {
+                trimmed = trimmed.substring(3);
+            }
+            if (trimmed.endsWith("```")) {
+                trimmed = trimmed.substring(0, trimmed.length() - 3);
+            }
+            trimmed = trimmed.trim();
+        }
+        return trimmed;
+    }
+
+    /**
+     * Generate LeetCode description, examples, constraints, hints basic details.
+     */
+    public String generateProblemBasicDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
         String key = getApiKey();
         if (key.isEmpty()) {
             throw new IllegalStateException("Gemini API key is not configured.");
         }
 
-        String prompt = "Generate a complete LeetCode-like problem description details in JSON format for the problem '" 
+        String prompt = "Generate LeetCode-like basic problem description details in JSON format for the problem '" 
                 + problemName + "' (LeetCode #" + leetcodeNumber + ") under topic '" + topicName + "'.\n"
                 + "Return a single JSON object with the following properties:\n"
                 + "1. 'problemStatement': Detailed description markdown text explaining the problem context and goals.\n"
@@ -90,26 +111,81 @@ public class GeminiService {
                 + "5. 'constraints': Array of string constraints (e.g. n <= 10^5).\n"
                 + "6. 'edgeCases': Array of 2 to 3 strings highlighting edge case challenges.\n"
                 + "7. 'followUp': Markdown string follow-up questions if available.\n"
-                + "8. 'hints': Array of exactly 3 progressive hints.\n"
-                + "9. 'observation': Markdown string of key patterns/notes to observe.\n"
-                + "10. 'pattern': A single string detailing the master pattern name (e.g., 'Two Pointers').\n"
-                + "11. 'approach': Short summary markdown string of the optimal approach strategy.\n"
-                + "12. 'optimalTimeComplexity': The big-O optimal time complexity (e.g. 'O(n)').\n"
-                + "13. 'optimalSpaceComplexity': The big-O optimal space complexity (e.g. 'O(1)').\n"
-                + "14. 'fullExplanation': In-depth markdown explanation of how to solve the problem optimal code strategy.\n"
-                + "15. 'referenceSolution': Code snippet block of the optimal solution in C++.\n"
-                + "16. 'referenceSolutions': A JSON object containing key-value pairs mapping language name ('cpp', 'java') to clean code solution strings (with C++ as the primary focus).\n"
-                + "17. 'bruteForce': A JSON object containing:\n"
+                + "8. 'hints': Array of exactly 3 progressive hints.";
+
+        try {
+            String escapedPrompt = escapeJsonString(prompt);
+
+            String requestBody = "{"
+                    + "\"contents\": [{"
+                    + "  \"parts\": [{"
+                    + "    \"text\": \"" + escapedPrompt + "\""
+                    + "  }]"
+                    + "}],"
+                    + "\"generationConfig\": {"
+                    + "  \"responseMimeType\": \"application/json\""
+                    + "}"
+                    + "}";
+
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Gemini API call failed with status code " + response.statusCode() + ": " + response.body());
+            }
+
+            String responseBody = response.body();
+            String jsonText = extractCandidateText(responseBody);
+            
+            if (jsonText == null || jsonText.trim().isEmpty()) {
+                throw new RuntimeException("Gemini returned invalid empty candidate content.");
+            }
+
+            return cleanJsonString(jsonText);
+        } catch (Exception e) {
+            log.error("Failed to generate basic problem details via Gemini API", e);
+            throw new RuntimeException("Failed to generate basic problem details via Gemini: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Generate optimal strategy, complexities, code solutions details in JSON.
+     */
+    public String generateProblemSolutionDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
+        String key = getApiKey();
+        if (key.isEmpty()) {
+            throw new IllegalStateException("Gemini API key is not configured.");
+        }
+
+        String prompt = "Generate LeetCode-like optimal strategy and code solution details in JSON format for the problem '" 
+                + problemName + "' (LeetCode #" + leetcodeNumber + ") under topic '" + topicName + "'.\n"
+                + "Return a single JSON object with the following properties:\n"
+                + "1. 'observation': Markdown string of key patterns/notes to observe.\n"
+                + "2. 'pattern': A single string detailing the master pattern name (e.g., 'Two Pointers').\n"
+                + "3. 'approach': Short summary markdown string of the optimal approach strategy.\n"
+                + "4. 'optimalTimeComplexity': The big-O optimal time complexity (e.g. 'O(n)').\n"
+                + "5. 'optimalSpaceComplexity': The big-O space complexity (e.g. 'O(1)').\n"
+                + "6. 'fullExplanation': In-depth markdown explanation of how to solve the problem optimal code strategy.\n"
+                + "7. 'referenceSolution': Code snippet block of the optimal solution in C++.\n"
+                + "8. 'referenceSolutions': A JSON object containing key-value pairs mapping language name ('cpp', 'java') to clean code solution strings (with C++ as the primary focus).\n"
+                + "9. 'bruteForce': A JSON object containing:\n"
                 + "    - 'approach': Short summary markdown explanation of the brute force strategy.\n"
                 + "    - 'timeComplexity': The big-O time complexity (e.g. 'O(n^2)').\n"
                 + "    - 'spaceComplexity': The big-O space complexity (e.g. 'O(1)').\n"
                 + "    - 'code': A JSON object containing 'cpp' and 'java' fields with clean code implementations.\n"
-                + "18. 'better': (Optional, set to null if no distinct 'better' approach exists) A JSON object containing:\n"
+                + "10. 'better': (Optional, set to null if no distinct 'better' approach exists) A JSON object containing:\n"
                 + "    - 'approach': Short summary markdown explanation of the better strategy.\n"
                 + "    - 'timeComplexity': The big-O time complexity (e.g. 'O(n log n)').\n"
                 + "    - 'spaceComplexity': The big-O space complexity (e.g. 'O(n)').\n"
                 + "    - 'code': A JSON object containing 'cpp' and 'java' fields with clean code implementations.\n"
-                + "19. 'optimal': A JSON object containing:\n"
+                + "11. 'optimal': A JSON object containing:\n"
                 + "    - 'approach': Short summary markdown explanation of the optimal strategy.\n"
                 + "    - 'timeComplexity': The big-O time complexity (e.g. 'O(n)').\n"
                 + "    - 'spaceComplexity': The big-O space complexity (e.g. 'O(1)' or 'O(n)').\n"
@@ -150,11 +226,17 @@ public class GeminiService {
                 throw new RuntimeException("Gemini returned invalid empty candidate content.");
             }
 
-            return jsonText.trim();
+            return cleanJsonString(jsonText);
         } catch (Exception e) {
-            log.error("Failed to generate problem details via Gemini API", e);
-            throw new RuntimeException("Failed to generate problem details via Gemini: " + e.getMessage(), e);
+            log.error("Failed to generate solution details via Gemini API", e);
+            throw new RuntimeException("Failed to generate solution details via Gemini: " + e.getMessage(), e);
         }
+    }
+
+    @Deprecated
+    public String generateProblemDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
+        // Fallback that returns basic details format
+        return generateProblemBasicDetailsJson(problemName, leetcodeNumber, topicName);
     }
 
     /**
@@ -186,16 +268,17 @@ public class GeminiService {
                 + "- Selected Candidate Patterns: " + userPossiblePatterns + "\n"
                 + "- Time Complexity Guess: " + userTimeComplexity + "\n"
                 + "- Space Complexity Guess: " + userSpaceComplexity + "\n"
-                + "- User Solution Approach Draft: " + userApproach + "\n\n"
+                + "- User Solution Approach Draft (Written Explanation): " + userApproach + "\n\n"
                 + "Compare user's values against expected. Award a score out of 100 for every single parameter.\n"
                 + "You MUST structure your response EXACTLY as follows (do not use JSON, just plain text with these exact headers):\n\n"
                 + "PATTERNS_MATCH: [Correct/Partially Correct/Incorrect (Score: X/100)]\n"
                 + "TIME_COMPLEXITY_MATCH: [Correct/Incorrect (Score: X/100)]\n"
-                + "SPACE_COMPLEXITY_MATCH: [Correct/Incorrect (Score: X/100)]\n\n"
+                + "SPACE_COMPLEXITY_MATCH: [Correct/Incorrect (Score: X/100)]\n"
+                + "EXPLANATION_SCORE: [Score: X/100]\n\n"
                 + "FEEDBACK_START\n"
                 + "[Detailed feedback text in markdown...]\n"
                 + "   - A clear score breakdown for each of the parameters out of 100.\n"
-                + "   - A thorough verification of the user's written explanation of the solution (from 'User Solution Approach Draft'). Compare it against the optimal logic, cross-verify its correctness, highlight any logical bugs/flaws or missing edge cases in their description, and award an 'Explanation Score' out of 100 for logic clarity and correctness.\n"
+                + "   - A thorough verification of the user's written explanation of the solution (from 'User Solution Approach Draft'). Compare it against the optimal logic, cross-verify its correctness, highlight any logical bugs/flaws or missing edge cases in their description, and explain the 'Explanation Score' out of 100 for logic clarity and correctness.\n"
                 + "   - Why their patterns guesses are correct/incorrect relative to " + optimalPattern + ".\n"
                 + "   - If their complexity estimates match optimal thresholds.\n"
                 + "   - Constructive interview advice on their solution approach.\n"
@@ -236,6 +319,7 @@ public class GeminiService {
             String patternsMatch = "Partially Correct";
             String timeComplexityMatch = "Correct";
             String spaceComplexityMatch = "Correct";
+            String explanationScore = "N/A";
             String feedback = rawText;
 
             String[] lines = rawText.split("\n");
@@ -250,6 +334,8 @@ public class GeminiService {
                     timeComplexityMatch = line.substring(line.indexOf(":") + 1).trim();
                 } else if (trimmed.toUpperCase().startsWith("SPACE_COMPLEXITY_MATCH:")) {
                     spaceComplexityMatch = line.substring(line.indexOf(":") + 1).trim();
+                } else if (trimmed.toUpperCase().startsWith("EXPLANATION_SCORE:")) {
+                    explanationScore = line.substring(line.indexOf(":") + 1).trim();
                 } else if (trimmed.equalsIgnoreCase("FEEDBACK_START") || trimmed.toUpperCase().startsWith("FEEDBACK:")) {
                     foundStart = true;
                 } else {
@@ -258,7 +344,8 @@ public class GeminiService {
                     } else if (!trimmed.isEmpty() && 
                                !trimmed.toUpperCase().startsWith("PATTERNS_MATCH:") && 
                                !trimmed.toUpperCase().startsWith("TIME_COMPLEXITY_MATCH:") && 
-                               !trimmed.toUpperCase().startsWith("SPACE_COMPLEXITY_MATCH:")) {
+                               !trimmed.toUpperCase().startsWith("SPACE_COMPLEXITY_MATCH:") &&
+                               !trimmed.toUpperCase().startsWith("EXPLANATION_SCORE:")) {
                         feedbackBuilder.append(line).append("\n");
                     }
                 }
@@ -272,6 +359,7 @@ public class GeminiService {
                     "patternsMatch", patternsMatch,
                     "timeComplexityMatch", timeComplexityMatch,
                     "spaceComplexityMatch", spaceComplexityMatch,
+                    "explanationScore", explanationScore,
                     "feedback", feedback
             );
         } catch (Exception e) {
@@ -280,6 +368,7 @@ public class GeminiService {
                     "patternsMatch", "Partially Correct",
                     "timeComplexityMatch", "Correct",
                     "spaceComplexityMatch", "Correct",
+                    "explanationScore", "N/A",
                     "feedback", "Approach received. (Note: Gemini feedback check failed: " + e.getMessage() + ")"
             );
         }

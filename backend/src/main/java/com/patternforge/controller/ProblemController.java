@@ -439,36 +439,72 @@ public class ProblemController {
                 .build());
     }
 
-    @GetMapping("/{id}/details")
-    public ResponseEntity<?> getProblemDetails(Authentication authentication, @PathVariable UUID id) {
+    @GetMapping("/{id}/basic-details")
+    public ResponseEntity<?> getProblemBasicDetails(Authentication authentication, @PathVariable UUID id) {
         Optional<Problem> problemOpt = problemRepository.findById(id);
         if (problemOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         Problem p = problemOpt.get();
+        ObjectMapper mapper = new ObjectMapper();
 
-        // If details are already cached in DB, return them immediately
-        if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
-            return ResponseEntity.ok()
-                    .header("Content-Type", "application/json")
-                    .body(p.getProblemDetailsJson());
+        // 1. Check if basic details are already cached in DB and valid JSON
+        if (p.getBasicDetailsJson() != null && !p.getBasicDetailsJson().trim().isEmpty()) {
+            try {
+                mapper.readTree(p.getBasicDetailsJson());
+                return ResponseEntity.ok()
+                        .header("Content-Type", "application/json")
+                        .body(p.getBasicDetailsJson());
+            } catch (Exception e) {
+                // Invalid JSON, discard and try to fall back or regenerate
+                p.setBasicDetailsJson(null);
+                problemRepository.save(p);
+            }
         }
 
+        // 2. Check if legacy full JSON is present and extract basic fields from it
+        if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
+            try {
+                JsonNode root = mapper.readTree(p.getProblemDetailsJson());
+                Map<String, Object> basic = new LinkedHashMap<>();
+                basic.put("problemStatement", root.path("problemStatement").asText(""));
+                basic.put("inputFormat", root.path("inputFormat").asText(""));
+                basic.put("outputFormat", root.path("outputFormat").asText(""));
+                basic.put("examples", mapper.convertValue(root.path("examples"), List.class));
+                basic.put("constraints", mapper.convertValue(root.path("constraints"), List.class));
+                basic.put("edgeCases", mapper.convertValue(root.path("edgeCases"), List.class));
+                basic.put("followUp", root.path("followUp").asText(""));
+                basic.put("hints", mapper.convertValue(root.path("hints"), List.class));
+
+                String basicJson = mapper.writeValueAsString(basic);
+                p.setBasicDetailsJson(basicJson);
+                problemRepository.save(p);
+
+                return ResponseEntity.ok()
+                        .header("Content-Type", "application/json")
+                        .body(basicJson);
+            } catch (Exception e) {
+                // Invalid legacy JSON, ignore and regenerate
+            }
+        }
+
+        // 3. Generate fresh basic details using Gemini
         try {
-            String jsonStr = geminiService.generateProblemDetailsJson(
+            String jsonStr = geminiService.generateProblemBasicDetailsJson(
                     p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
             
-            // Cache in the database
-            p.setProblemDetailsJson(jsonStr);
+            // Validate JSON
+            mapper.readTree(jsonStr);
+
+            p.setBasicDetailsJson(jsonStr);
             problemRepository.save(p);
 
-            // Return the raw JSON string directly
             return ResponseEntity.ok()
                     .header("Content-Type", "application/json")
                     .body(jsonStr);
         } catch (Exception e) {
-            // Return a fallback stub so the UI doesn't break
+            // Return fallback basic stub
             Map<String, Object> fallback = new HashMap<>();
             fallback.put("problemStatement", "Problem: " + p.getName() + " (LeetCode #" + p.getLeetcodeNumber() + ")");
             fallback.put("inputFormat", "Please refer to LeetCode for the full problem statement.");
@@ -481,14 +517,85 @@ public class ProblemController {
                     "Think about the brute force approach first.",
                     "Consider what data structures could optimize your solution.",
                     "Look for patterns related to " + p.getTopic().getName() + "."));
+            return ResponseEntity.ok(fallback);
+        }
+    }
+
+    @GetMapping("/{id}/solution-details")
+    public ResponseEntity<?> getProblemSolutionDetails(Authentication authentication, @PathVariable UUID id) {
+        Optional<Problem> problemOpt = problemRepository.findById(id);
+        if (problemOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Problem p = problemOpt.get();
+        ObjectMapper mapper = new ObjectMapper();
+
+        // 1. Check if solution details are cached and valid
+        if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty()) {
+            try {
+                mapper.readTree(p.getSolutionDetailsJson());
+                return ResponseEntity.ok()
+                        .header("Content-Type", "application/json")
+                        .body(p.getSolutionDetailsJson());
+            } catch (Exception e) {
+                p.setSolutionDetailsJson(null);
+                problemRepository.save(p);
+            }
+        }
+
+        // 2. Check if legacy full JSON is present and extract solution fields
+        if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
+            try {
+                JsonNode root = mapper.readTree(p.getProblemDetailsJson());
+                Map<String, Object> sol = new LinkedHashMap<>();
+                sol.put("observation", root.path("observation").asText(""));
+                sol.put("pattern", root.path("pattern").asText(""));
+                sol.put("approach", root.path("approach").asText(""));
+                sol.put("optimalTimeComplexity", root.path("optimalTimeComplexity").asText(""));
+                sol.put("optimalSpaceComplexity", root.path("optimalSpaceComplexity").asText(""));
+                sol.put("fullExplanation", root.path("fullExplanation").asText(""));
+                sol.put("referenceSolution", root.path("referenceSolution").asText(""));
+                sol.put("referenceSolutions", mapper.convertValue(root.path("referenceSolutions"), Map.class));
+                sol.put("bruteForce", mapper.convertValue(root.path("bruteForce"), Map.class));
+                sol.put("better", mapper.convertValue(root.path("better"), Map.class));
+                sol.put("optimal", mapper.convertValue(root.path("optimal"), Map.class));
+
+                String solJson = mapper.writeValueAsString(sol);
+                p.setSolutionDetailsJson(solJson);
+                problemRepository.save(p);
+
+                return ResponseEntity.ok()
+                        .header("Content-Type", "application/json")
+                        .body(solJson);
+            } catch (Exception e) {
+                // Ignore and regenerate
+            }
+        }
+
+        // 3. Generate fresh solution details using Gemini
+        try {
+            String jsonStr = geminiService.generateProblemSolutionDetailsJson(
+                    p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+            
+            // Validate JSON
+            mapper.readTree(jsonStr);
+
+            p.setSolutionDetailsJson(jsonStr);
+            problemRepository.save(p);
+
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .body(jsonStr);
+        } catch (Exception e) {
+            Map<String, Object> fallback = new HashMap<>();
             fallback.put("observation", "This problem falls under " + p.getTopic().getName() + ".");
             fallback.put("pattern", p.getTopic().getName());
             fallback.put("approach", "Analyze the problem constraints and identify the optimal pattern.");
-            fallback.put("optimalTimeComplexity", "Varies");
-            fallback.put("optimalSpaceComplexity", "Varies");
-            fallback.put("fullExplanation", "Gemini AI details could not be generated. Error: " + e.getMessage() +
-                    "\n\nPlease set the GEMINI_API_KEY environment variable or configure gemini.api-key in application.yml to enable AI-generated problem details.");
-            fallback.put("referenceSolution", "# Reference solution not available without Gemini API key.");
+            fallback.put("optimalTimeComplexity", "O(n)");
+            fallback.put("optimalSpaceComplexity", "O(1)");
+            fallback.put("fullExplanation", "Gemini AI details could not be generated. Error: " + e.getMessage());
+            fallback.put("referenceSolution", "# Reference solution not available.");
             return ResponseEntity.ok(fallback);
         }
     }
@@ -523,8 +630,38 @@ public class ProblemController {
         String expectedTime = "O(n)";
         String expectedSpace = "O(1)";
 
-        // Extract expected values dynamically from the cached JSON if present
-        if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
+        // Synchronously generate solution details if they don't exist in any cache
+        if ((p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty()) &&
+            (p.getProblemDetailsJson() == null || p.getProblemDetailsJson().trim().isEmpty())) {
+            try {
+                String generatedSol = geminiService.generateProblemSolutionDetailsJson(
+                        p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+                p.setSolutionDetailsJson(generatedSol);
+                problemRepository.save(p);
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+
+        // Try extracting from solutionDetailsJson first
+        if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty()) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode rootNode = mapper.readTree(p.getSolutionDetailsJson());
+                if (rootNode.has("pattern")) {
+                    expectedPattern = rootNode.get("pattern").asText();
+                }
+                if (rootNode.has("optimalTimeComplexity")) {
+                    expectedTime = rootNode.get("optimalTimeComplexity").asText();
+                }
+                if (rootNode.has("optimalSpaceComplexity")) {
+                    expectedSpace = rootNode.get("optimalSpaceComplexity").asText();
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        } else if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
+            // Try extracting from legacy problemDetailsJson second
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode rootNode = mapper.readTree(p.getProblemDetailsJson());
@@ -538,7 +675,7 @@ public class ProblemController {
                     expectedSpace = rootNode.get("optimalSpaceComplexity").asText();
                 }
             } catch (Exception e) {
-                // Ignore parsing errors, fall back to defaults
+                // ignore
             }
         }
 
@@ -553,6 +690,7 @@ public class ProblemController {
                     "patternsMatch", "Partially Correct",
                     "timeComplexityMatch", "Correct",
                     "spaceComplexityMatch", "Correct",
+                    "explanationScore", "N/A",
                     "feedback", "Your thinking approach was received. (AI evaluation unavailable: " + e.getMessage() + ")"
             );
         }
@@ -575,6 +713,7 @@ public class ProblemController {
         note.setPatternsMatchResult((String) evaluation.getOrDefault("patternsMatch", ""));
         note.setTimeComplexityResult((String) evaluation.getOrDefault("timeComplexityMatch", ""));
         note.setSpaceComplexityResult((String) evaluation.getOrDefault("spaceComplexityMatch", ""));
+        note.setExplanationScore((String) evaluation.getOrDefault("explanationScore", "N/A"));
 
         noteRepository.save(note);
 
@@ -609,6 +748,7 @@ public class ProblemController {
                 .patternsMatchResult(note.getPatternsMatchResult())
                 .timeComplexityResult(note.getTimeComplexityResult())
                 .spaceComplexityResult(note.getSpaceComplexityResult())
+                .explanationScore(note.getExplanationScore())
                 .build();
 
         return ResponseEntity.ok(responseDto);
@@ -779,7 +919,7 @@ public class ProblemController {
         // 3. Generate Mentor response via Gemini
         String aiResponseContent = geminiService.generateChatResponse(
                 problem.getName(),
-                problem.getProblemDetailsJson(),
+                problem.getEffectiveProblemStatement(),
                 history,
                 userMessageContent,
                 currentCode
