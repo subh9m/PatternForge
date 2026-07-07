@@ -451,6 +451,65 @@ public class GeminiService {
         }
     }
 
+    public Map<String, String> generateSimplifiedProblemAndApproach(String problemName, String fullStatement, String solutionDetailsJson) {
+        String key = getApiKey();
+        if (key.isEmpty()) {
+            throw new IllegalStateException("Gemini API key is not configured.");
+        }
+
+        String prompt = "Review the following coding problem details for '" + problemName + "'.\n\n"
+                + "Full Problem Statement:\n"
+                + fullStatement + "\n\n"
+                + "Optimal Solution/Approach Context:\n"
+                + solutionDetailsJson + "\n\n"
+                + "Generate a simplified response in JSON format. Provide exactly these two fields:\n"
+                + "1. 'simplifiedStatement': A very brief and simple description of the problem statement (2-3 lines in simple, plain, easy-to-understand words, focusing only on the core goal).\n"
+                + "2. 'simplifiedApproach': A very brief explanation of the optimal strategy/approach in simple, plain words (2-3 lines explaining the core pattern or intuition).\n\n"
+                + "Return a single JSON object with only these two string properties.";
+
+        try {
+            String escapedPrompt = escapeJsonString(prompt);
+
+            String requestBody = "{"
+                    + "\"contents\": [{"
+                    + "  \"parts\": [{"
+                    + "    \"text\": \"" + escapedPrompt + "\""
+                    + "  }]"
+                    + "}],"
+                    + "\"generationConfig\": {"
+                    + "  \"responseMimeType\": \"application/json\""
+                    + "}"
+                    + "}";
+
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Gemini API call failed with status code " + response.statusCode());
+            }
+
+            String jsonText = extractCandidateText(response.body());
+            if (jsonText == null || jsonText.trim().isEmpty()) {
+                throw new RuntimeException("Gemini returned empty candidate text.");
+            }
+
+            return objectMapper.readValue(cleanJsonString(jsonText), new com.fasterxml.jackson.core.type.TypeReference<Map<String, String>>() {});
+        } catch (Exception e) {
+            log.error("Failed to generate simplified problem statement and approach via Gemini", e);
+            return Map.of(
+                "simplifiedStatement", "Please solve " + problemName + ".",
+                "simplifiedApproach", "Implement the optimal DSA pattern for this category."
+            );
+        }
+    }
+
     private String escapeJsonString(String val) {
         if (val == null) return "";
         return val.replace("\\", "\\\\")

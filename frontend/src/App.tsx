@@ -18,6 +18,7 @@ import CnGuide from './views/cn/CnGuide';
 import SpringGuide from './views/spring/SpringGuide';
 import ReactGuide from './views/react/ReactGuide';
 import ProjectsGuide from './views/projects/ProjectsGuide';
+import RevisionView from './views/RevisionView';
 
 const MainApp: React.FC = () => {
   const { user, logout, loading } = useAuth();
@@ -25,7 +26,7 @@ const MainApp: React.FC = () => {
     const saved = localStorage.getItem('activePortal');
     return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml' || saved === 'cn' || saved === 'spring' || saved === 'react' || saved === 'projects' || saved === 'selection' || saved === 'master_dashboard') ? saved : 'master_dashboard';
   });
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision'>('dashboard');
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
 
   // Focus mode session state
@@ -250,6 +251,9 @@ const MainApp: React.FC = () => {
         )}
         {activeTab === 'settings' && (
           <Settings />
+        )}
+        {activeTab === 'revision' && (
+          <RevisionView navigateToProblem={navigateToProblem} />
         )}
       </main>
     </div>

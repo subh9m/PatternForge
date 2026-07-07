@@ -5,6 +5,7 @@ import com.patternforge.dto.CodeRunResponse;
 import com.patternforge.model.*;
 import com.patternforge.repository.*;
 import com.patternforge.service.CodeExecutionService;
+import com.patternforge.service.GeminiService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,17 +22,21 @@ public class SubmissionController {
     private final AttemptRepository attemptRepository;
     private final SubmissionRepository submissionRepository;
     private final TestCaseRepository testCaseRepository;
+    private final GeminiService geminiService;
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SubmissionController.class);
 
     public SubmissionController(CodeExecutionService codeExecutionService,
                                 ProblemRepository problemRepository,
                                 AttemptRepository attemptRepository,
                                 SubmissionRepository submissionRepository,
-                                TestCaseRepository testCaseRepository) {
+                                TestCaseRepository testCaseRepository,
+                                GeminiService geminiService) {
         this.codeExecutionService = codeExecutionService;
         this.problemRepository = problemRepository;
         this.attemptRepository = attemptRepository;
         this.submissionRepository = submissionRepository;
         this.testCaseRepository = testCaseRepository;
+        this.geminiService = geminiService;
     }
 
     @PostMapping("/run")
@@ -169,6 +174,10 @@ public class SubmissionController {
         }
         attemptRepository.save(attempt);
 
+        if ("SOLVED".equals(attempt.getStatus())) {
+            generateAndSaveSimplifiedFields(attempt.getProblem());
+        }
+
         // Calculate updated streak and solved count for the user
         List<Submission> userSubmissions = submissionRepository.findByUserIdOrderByCreatedAtDesc(userId);
         List<Attempt> userAttempts = attemptRepository.findByUserId(userId);
@@ -237,5 +246,35 @@ public class SubmissionController {
         }
 
         return ResponseEntity.ok(response);
+    }
+
+    public void generateAndSaveSimplifiedFields(Problem problem) {
+        if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty() ||
+            problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
+            
+            try {
+                Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
+                        problem.getName(),
+                        problem.getEffectiveProblemStatement(),
+                        problem.getSolutionDetailsJson()
+                );
+                
+                if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty()) {
+                    problem.setSimplifiedStatement(res.get("simplifiedStatement"));
+                }
+                if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
+                    problem.setSimplifiedApproach(res.get("simplifiedApproach"));
+                }
+                problemRepository.save(problem);
+            } catch (Exception e) {
+                if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty()) {
+                    problem.setSimplifiedStatement("Solve the coding puzzle for " + problem.getName() + ".");
+                }
+                if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
+                    problem.setSimplifiedApproach("Optimal solution using standard categories.");
+                }
+                problemRepository.save(problem);
+            }
+        }
     }
 }

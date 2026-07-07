@@ -55,8 +55,11 @@ public class DashboardController {
         List<Topic> topics = topicRepository.findAll();
         List<Attempt> attempts = attemptRepository.findByUserId(userId);
         List<Submission> submissions = submissionRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        List<Revision> pendingRevisions = revisionRepository.findByUserIdAndScheduledDateBeforeAndStatus(
-                userId, LocalDateTime.now(), "PENDING");
+        long solvedAttemptsCount = attempts.stream().filter(a -> "SOLVED".equals(a.getStatus())).count();
+        long revisedTodayCount = attempts.stream()
+                .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastRevisedAt() != null && a.getLastRevisedAt().toLocalDate().equals(LocalDate.now()))
+                .count();
+        long revisionDueTodayCount = solvedAttemptsCount - revisedTodayCount;
 
         long solvedCount = attempts.stream().filter(a -> a.getStatus().equals("SOLVED")).count();
         long attemptedCount = attempts.size();
@@ -203,7 +206,7 @@ public class DashboardController {
                 .strongestPattern(strongestPattern)
                 .recentlySolved(recentlySolved)
                 .continueLastSession(continueLastSession)
-                .revisionDueTodayCount(pendingRevisions.size())
+                .revisionDueTodayCount((int) revisionDueTodayCount)
                 .weakestTopic(weakestTopic)
                 .strongestTopic(strongestTopic)
                 .problemsPerTopicSolved(problemsPerTopicSolved)

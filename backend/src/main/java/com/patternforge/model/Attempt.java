@@ -46,6 +46,7 @@ public class Attempt {
     @Builder.Default
     private Integer revisionLevel = 0; // 0, 1, 2, 3, 4, 5 corresponding to days (1, 3, 7, 15, 30)
     private LocalDateTime nextRevisionDate;
+    private LocalDateTime lastRevisedAt;
     @Builder.Default
     private Integer timeTaken = 0; // seconds
     @Builder.Default

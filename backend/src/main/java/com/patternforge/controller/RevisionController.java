@@ -13,98 +13,101 @@ import java.util.*;
 @RequestMapping("/api/revisions")
 public class RevisionController {
 
-    private final RevisionRepository revisionRepository;
     private final AttemptRepository attemptRepository;
+    private final SubmissionRepository submissionRepository;
+    private final NoteRepository noteRepository;
 
-    public RevisionController(RevisionRepository revisionRepository, AttemptRepository attemptRepository) {
-        this.revisionRepository = revisionRepository;
+    public RevisionController(AttemptRepository attemptRepository,
+                              SubmissionRepository submissionRepository,
+                              NoteRepository noteRepository) {
         this.attemptRepository = attemptRepository;
+        this.submissionRepository = submissionRepository;
+        this.noteRepository = noteRepository;
     }
 
     @GetMapping
     public ResponseEntity<?> getRevisionQueue(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
-        List<Revision> pending = revisionRepository.findByUserIdAndStatus(userId, "PENDING");
         
+        // Query solved attempts
+        List<Attempt> solvedAttempts = attemptRepository.findByUserId(userId).stream()
+                .filter(a -> "SOLVED".equals(a.getStatus()))
+                .toList();
+
         List<Map<String, Object>> response = new ArrayList<>();
-        for (Revision r : pending) {
-            Problem p = r.getProblem();
-            response.add(Map.of(
-                    "id", r.getId(),
-                    "problemId", p.getId(),
-                    "masterNumber", p.getMasterNumber(),
-                    "name", p.getName(),
-                    "topicName", p.getTopic().getName(),
-                    "difficulty", p.getDifficulty(),
-                    "level", r.getLevel(),
-                    "scheduledDate", r.getScheduledDate().toString(),
-                    "due", r.getScheduledDate().isBefore(LocalDateTime.now())
-            ));
+        java.time.LocalDate today = java.time.LocalDate.now();
+
+        for (Attempt a : solvedAttempts) {
+            Problem p = a.getProblem();
+            
+            // Get user's latest code submission
+            List<Submission> submissions = submissionRepository.findByUserIdAndProblemIdOrderByCreatedAtDesc(userId, p.getId());
+            String userCode = submissions.isEmpty() ? "" : submissions.get(0).getCode();
+            String language = submissions.isEmpty() ? "cpp" : submissions.get(0).getLanguage();
+
+            // Get user's complexity guess from Notes
+            String timeComplexity = "";
+            Optional<Note> noteOpt = noteRepository.findByUserIdAndProblemId(userId, p.getId());
+            if (noteOpt.isPresent() && noteOpt.get().getTimeComplexityGuess() != null && !noteOpt.get().getTimeComplexityGuess().trim().isEmpty()) {
+                timeComplexity = noteOpt.get().getTimeComplexityGuess();
+            } else {
+                timeComplexity = getOptimalTimeComplexity(p);
+            }
+
+            boolean isRevisedToday = (a.getLastRevisedAt() != null && a.getLastRevisedAt().toLocalDate().equals(today));
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", p.getId());
+            item.put("masterNumber", p.getMasterNumber());
+            item.put("name", p.getName());
+            item.put("topicName", p.getTopic().getName());
+            item.put("difficulty", p.getDifficulty());
+            item.put("simplifiedStatement", p.getSimplifiedStatement() != null ? p.getSimplifiedStatement() : "Solve the puzzle in brief.");
+            item.put("simplifiedApproach", p.getSimplifiedApproach() != null ? p.getSimplifiedApproach() : "Short optimal strategy.");
+            item.put("userCode", userCode);
+            item.put("language", language);
+            item.put("timeComplexity", timeComplexity);
+            item.put("isRevisedToday", isRevisedToday);
+            
+            response.add(item);
         }
 
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{id}/complete")
+    @PostMapping("/{problemId}/complete")
     public ResponseEntity<?> completeRevision(
             Authentication authentication,
-            @PathVariable UUID id,
-            @RequestBody Map<String, Object> body) {
+            @PathVariable UUID problemId) {
 
         UUID userId = (UUID) authentication.getPrincipal();
-        Optional<Revision> revisionOpt = revisionRepository.findById(id);
+        Optional<Attempt> attemptOpt = attemptRepository.findByUserIdAndProblemId(userId, problemId);
 
-        if (revisionOpt.isEmpty() || !revisionOpt.get().getUser().getId().equals(userId)) {
+        if (attemptOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        Revision rev = revisionOpt.get();
-        rev.setStatus("COMPLETED");
-        rev.setCompletedAt(LocalDateTime.now());
-        revisionRepository.save(rev);
+        Attempt attempt = attemptOpt.get();
+        attempt.setLastRevisedAt(LocalDateTime.now());
+        attemptRepository.save(attempt);
 
-        // Advance to next spaced repetition level
-        // Spaced levels: 1 -> 3 -> 7 -> 15 -> 30 -> done
-        int currentLevel = rev.getLevel();
-        int nextLevel = getNextSpacedLevel(currentLevel);
-
-        Optional<Attempt> attemptOpt = attemptRepository.findByUserIdAndProblemId(userId, rev.getProblem().getId());
-        if (attemptOpt.isPresent()) {
-            Attempt attempt = attemptOpt.get();
-            if (nextLevel > 0) {
-                attempt.setRevisionLevel(nextLevel);
-                LocalDateTime nextDate = LocalDateTime.now().plusDays(nextLevel);
-                attempt.setNextRevisionDate(nextDate);
-                attemptRepository.save(attempt);
-
-                // Schedule next revision
-                revisionRepository.save(Revision.builder()
-                        .user(User.builder().id(userId).build())
-                        .problem(rev.getProblem())
-                        .level(nextLevel)
-                        .scheduledDate(nextDate)
-                        .status("PENDING")
-                        .build());
-            } else {
-                // Completed all levels, clear revision status
-                attempt.setNeedRevision(false);
-                attempt.setRevisionLevel(0);
-                attempt.setNextRevisionDate(null);
-                attemptRepository.save(attempt);
-            }
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "nextLevel", nextLevel
-        ));
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
-    private int getNextSpacedLevel(int currentLevel) {
-        if (currentLevel == 1) return 3;
-        if (currentLevel == 3) return 7;
-        if (currentLevel == 7) return 15;
-        if (currentLevel == 15) return 30;
-        return 0; // Completed all stages
+    private String getOptimalTimeComplexity(Problem p) {
+        if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty()) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(p.getSolutionDetailsJson());
+                if (node.has("optimalTimeComplexity")) {
+                    return node.get("optimalTimeComplexity").asText();
+                }
+                if (node.has("optimal") && node.get("optimal").has("timeComplexity")) {
+                    return node.get("optimal").get("timeComplexity").asText();
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return "O(N)";
     }
 }

@@ -815,6 +815,10 @@ public class ProblemController {
         }
         attemptRepository.save(attempt);
 
+        if ("SOLVED".equals(attempt.getStatus())) {
+            generateAndSaveSimplifiedFields(attempt.getProblem());
+        }
+
         // Calculate updated streak and solved count for the user
         List<Submission> userSubmissions = submissionRepository.findByUserIdOrderByCreatedAtDesc(userId);
         List<Attempt> userAttempts = attemptRepository.findByUserId(userId);
@@ -837,6 +841,36 @@ public class ProblemController {
                 "newStreak", newStreak,
                 "newSolvedCount", (int) newSolvedCount
         ));
+    }
+
+    public void generateAndSaveSimplifiedFields(Problem problem) {
+        if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty() ||
+            problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
+            
+            try {
+                Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
+                        problem.getName(),
+                        problem.getEffectiveProblemStatement(),
+                        problem.getSolutionDetailsJson()
+                );
+                
+                if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty()) {
+                    problem.setSimplifiedStatement(res.get("simplifiedStatement"));
+                }
+                if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
+                    problem.setSimplifiedApproach(res.get("simplifiedApproach"));
+                }
+                problemRepository.save(problem);
+            } catch (Exception e) {
+                if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty()) {
+                    problem.setSimplifiedStatement("Solve the coding puzzle for " + problem.getName() + ".");
+                }
+                if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
+                    problem.setSimplifiedApproach("Optimal solution using standard categories.");
+                }
+                problemRepository.save(problem);
+            }
+        }
     }
 
     private int calculateStreak(Set<java.time.LocalDate> activityDates) {

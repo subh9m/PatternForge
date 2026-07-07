@@ -47,6 +47,12 @@ public class Problem {
     @Column(columnDefinition = "TEXT")
     private String solutionDetailsJson;
 
+    @Column(columnDefinition = "TEXT")
+    private String simplifiedStatement;
+
+    @Column(columnDefinition = "TEXT")
+    private String simplifiedApproach;
+
     public String getEffectiveProblemStatement() {
         if (basicDetailsJson != null && !basicDetailsJson.trim().isEmpty()) {
             try {

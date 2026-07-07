@@ -4,8 +4,8 @@ import { Flame, Terminal, CheckCircle2, Sun, Moon, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
-  activeTab: 'dashboard' | 'explorer' | 'problem' | 'settings';
-  setActiveTab: (tab: 'dashboard' | 'explorer' | 'problem' | 'settings') => void;
+  activeTab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision';
+  setActiveTab: (tab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision') => void;
   onSwitchPortal?: () => void;
 }
 
@@ -116,6 +116,16 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
             }`}
           >
             Problems
+          </button>
+          <button
+            onClick={() => setActiveTab('revision')}
+            className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth ${
+              activeTab === 'revision'
+                ? 'border border-text-primary text-text-primary bg-surface/40'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            Revision
           </button>
           <button
             onClick={() => setActiveTab('settings')}
