@@ -63,6 +63,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [pendingModule, setPendingModule] = useState<'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects' | null>(null);
 
+  const [heatmapError, setHeatmapError] = useState<string | null>(null);
+
   const getTodayDateString = () => {
     const d = new Date();
     const year = d.getFullYear();
@@ -73,30 +75,37 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
 
   const loadDashboardData = async () => {
     setLoading(true);
+    setHeatmapError(null);
+
+    // 1. Fetch dashboard stats
     try {
-      const [statsData, dailyData] = await Promise.all([
-        api.get<DashboardStats>(`/dashboard/stats?year=${selectedYear}`),
-        api.get<DailyTaskData>(`/daily-tasks/today`)
-      ]);
+      const statsData = await api.get<DashboardStats>(`/dashboard/stats?year=${selectedYear}`);
       setStats(statsData);
-      setDailyTask(dailyData);
-    } catch (e) {
-      console.error("Failed to load master dashboard data, using fallbacks", e);
-      // Fallback data to prevent rendering black screen (returning null)
+    } catch (err: any) {
+      console.error("Failed to load dashboard stats", err);
+      setHeatmapError(err.message || String(err));
       setStats({
         currentStreak: 0,
         problemsSolved: 0,
         problemsAttempted: 0,
         monthlyHeatmap: []
       });
+    }
+
+    // 2. Fetch daily tasks selection
+    try {
+      const dailyData = await api.get<DailyTaskData>(`/daily-tasks/today`);
+      setDailyTask(dailyData);
+    } catch (err: any) {
+      console.error("Failed to load daily tasks today data", err);
       setDailyTask({
         selectedModules: '',
         completedModules: '',
         targetDurations: ''
       });
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -295,7 +304,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
             </p>
           </div>
 
-          <div className="mt-4 md:mt-0 flex items-center space-x-6">
+          <div className="mt-4 md:mt-0 flex items-center space-x-4 flex-wrap gap-y-2 justify-end">
             <div className="flex items-center space-x-3 bg-slate-900/50 border border-border p-3.5 rounded-2xl">
               <Flame className="h-7 w-7 text-orange-500 fill-orange-500/20 animate-pulse" />
               <div>
@@ -303,6 +312,18 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                 <span className="text-xl font-black font-heading text-slate-100">{stats.currentStreak} Days</span>
               </div>
             </div>
+
+            {selectedList.length > 0 && (
+              <div className="flex items-center space-x-3 bg-slate-900/50 border border-border p-3.5 rounded-2xl animate-fade-in">
+                <CheckCircle className={`h-7 w-7 ${completedList.length === selectedList.length ? 'text-emerald-400 fill-emerald-400/20' : 'text-blue-400 fill-blue-400/20'}`} />
+                <div>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block font-mono">Focus Goals</span>
+                  <span className="text-xl font-black font-heading text-slate-100">
+                    {completedList.length}/{selectedList.length} Done
+                  </span>
+                </div>
+              </div>
+            )}
 
             <button
               onClick={onGoToModules}
@@ -338,6 +359,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
               </div>
             </div>
           </div>
+          
+          {heatmapError && (
+            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center space-x-2 animate-fade-in font-sans">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>Failed to fetch stats: {heatmapError}. Click on "Logout" and re-authenticate to refresh your session.</span>
+            </div>
+          )}
 
           {/* Heatmap component */}
           <div className="w-full overflow-x-auto p-4 bg-surface/30 border border-border custom-scrollbar rounded-xl">
@@ -527,15 +555,16 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                       </div>
                     </div>
 
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleToggleModuleSelection(mod.id)}
-                        className="rounded bg-slate-950 border-border text-blue-500 focus:ring-blue-500/30 w-4 h-4 cursor-pointer"
-                      />
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider select-none">Focus Goal</span>
-                    </label>
+                    <button
+                      onClick={() => handleToggleModuleSelection(mod.id)}
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer border ${
+                        isSelected 
+                          ? 'bg-blue-500/20 border-blue-500/60 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]' 
+                          : 'bg-slate-950/40 border-border/60 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                      }`}
+                    >
+                      {isSelected ? '★ Selected Goal' : '+ Focus Goal'}
+                    </button>
                   </div>
 
                   {isSelected && (

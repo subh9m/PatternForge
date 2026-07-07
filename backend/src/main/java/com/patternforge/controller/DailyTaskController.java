@@ -26,6 +26,9 @@ public class DailyTaskController {
     @GetMapping("/today")
     public ResponseEntity<?> getTodayTask(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
+        if (!userRepository.existsById(userId)) {
+            return ResponseEntity.status(401).body("Session invalid. User not found.");
+        }
         LocalDate today = LocalDate.now();
         Optional<DailyTask> taskOpt = dailyTaskRepository.findByUserIdAndDate(userId, today);
         
@@ -43,20 +46,22 @@ public class DailyTaskController {
     @PostMapping("/today/select")
     public ResponseEntity<?> selectModules(Authentication authentication, @RequestBody Map<String, String> body) {
         UUID userId = (UUID) authentication.getPrincipal();
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(401).body("Session invalid. User not found.");
+        }
+        User user = userOpt.get();
         LocalDate today = LocalDate.now();
         
         String selected = body.getOrDefault("selectedModules", "");
         String durations = body.getOrDefault("targetDurations", "");
         
         DailyTask task = dailyTaskRepository.findByUserIdAndDate(userId, today)
-                .orElseGet(() -> {
-                    User user = userRepository.findById(userId).orElseThrow();
-                    return DailyTask.builder()
-                            .user(user)
-                            .date(today)
-                            .completedModules("")
-                            .build();
-                });
+                .orElseGet(() -> DailyTask.builder()
+                        .user(user)
+                        .date(today)
+                        .completedModules("")
+                        .build());
                 
         task.setSelectedModules(selected);
         task.setTargetDurations(durations);
@@ -68,6 +73,11 @@ public class DailyTaskController {
     @PostMapping("/today/complete")
     public ResponseEntity<?> completeModule(Authentication authentication, @RequestBody Map<String, String> body) {
         UUID userId = (UUID) authentication.getPrincipal();
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(401).body("Session invalid. User not found.");
+        }
+        User user = userOpt.get();
         LocalDate today = LocalDate.now();
         String module = body.get("module"); // e.g. "dsa"
         
@@ -76,16 +86,13 @@ public class DailyTaskController {
         }
         
         DailyTask task = dailyTaskRepository.findByUserIdAndDate(userId, today)
-                .orElseGet(() -> {
-                    User user = userRepository.findById(userId).orElseThrow();
-                    return DailyTask.builder()
-                            .user(user)
-                            .date(today)
-                            .selectedModules("")
-                            .targetDurations("")
-                            .completedModules("")
-                            .build();
-                });
+                .orElseGet(() -> DailyTask.builder()
+                        .user(user)
+                        .date(today)
+                        .selectedModules("")
+                        .targetDurations("")
+                        .completedModules("")
+                        .build());
                 
         String completed = task.getCompletedModules();
         Set<String> completedSet = new LinkedHashSet<>();

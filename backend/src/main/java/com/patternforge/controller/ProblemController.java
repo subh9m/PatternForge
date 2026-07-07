@@ -867,7 +867,7 @@ public class ProblemController {
     ) {
         UUID userId = (UUID) authentication.getPrincipal();
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("User not found"));
 
         List<ProblemChatMessage> messages = problemChatMessageRepository
                 .findByUserIdAndProblemIdOrderByCreatedAtAsc(user.getId(), id);
@@ -891,7 +891,7 @@ public class ProblemController {
     ) {
         UUID userId = (UUID) authentication.getPrincipal();
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("User not found"));
 
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Problem not found"));

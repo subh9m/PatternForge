@@ -80,8 +80,11 @@ public class DashboardController {
         // Load all daily tasks for the user to factor into streak
         List<DailyTask> allDailyTasks = dailyTaskRepository.findByUserIdAndDateBetween(
                 userId, LocalDate.now().minusYears(2), LocalDate.now());
+        if (allDailyTasks == null) {
+            allDailyTasks = new ArrayList<>();
+        }
         Map<LocalDate, DailyTask> dailyTaskMapAll = allDailyTasks.stream()
-                .collect(Collectors.toMap(DailyTask::getDate, t -> t));
+                .collect(Collectors.toMap(DailyTask::getDate, t -> t, (t1, t2) -> t1));
 
         Set<LocalDate> activityDates = new HashSet<>();
         solvedCountByDate.forEach((date, count) -> {
@@ -272,8 +275,11 @@ public class DashboardController {
                 ));
 
         List<DailyTask> dailyTasks = dailyTaskRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+        if (dailyTasks == null) {
+            dailyTasks = new ArrayList<>();
+        }
         Map<LocalDate, DailyTask> dailyTaskMap = dailyTasks.stream()
-                .collect(Collectors.toMap(DailyTask::getDate, t -> t));
+                .collect(Collectors.toMap(DailyTask::getDate, t -> t, (t1, t2) -> t1));
 
         List<Map<String, Object>> heatmapList = new ArrayList<>();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
