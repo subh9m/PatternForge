@@ -63,6 +63,14 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [pendingModule, setPendingModule] = useState<'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects' | null>(null);
 
+  const getTodayDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const loadDashboardData = async () => {
     setLoading(true);
     try {
@@ -138,8 +146,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
 
     // 2. Optimistically update today's heatmap cell to change colors instantly
     if (stats) {
-      const todayStr = new Date().toLocaleDateString('sv').split(' ')[0]; // Swedish locale outputs yyyy-mm-dd format
-      const updatedHeatmap = stats.monthlyHeatmap.map(cell => {
+      const todayStr = getTodayDateString();
+      const updatedHeatmap = (stats.monthlyHeatmap || []).map(cell => {
         if (cell.date === todayStr) {
           const completedSet = new Set(dailyTask.completedModules ? dailyTask.completedModules.split(',') : []);
           const selectedSet = new Set(nextSelected);
@@ -240,11 +248,12 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
 
   if (!stats) return null;
 
-  // Split heatmap data into 7-day weeks
+  // Split heatmap data into 7-day weeks safely
   const weeks: HeatmapDay[][] = [];
   let currentWeek: HeatmapDay[] = [];
 
-  stats.monthlyHeatmap.forEach((day) => {
+  const heatmapData = stats.monthlyHeatmap || [];
+  heatmapData.forEach((day) => {
     currentWeek.push(day);
     if (currentWeek.length === 7) {
       weeks.push(currentWeek);
@@ -421,7 +430,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                               if (isDone) {
                                 bgClass = "bg-[#2cbb5d]/60 border border-[#2cbb5d]/85 text-white hover:border-emerald-400 shadow-[0_0_8px_rgba(44,187,93,0.2)]";
                               } else {
-                                bgClass = "bg-red-955 border border-red-900 text-red-200 hover:border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]";
+                                bgClass = "bg-red-900 border border-red-800 text-red-200 hover:border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]";
                               }
                             } else if (count > 0) {
                               bgClass = "bg-[#2cbb5d]/30 border border-[#2cbb5d]/40 text-[#2cbb5d] hover:border-emerald-500";
