@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function ProjectsCard({ data, activeTab }) {
   const [expandedQa, setExpandedQa] = useState(null);
+  const [expandedTech, setExpandedTech] = useState(null);
 
   const toggleQa = (idx) => {
     setExpandedQa(expandedQa === idx ? null : idx);
@@ -61,35 +62,134 @@ export default function ProjectsCard({ data, activeTab }) {
           <div className="border-b border-gray-150 dark:border-[#333] pb-4">
             <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[9px] font-mono font-black uppercase rounded">Technical Stack</span>
             <h2 className="text-xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide mt-1.5">Stack Details</h2>
+            <p className="text-xs text-gray-500 mt-1 font-sans">Click on any core framework/library below to expand L5-level architectural summaries and technical rationale.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 border border-gray-200 dark:border-neutral-900 rounded-xl bg-white/40 dark:bg-neutral-950/20">
-              <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-2">💻 Frontend Interface</span>
-              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 pl-2 list-disc">
-                {data.techStack.frontend.map((item, i) => <li key={i}>{item}</li>)}
-              </ul>
+          <div className="space-y-4">
+            {/* React 19 */}
+            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+              <button
+                onClick={() => setExpandedTech(expandedTech === 'react' ? null : 'react')}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-55/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="h-2 w-2 rounded-full bg-sky-500"></span>
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-255">React 19 & React Router v7 (Frontend Core)</span>
+                </div>
+                {expandedTech === 'react' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+              </button>
+              {expandedTech === 'react' && (
+                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-white/50 dark:bg-black/40 text-xs text-gray-650 dark:text-gray-300 leading-relaxed font-sans space-y-2">
+                  <p><strong>Rationale:</strong> Declarative rendering matching active state changes dynamically. Reusable modular design pattern using custom hooks to segregate layout logic from side effects.</p>
+                  <p><strong>Internal Workings:</strong> Utilizes React's Fiber engine to batch rendering updates and schedule non-blocking updates. React Router handles path routing entirely client-side, avoiding server requests on tab transitions.</p>
+                  <p><strong>Why Chosen:</strong> Blazing-fast virtual DOM reconciliation, excellent hydration controls, and a huge library ecosystem (TanStack Query, Recharts).</p>
+                </div>
+              )}
             </div>
 
-            <div className="p-4 border border-gray-200 dark:border-neutral-900 rounded-xl bg-white/40 dark:bg-neutral-950/20">
-              <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-2">☕ Backend Application</span>
-              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 pl-2 list-disc">
-                {data.techStack.backend.map((item, i) => <li key={i}>{item}</li>)}
-              </ul>
+            {/* TanStack Query */}
+            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+              <button
+                onClick={() => setExpandedTech(expandedTech === 'query' ? null : 'query')}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-55/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="h-2 w-2 rounded-full bg-cyan-400"></span>
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-255">TanStack Query / React Query (Remote State Engine)</span>
+                </div>
+                {expandedTech === 'query' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+              </button>
+              {expandedTech === 'query' && (
+                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-white/50 dark:bg-black/40 text-xs text-gray-650 dark:text-gray-300 leading-relaxed font-sans space-y-2">
+                  <p><strong>Rationale:</strong> Manages remote server-state in-memory caches, removing boilerplate <code>useEffect</code> fetch loops.</p>
+                  <p><strong>Internal Workings:</strong> Maintains an absolute client-side cache registry. Automatically triggers background refetches when window focus updates, when network reconnects, or when manual queries are invalidated via mutations.</p>
+                  <p><strong>Why Chosen:</strong> Optimistic updates (immediate visual confirmation of checkoffs or removals) and robust loading/error wrappers built-in.</p>
+                </div>
+              )}
             </div>
 
-            <div className="p-4 border border-gray-200 dark:border-neutral-900 rounded-xl bg-white/40 dark:bg-neutral-950/20">
-              <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-2">🗄️ Database & Schema</span>
-              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 pl-2 list-disc">
-                {data.techStack.database.map((item, i) => <li key={i}>{item}</li>)}
-              </ul>
+            {/* Tesseract.js */}
+            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+              <button
+                onClick={() => setExpandedTech(expandedTech === 'tesseract' ? null : 'tesseract')}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-55/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="h-2 w-2 rounded-full bg-fuchsia-400"></span>
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-255">Tesseract.js (Client-Side OCR)</span>
+                </div>
+                {expandedTech === 'tesseract' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+              </button>
+              {expandedTech === 'tesseract' && (
+                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-white/50 dark:bg-black/40 text-xs text-gray-650 dark:text-gray-300 leading-relaxed font-sans space-y-2">
+                  <p><strong>Rationale:</strong> Allows client-side image character recognition directly in the browser, eliminating GPU/CPU intensive OCR loads on the server.</p>
+                  <p><strong>Internal Workings:</strong> Loads compiled WebAssembly (WASM) packages containing the C++ engine. Spawns asynchronous Web Workers to process receipt images off the main thread, keeping the UI thread responsive.</p>
+                  <p><strong>Why Chosen:</strong> Offline capability, zero cost per scan, and simple integration wrappers.</p>
+                </div>
+              )}
             </div>
 
-            <div className="p-4 border border-gray-200 dark:border-neutral-900 rounded-xl bg-white/40 dark:bg-neutral-950/20">
-              <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-2">🛠️ Infrastructure & Devops</span>
-              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 pl-2 list-disc">
-                {data.techStack.infrastructure.map((item, i) => <li key={i}>{item}</li>)}
-              </ul>
+            {/* Spring Boot 3.3.0 */}
+            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+              <button
+                onClick={() => setExpandedTech(expandedTech === 'spring' ? null : 'spring')}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-55/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-255">Spring Boot 3.3.0 & Spring Web (Backend Core)</span>
+                </div>
+                {expandedTech === 'spring' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+              </button>
+              {expandedTech === 'spring' && (
+                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-white/50 dark:bg-black/40 text-xs text-gray-650 dark:text-gray-300 leading-relaxed font-sans space-y-2">
+                  <p><strong>Rationale:</strong> Highly standardized enterprise MVC routing and inversion-of-control container.</p>
+                  <p><strong>Internal Workings:</strong> Spawns an embedded Apache Tomcat servlet engine on port 8080. <code>DispatcherServlet</code> captures inbound REST routes and maps them to Controller handlers. Spring's IoC container instantiates and wires singletons using dependency injection.</p>
+                  <p><strong>Why Chosen:</strong> Excellent multithreaded capacity, declarative configuration, and robust transactional boundaries.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Spring Data JPA & Hibernate */}
+            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+              <button
+                onClick={() => setExpandedTech(expandedTech === 'jpa' ? null : 'jpa')}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-55/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="h-2 w-2 rounded-full bg-emerald-450"></span>
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-255">Spring Data JPA & Hibernate (Database ORM)</span>
+                </div>
+                {expandedTech === 'jpa' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+              </button>
+              {expandedTech === 'jpa' && (
+                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-white/50 dark:bg-black/40 text-xs text-gray-650 dark:text-gray-300 leading-relaxed font-sans space-y-2">
+                  <p><strong>Rationale:</strong> Decouples Java objects from physical SQL schema definitions, managing relationships cleanly.</p>
+                  <p><strong>Internal Workings:</strong> Generates dynamic proxies for JPA interface repositories. Integrates Hibernate to snapshot active entities and flush database updates automatically at transaction boundaries via dirty checking.</p>
+                  <p><strong>Why Chosen:</strong> Mitigates boilerplate SQL mapping, handles schema relations (One-to-Many cascade deletions), and optimizes transactions via connections pool caching.</p>
+                </div>
+              )}
+            </div>
+
+            {/* PostgreSQL */}
+            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+              <button
+                onClick={() => setExpandedTech(expandedTech === 'postgres' ? null : 'postgres')}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-55/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="h-2 w-2 rounded-full bg-blue-600"></span>
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-255">PostgreSQL & Flyway Migrations (Persistence Layer)</span>
+                </div>
+                {expandedTech === 'postgres' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+              </button>
+              {expandedTech === 'postgres' && (
+                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-white/50 dark:bg-black/40 text-xs text-gray-650 dark:text-gray-300 leading-relaxed font-sans space-y-2">
+                  <p><strong>Rationale:</strong> Reliable transactional persistence offering structured integrity checks.</p>
+                  <p><strong>Internal Workings:</strong> Relational engine executing ACID-compliant B-Tree indexing. Flyway hooks compile migrations, executing incremental SQL versions from the database classpath before app boot to ensure repeatable builds.</p>
+                  <p><strong>Why Chosen:</strong> Zero data loss reliability (WAL logging), foreign key checks, and clean composite index lookup performance.</p>
+                </div>
+              )}
             </div>
           </div>
         </section>

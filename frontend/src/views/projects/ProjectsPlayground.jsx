@@ -118,6 +118,7 @@ export default function ProjectsPlayground() {
       } else {
         clearInterval(interval);
         setIsRunning(false);
+        setActiveStep(-1);
       }
     }, 1500);
   };

@@ -179,6 +179,30 @@ export const projectsList = [
       {
         q: "How do you protect your endpoints from Insecure Direct Object Reference (IDOR) attacks?",
         a: "We use UUIDs instead of auto-incrementing integer IDs to make entity identifiers unguessable. More importantly, we always validate ownership inside the service layer by checking if the resource's user ID matches the authenticated principal ID before completing any updates."
+      },
+      {
+        q: "How should database connection pools (like HikariCP) be configured to optimize performance under high concurrency?",
+        a: "A common mistake is oversizing the pool. According to PostgreSQL benchmarks, the optimal formula is: Pool Size = (Core Count * 2) + Effective Spindle Count. Oversizing leads to context switching overhead at the CPU level. We size HikariCP precisely, keep connection timeouts low, and use asynchronous query execution (CompletableFutures) for non-blocking I/O routes."
+      },
+      {
+        q: "How do you identify and resolve Hibernate's N+1 query issue in your JPA relationships?",
+        a: "The N+1 issue happens when querying parent objects (e.g. users) and accessing lazy-loaded children (e.g. pantry items) inside a loop, causing N additional SQL calls. We resolve this by using JOIN FETCH JPQL queries: 'SELECT u FROM User u JOIN FETCH u.pantryItems'. Alternatively, we can define @EntityGraph annotations to surgically describe which relationships should be eagerly fetched in single-join SQL queries."
+      },
+      {
+        q: "If JWT authentication is stateless, how do you handle immediate token revocation (e.g. user logout, password reset, or account compromise)?",
+        a: "Because stateless tokens are verified cryptographically without database checks, they cannot be revoked on the fly. To mitigate this: 1. Set short lifetimes (15 mins) on access tokens and use longer-term refresh tokens. 2. Implement a token blocklist in Redis, storing revoked token signatures for the duration of their remaining expiration time. The security filter checks Redis in O(1) time before validating signatures."
+      },
+      {
+        q: "Explain what triggers a CORS preflight request and how you handle it inside Spring Security.",
+        a: "Cross-Origin Resource Sharing (CORS) preflights are sent by browsers as an OPTIONS request before executing 'non-simple' requests (e.g. custom headers like Authorization, or content-types other than application/x-www-form-urlencoded). We handle this by configuring a CorsConfigurationSource bean in our SecurityFilterChain, permitting OPTIONS preflights explicitly and setting 'Access-Control-Allow-Origin' and 'Access-Control-Allow-Methods' headers."
+      },
+      {
+        q: "When running Tesseract.js in a single-page React app, how do you prevent Web Worker memory leaks?",
+        a: "Spawning a new Tesseract worker on every file upload can rapidly consume browser heap memory since workers are not automatically garbage collected. To prevent leaks: 1. Maintain a single, reusable worker instance cached in a hook context or global state. 2. Explicitly call worker.terminate() inside useEffect cleanup callbacks when components unmount."
+      },
+      {
+        q: "If you needed to scale your backend horizontally, what changes would be required for scheduled background crons (@Scheduled)?",
+        a: "Using Spring's native @Scheduled in a multi-instance deployment causes execution overlap: all instances will run the cron concurrently (e.g. sending duplicate emails). To resolve this, we must implement distributed lock managers like ShedLock. ShedLock uses a shared database table (or Redis) to ensure only one JVM instance obtains the cron execution lock at a time."
       }
     ]
   }
