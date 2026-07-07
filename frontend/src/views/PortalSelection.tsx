@@ -4,9 +4,10 @@ import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon, GitBranch, Brain, Gl
 
 interface PortalSelectionProps {
   onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects') => void;
+  onBackToDashboard?: () => void;
 }
 
-const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => {
+const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal, onBackToDashboard }) => {
   const { user, logout } = useAuth();
   
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -39,6 +40,14 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
     <div className="min-h-screen w-screen flex items-center justify-center bg-background px-4 py-12 md:py-20 relative overflow-y-auto select-none">
       {/* Floating Theme Toggle & Sign Out on the top-right of page */}
       <div className="absolute top-6 right-6 flex items-center space-x-3 z-50">
+        {onBackToDashboard && (
+          <button
+            onClick={onBackToDashboard}
+            className="px-4 py-2 rounded-xl bg-surface/60 border border-border hover:border-text-primary text-text-secondary hover:text-text-primary transition-smooth flex items-center space-x-1 text-xs font-extrabold cursor-pointer"
+          >
+            <span>BACK TO DASHBOARD</span>
+          </button>
+        )}
         <button
           onClick={toggleTheme}
           className="p-2 rounded-xl bg-surface/60 border border-border hover:border-text-primary text-text-secondary hover:text-text-primary transition-smooth flex items-center justify-center cursor-pointer shadow-md"

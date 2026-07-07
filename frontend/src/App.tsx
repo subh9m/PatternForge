@@ -66,14 +66,14 @@ const MainApp: React.FC = () => {
   if (activePortal === 'master_dashboard') {
     return (
       <MasterDashboard
-        onSelectPortal={(portal) => {
-          localStorage.setItem('activePortal', portal);
-          setActivePortal(portal);
-        }}
         onEnterFocusMode={(portal, duration) => {
           localStorage.setItem('activePortal', portal);
           setFocusSession({ module: portal, duration });
           setActivePortal(portal);
+        }}
+        onGoToModules={() => {
+          localStorage.setItem('activePortal', 'selection');
+          setActivePortal('selection');
         }}
         onLogout={logout}
       />
@@ -86,6 +86,10 @@ const MainApp: React.FC = () => {
         onSelectPortal={(portal) => {
           localStorage.setItem('activePortal', portal);
           setActivePortal(portal);
+        }}
+        onBackToDashboard={() => {
+          localStorage.setItem('activePortal', 'master_dashboard');
+          setActivePortal('master_dashboard');
         }}
       />
     );
@@ -229,8 +233,8 @@ const MainApp: React.FC = () => {
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         onSwitchPortal={() => {
-          localStorage.removeItem('activePortal');
-          setActivePortal('master_dashboard');
+          localStorage.setItem('activePortal', 'selection');
+          setActivePortal('selection');
         }}
       />
       

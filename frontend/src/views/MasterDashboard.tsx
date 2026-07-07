@@ -29,8 +29,8 @@ interface DailyTaskData {
 }
 
 interface MasterDashboardProps {
-  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects') => void;
   onEnterFocusMode: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects', duration: number) => void;
+  onGoToModules: () => void;
   onLogout: () => void;
 }
 
@@ -47,7 +47,7 @@ const MODULES_CONFIG = [
   { id: 'projects', name: 'Projects Architecture', icon: FolderGit2, color: 'text-fuchsia-400', border: 'hover:border-fuchsia-500', bg: 'bg-fuchsia-500/10' }
 ] as const;
 
-const MasterDashboard: React.FC<MasterDashboardProps> = ({ onSelectPortal, onEnterFocusMode, onLogout }) => {
+const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onGoToModules, onLogout }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [dailyTask, setDailyTask] = useState<DailyTaskData>({
     selectedModules: '',
@@ -73,7 +73,19 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onSelectPortal, onEnt
       setStats(statsData);
       setDailyTask(dailyData);
     } catch (e) {
-      console.error("Failed to load master dashboard data", e);
+      console.error("Failed to load master dashboard data, using fallbacks", e);
+      // Fallback data to prevent rendering black screen (returning null)
+      setStats({
+        currentStreak: 0,
+        problemsSolved: 0,
+        problemsAttempted: 0,
+        monthlyHeatmap: []
+      });
+      setDailyTask({
+        selectedModules: '',
+        completedModules: '',
+        targetDurations: ''
+      });
     } finally {
       setLoading(false);
     }
@@ -108,28 +120,56 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onSelectPortal, onEnt
       durationMap.set(moduleId, 25);
     }
     
-    // Format durations string
+    const nextSelectedStr = nextSelected.join(',');
     const targetDurationsStr = nextSelected
       .map(id => `${id}:${durationMap.get(id) || 25}`)
       .join(',');
 
-    try {
-      const updated = await api.post<DailyTaskData>(`/daily-tasks/today/select`, {
-        selectedModules: nextSelected.join(','),
-        targetDurations: targetDurationsStr
+    // Optimistic cache for rollback
+    const prevDailyTask = { ...dailyTask };
+    const prevStats = stats ? { ...stats } : null;
+
+    // 1. Optimistically update dailyTask state
+    setDailyTask(prev => ({
+      ...prev,
+      selectedModules: nextSelectedStr,
+      targetDurations: targetDurationsStr
+    }));
+
+    // 2. Optimistically update today's heatmap cell to change colors instantly
+    if (stats) {
+      const todayStr = new Date().toLocaleDateString('sv').split(' ')[0]; // Swedish locale outputs yyyy-mm-dd format
+      const updatedHeatmap = stats.monthlyHeatmap.map(cell => {
+        if (cell.date === todayStr) {
+          const completedSet = new Set(dailyTask.completedModules ? dailyTask.completedModules.split(',') : []);
+          const selectedSet = new Set(nextSelected);
+          
+          let isDone = true;
+          selectedSet.forEach(m => {
+            if (!completedSet.has(m)) isDone = false;
+          });
+
+          return {
+            ...cell,
+            hasDailyTask: nextSelected.length > 0,
+            isDailyTaskCompleted: nextSelected.length > 0 ? isDone : false,
+            selectedModules: nextSelectedStr
+          };
+        }
+        return cell;
       });
-      setDailyTask(prev => ({
-        ...prev,
-        selectedModules: updated.selectedModules,
-        targetDurations: updated.targetDurations
-      }));
-      
-      // Reload stats to update heatmap status for today
-      const statsData = await api.get<DashboardStats>(`/dashboard/stats?year=${selectedYear}`);
-      setStats(statsData);
-    } catch (err) {
-      console.error("Failed to update module selection", err);
+      setStats(prev => prev ? { ...prev, monthlyHeatmap: updatedHeatmap } : null);
     }
+
+    // Call API in the background
+    api.post<DailyTaskData>(`/daily-tasks/today/select`, {
+      selectedModules: nextSelectedStr,
+      targetDurations: targetDurationsStr
+    }).catch(err => {
+      console.error("Failed to update module selection in background, rolling back", err);
+      setDailyTask(prevDailyTask);
+      setStats(prevStats);
+    });
   };
 
   const handleDurationChange = async (moduleId: string, newDuration: number) => {
@@ -149,18 +189,21 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onSelectPortal, onEnt
       .map(id => `${id}:${durationMap.get(id) || 25}`)
       .join(',');
 
-    try {
-      const updated = await api.post<DailyTaskData>(`/daily-tasks/today/select`, {
-        selectedModules: dailyTask.selectedModules,
-        targetDurations: targetDurationsStr
-      });
-      setDailyTask(prev => ({
-        ...prev,
-        targetDurations: updated.targetDurations
-      }));
-    } catch (err) {
-      console.error("Failed to update focus duration", err);
-    }
+    const prevDailyTask = { ...dailyTask };
+
+    // Optimistically update targetDurations
+    setDailyTask(prev => ({
+      ...prev,
+      targetDurations: targetDurationsStr
+    }));
+
+    api.post<DailyTaskData>(`/daily-tasks/today/select`, {
+      selectedModules: dailyTask.selectedModules,
+      targetDurations: targetDurationsStr
+    }).catch(err => {
+      console.error("Failed to update focus duration in background, rolling back", err);
+      setDailyTask(prevDailyTask);
+    });
   };
 
   const triggerLaunchModule = (moduleId: any) => {
@@ -253,7 +296,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onSelectPortal, onEnt
             </div>
 
             <button
-              onClick={() => onSelectPortal('dsa')}
+              onClick={onGoToModules}
               className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black tracking-wider uppercase transition-smooth shadow-glow-primary cursor-pointer flex items-center space-x-2"
             >
               <Code2 className="h-4 w-4" />
@@ -324,10 +367,25 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onSelectPortal, onEnt
                         }
                       }
 
+                      // Check if there is a month change to the next week
+                      const nextWeek = weeks[idx + 1];
+                      let hasMonthTransition = false;
+                      if (nextWeek && nextWeek[0]) {
+                        const nextMonthIndex = parseInt(nextWeek[0].date.split('-')[1]) - 1;
+                        if (monthIndex !== nextMonthIndex) {
+                          hasMonthTransition = true;
+                        }
+                      }
+
                       return (
-                        <div key={idx} className="w-[14px] shrink-0 text-left overflow-visible">
-                          {showMonth ? monthName : ""}
-                        </div>
+                        <React.Fragment key={idx}>
+                          <div className="w-[14px] shrink-0 text-left overflow-visible">
+                            {showMonth ? monthName : ""}
+                          </div>
+                          {hasMonthTransition && (
+                            <div className="w-[14px] shrink-0" aria-hidden="true" />
+                          )}
+                        </React.Fragment>
                       );
                     });
                   })()}
@@ -335,35 +393,55 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onSelectPortal, onEnt
 
                 {/* Grid cells */}
                 <div className="flex gap-[3px]">
-                  {weeks.map((week, weekIdx) => (
-                    <div key={weekIdx} className="flex flex-col gap-[3px] shrink-0">
-                      {week.map((day, dayIdx) => {
-                        const count = day.count;
-                        const isDaily = day.hasDailyTask;
-                        const isDone = day.isDailyTaskCompleted;
-                        
-                        let bgClass = "bg-[#18181b] border border-border/40 hover:border-text-primary";
-                        
-                        if (isDaily) {
-                          if (isDone) {
-                            bgClass = "bg-[#2cbb5d]/60 border border-[#2cbb5d]/85 text-white hover:border-emerald-400 shadow-[0_0_8px_rgba(44,187,93,0.2)]";
-                          } else {
-                            bgClass = "bg-red-900 border border-red-800 text-red-200 hover:border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]";
-                          }
-                        } else if (count > 0) {
-                          bgClass = "bg-[#2cbb5d]/30 border border-[#2cbb5d]/40 text-[#2cbb5d] hover:border-emerald-500";
+                  {weeks.map((week, weekIdx) => {
+                    const firstDay = week[0];
+                    let hasMonthTransition = false;
+                    if (firstDay) {
+                      const monthIndex = parseInt(firstDay.date.split('-')[1]) - 1;
+                      const nextWeek = weeks[weekIdx + 1];
+                      if (nextWeek && nextWeek[0]) {
+                        const nextMonthIndex = parseInt(nextWeek[0].date.split('-')[1]) - 1;
+                        if (monthIndex !== nextMonthIndex) {
+                          hasMonthTransition = true;
                         }
+                      }
+                    }
 
-                        return (
-                          <div
-                            key={dayIdx}
-                            onClick={() => setSelectedDay(day === selectedDay ? null : day)}
-                            className={`h-[11px] w-[11px] rounded-sm transition-all duration-150 cursor-pointer ${bgClass}`}
-                          />
-                        );
-                      })}
-                    </div>
-                  ))}
+                    return (
+                      <React.Fragment key={weekIdx}>
+                        <div className="flex flex-col gap-[3px] shrink-0">
+                          {week.map((day, dayIdx) => {
+                            const count = day.count;
+                            const isDaily = day.hasDailyTask;
+                            const isDone = day.isDailyTaskCompleted;
+                            
+                            let bgClass = "bg-[#18181b] border border-border/40 hover:border-text-primary";
+                            
+                            if (isDaily) {
+                              if (isDone) {
+                                bgClass = "bg-[#2cbb5d]/60 border border-[#2cbb5d]/85 text-white hover:border-emerald-400 shadow-[0_0_8px_rgba(44,187,93,0.2)]";
+                              } else {
+                                bgClass = "bg-red-955 border border-red-900 text-red-200 hover:border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]";
+                              }
+                            } else if (count > 0) {
+                              bgClass = "bg-[#2cbb5d]/30 border border-[#2cbb5d]/40 text-[#2cbb5d] hover:border-emerald-500";
+                            }
+
+                            return (
+                              <div
+                                key={dayIdx}
+                                onClick={() => setSelectedDay(day === selectedDay ? null : day)}
+                                className={`h-[11px] w-[11px] rounded-sm transition-all duration-150 cursor-pointer ${bgClass}`}
+                              />
+                            );
+                          })}
+                        </div>
+                        {hasMonthTransition && (
+                          <div className="w-[11px] shrink-0" aria-hidden="true" />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
               </div>
             </div>
