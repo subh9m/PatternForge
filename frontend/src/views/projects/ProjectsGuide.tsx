@@ -13,6 +13,19 @@ const ProjectsGuide: React.FC<ProjectsGuideProps> = ({ onBackToPortal }) => {
   const [activeProject, setActiveProject] = useState(projectsList[0]);
   const [activeTab, setActiveTab] = useState<string>('overview');
 
+  const [fontScale, setFontScale] = useState<number>(() => {
+    const saved = localStorage.getItem('reading-font-scale');
+    const parsed = saved ? parseFloat(saved) : 1.0;
+    document.documentElement.style.setProperty('--font-scale', parsed.toString());
+    return parsed;
+  });
+
+  const handleFontScaleChange = (val: number) => {
+    setFontScale(val);
+    localStorage.setItem('reading-font-scale', val.toString());
+    document.documentElement.style.setProperty('--font-scale', val.toString());
+  };
+
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
     if (saved === 'light') {
@@ -66,6 +79,21 @@ const ProjectsGuide: React.FC<ProjectsGuideProps> = ({ onBackToPortal }) => {
 
           {/* Right Action Menu */}
           <div className="flex items-center space-x-3.5">
+            <div className="flex items-center space-x-2 border border-border px-2.5 py-1 rounded-sm bg-surface/30">
+              <span className="text-[9px] font-mono font-black text-text-secondary uppercase">SIZE</span>
+              <input
+                type="range"
+                min="0.85"
+                max="1.4"
+                step="0.05"
+                value={fontScale}
+                onChange={(e) => handleFontScaleChange(parseFloat(e.target.value))}
+                className="w-16 sm:w-20 cursor-pointer h-1 accent-text-primary bg-border rounded-lg appearance-none"
+              />
+              <span className="text-[9px] font-mono font-black text-text-primary">{Math.round(fontScale * 100)}%</span>
+            </div>
+
+            <div className="h-5 w-px bg-border"></div>
             <button
               onClick={onBackToPortal}
               title="Switch Portal / Module"

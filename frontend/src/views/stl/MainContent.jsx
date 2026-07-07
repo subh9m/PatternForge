@@ -52,7 +52,7 @@ export default function MainContent({ isOpen, toggleSidebar, isDarkMode, toggleT
       </button>
 
       {/* Content grid */}
-      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8">
+      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8 reading-module-content">
         {activeView === 'cpp' ? (
           <CppContent activeTab={activeTab} />
         ) : (

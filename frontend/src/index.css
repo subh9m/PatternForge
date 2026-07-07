@@ -358,3 +358,56 @@ aside a.dark\:text-gray-300:hover {
   box-shadow: 0 0 10px rgba(255, 59, 48, 0.15) !important;
   border-color: var(--text-primary) !important;
 }
+
+/* Dynamic reading font size scaling */
+:root {
+  --font-scale: 1.0;
+}
+
+.reading-module-content p,
+.reading-module-content li,
+.reading-module-content blockquote,
+.reading-module-content pre,
+.reading-module-content code,
+.reading-module-content span {
+  transition: font-size 0.2s ease, line-height 0.2s ease;
+}
+
+.reading-module-content p {
+  font-size: calc(14px * var(--font-scale, 1.0)) !important;
+  line-height: calc(1.625 * 14px * var(--font-scale, 1.0)) !important;
+}
+
+.reading-module-content li {
+  font-size: calc(13px * var(--font-scale, 1.0)) !important;
+  line-height: calc(1.5 * 13px * var(--font-scale, 1.0)) !important;
+}
+
+.reading-module-content blockquote {
+  font-size: calc(13px * var(--font-scale, 1.0)) !important;
+}
+
+.reading-module-content code,
+.reading-module-content pre {
+  font-size: calc(12px * var(--font-scale, 1.0)) !important;
+}
+
+.reading-module-content span.text-sm {
+  font-size: calc(14px * var(--font-scale, 1.0)) !important;
+}
+
+.reading-module-content span.text-xs {
+  font-size: calc(12.5px * var(--font-scale, 1.0)) !important;
+}
+
+.reading-module-content span.text-lg {
+  font-size: calc(18px * var(--font-scale, 1.0)) !important;
+}
+
+.reading-module-content span.text-xl {
+  font-size: calc(20px * var(--font-scale, 1.0)) !important;
+}
+
+.reading-module-content span.text-2xl {
+  font-size: calc(24px * var(--font-scale, 1.0)) !important;
+}

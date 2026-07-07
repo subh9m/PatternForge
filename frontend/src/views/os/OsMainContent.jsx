@@ -34,7 +34,7 @@ export default function OsMainContent({ isOpen, toggleSidebar, activeTab }) {
       </button>
 
       {/* Content Grid */}
-      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8">
+      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8 reading-module-content">
         {ds ? <OsCard key={ds.id} data={ds} /> : null}
       </div>
     </main>

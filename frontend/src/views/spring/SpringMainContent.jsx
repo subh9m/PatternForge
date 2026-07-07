@@ -36,7 +36,7 @@ export default function SpringMainContent({ isOpen, toggleSidebar, activeTab }) 
       </button>
 
       {/* Content Grid */}
-      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8">
+      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8 reading-module-content">
         {activeTab === 'spring_cheat_sheet' ? (
           <SpringCheatSheet />
         ) : activeTab === 'spring_playground' ? (

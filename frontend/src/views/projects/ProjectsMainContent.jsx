@@ -32,7 +32,7 @@ export default function ProjectsMainContent({ isOpen, toggleSidebar, activeProje
       </button>
 
       {/* Content Container */}
-      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8">
+      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8 reading-module-content">
         
         {/* Project Header Banner */}
         <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6">

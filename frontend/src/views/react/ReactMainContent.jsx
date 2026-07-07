@@ -36,7 +36,7 @@ export default function ReactMainContent({ isOpen, toggleSidebar, activeTab }) {
       </button>
 
       {/* Content Container */}
-      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8">
+      <div className="max-w-7xl mx-auto p-6 md:p-10 pt-10 space-y-8 reading-module-content">
         {activeTab === 'react_cheat_sheet' ? (
           <ReactCheatSheet />
         ) : activeTab === 'react_playground' ? (
