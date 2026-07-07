@@ -19,6 +19,7 @@ interface RevisionItem {
   timeComplexity: string;
   isRevisedToday: boolean;
   solutionDetails?: string;
+  spaceComplexity?: string;
 }
 
 interface RevisionViewProps {
@@ -219,68 +220,96 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map(item => (
-            <div 
-              key={item.id}
-              onClick={() => setSelectedItem(item)}
-              className={`glass-panel border p-5 rounded-2xl hover:border-slate-750 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4 relative overflow-hidden group ${
-                item.isRevisedToday ? 'bg-emerald-950/5 border-emerald-500/20' : 'bg-slate-900/20 border-slate-900'
-              }`}
-            >
-              
-              {/* Corner completion glow */}
-              {item.isRevisedToday && (
-                <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
-              )}
+          {filteredItems.map(item => {
+            // Extract optimal approach description defensively
+            let optimalBrief = "";
+            if (item.simplifiedApproach) {
+              try {
+                const parsed = JSON.parse(item.simplifiedApproach);
+                optimalBrief = (parsed && parsed.optimal) ? parsed.optimal : item.simplifiedApproach;
+              } catch (e) {
+                optimalBrief = item.simplifiedApproach;
+              }
+            }
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-500 font-mono uppercase">#{item.masterNumber}</span>
-                  <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
-                    item.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400' :
-                    item.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
-                    'bg-red-500/10 text-red-400'
-                  }`}>
-                    {item.difficulty}
-                  </span>
+            return (
+              <div 
+                key={item.id}
+                onClick={() => setSelectedItem(item)}
+                className={`glass-panel border p-5 rounded-2xl hover:border-slate-750 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4 relative overflow-hidden group ${
+                  item.isRevisedToday ? 'bg-emerald-950/5 border-emerald-500/20' : 'bg-slate-900/20 border-slate-900'
+                }`}
+              >
+                
+                {/* Corner completion glow */}
+                {item.isRevisedToday && (
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
+                )}
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-slate-500 font-mono uppercase">#{item.masterNumber}</span>
+                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                      item.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400' :
+                      item.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
+                      'bg-red-500/10 text-red-400'
+                    }`}>
+                      {item.difficulty}
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-sm font-extrabold text-slate-200 group-hover:text-slate-100 transition-colors">
+                    {item.name}
+                  </h3>
+
+                  {/* Brief Problem Description */}
+                  {item.simplifiedStatement && (
+                    <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
+                      <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Problem Brief</strong>
+                      {item.simplifiedStatement}
+                    </p>
+                  )}
+
+                  {/* Simplified Optimal Approach */}
+                  {optimalBrief && (
+                    <p className="text-slate-450 text-xs leading-relaxed line-clamp-2">
+                      <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Simplified Approach</strong>
+                      {optimalBrief}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center justify-between pt-1.5 border-t border-slate-900/50">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-slate-950 px-2.5 py-1 rounded border border-slate-900 font-mono">
+                      {item.topicName}
+                    </span>
+                    <div className="flex items-center space-x-2.5 text-[10px] font-bold font-mono text-slate-500">
+                      <span>T: <strong className="text-blue-400">{item.timeComplexity || 'O(N)'}</strong></span>
+                      <span>S: <strong className="text-purple-400">{item.spaceComplexity || 'O(1)'}</strong></span>
+                    </div>
+                  </div>
                 </div>
-                
-                <h3 className="text-sm font-extrabold text-slate-200 group-hover:text-slate-100 transition-colors">
-                  {item.name}
-                </h3>
-                
-                <div className="flex items-center space-x-1.5 pt-1">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-950/60 px-2 py-0.5 rounded border border-slate-900">
-                    {item.topicName}
+
+                <div className="flex items-center justify-between border-t border-slate-900/60 pt-3">
+                  <span className="text-[10px] font-semibold text-slate-500 flex items-center space-x-1">
+                    <BookOpen className="h-3 w-3" />
+                    <span>Click to review details</span>
                   </span>
-                  {item.timeComplexity && (
-                    <span className="text-[9px] font-bold text-slate-400 font-mono">
-                      {item.timeComplexity}
+
+                  {item.isRevisedToday ? (
+                    <span className="flex items-center space-x-1 text-emerald-400 text-[10px] font-black uppercase font-mono">
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      <span>Revised</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center space-x-1 text-amber-400 text-[10px] font-black uppercase font-mono">
+                      <Circle className="h-3.5 w-3.5" />
+                      <span>Pending</span>
                     </span>
                   )}
                 </div>
               </div>
-
-              <div className="flex items-center justify-between border-t border-slate-900/60 pt-3">
-                <span className="text-[10px] font-semibold text-slate-500 flex items-center space-x-1">
-                  <BookOpen className="h-3 w-3" />
-                  <span>Click to review details</span>
-                </span>
-
-                {item.isRevisedToday ? (
-                  <span className="flex items-center space-x-1 text-emerald-400 text-[10px] font-black uppercase font-mono">
-                    <CheckCircle className="h-3.5 w-3.5" />
-                    <span>Revised</span>
-                  </span>
-                ) : (
-                  <span className="flex items-center space-x-1 text-amber-400 text-[10px] font-black uppercase font-mono">
-                    <Circle className="h-3.5 w-3.5" />
-                    <span>Pending</span>
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -345,7 +374,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
               : activeCode;
 
             return (
-              <div className="glass-panel border border-slate-800 rounded-2xl w-full max-w-5xl h-[80vh] flex flex-col shadow-2xl relative">
+              <div className="glass-panel border border-slate-800 rounded-2xl w-full max-w-[92vw] lg:max-w-7xl xl:max-w-[85vw] h-[85vh] flex flex-col shadow-2xl relative">
                 
                 {/* Modal Header */}
                 <div className="flex items-center justify-between p-5 border-b border-slate-900 bg-slate-950/30">

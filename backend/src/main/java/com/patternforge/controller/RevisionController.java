@@ -67,6 +67,7 @@ public class RevisionController {
             item.put("userCode", userCode);
             item.put("language", language);
             item.put("timeComplexity", timeComplexity);
+            item.put("spaceComplexity", getOptimalSpaceComplexity(p));
             item.put("isRevisedToday", isRevisedToday);
             item.put("solutionDetails", p.getSolutionDetailsJson() != null ? p.getSolutionDetailsJson() : "{}");
             
@@ -105,10 +106,27 @@ public class RevisionController {
                 if (node.has("optimal") && node.get("optimal").has("timeComplexity")) {
                     return node.get("optimal").get("timeComplexity").asText();
                 }
-            } catch (Exception e) {
+              } catch (Exception e) {
                 // ignore
             }
         }
         return "O(N)";
+    }
+
+    private String getOptimalSpaceComplexity(Problem p) {
+        if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty()) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(p.getSolutionDetailsJson());
+                if (node.has("optimalSpaceComplexity")) {
+                    return node.get("optimalSpaceComplexity").asText();
+                }
+                if (node.has("optimal") && node.get("optimal").has("spaceComplexity")) {
+                    return node.get("optimal").get("spaceComplexity").asText();
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return "O(1)";
     }
 }
