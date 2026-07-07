@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, RotateCcw, Terminal, ArrowRight, GitBranch, Share2 } from 'lucide-react';
+import { Play, RotateCcw, Terminal, GitBranch, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Tooltips for instructions
@@ -25,9 +25,12 @@ export default function GitPlayground() {
   
   // Working Directory files
   const [files, setFiles] = useState([
-    { name: 'index.html', status: 'clean', originalContent: '<h1>Hello</h1>', currentContent: '<h1>Hello</h1>' },
-    { name: 'app.js', status: 'clean', originalContent: 'console.log("init");', currentContent: 'console.log("init");' },
+    { name: 'index.html', status: 'clean', originalContent: '<h1>Hello World</h1>\n<p>Welcome to PatternForge</p>', currentContent: '<h1>Hello World</h1>\n<p>Welcome to PatternForge</p>' },
+    { name: 'app.js', status: 'clean', originalContent: '// Authentication utility\nfunction login() {\n  console.log("Logged in");\n}', currentContent: '// Authentication utility\nfunction login() {\n  console.log("Logged in");\n}' },
   ]);
+
+  // Selected file for code editor
+  const [selectedFile, setSelectedFile] = useState('index.html');
 
   // Staging area
   const [stagingArea, setStagingArea] = useState([]);
@@ -48,7 +51,7 @@ export default function GitPlayground() {
 
   // Push animation trigger state
   const [isPushing, setIsPushing] = useState(false);
-  const [pushSourceCoords, setPushSourceCoords] = useState({ x: 110, y: 110 });
+  const [pushSourceCoords, setPushSourceCoords] = useState({ x: 130, y: 110 });
 
   const logsEndRef = useRef(null);
 
@@ -69,22 +72,23 @@ export default function GitPlayground() {
     return result;
   };
 
-  // Modify File
-  const modifyFile = (fileName) => {
+  // Handle live code edits
+  const handleCodeChange = (e) => {
+    const text = e.target.value;
     setFiles(prev => prev.map(f => {
-      if (f.name === fileName) {
-        const appended = `\n// Change added at ${new Date().toLocaleTimeString()}`;
-        const newContent = f.currentContent + appended;
+      if (f.name === selectedFile) {
+        const isModified = text !== f.originalContent;
         return {
           ...f,
-          currentContent: newContent,
-          status: f.status === 'clean' ? 'modified' : f.status
+          currentContent: text,
+          status: isModified ? 'modified' : 'clean'
         };
       }
       return f;
     }));
-    addLog(`$ local-editor: wrote code edits to '${fileName}'`);
   };
+
+
 
   // git add
   const handleGitAdd = (fileName) => {
@@ -150,7 +154,16 @@ export default function GitPlayground() {
       ...prev,
       [activeBranch]: newId
     }));
-    setFiles(prev => prev.map(f => stagingArea.includes(f.name) ? { ...f, status: 'clean', originalContent: f.currentContent } : f));
+    setFiles(prev => prev.map(f => {
+      if (stagingArea.includes(f.name)) {
+        return {
+          ...f,
+          status: 'clean',
+          originalContent: f.currentContent
+        };
+      }
+      return f;
+    }));
     setStagingArea([]);
 
     addLog(`$ git commit -m "${msg}"`);
@@ -190,8 +203,7 @@ export default function GitPlayground() {
     }
     setActiveBranch(branchName);
     
-    // In real git, switching branch changes working dir files to target commit files state
-    // We simulate this by setting files content of HEAD commit of that branch
+    // Switch working file values
     const headId = branches[branchName];
     const commit = commits.find(c => c.id === headId);
     if (commit) {
@@ -262,7 +274,6 @@ export default function GitPlayground() {
     }
 
     if (isAncestor) {
-      // Fast-forward merge
       setBranches(prev => ({
         ...prev,
         [activeBranch]: targetHead
@@ -273,7 +284,7 @@ export default function GitPlayground() {
       return;
     }
 
-    // Check if targetHead is ancestor of activeHead (Already merged)
+    // Check if targetHead is ancestor of activeHead
     let isTargetAncestor = false;
     curr = activeHead;
     while (curr) {
@@ -291,7 +302,7 @@ export default function GitPlayground() {
       return;
     }
 
-    // Divergent: Perform 3-Way Merge Commit
+    // Perform 3-Way Merge Commit
     const sha = generateSha();
     const newId = 'c_' + sha;
     const mergeCommit = {
@@ -342,18 +353,16 @@ export default function GitPlayground() {
       return;
     }
 
-    // Collect all commits on activeBranch back to the LCA (excluding LCA)
     const commitsToReplay = [];
     let curr = activeHead;
     while (curr && curr !== lcaId) {
       const c = commits.find(x => x.id === curr);
       if (!c) break;
-      commitsToReplay.unshift(c); // chronologically first
+      commitsToReplay.unshift(c);
       curr = c.parentId;
     }
 
     if (commitsToReplay.length === 0) {
-      // If activeHead is ancestor of targetHead, it is just a fast-forward rebase
       setBranches(prev => ({
         ...prev,
         [activeBranch]: targetHead
@@ -363,7 +372,6 @@ export default function GitPlayground() {
       return;
     }
 
-    // Replay commits one-by-one on top of targetHead
     let newParentId = targetHead;
     let updatedCommits = [...commits];
     let lastNewId = null;
@@ -383,7 +391,7 @@ export default function GitPlayground() {
         files: [...c.files]
       };
       updatedCommits.push(replayed);
-      addLog(`  Replaying commit ${c.sha.slice(0, 7)}: "${c.message}" on top of references tip`);
+      addLog(`  Replaying commit ${c.sha.slice(0, 7)}: "${c.message}" on top of target tip`);
       newParentId = newId;
       lastNewId = newId;
     });
@@ -417,8 +425,7 @@ export default function GitPlayground() {
       return;
     }
 
-    // Get active head layout coordinates to start the push floating packet animation
-    const coords = nodeCoords[activeHeadId] || { x: 110, y: 110 };
+    const coords = nodeCoords[activeHeadId] || { x: 130, y: 110 };
     setPushSourceCoords(coords);
     setIsPushing(true);
 
@@ -498,9 +505,10 @@ export default function GitPlayground() {
   // Reset Playground State
   const resetPlayground = () => {
     setFiles([
-      { name: 'index.html', status: 'clean', originalContent: '<h1>Hello</h1>', currentContent: '<h1>Hello</h1>' },
-      { name: 'app.js', status: 'clean', originalContent: 'console.log("init");', currentContent: 'console.log("init");' },
+      { name: 'index.html', status: 'clean', originalContent: '<h1>Hello World</h1>\n<p>Welcome to PatternForge</p>', currentContent: '<h1>Hello World</h1>\n<p>Welcome to PatternForge</p>' },
+      { name: 'app.js', status: 'clean', originalContent: '// Authentication utility\nfunction login() {\n  console.log("Logged in");\n}', currentContent: '// Authentication utility\nfunction login() {\n  console.log("Logged in");\n}' },
     ]);
+    setSelectedFile('index.html');
     setStagingArea([]);
     setCommits([
       { id: 'c1', sha: 'e8f5e97', label: 'C1', message: 'Initial commit', parentId: null, parent2Id: null, branch: 'main', files: ['index.html', 'app.js'] },
@@ -574,8 +582,7 @@ export default function GitPlayground() {
     }
   };
 
-  // Layout node coordinates
-  // Root = depth 0. Child depth = max(parents' depths) + 1.
+  // Layout node coordinates with wider spacing (130px)
   const computeNodePositions = () => {
     const coords = {};
     const branchRows = {
@@ -594,7 +601,7 @@ export default function GitPlayground() {
         depths[c.id] = Math.max(d1, d2) + 1;
       }
 
-      const x = (depths[c.id] + 1) * 110;
+      const x = (depths[c.id] + 1) * 135;
       const y = branchRows[c.branch] || 110;
       coords[c.id] = { x, y, sha: c.sha, message: c.message, branch: c.branch };
     });
@@ -603,6 +610,7 @@ export default function GitPlayground() {
   };
 
   const nodeCoords = computeNodePositions();
+  const currentSelectedFileObj = files.find(f => f.name === selectedFile) || files[0];
 
   return (
     <div className="space-y-6">
@@ -634,9 +642,9 @@ export default function GitPlayground() {
         <div className="mt-6 space-y-2">
           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono block">🌿 Visual Commit Graph & Network Alias</span>
           
-          <div className="relative border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 dark:bg-black/60 rounded-xl overflow-x-auto p-4 min-h-[230px] scrollbar-thin">
+          <div className="relative border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 dark:bg-black/60 rounded-xl overflow-x-auto p-4 min-h-[240px] scrollbar-thin">
             {/* SVG Graph Drawing Canvas */}
-            <svg className="w-full h-full" style={{ minWidth: '950px', height: '220px' }}>
+            <svg className="w-full h-full" style={{ minWidth: '980px', height: '220px' }}>
               {/* Connecting lines with stroke drawing effect */}
               {commits.map((c) => {
                 const child = nodeCoords[c.id];
@@ -651,8 +659,8 @@ export default function GitPlayground() {
                         animate={{ pathLength: 1, d: `M ${nodeCoords[c.parentId].x} ${nodeCoords[c.parentId].y} C ${(nodeCoords[c.parentId].x + child.x) / 2} ${nodeCoords[c.parentId].y}, ${(nodeCoords[c.parentId].x + child.x) / 2} ${child.y}, ${child.x} ${child.y}` }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
                         fill="none"
-                        stroke={c.branch === 'main' ? '#f59e0b' : (c.branch === 'feature' ? '#3b82f6' : '#a855f7')}
-                        strokeWidth="3"
+                        stroke={c.branch === 'main' ? '#f59e0b' : (c.branch === 'feature' ? '#0ea5e9' : '#d946ef')}
+                        strokeWidth="4"
                         strokeDasharray={remoteCommits.includes(c.id) ? 'none' : '5,4'}
                       />
                     )}
@@ -664,8 +672,8 @@ export default function GitPlayground() {
                         animate={{ pathLength: 1, d: `M ${nodeCoords[c.parent2Id].x} ${nodeCoords[c.parent2Id].y} C ${(nodeCoords[c.parent2Id].x + child.x) / 2} ${nodeCoords[c.parent2Id].y}, ${(nodeCoords[c.parent2Id].x + child.x) / 2} ${child.y}, ${child.x} ${child.y}` }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
                         fill="none"
-                        stroke={c.branch === 'main' ? '#f59e0b' : (c.branch === 'feature' ? '#3b82f6' : '#a855f7')}
-                        strokeWidth="3"
+                        stroke={c.branch === 'main' ? '#f59e0b' : (c.branch === 'feature' ? '#0ea5e9' : '#d946ef')}
+                        strokeWidth="4"
                         strokeDasharray={remoteCommits.includes(c.id) ? 'none' : '5,4'}
                       />
                     )}
@@ -673,7 +681,7 @@ export default function GitPlayground() {
                 );
               })}
 
-              {/* Commits (Animated Circles) */}
+              {/* Commits (Large Animated Circles with High-Contrast Text Labels) */}
               {commits.map((c) => {
                 const node = nodeCoords[c.id];
                 if (!node) return null;
@@ -684,11 +692,11 @@ export default function GitPlayground() {
                   <g 
                     key={`node-${c.id}`} 
                     className="cursor-pointer group"
-                    onClick={() => addLog(`commit ${c.sha} | msg: "${c.message}" | branch: ${c.branch} | modified: ${c.files.join(', ') || 'none'}`)}
+                    onClick={() => addLog(`commit ${c.sha} | message: "${c.message}" | branch: ${c.branch} | modified: ${c.files.join(', ') || 'none'}`)}
                   >
                     {/* Ring highlight animation if HEAD */}
                     {isHeadCommit && (
-                      <circle cx={node.x} cy={node.y} r="20" fill="none" stroke="#ef4444" strokeWidth="2" className="animate-ping opacity-35" />
+                      <circle cx={node.x} cy={node.y} r="28" fill="none" stroke="#ef4444" strokeWidth="2.5" className="animate-ping opacity-45" />
                     )}
 
                     <motion.circle
@@ -696,19 +704,19 @@ export default function GitPlayground() {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1, cx: node.x, cy: node.y }}
                       transition={{ type: 'spring', stiffness: 220, damping: 20 }}
-                      r="14"
-                      fill={c.branch === 'main' ? '#f59e0b' : (c.branch === 'feature' ? '#3b82f6' : '#a855f7')}
+                      r="21"
+                      fill={c.branch === 'main' ? '#f59e0b' : (c.branch === 'feature' ? '#0ea5e9' : '#d946ef')}
                       stroke={isHeadCommit ? '#ef4444' : (isPushed ? '#22c55e' : '#666')}
-                      strokeWidth="2.5"
+                      strokeWidth="3.5"
                     />
 
-                    {/* Commit label text */}
+                    {/* High-Contrast Commit label text */}
                     <motion.text
                       layout
-                      animate={{ x: node.x, y: node.y + 3 }}
+                      animate={{ x: node.x, y: node.y + 3.5 }}
                       textAnchor="middle"
-                      fill="#000"
-                      className="font-mono text-[9px] font-black select-none pointer-events-none"
+                      fill="#ffffff"
+                      className="font-mono text-[9px] font-black select-none pointer-events-none drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.95)]"
                     >
                       {c.label}
                     </motion.text>
@@ -729,7 +737,7 @@ export default function GitPlayground() {
                   <motion.g
                     key={`ref-${bName}`}
                     layout
-                    animate={{ x: node.x - 30, y: node.y - 32 }}
+                    animate={{ x: node.x - 30, y: node.y - 38 }}
                     transition={{ type: 'spring', stiffness: 180, damping: 18 }}
                   >
                     <rect
@@ -770,11 +778,11 @@ export default function GitPlayground() {
                 <span>main</span>
               </div>
               <div className="flex items-center space-x-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
                 <span>feature</span>
               </div>
               <div className="flex items-center space-x-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-purple-500"></span>
+                <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-500"></span>
                 <span>bugfix</span>
               </div>
               <div className="flex items-center space-x-1 border-l border-neutral-700 pl-2">
@@ -823,57 +831,97 @@ export default function GitPlayground() {
         </div>
 
         {/* 3. WORKING DIRECTORY & STAGING INDEX */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          {/* Working directory */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          
+          {/* File Explorer (Left sidebar in Directory Panel) */}
           <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between border-b border-gray-250 dark:border-neutral-900 pb-2 mb-3">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">💻 Working Directory</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">📂 File Explorer</span>
                 <span className="h-2 w-2 rounded-full bg-blue-500"></span>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
                 {files.map((file, idx) => {
-                  let statusBg = 'border-gray-250 bg-gray-50/30 text-gray-500';
-                  if (file.status === 'modified') statusBg = 'border-red-500/30 bg-red-500/[0.03] text-red-400';
-                  if (file.status === 'staged') statusBg = 'border-green-500/30 bg-green-500/[0.03] text-green-400';
+                  const isSelected = file.name === selectedFile;
+                  let statusColor = 'text-gray-400';
+                  let borderStyle = isSelected ? 'border-amber-500 bg-amber-500/[0.04]' : 'border-gray-250 dark:border-neutral-800 bg-white/40 dark:bg-black/30';
+                  
+                  if (file.status === 'modified') statusColor = 'text-red-500';
+                  if (file.status === 'staged') statusColor = 'text-green-500';
                   
                   return (
                     <motion.div 
                       key={idx} 
-                      className={`p-3 border rounded-xl ${statusBg} flex flex-col justify-between`}
+                      onClick={() => setSelectedFile(file.name)}
+                      className={`p-3 border rounded-xl flex items-center justify-between cursor-pointer hover:border-amber-500/40 transition-all ${borderStyle}`}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs">📄</span>
                         <span className="font-mono text-xs font-bold text-gray-700 dark:text-gray-300">{file.name}</span>
-                        <span className="text-[8px] uppercase tracking-widest font-mono font-semibold px-1 rounded bg-neutral-900/10 dark:bg-neutral-950/60">
-                          {file.status}
-                        </span>
                       </div>
-                      <button
-                        onClick={() => modifyFile(file.name)}
-                        className="mt-4 text-[9px] font-mono font-bold text-amber-500 hover:text-amber-600 cursor-pointer self-start"
-                      >
-                        ✍️ Edit File
-                      </button>
+                      <span className={`text-[8.5px] font-mono font-bold uppercase tracking-wider ${statusColor}`}>
+                        {file.status}
+                      </span>
                     </motion.div>
                   );
                 })}
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-dashed border-gray-200 dark:border-neutral-900">
+            <div className="mt-4 pt-3 border-t border-dashed border-gray-200 dark:border-neutral-900 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => handleGitAdd(selectedFile)}
+                className="flex items-center justify-center space-x-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-mono font-bold cursor-pointer transition-colors shadow-sm"
+              >
+                <span>Stage file</span>
+              </button>
               <button
                 onClick={() => handleGitAdd('.')}
-                className="w-full flex items-center justify-center space-x-2 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-mono font-black cursor-pointer transition-all duration-150 shadow-sm"
+                className="flex items-center justify-center space-x-1 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-500 rounded-lg text-xs font-mono font-bold cursor-pointer transition-colors"
               >
-                <span>git add .</span>
-                <ArrowRight className="h-3 w-3" />
+                <span>Stage All</span>
               </button>
             </div>
           </div>
 
-          {/* Staging index */}
+          {/* Interactive Code Editor (Center pane in Directory Panel) */}
+          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between min-h-[220px]">
+            <div>
+              <div className="flex items-center justify-between border-b border-gray-250 dark:border-neutral-900 pb-2 mb-3">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">📝 Code Editor: {selectedFile}</span>
+                <span className="text-[8px] font-mono text-gray-400 uppercase">Write actual code here</span>
+              </div>
+
+              {/* Styled Textarea styled like an SDE code editor */}
+              <div className="relative">
+                <textarea
+                  value={currentSelectedFileObj.currentContent}
+                  onChange={handleCodeChange}
+                  rows={6}
+                  className="w-full p-3 bg-neutral-950 text-green-400 font-mono text-xs border border-neutral-900 rounded-lg focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 leading-relaxed overflow-y-auto whitespace-pre"
+                />
+              </div>
+            </div>
+
+            <div className="mt-2 text-[9.5px] font-mono text-gray-400 flex items-center justify-between">
+              <span>Status: {currentSelectedFileObj.status === 'modified' ? '🔴 Unsaved changes' : '🟢 Saved & Clean'}</span>
+              {currentSelectedFileObj.status === 'modified' && (
+                <button
+                  onClick={() => {
+                    setFiles(prev => prev.map(f => f.name === selectedFile ? { ...f, currentContent: f.originalContent, status: 'clean' } : f));
+                    addLog(`$ git restore ${selectedFile}`);
+                  }}
+                  className="text-[9.5px] text-red-500 hover:text-red-600 font-bold underline cursor-pointer"
+                >
+                  Discard edits
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Staging Index (Right pane in Directory Panel) */}
           <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between border-b border-gray-250 dark:border-neutral-900 pb-2 mb-3">
@@ -883,7 +931,7 @@ export default function GitPlayground() {
 
               <AnimatePresence>
                 {stagingArea.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="space-y-2">
                     {stagingArea.map((name) => (
                       <motion.div 
                         key={name}
