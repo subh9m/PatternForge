@@ -433,7 +433,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                                 bgClass = "bg-red-900 border border-red-800 text-red-200 hover:border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]";
                               }
                             } else if (count > 0) {
-                              bgClass = "bg-[#2cbb5d]/30 border border-[#2cbb5d]/40 text-[#2cbb5d] hover:border-emerald-500";
+                              if (count <= 2) {
+                                bgClass = "bg-[#2cbb5d]/20 border border-[#2cbb5d]/30 text-[#2cbb5d] hover:border-[#2cbb5d]";
+                              } else if (count <= 4) {
+                                bgClass = "bg-[#2cbb5d]/50 border border-[#2cbb5d]/60 text-white hover:border-[#2cbb5d]";
+                              } else {
+                                bgClass = "bg-[#2cbb5d] border border-[#2cbb5d] text-white hover:border-text-primary shadow-[0_0_8px_rgba(44,187,93,0.3)]";
+                              }
                             }
 
                             return (
