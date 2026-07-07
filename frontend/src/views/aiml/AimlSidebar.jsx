@@ -80,7 +80,16 @@ export default function AimlSidebar({ isOpen, activeTab, onTabChange }) {
             </div>
 
             <div>
-              <NavHeading>5. Revision & Sandbox</NavHeading>
+              <NavHeading>5. Applications & Hardware</NavHeading>
+              <ul className="space-y-0.5">
+                <li><NavItem href="#nlp_vision_speech">AI.9 Vision, NLP & Speech</NavItem></li>
+                <li><NavItem href="#applied_ethics">AI.10 Applied ML & Ethics</NavItem></li>
+                <li><NavItem href="#infra_architecture">AI.11 Infrastructure & Design</NavItem></li>
+              </ul>
+            </div>
+
+            <div>
+              <NavHeading>6. Revision & Sandbox</NavHeading>
               <ul className="space-y-0.5">
                 <li><NavItem href="#aiml_cheat_sheet">📋 Terminology Cheat Sheet</NavItem></li>
                 <li><NavItem href="#aiml_playground">🎮 AI/ML Interactive Sandbox</NavItem></li>

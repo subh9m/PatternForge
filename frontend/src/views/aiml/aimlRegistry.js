@@ -962,4 +962,256 @@ const systemDeploymentLayout = {
       }
     ]
   }
+  ,
+  {
+    id: "nlp_vision_speech",
+    num: "AI.9",
+    title: "Vision, NLP & Speech",
+    desc: "Domain-specific AI applications. This section covers Computer Vision pipelines (CNNs and ViTs), Natural Language Processing algorithms, and Speech AI capabilities (STT/TTS).",
+    declaration: `// AI Modalities Configuration
+const modalPipeline = {
+  vision: "CNN / Vision Transformer (ViT)",
+  language: "Tokenization -> Transformer Encoder",
+  speech: "Waveform Mel-Spectrogram -> Whisper STT"
+};`,
+    internalImplementation: `/* ----------------- SPEECH-TO-TEXT PIPELINE -----------------
+   Audio Wav ──► [Mel-Spectrogram Convert] ──► [Encoder-Decoder] ──► Token Text
+*/`,
+    subtopics: [
+      {
+        name: "Computer Vision",
+        oneLiner: "Computer Vision enables machines to extract structured information from images and video feeds.",
+        definition: "A subfield of AI focused on training computers to interpret and understand the visual world, using deep learning models (like CNNs or Vision Transformers) to classify images, detect objects, and perform OCR.",
+        whyNeed: "Raw image pixels contain no structured meaning. CV maps pixels to high-level labels or spatial boundaries, enabling automated visual analysis.",
+        example: "Tesla Autopilot detects lane markings, pedestrians, and traffic signs in real-time video streams.",
+        devPerspective: "SDEs use pre-trained vision APIs (Google Cloud Vision, AWS Rekognition) to automate document OCR, image moderation, or face verification without training custom weights.",
+        questions: [
+          "What is Computer Vision and how does it represent images?",
+          "How does image classification differ from object detection?",
+          "What is OCR and how does it extract text from images?"
+        ],
+        followups: [
+          "Explain the difference between CNNs and Vision Transformers (ViTs) for image tasks.",
+          "What is image segmentation and when is it used?"
+        ],
+        confusions: [
+          "Image search vs Semantic image search: Image search checks tag keywords; semantic image search maps image embeddings into a joint text-image vector space (like CLIP)."
+        ],
+        takeaways: [
+          "CNNs and ViTs are the standard backbones.",
+          "SDEs use visual processing through APIs.",
+          "OCR digitizes printed text."
+        ]
+      },
+      {
+        name: "Natural Language Processing (NLP)",
+        oneLiner: "NLP bridges human communication and machine understanding through tokenization, parsing, and semantic modeling.",
+        definition: "A branch of AI that helps computers understand, interpret, and generate human language, combining rule-based heuristics with deep learning models.",
+        whyNeed: "Human language is unstructured, ambiguous, and context-dependent. NLP structures text to extract intents, entities, and sentiments.",
+        example: "Email clients analyzing feedback tickets to classify sentiment (Positive/Negative) and route them to help desks.",
+        devPerspective: "SDEs use NLP libraries (spaCy, NLTK) or hosted APIs to perform tokenization, Named Entity Recognition (NER) for extracting dates/names, and translation.",
+        questions: [
+          "What is NLP and what are its core tasks?",
+          "How does tokenization work and why is it the first step in NLP?",
+          "What is Named Entity Recognition (NER)?"
+        ],
+        followups: [
+          "Explain sentiment analysis and its challenges in handling sarcasm.",
+          "What is the difference between lemmatization and stemming?"
+        ],
+        confusions: [
+          "NLP vs LLMs: NLP is the overall academic field of language processing; LLMs are a modern, deep learning-based technique within NLP."
+        ],
+        takeaways: [
+          "NLP parses unstructured human text into structured data parameters.",
+          "NER extracts domain-specific entities (names, keys, dates).",
+          "Tokenization splits text into smaller sub-word units."
+        ]
+      },
+      {
+        name: "Speech AI",
+        oneLiner: "Speech AI translates spoken audio signals into text and synthesizes natural-sounding speech from characters.",
+        definition: "The technology that enables machines to process voice inputs (Speech-to-Text / STT) and generate synthetic human speech (Text-to-Speech / TTS).",
+        whyNeed: "Voice is the most natural human interface. Speech AI digitizes audio waveforms and converts text back into synthetic vocal tones.",
+        example: "Voice assistants (Alexa, Siri) transcribing your speech, processing the command, and answering back with TTS.",
+        devPerspective: "SDEs integrate Speech AI using APIs (Whisper API, Google TTS) to add voice control, transcription, and dictation features to their web/mobile apps.",
+        questions: [
+          "What is Speech AI and what are its two main components?",
+          "How does Speech-to-Text (STT) differ from Text-to-Speech (TTS)?",
+          "How do voice assistants function under the hood?"
+        ],
+        followups: [
+          "Explain the challenges of background noise and accents in speech transcription.",
+          "What is a Mel-spectrogram and how does it represent audio data?"
+        ],
+        confusions: [
+          "Transcription vs Voice ID: Speech-to-text transcribes words; speaker identification verifies who is speaking."
+        ],
+        takeaways: [
+          "Speech-to-Text converts audio signals to tokens.",
+          "Text-to-Speech converts tokens to audio signals.",
+          "Whisper is a state-of-the-art open source speech model by OpenAI."
+        ]
+      }
+    ]
+  },
+  {
+    id: "applied_ethics",
+    num: "AI.10",
+    title: "Applied ML & Ethics",
+    desc: "Personalization systems and governance. Covers Recommendation System mechanics (collaborative/content filtering) and Responsible AI guidelines.",
+    declaration: `// Ethics & Personalization Schema
+const appliedMLSchema = {
+  personalization: "Collaborative Filtering / Matrix Factorization",
+  ethicsGovernance: ["Fairness Metrics", "Model Explainability (SHAP)", "Data Privacy"]
+};`,
+    internalImplementation: `/* ----------------- COLLABORATIVE FILTERING -----------------
+   User Vector ──┐
+                 ├──► [Dot Product Similarity] ──► Recommendation Score
+   Item Vector ──┘
+*/`,
+    subtopics: [
+      {
+        name: "Recommendation Systems",
+        oneLiner: "Recommendation systems predict user preferences using Collaborative Filtering or Content-Based algorithms.",
+        definition: "Algorithms designed to suggest relevant items to users (products, music, movies) based on user interaction histories (collaborative) or item descriptions (content-based).",
+        whyNeed: "With millions of products or videos, users experience choice paralysis. Recommendations drive engagement by personalizing the content catalog.",
+        example: "Netflix recommending movies based on what users with similar watch histories liked.",
+        devPerspective: "SDEs design recommendation APIs using matrix factorization or neural networks, storing user-item interaction matrix embeddings in databases for fast vector lookup.",
+        questions: [
+          "How do recommendation systems work?",
+          "Compare Collaborative Filtering vs Content-Based Filtering.",
+          "What is the cold start problem?"
+        ],
+        followups: [
+          "What is matrix factorization and how does it extract latent user factors?",
+          "Explain how modern deep learning recommendation models (like DLRM) scale."
+        ],
+        confusions: [
+          "Recommendation vs Search: Search is user-active retrieval; recommendation is system-proactive prediction based on user profile logs."
+        ],
+        takeaways: [
+          "Collaborative filtering looks at user behaviors; content-based looks at item details.",
+          "Cold start is resolved by using default items or asking user preferences on sign-up.",
+          "Vectors represent user preferences and item categories."
+        ]
+      },
+      {
+        name: "Responsible AI",
+        oneLiner: "Responsible AI ensures safety, explainability, and fairness, mitigating bias in predictive models.",
+        definition: "A framework for designing, developing, and deploying AI systems that are fair, transparent, explainable, and aligned with human values.",
+        whyNeed: "Models can inherit and amplify human biases from training datasets, leading to discriminatory predictions in hiring, lending, or law enforcement.",
+        example: "A recruitment tool prioritizing male resumes because the historical training data consisted mostly of male hires.",
+        devPerspective: "SDEs enforce guardrails by checking training distribution statistics, logging feature attribution metrics (like SHAP), and implementing human-in-the-loop validation.",
+        questions: [
+          "What is Responsible AI?",
+          "How can bias enter an ML model?",
+          "Explain Model Explainability and why it matters."
+        ],
+        followups: [
+          "What is the difference between model explainability (interpreting parameters) and feature attribution (SHAP/LIME)?",
+          "What is data alignment and why is it crucial for safety?"
+        ],
+        confusions: [
+          "Unbiased models: No model is naturally unbiased. A model fits the distribution of the training data. If the dataset reflects systemic bias, the model will reproduce it."
+        ],
+        takeaways: [
+          "Bias is inherited from training data.",
+          "Transparency requires explaining how the model reached its decision.",
+          "Responsible AI requires continuous auditing of model metrics in production."
+        ]
+      }
+    ]
+  },
+  {
+    id: "infra_architecture",
+    num: "AI.11",
+    title: "Infrastructure & Design",
+    desc: "Accelerating and scaling models in production. Covers hardware (GPUs, TPUs, CUDA), AI integrations in SDE workflows, and scaling system design patterns.",
+    declaration: `// AI Platform Architecture
+const infrastructurePlatform = {
+  hardware: "Nvidia GPU cluster / TPU pods",
+  layer: "CUDA toolkit / PyTorch core",
+  designPatterns: ["Semantic caching", "Model pruning", "Asynchronous queues"]
+};`,
+    internalImplementation: `/* ----------------- DISTRIBUTED LLM TRAINING -----------------
+   Prompt Data ──► [Pipeline Parallelism] ──► GPU 1 ──► GPU 2 ──► Weight Updates
+*/`,
+    subtopics: [
+      {
+        name: "AI Infrastructure",
+        oneLiner: "GPUs, TPUs, and CUDA accelerate parallel matrix math for deep training and inference.",
+        definition: "The hardware and software ecosystem (GPUs, TPUs, high-bandwidth memory, CUDA drivers, and distributed training setups) that supports massive parallel matrix operations needed for AI.",
+        whyNeed: "Deep learning models require trillions of floating-point operations. CPUs process tasks sequentially, which is too slow; GPUs/TPUs execute thousands of calculations in parallel.",
+        example: "Meta training LLaMA-3 using clusters of 24,000 NVIDIA H100 GPUs connected by high-speed InfiniBand switches.",
+        devPerspective: "SDEs optimize deployment costs by selecting correct GPU sizes, configuring auto-scaling node groups on AWS/GCP, and leveraging runtime engines like vLLM.",
+        questions: [
+          "What hardware accelerates AI?",
+          "Compare GPUs vs TPUs.",
+          "What is CUDA and why is it essential?"
+        ],
+        followups: [
+          "What is distributed training and how does tensor/pipeline parallelism work?",
+          "Explain memory bandwidth bottlenecks in GPU computing."
+        ],
+        confusions: [
+          "GPU vs CPU cores: A CPU has a few powerful cores for sequential processing; a GPU has thousands of simple cores optimized for matrix multiplications."
+        ],
+        takeaways: [
+          "Deep learning is accelerated by hardware optimization.",
+          "GPUs are general parallel accelerators; TPUs are application-specific matrix chips.",
+          "CUDA connects PyTorch/TensorFlow to NVIDIA hardware drivers."
+        ]
+      },
+      {
+        name: "AI in Software Engineering",
+        oneLiner: "AI assistants accelerate development through code generation, unit test creation, and bug fixing.",
+        definition: "The integration of LLMs (like OpenAI Codex) into software development tools to automate coding tasks, translation between languages, and system architecture planning.",
+        whyNeed: "Developers spend massive time on boilerplate code, searching documentation, and writing tests. Code assistants increase developer velocity by generating these blocks in real-time.",
+        example: "GitHub Copilot recommending code blocks or writing unit tests from a docstring comment.",
+        devPerspective: "SDEs leverage these tools to write scripts, debug compile warnings, and translate legacy codebases to modern frameworks.",
+        questions: [
+          "How is AI used in software engineering?",
+          "What are the limitations of code generation assistants?"
+        ],
+        followups: [
+          "Explain the security risks of AI-generated code (e.g. licensing, credentials leak).",
+          "How do SDEs configure corporate code repositories to block context ingestion?"
+        ],
+        confusions: [
+          "Replacing SDEs: AI assistants generate syntax but cannot verify overall architectural alignment or handle complex system scaling issues."
+        ],
+        takeaways: [
+          "AI assistants act as pair programmers, not replacements.",
+          "Generated code requires human verification and unit tests.",
+          "Security audits are essential for AI suggested blocks."
+        ]
+      },
+      {
+        name: "AI System Design",
+        oneLiner: "AI system design structures data ingest, vector retrieval, and prompt guardrails to scale models safely.",
+        definition: "The design of architectures that integrate models, vector databases, caches, queues, and APIs to deliver robust, low-latency, and cost-effective AI solutions.",
+        whyNeed: "Standard web architectures do not scale easily under heavy model inference workloads due to GPU memory bottlenecks and high API latencies.",
+        example: "Designing a RAG system with a semantic caching layer, a Redis queue, and fallback API keys to prevent user outages.",
+        devPerspective: "SDEs design and implement these pipelines, monitoring system metrics like time-to-first-token (TTFT) and caching hit-rates.",
+        questions: [
+          "How do you design a scalable AI system?",
+          "Explain the function of a semantic cache.",
+          "What is Time-to-First-Token (TTFT)?"
+        ],
+        followups: [
+          "How do you mitigate rate-limiting errors when using model provider APIs?",
+          "What is model pruning and distillation in terms of system performance optimization?"
+        ],
+        confusions: [
+          "Scaling AI vs scaling servers: AI API response latency is measured in seconds, not milliseconds, requiring async processing or token streaming pipelines."
+        ],
+        takeaways: [
+          "Semantic caches save cost and latency.",
+          "Rate limits are mitigated by load balancing across API providers.",
+          "Streaming is essential for a good user experience."
+        ]
+      }
+    ]
+  }
 ];
