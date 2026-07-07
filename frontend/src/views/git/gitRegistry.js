@@ -136,7 +136,7 @@ export const gitConcepts = [
 </table>
 <br/>
 <b>Q: What happens if you run git init inside an existing Git repository?</b><br/>
-It is safe. It will not destroy existing commits or overwrite files; it simply refreshes the `.git` directory config parameters.`
+It is safe. It will not destroy existing commits or overwrite files; it simply refreshes the <code>.git</code> directory config parameters.`
       },
       { 
         method: "Git Clone Options", 
