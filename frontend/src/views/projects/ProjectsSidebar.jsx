@@ -67,6 +67,7 @@ export default function ProjectsSidebar({ isOpen, activeProject, onProjectChange
                 <NavHeading>1. Architecture Overview</NavHeading>
                 <ul className="space-y-0.5">
                   <li><NavItem href="#overview">Architecture Summary</NavItem></li>
+                  <li><NavItem href="#patterns">OOP & Design Patterns</NavItem></li>
                   <li><NavItem href="#tech_stack">Technical Stack</NavItem></li>
                   <li><NavItem href="#folders">Folder Structures</NavItem></li>
                 </ul>

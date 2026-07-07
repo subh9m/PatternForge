@@ -195,6 +195,65 @@ export default function ProjectsCard({ data, activeTab }) {
         </section>
       )}
 
+      {activeTab === 'patterns' && (
+        <section className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-255 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-xl space-y-6 animate-fadeIn">
+          <div className="border-b border-gray-150 dark:border-[#333] pb-4">
+            <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[9px] font-mono font-black uppercase rounded">Architecture Patterns</span>
+            <h2 className="text-xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide mt-1.5">Design Patterns & OOP Concepts</h2>
+            <p className="text-xs text-gray-500 mt-1 font-sans">Exhaustive architectural breakdown of software design principles and OOP contracts implemented in Verfalarm.</p>
+          </div>
+
+          <div className="space-y-8">
+            {/* Design Patterns */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-mono font-black text-fuchsia-500 uppercase tracking-widest border-b border-neutral-900 pb-2">📂 Creational, Structural & Behavioral Patterns</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {data.patternsAndOops.designPatterns.map((pat, idx) => (
+                  <div key={idx} className="p-5 border border-gray-200 dark:border-neutral-900 bg-white/40 dark:bg-neutral-950/20 rounded-xl space-y-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-900 pb-1.5">
+                      <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">{pat.name}</span>
+                      <span className="text-[9px] bg-fuchsia-550/15 text-fuchsia-400 border border-fuchsia-550/20 px-1.5 py-0.5 rounded font-mono uppercase font-black">Pattern</span>
+                    </div>
+                    <div className="text-xs space-y-1.5">
+                      <div><span className="text-gray-400 font-mono font-bold text-[10px] uppercase">Where:</span> <code className="bg-neutral-950 px-1.5 py-0.5 rounded text-fuchsia-300 font-mono text-[10.5px] border border-neutral-900">{pat.where}</code></div>
+                      <div><span className="text-gray-400 font-mono font-bold text-[10px] uppercase">Why:</span> <span className="text-gray-650 dark:text-gray-300 font-light">{pat.why}</span></div>
+                      <div className="pt-1.5 border-t border-neutral-900 text-gray-500 dark:text-neutral-500 flex items-center space-x-1.5 italic text-[11px]">
+                        <span>💡 Analogy:</span>
+                        <span>{pat.analogy}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* OOP Concepts */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-mono font-black text-fuchsia-500 uppercase tracking-widest border-b border-neutral-900 pb-2">☕ Core Object-Oriented Programming (OOP) Principles</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {data.patternsAndOops.oopConcepts.map((oop, idx) => (
+                  <div key={idx} className="p-5 border border-gray-200 dark:border-neutral-900 bg-white/40 dark:bg-neutral-950/20 rounded-xl flex flex-col justify-between space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center border-b border-neutral-900 pb-1.5">
+                        <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">{oop.concept}</span>
+                        <span className="text-[9px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded font-mono uppercase font-black">OOP</span>
+                      </div>
+                      <div className="text-xs space-y-1.5 font-light">
+                        <div><span className="text-gray-400 font-mono font-bold text-[9px] uppercase block mb-0.5">Where:</span> <code className="bg-neutral-950 px-1 py-0.5 rounded text-fuchsia-300 font-mono text-[10px] border border-neutral-900 block overflow-x-auto whitespace-pre-wrap">{oop.where}</code></div>
+                        <p className="text-gray-650 dark:text-gray-300 pt-1">{oop.detail}</p>
+                      </div>
+                    </div>
+                    <div className="border-t border-neutral-900 pt-2 text-[10px] text-gray-500 italic">
+                      <span>💡 Analogy: {oop.analogy}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {activeTab === 'folders' && (
         <section className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-255 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-xl space-y-6">
           <div className="border-b border-gray-150 dark:border-[#333] pb-4">

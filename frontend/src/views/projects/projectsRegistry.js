@@ -11,6 +11,90 @@ export const projectsList = [
       motivation: "To build a highly cohesive, robust full-stack application demonstrating mastery over modern architectural patterns: AI integration, background task scheduling, stateless JWT security, client-side OCR, and relational data integrity.",
       architecture: "The system follows a classic decoupled 3-tier architecture: 1. Frontend (React 19 SPA built with Vite and Tailwind CSS), 2. Backend (Java 21, Spring Boot 3.3.0 REST API), 3. Database (PostgreSQL 15 with Hibernate ORM, managed via Flyway migrations)."
     },
+    patternsAndOops: {
+      designPatterns: [
+        {
+          name: "Dependency Injection / Inversion of Control (IoC)",
+          where: "SecurityConfig.java, AuthService.java, EmailService.java, EmailNotificationScheduler.java, AuthContext.tsx",
+          why: "Spring's ApplicationContext IoC container creates, configures, and dynamically injects component collaborators (e.g. PasswordEncoder, JwtAuthenticationFilter, or repositories) using constructor injection. This avoids hardcoding class instantiations inside business logic layers, promoting high modularity and mock-based unit testability. On the frontend, React Context API acts as a localized IoC injector, making global authentication states available to deeply nested components without prop-drilling.",
+          analogy: "A restaurant kitchen where the head chef receives prepared ingredients from specialized suppliers instead of personally growing and harvesting everything."
+        },
+        {
+          name: "Singleton Pattern",
+          where: "Spring Beans (Services, Repositories, Configurations) by default scope",
+          why: "Spring manages beans as Singletons within the ApplicationContext scope by default. This guarantees that only one shared, stateless instance of classes like PasswordEncoder or EmailService exists in the JVM heap, saving memory resources and ensuring centralized configuration state. If stateful beans are needed, scope settings are overridden to Prototype.",
+          analogy: "A building's central control room that everyone references instead of every single floor installing its own independent power grid."
+        },
+        {
+          name: "Template Method Pattern",
+          where: "JwtAuthenticationFilter extending OncePerRequestFilter, React ErrorBoundary extending React.Component",
+          why: "The superclass provides the framework's skeleton execution algorithm (e.g. OncePerRequestFilter guarantees execution exactly once per request chain), while subclasses override specific hook methods (doFilterInternal) to implement custom JWT claim validation. In React, Component defines standard lifecycle trees while ErrorBoundary implements custom fallback UI rendering overrides.",
+          analogy: "A standardized tax form with fixed calculation paths, but customizable fields for your personal deductions."
+        },
+        {
+          name: "Strategy Pattern",
+          where: "EmailService selecting mail providers or dynamic algorithms dynamically",
+          why: "Allows switching backend implementations at runtime without code changes at the call site. For instance, the system can choose between sending via local SMTP, SendGrid, or Resend based on active configurations, keeping client controllers decoupled.",
+          analogy: "A courier app selecting between bicycle, car, or truck depending on packet weights and destination distances."
+        },
+        {
+          name: "Repository Pattern",
+          where: "UserRepository, PantryItemRepository extending JpaRepository",
+          why: "Isolates direct database querying logic behind clean interfaces. The service layer works with clean CRUD signatures without dealing with EntityManager scopes, low-level JDBC queries, or dialect constraints.",
+          analogy: "A library catalog desk that retrieves books from the vaults, hiding the warehouse layout from readers."
+        },
+        {
+          name: "Observer Pattern (Pub-Sub)",
+          where: "React Context API (AuthContext, ThemeContext) subscriber updates",
+          why: "A change in shared state (e.g. login updates user profile parameters) notifies all registered subscriber components, triggering automated re-renders of elements observing that slice of state.",
+          analogy: "A newsletter distribution list where adding an article broadcasts warnings to all registered readers instantly."
+        },
+        {
+          name: "Facade Pattern",
+          where: "AuthService and PantryService orchestrating multiple helper subsystems",
+          why: "Exposes a simplified interface to Controllers. PantryService acts as a facade that coordinates user checkouts, database validation, transactional persistence, and email warnings, shielding the endpoint controller from multi-class complexities.",
+          analogy: "A hotel front desk coordinating billing, housekeeping, and room keys without requiring the guest to visit each department."
+        }
+      ],
+      oopConcepts: [
+        {
+          concept: "Encapsulation",
+          where: "Private fields in Entity classes (User.java, PantryItem.java) with Getter/Setter structures; private state hooks inside AuthContext.tsx",
+          detail: "Protects class internal states from direct outer manipulation. Access is strictly funneled through public APIs or setter validation logic (e.g. verifying input ranges before writing variables), preserving domain state integrity.",
+          analogy: "A digital thermometer that allows reading temperatures, but hides the internal sensor calibration circuits from users."
+        },
+        {
+          concept: "Abstraction",
+          where: "Service interfaces (RecipeAIService), Data Transfer Objects (PantryItemDTO), and React hooks (useAuth)",
+          detail: "Hides unnecessary structural details from the consumer. A Controller works with a PantryItemDTO payload without needing to know database schema columns, and components call useAuth() without managing HTTP token storage.",
+          analogy: "Driving a car using the steering wheel and accelerator pedal without needing to study mechanical combustion or fuel injector timers."
+        },
+        {
+          concept: "Inheritance",
+          where: "Custom exceptions extending RuntimeException, filter classes extending OncePerRequestFilter",
+          detail: "Enables code reuse by inheriting existing behaviors from standard classes and extending or overriding them for project requirements.",
+          analogy: "Building an electric bicycle by starting with a traditional bicycle frame and adding a battery and motor."
+        },
+        {
+          concept: "Polymorphism",
+          where: "Injecting JPA repositories by interface type, overriding CustomUserDetailsService loadUserByUsername",
+          detail: "Allows the same interface call to execute different runtime actions. For example, injecting mock repository dependencies inside test suites instead of active database connection handlers.",
+          analogy: "A universal remote where pressing the power button operates TV, audio system, or projector components differently."
+        },
+        {
+          concept: "Composition",
+          where: "PantryService composing PantryItemRepository and UserRepository; AppLayout composing UI buttons and sidebars",
+          detail: "Assembles complex behaviors by combining small, focused objects instead of relying on subclassing trees (favoring Has-A relationships over Is-A).",
+          analogy: "A laptop built by assembling processor, memory, and monitor modules rather than fusing everything as one plastic piece."
+        },
+        {
+          concept: "Association / Aggregation",
+          where: "PantryItem referencing User via @ManyToOne annotation",
+          detail: "Defines relationships between entities that can exist independently (Aggregation) or are lifecycled together (Composition with CASCADE deletion).",
+          analogy: "A professor associated with a university course; the course details reference the professor, but both continue to exist separately."
+        }
+      ]
+    },
     techStack: {
       frontend: ["React 19", "TypeScript", "Vite", "React Router v7", "TanStack Query", "Tailwind CSS v4", "Lucide Icons", "Tesseract.js", "Recharts"],
       backend: ["Java 21", "Spring Boot 3.3.0 (Web, Data JPA, Security, Mail, Validation)", "Google Gemini API SDK"],
