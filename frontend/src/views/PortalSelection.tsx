@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon, GitBranch, Brain, Globe, Coffee, Atom } from 'lucide-react';
+import { Code2, BookOpen, Database, Cpu, LogOut, Sun, Moon, GitBranch, Brain, Globe, Coffee, Atom, FolderGit2 } from 'lucide-react';
 
 interface PortalSelectionProps {
-  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react') => void;
+  onSelectPortal: (portal: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects') => void;
 }
 
 const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => {
@@ -263,6 +263,28 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal }) => 
             </div>
             <span className="text-xs font-bold text-sky-400 group-hover:text-sky-300 transition-smooth flex items-center space-x-1 pt-2">
               <span>RENDER</span>
+              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+            </span>
+          </div>
+
+          {/* System Architecture / Projects Card */}
+          <div
+            onClick={() => onSelectPortal('projects')}
+            className="p-6 border border-border hover:border-text-primary bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group"
+          >
+            <div className="w-full">
+              <div className="h-10 w-10 bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 mb-4 group-hover:shadow-glow-fuchsia transition-smooth">
+                <FolderGit2 className="h-5 w-5" />
+              </div>
+              <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">
+                Projects Architecture
+              </h2>
+              <p className="text-xs text-text-secondary leading-relaxed font-light mb-4">
+                Explore L5/Senior SDE project walkthroughs: Verfalarm zero-waste kitchen, client-side OCR workers, database constraints, and system design tradeoffs.
+              </p>
+            </div>
+            <span className="text-xs font-bold text-fuchsia-400 group-hover:text-fuchsia-300 transition-smooth flex items-center space-x-1 pt-2">
+              <span>ARCH</span>
               <span className="transform group-hover:translate-x-1 transition-transform">→</span>
             </span>
           </div>

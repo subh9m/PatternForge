@@ -202,6 +202,9 @@ body {
 .shadow-glow-sky {
   box-shadow: 0 0 15px rgba(14, 165, 233, 0.45) !important;
 }
+.shadow-glow-fuchsia {
+  box-shadow: 0 0 15px rgba(217, 70, 239, 0.45) !important;
+}
 
 /* Scrollbars - Minimalist Monochrome */
 ::-webkit-scrollbar {
