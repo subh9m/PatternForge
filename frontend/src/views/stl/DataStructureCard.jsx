@@ -34,14 +34,14 @@ export default function DataStructureCard({ data }) {
   return (
     <section 
       id={data.id}
-      className="bg-white/60 dark:bg-black/60 backdrop-blur-md 
-                 border border-gray-200 dark:border-[#333] 
+      className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md 
+                 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 
                  rounded-2xl overflow-hidden shadow-lg
                  hover:shadow-[0_0_25px_rgba(255,59,48,0.2)] hover:-translate-y-0.5
                  transition-all duration-500 ease-in-out mb-10"
     >
       {/* Card Header */}
-      <div className="p-6 md:p-8 border-b border-gray-200 dark:border-[#333]">
+      <div className="p-6 md:p-8 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white flex items-center">
             <span className="font-mono text-red-500 mr-3">{data.num}</span>
@@ -54,13 +54,13 @@ export default function DataStructureCard({ data }) {
       </div>
 
       {/* Grid for Code Actions */}
-      <div className="p-6 md:p-8 bg-gray-50/30 dark:bg-neutral-950/20 border-b border-gray-200 dark:border-[#333] grid grid-cols-1 gap-6">
+      <div className="p-6 md:p-8 bg-gray-50/30 dark:bg-neutral-950/20 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 grid grid-cols-1 gap-6">
         {/* Declaration Section Accordion */}
         {data.declaration && (
           <div>
             <button
               onClick={() => setShowDeclaration(!showDeclaration)}
-              className="w-full flex items-center justify-between p-3.5 bg-gray-100/60 dark:bg-neutral-950/60 hover:bg-gray-200/50 dark:hover:bg-neutral-900/50 border border-gray-200 dark:border-[#333] transition-smooth font-mono text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 cursor-pointer"
+              className="w-full flex items-center justify-between p-3.5 bg-gray-100/60 dark:bg-neutral-950/60 hover:bg-gray-200/50 dark:hover:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 transition-smooth font-mono text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 cursor-pointer"
             >
               <div className="flex items-center space-x-2">
                 <Code className="h-4 w-4 text-red-500" />
@@ -72,9 +72,9 @@ export default function DataStructureCard({ data }) {
             </button>
             
             {showDeclaration && (
-              <div className="border-x border-b border-gray-200 dark:border-[#333] bg-gray-50/40 dark:bg-neutral-950/40 p-4">
+              <div className="border-x border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-gray-50/40 dark:bg-neutral-950/40 p-4">
                 <pre 
-                  className="bg-gray-100/80 dark:bg-black/80 text-gray-800 dark:text-gray-300 p-4 font-mono text-xs overflow-x-auto border border-gray-200 dark:border-[#333] leading-relaxed select-all"
+                  className="bg-neutral-100/80 dark:bg-neutral-900/80 text-neutral-800 dark:text-neutral-300 p-4 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 leading-relaxed select-all"
                   dangerouslySetInnerHTML={{ __html: highlightCode(data.declaration) }}
                 />
               </div>
@@ -87,7 +87,7 @@ export default function DataStructureCard({ data }) {
           <div>
             <button
               onClick={() => setShowInternal(!showInternal)}
-              className="w-full flex items-center justify-between p-3.5 bg-gray-100/60 dark:bg-neutral-950/60 hover:bg-gray-200/50 dark:hover:bg-neutral-900/50 border border-gray-200 dark:border-[#333] transition-smooth font-mono text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 cursor-pointer"
+              className="w-full flex items-center justify-between p-3.5 bg-gray-100/60 dark:bg-neutral-950/60 hover:bg-gray-200/50 dark:hover:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 transition-smooth font-mono text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 cursor-pointer"
             >
               <div className="flex items-center space-x-2">
                 <Braces className="h-4 w-4 text-red-500" />
@@ -100,15 +100,15 @@ export default function DataStructureCard({ data }) {
             
             {showInternal && (
               data.id === 'sql_practice_db' ? (
-                <div className="border-x border-b border-gray-200 dark:border-[#333] bg-gray-50/40 dark:bg-neutral-950/40 p-6 md:p-8 space-y-8">
+                <div className="border-x border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-gray-50/40 dark:bg-neutral-950/40 p-6 md:p-8 space-y-8">
                   {/* ER Diagram Section */}
                   <div>
                     <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 font-mono">Entity-Relationship (ER) Diagram</h4>
-                    <div className="bg-black/20 dark:bg-black/60 border border-gray-200 dark:border-[#333] rounded-xl p-4 flex justify-center">
+                    <div className="bg-black/20 dark:bg-black/60 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-4 flex justify-center">
                       <img 
                         src="/northpeak_er_diagram.png" 
                         alt="NorthPeak Corp ER Diagram" 
-                        className="max-w-full h-auto rounded-lg shadow-md border border-gray-250 dark:border-neutral-800"
+                        className="max-w-full h-auto rounded-lg shadow-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800"
                       />
                     </div>
                   </div>
@@ -130,12 +130,12 @@ export default function DataStructureCard({ data }) {
                     </p>
 
                     {/* 1. Departments Table Hook */}
-                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                    <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl overflow-hidden bg-neutral-50/50 dark:bg-neutral-950/30">
                       <button
                         onClick={() => setActiveFullTable('departments')}
-                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 flex justify-between items-center transition-colors font-mono cursor-pointer"
                       >
-                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                        <span className="text-xs font-black text-neutral-800 dark:text-neutral-200 flex items-center">
                           <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
                           TABLE: DEPARTMENTS (Click to open full table)
                         </span>
@@ -143,7 +143,7 @@ export default function DataStructureCard({ data }) {
                       </button>
                       <div className="overflow-x-auto text-[11px] font-mono">
                         <table className="w-full text-left">
-                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                             <tr>
                               <th className="px-4 py-2 font-bold text-gray-500">dept_id (PK)</th>
                               <th className="px-4 py-2 font-bold text-gray-500">dept_name</th>
@@ -151,7 +151,7 @@ export default function DataStructureCard({ data }) {
                               <th className="px-4 py-2 font-bold text-gray-500">budget</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-neutral-700 dark:text-neutral-300">
                             {departmentsData.slice(0, 4).map((row, i) => (
                               <tr key={i}>
                                 <td className="px-4 py-2">{row.dept_id}</td>
@@ -171,12 +171,12 @@ export default function DataStructureCard({ data }) {
                     </div>
 
                     {/* 2. Employees Table Hook */}
-                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                    <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl overflow-hidden bg-neutral-50/50 dark:bg-neutral-950/30">
                       <button
                         onClick={() => setActiveFullTable('employees')}
-                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 flex justify-between items-center transition-colors font-mono cursor-pointer"
                       >
-                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                        <span className="text-xs font-black text-neutral-800 dark:text-neutral-200 flex items-center">
                           <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
                           TABLE: EMPLOYEES (Click to open full table)
                         </span>
@@ -184,7 +184,7 @@ export default function DataStructureCard({ data }) {
                       </button>
                       <div className="overflow-x-auto text-[11px] font-mono">
                         <table className="w-full text-left">
-                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                             <tr>
                               <th className="px-4 py-2 font-bold text-gray-500">emp_id</th>
                               <th className="px-4 py-2 font-bold text-gray-500">name</th>
@@ -193,7 +193,7 @@ export default function DataStructureCard({ data }) {
                               <th className="px-4 py-2 font-bold text-gray-500">job_title</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-neutral-700 dark:text-neutral-300">
                             {employeesData.slice(0, 4).map((row, i) => (
                               <tr key={i}>
                                 <td className="px-4 py-2">{row.emp_id}</td>
@@ -214,12 +214,12 @@ export default function DataStructureCard({ data }) {
                     </div>
 
                     {/* 3. Salaries Table Hook */}
-                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                    <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl overflow-hidden bg-neutral-50/50 dark:bg-neutral-950/30">
                       <button
                         onClick={() => setActiveFullTable('salaries')}
-                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 flex justify-between items-center transition-colors font-mono cursor-pointer"
                       >
-                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                        <span className="text-xs font-black text-neutral-800 dark:text-neutral-200 flex items-center">
                           <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
                           TABLE: SALARIES (Click to open full table)
                         </span>
@@ -227,7 +227,7 @@ export default function DataStructureCard({ data }) {
                       </button>
                       <div className="overflow-x-auto text-[11px] font-mono">
                         <table className="w-full text-left">
-                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                             <tr>
                               <th className="px-4 py-2 font-bold text-gray-500">salary_id</th>
                               <th className="px-4 py-2 font-bold text-gray-500">emp_id</th>
@@ -235,7 +235,7 @@ export default function DataStructureCard({ data }) {
                               <th className="px-4 py-2 font-bold text-gray-500">effective_date</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-neutral-700 dark:text-neutral-300">
                             {salariesData.slice(0, 4).map((row, i) => (
                               <tr key={i}>
                                 <td className="px-4 py-2">{row.salary_id}</td>
@@ -255,12 +255,12 @@ export default function DataStructureCard({ data }) {
                     </div>
 
                     {/* 4. Projects Table Hook */}
-                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                    <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl overflow-hidden bg-neutral-50/50 dark:bg-neutral-950/30">
                       <button
                         onClick={() => setActiveFullTable('projects')}
-                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 flex justify-between items-center transition-colors font-mono cursor-pointer"
                       >
-                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                        <span className="text-xs font-black text-neutral-800 dark:text-neutral-200 flex items-center">
                           <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
                           TABLE: PROJECTS (Click to open full table)
                         </span>
@@ -268,14 +268,14 @@ export default function DataStructureCard({ data }) {
                       </button>
                       <div className="overflow-x-auto text-[11px] font-mono">
                         <table className="w-full text-left">
-                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                             <tr>
                               <th className="px-4 py-2 font-bold text-gray-500">project_id</th>
                               <th className="px-4 py-2 font-bold text-gray-500">project_name</th>
                               <th className="px-4 py-2 font-bold text-gray-500">status</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-neutral-700 dark:text-neutral-300">
                             {projectsData.slice(0, 4).map((row, i) => (
                               <tr key={i}>
                                 <td className="px-4 py-2">{row.project_id}</td>
@@ -294,12 +294,12 @@ export default function DataStructureCard({ data }) {
                     </div>
 
                     {/* 5. Employee Projects Table Hook */}
-                    <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white/40 dark:bg-black/40">
+                    <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl overflow-hidden bg-neutral-50/50 dark:bg-neutral-950/30">
                       <button
                         onClick={() => setActiveFullTable('employee_projects')}
-                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-gray-200 dark:border-[#333] flex justify-between items-center transition-colors font-mono cursor-pointer"
+                        className="w-full px-4 py-2.5 bg-gray-100/50 dark:bg-neutral-950/50 hover:bg-red-500/5 dark:hover:bg-red-500/5 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 flex justify-between items-center transition-colors font-mono cursor-pointer"
                       >
-                        <span className="text-xs font-black text-gray-800 dark:text-gray-250 flex items-center">
+                        <span className="text-xs font-black text-neutral-800 dark:text-neutral-200 flex items-center">
                           <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
                           TABLE: EMPLOYEE_PROJECTS (Click to open full table)
                         </span>
@@ -307,7 +307,7 @@ export default function DataStructureCard({ data }) {
                       </button>
                       <div className="overflow-x-auto text-[11px] font-mono">
                         <table className="w-full text-left">
-                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-gray-200 dark:border-[#333]">
+                          <thead className="bg-gray-150/30 dark:bg-neutral-900/30 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                             <tr>
                               <th className="px-4 py-2 font-bold text-gray-500">emp_id</th>
                               <th className="px-4 py-2 font-bold text-gray-500">project_id</th>
@@ -315,7 +315,7 @@ export default function DataStructureCard({ data }) {
                               <th className="px-4 py-2 font-bold text-gray-500">hours_logged</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-gray-700 dark:text-gray-300">
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#333] text-neutral-700 dark:text-neutral-300">
                             {employeeProjectsData.slice(0, 4).map((row, i) => (
                               <tr key={i}>
                                 <td className="px-4 py-2">{row.emp_id}</td>
@@ -336,9 +336,9 @@ export default function DataStructureCard({ data }) {
                   </div>
                 </div>
               ) : (
-                <div className="border-x border-b border-gray-200 dark:border-[#333] bg-gray-50/40 dark:bg-neutral-950/40 p-4">
+                <div className="border-x border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-gray-50/40 dark:bg-neutral-950/40 p-4">
                   <pre 
-                    className="bg-gray-100/80 dark:bg-black/80 text-gray-800 dark:text-gray-300 p-4 font-mono text-xs overflow-x-auto border border-gray-200 dark:border-[#333] leading-relaxed max-h-[400px] select-all"
+                    className="bg-neutral-100/80 dark:bg-neutral-900/80 text-neutral-800 dark:text-neutral-300 p-4 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 leading-relaxed max-h-[400px] select-all"
                     dangerouslySetInnerHTML={{ __html: highlightCode(data.internalImplementation) }}
                   />
                 </div>
@@ -350,7 +350,7 @@ export default function DataStructureCard({ data }) {
 
       {/* Interactive Query Playground */}
       {data.queries && data.queries.length > 0 && (
-        <div className="p-6 md:p-8 bg-gray-50/20 dark:bg-neutral-950/10 border-b border-gray-200 dark:border-[#333]">
+        <div className="p-6 md:p-8 bg-gray-50/20 dark:bg-neutral-950/10 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
           <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center font-mono uppercase tracking-wider">
             <Play className="h-4 w-4 text-emerald-500 mr-2" />
             Interactive Query Playground
@@ -366,7 +366,7 @@ export default function DataStructureCard({ data }) {
                   setSelectedQueryIdx(parseInt(e.target.value));
                   setExecuted(false);
                 }}
-                className="w-full bg-white dark:bg-black border border-gray-200 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-3 py-2 rounded-lg focus:outline-none focus:border-red-500"
+                className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-800 dark:text-gray-200 text-xs font-mono px-3 py-2 rounded-lg focus:outline-none focus:border-red-500"
               >
                 {data.queries.map((q, idx) => (
                   <option key={idx} value={idx}>Query {idx + 1}: {q.sql.split('\n')[0].replace('-- ', '')}</option>
@@ -377,7 +377,7 @@ export default function DataStructureCard({ data }) {
           
           {/* Query Display Block */}
           <div className="relative mb-4">
-            <pre className="bg-gray-100/90 dark:bg-black/90 text-gray-800 dark:text-gray-300 p-4 font-mono text-xs overflow-x-auto border border-gray-200 dark:border-[#333] select-all leading-relaxed rounded-xl pr-28">
+            <pre className="bg-neutral-100/90 dark:bg-neutral-900/90 text-neutral-800 dark:text-neutral-300 p-4 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 select-all leading-relaxed rounded-xl pr-28">
               <code dangerouslySetInnerHTML={{ __html: highlightCode(data.queries[selectedQueryIdx].sql) }} />
             </pre>
             <button
@@ -397,9 +397,9 @@ export default function DataStructureCard({ data }) {
                 <span className="text-[9px] text-slate-400 font-mono">Time: 0.08ms | Rows: {data.queries[selectedQueryIdx].rows.length}</span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-mono text-gray-800 dark:text-gray-300">
+                <table className="w-full text-left text-xs font-mono text-neutral-800 dark:text-neutral-300">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-neutral-800">
+                    <tr className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                       {data.queries[selectedQueryIdx].columns.map((col) => (
                         <th key={col} className="pb-2 font-bold text-gray-500 dark:text-gray-400">{col}</th>
                       ))}
@@ -439,7 +439,7 @@ export default function DataStructureCard({ data }) {
       {data.methods && data.methods.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1024px] text-left text-sm">
-            <thead className="bg-gray-50/70 dark:bg-neutral-950/70 border-b border-gray-200 dark:border-[#333]">
+            <thead className="bg-gray-50/70 dark:bg-neutral-950/70 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
               <tr>
                 {['Method', 'Syntax', 'Input / Parameters', 'Output / Return', 'Time Complexity', 'Description'].map((header) => (
                   <th 
@@ -460,7 +460,7 @@ export default function DataStructureCard({ data }) {
                     {row.method}
                   </td>
                   {/* Syntax */}
-                  <td className="px-6 py-4 font-mono text-gray-800 dark:text-gray-300 whitespace-nowrap">
+                  <td className="px-6 py-4 font-mono text-neutral-800 dark:text-neutral-300 whitespace-nowrap">
                     <code>{row.syntax}</code>
                   </td>
                   {/* Params */}
@@ -468,11 +468,11 @@ export default function DataStructureCard({ data }) {
                     {row.params}
                   </td>
                   {/* Output */}
-                  <td className="px-6 py-4 font-mono text-gray-800 dark:text-gray-300 whitespace-nowrap">
+                  <td className="px-6 py-4 font-mono text-neutral-800 dark:text-neutral-300 whitespace-nowrap">
                     <code>{row.output}</code>
                   </td>
                   {/* Complexity */}
-                  <td className="px-6 py-4 font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap text-xs font-bold">
+                  <td className="px-6 py-4 font-mono text-neutral-700 dark:text-neutral-300 whitespace-nowrap text-xs font-bold">
                     {row.complexity}
                   </td>
                   {/* Description */}

@@ -147,8 +147,8 @@ export default function Sidebar({ isOpen, activeView, activeTab, onTabChange }) 
     <SidebarContext.Provider value={{ activeTab, onTabChange }}>
       <aside
         className={`fixed top-16 left-0 z-35 h-[calc(100vh-64px)] w-64 
-                    bg-white/80 dark:bg-black/80 backdrop-blur-md 
-                    border-r border-gray-200 dark:border-[#333]
+                    bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md 
+                    border-r border-neutral-200 dark:border-neutral-800 dark:border-neutral-800
                     transform transition-all duration-500 ease-in-out
                     ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >

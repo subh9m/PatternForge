@@ -312,7 +312,7 @@ export default function GitCheatSheet() {
   return (
     <div className="space-y-6">
       {/* Header Info */}
-      <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg">
+      <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg">
         <h1 className="text-2xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
           📋 Interactive SDE Git Cheat Sheet
         </h1>
@@ -330,7 +330,7 @@ export default function GitCheatSheet() {
             placeholder="Search commands, definitions, or analogies..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-neutral-900 border border-gray-250 dark:border-neutral-800 rounded-xl text-sm font-mono text-gray-800 dark:text-gray-250 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-150"
+            className="block w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl text-sm font-mono text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-150"
           />
         </div>
       </div>
@@ -347,7 +347,7 @@ export default function GitCheatSheet() {
               className={`flex items-center space-x-2 px-4 py-2 border rounded-full text-xs font-mono font-bold whitespace-nowrap cursor-pointer transition-all duration-200
                 ${isActive 
                   ? 'bg-amber-500/10 text-amber-500 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]' 
-                  : 'bg-white/40 border-gray-250 hover:border-amber-500/30 text-gray-700 dark:bg-black/40 dark:border-neutral-800 dark:text-gray-300 dark:hover:text-amber-500'
+                  : 'bg-white/40 border-neutral-200 dark:border-neutral-800 hover:border-amber-500/30 text-gray-700 dark:bg-black/40 dark:border-neutral-800 dark:text-gray-300 dark:hover:text-amber-500'
                 }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -365,7 +365,7 @@ export default function GitCheatSheet() {
             return (
               <div
                 key={idx}
-                className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-neutral-800 rounded-xl p-5 shadow-sm hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] hover:border-amber-500/20 transition-all duration-350 flex flex-col justify-between"
+                className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-5 shadow-sm hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] hover:border-amber-500/20 transition-all duration-350 flex flex-col justify-between"
               >
                 <div>
                   {/* Command Row */}
@@ -378,7 +378,7 @@ export default function GitCheatSheet() {
                       className={`p-1.5 rounded-lg border transition-all duration-150 cursor-pointer flex-shrink-0
                         ${isCopied 
                           ? 'bg-green-500/10 border-green-500/30 text-green-500' 
-                          : 'bg-gray-50 border-gray-200 text-gray-400 hover:text-amber-500 hover:border-amber-500/30 dark:bg-neutral-900 dark:border-neutral-800'
+                          : 'bg-gray-50 border-neutral-200 dark:border-neutral-800 text-gray-400 hover:text-amber-500 hover:border-amber-500/30 dark:bg-neutral-900 dark:border-neutral-800'
                         }`}
                       title="Copy command to clipboard"
                     >
@@ -393,7 +393,7 @@ export default function GitCheatSheet() {
                 </div>
 
                 {/* Layman Callout */}
-                <div className="mt-4 pt-3.5 border-t border-dashed border-gray-200 dark:border-neutral-800">
+                <div className="mt-4 pt-3.5 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                   <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest font-mono mb-1">
                     💡 Layman analogy
                   </span>
@@ -405,7 +405,7 @@ export default function GitCheatSheet() {
             );
           })
         ) : (
-          <div className="col-span-full py-12 text-center border border-dashed border-gray-250 dark:border-neutral-800 rounded-2xl">
+          <div className="col-span-full py-12 text-center border border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl">
             <span className="text-2xl">🔍</span>
             <h3 className="mt-2 text-sm font-mono font-bold text-gray-600 dark:text-gray-400">
               No matching commands found

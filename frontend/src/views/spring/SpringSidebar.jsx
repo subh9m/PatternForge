@@ -35,14 +35,14 @@ export default function SpringSidebar({ isOpen, activeTab, onTabChange }) {
     <SpringSidebarContext.Provider value={{ activeTab, onTabChange }}>
       <aside
         className={`fixed top-16 left-0 z-35 h-[calc(100vh-64px)] w-64 
-                    bg-white/80 dark:bg-black/80 backdrop-blur-md 
-                    border-r border-gray-200 dark:border-[#333]
+                    bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md 
+                    border-r border-neutral-200 dark:border-neutral-800 dark:border-neutral-800
                     transform transition-all duration-500 ease-in-out
                     ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="h-full px-3 py-4 overflow-y-auto">
           <h2 className="p-4 text-xl font-bold uppercase tracking-wider 
-                         text-gray-900 dark:text-white font-mono border-b border-gray-200 dark:border-neutral-800/80 mb-2">
+                         text-gray-900 dark:text-white font-mono border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800/80 mb-2">
             SPRING BOOT
           </h2>
           

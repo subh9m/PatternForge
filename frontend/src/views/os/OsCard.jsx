@@ -127,8 +127,8 @@ export default function OsCard({ data }) {
   return (
     <section 
       id={data.id}
-      className="bg-white/60 dark:bg-black/60 backdrop-blur-md 
-                 border border-gray-250 dark:border-[#333] 
+      className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md 
+                 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 
                  rounded-2xl overflow-hidden shadow-lg
                  hover:shadow-[0_0_25px_rgba(245,158,11,0.15)] hover:border-amber-500/30 hover:-translate-y-0.5
                  transition-all duration-500 ease-in-out mb-10"
@@ -181,7 +181,7 @@ export default function OsCard({ data }) {
       `}</style>
 
       {/* Card Header */}
-      <div className="p-6 md:p-8 border-b border-gray-250 dark:border-[#333] bg-gradient-to-r from-amber-500/[0.03] to-transparent">
+      <div className="p-6 md:p-8 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-gradient-to-r from-amber-500/[0.03] to-transparent">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center space-x-3.5">
             <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/20">
@@ -203,10 +203,10 @@ export default function OsCard({ data }) {
       </div>
 
       {/* Revision Key Concepts Summary Sheet */}
-      <div className="border-b border-gray-200 dark:border-[#222]">
+      <div className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-850">
         <button
           onClick={() => setShowDeclaration(!showDeclaration)}
-          className="w-full flex items-center justify-between p-5 bg-gray-50/50 dark:bg-[#111]/30 hover:bg-gray-100/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-gray-800 dark:text-gray-300"
+          className="w-full flex items-center justify-between p-5 bg-gray-50/50 dark:bg-[#111]/30 hover:bg-gray-100/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-neutral-800 dark:text-neutral-300"
         >
           <span className="flex items-center space-x-2">
             <span>🚀 Module Core Quick Revision Summary</span>
@@ -215,8 +215,8 @@ export default function OsCard({ data }) {
         </button>
         
         {showDeclaration && (
-          <div className="p-6 bg-gray-100/30 dark:bg-[#070707]/30 border-t border-gray-150 dark:border-[#222]">
-            <pre className="text-xs font-mono text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+          <div className="p-6 bg-gray-100/30 dark:bg-[#070707]/30 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-850">
+            <pre className="text-xs font-mono text-neutral-700 dark:text-neutral-300 overflow-x-auto whitespace-pre-wrap leading-relaxed">
               <code>{data.declaration}</code>
             </pre>
           </div>
@@ -225,17 +225,17 @@ export default function OsCard({ data }) {
 
       {/* Visual / Execution Diagrams Section */}
       {(data.diagramUrl || data.internalImplementation) && (
-        <div className="border-b border-gray-200 dark:border-[#222]">
+        <div className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-850">
           <button
             onClick={() => setShowInternal(!showInternal)}
-            className="w-full flex items-center justify-between p-5 bg-gray-50/50 dark:bg-[#111]/30 hover:bg-gray-100/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-gray-800 dark:text-gray-300"
+            className="w-full flex items-center justify-between p-5 bg-gray-50/50 dark:bg-[#111]/30 hover:bg-gray-100/50 dark:hover:bg-[#111]/60 transition-colors duration-200 text-left font-mono font-bold text-xs uppercase text-neutral-800 dark:text-neutral-300"
           >
             <span>📊 Architectural Diagrams & Executions</span>
             {showInternal ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
           
           {showInternal && (
-            <div className="border-t border-gray-250 dark:border-[#222] bg-black/90 dark:bg-black/90 p-6 flex flex-col items-center space-y-6 overflow-x-auto">
+            <div className="border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 bg-black/90 dark:bg-black/90 p-6 flex flex-col items-center space-y-6 overflow-x-auto">
               {data.diagramUrl && (
                 <div className="flex flex-col items-center w-full max-w-2xl">
                   <img 
@@ -277,10 +277,10 @@ export default function OsCard({ data }) {
             return (
               <div 
                 key={idx}
-                className={`border border-gray-200 dark:border-[#222] rounded-xl overflow-hidden transition-all duration-300
+                className={`border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl overflow-hidden transition-all duration-300
                   ${isExpanded 
                     ? 'bg-amber-500/[0.01] dark:bg-amber-500/[0.01] border-amber-500/20 shadow-md' 
-                    : 'bg-white/40 dark:bg-black/40 hover:border-amber-500/10'
+                    : 'bg-neutral-50/50 dark:bg-neutral-950/30 hover:border-amber-500/10'
                   }`}
               >
                 {/* Accordion Trigger */}
@@ -297,7 +297,7 @@ export default function OsCard({ data }) {
 
                 {/* Accordion Content */}
                 {isExpanded && (
-                  <div className="px-5 pb-5 pt-1 space-y-4 border-t border-dashed border-gray-200 dark:border-[#222] animate-fadeIn">
+                  <div className="px-5 pb-5 pt-1 space-y-4 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 animate-fadeIn">
                     
                     {/* Fun Analogy Callout Box */}
                     <div className="p-4 bg-amber-500/[0.05] dark:bg-amber-500/[0.03] border-l-2 border-amber-500/70 rounded-r-lg">
@@ -322,28 +322,28 @@ export default function OsCard({ data }) {
 
                     {/* Micro-Stats Parameter Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-gray-150 dark:border-[#222] rounded-lg">
+                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
                         <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Mechanic / Key term</span>
                         <span className="block text-[11px] font-mono font-semibold text-amber-600 dark:text-amber-400 mt-1 break-words">
                           {row.syntax}
                         </span>
                       </div>
                       
-                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-gray-150 dark:border-[#222] rounded-lg">
+                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
                         <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Inputs / Context</span>
-                        <span className="block text-[11px] font-sans font-medium text-gray-700 dark:text-gray-300 mt-1 break-words">
+                        <span className="block text-[11px] font-sans font-medium text-neutral-700 dark:text-neutral-300 mt-1 break-words">
                           {row.params}
                         </span>
                       </div>
                       
-                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-gray-150 dark:border-[#222] rounded-lg">
+                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
                         <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Result / Output</span>
-                        <span className="block text-[11px] font-mono text-gray-700 dark:text-gray-300 mt-1 break-words">
+                        <span className="block text-[11px] font-mono text-neutral-700 dark:text-neutral-300 mt-1 break-words">
                           {row.output}
                         </span>
                       </div>
                       
-                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-gray-150 dark:border-[#222] rounded-lg">
+                      <div className="p-3 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
                         <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Overhead / Complexity</span>
                         <span className="block text-[11px] font-mono font-bold text-gray-800 dark:text-gray-200 mt-1 break-words">
                           {row.complexity}

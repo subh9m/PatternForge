@@ -92,10 +92,10 @@ export default function SqlCard({ data }) {
   return (
     <section 
       id={data.id}
-      className="w-full bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#222] rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-red-500/25 relative"
+      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-red-500/25 relative"
     >
       {/* Concept Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-150 dark:border-[#333]">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
         <div className="flex items-center space-x-3">
           <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[10px] font-black uppercase font-mono tracking-wider rounded-md">
             {data.num}
@@ -124,7 +124,7 @@ export default function SqlCard({ data }) {
 
       {/* SQL DDL / DML Schema Table Preview */}
       {isPracticeDb && data.methods && (
-        <div className="mb-6 bg-gray-50/50 dark:bg-neutral-900/30 border border-gray-200 dark:border-[#222] rounded-xl p-5">
+        <div className="mb-6 bg-gray-50/50 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl p-5">
           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-4 flex items-center space-x-2">
             <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full"></span>
             <span>Relational Schema (Click table name to view all records)</span>
@@ -134,7 +134,7 @@ export default function SqlCard({ data }) {
               <div 
                 key={i} 
                 onClick={() => { setActiveFullTable(tbl.method); setSearchQuery(""); }}
-                className="bg-white dark:bg-black border border-gray-150 dark:border-[#333] hover:border-red-500/50 hover:shadow-md p-3.5 rounded-xl cursor-pointer transition-all duration-300 group text-center"
+                className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 hover:border-red-500/50 hover:shadow-md p-3.5 rounded-xl cursor-pointer transition-all duration-300 group text-center"
               >
                 <span className="block text-xs font-mono font-bold text-gray-800 dark:text-gray-200 group-hover:text-red-500 uppercase tracking-wide">
                   {tbl.method}
@@ -153,13 +153,13 @@ export default function SqlCard({ data }) {
         <div className="absolute right-3 top-3 z-10 flex space-x-2">
           <button
             onClick={() => handleCopyCode(data.declaration)}
-            className="p-1.5 bg-white/80 dark:bg-black/80 hover:bg-gray-100 dark:hover:bg-neutral-900 text-gray-600 dark:text-gray-400 rounded-md border border-gray-200 dark:border-[#333] transition-colors duration-200 cursor-pointer"
+            className="p-1.5 bg-white/80 dark:bg-neutral-950/80 hover:bg-gray-100 dark:hover:bg-neutral-900 text-gray-600 dark:text-gray-400 rounded-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 transition-colors duration-200 cursor-pointer"
             title="Copy Syntax"
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
         </div>
-        <pre className="bg-gray-100/50 dark:bg-black/50 text-gray-800 dark:text-gray-300 p-5 font-mono text-xs overflow-x-auto border border-gray-200 dark:border-[#222] rounded-xl pr-14 leading-relaxed">
+        <pre className="bg-neutral-100/50 dark:bg-neutral-900/50 text-neutral-800 dark:text-neutral-300 p-5 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl pr-14 leading-relaxed">
           <code dangerouslySetInnerHTML={{ __html: highlightCode(data.declaration) }} />
         </pre>
       </div>
@@ -170,7 +170,7 @@ export default function SqlCard({ data }) {
           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2.5">
             Technical Internals / Compilation Details
           </h4>
-          <pre className="bg-red-500/[0.01] dark:bg-red-500/[0.01] text-gray-500 dark:text-gray-400 p-5 font-mono text-xs overflow-x-auto border border-dashed border-gray-200 dark:border-[#333] rounded-xl leading-relaxed">
+          <pre className="bg-red-500/[0.01] dark:bg-red-500/[0.01] text-gray-500 dark:text-gray-400 p-5 font-mono text-xs overflow-x-auto border border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl leading-relaxed">
             <code>{data.internalImplementation}</code>
           </pre>
         </div>
@@ -178,7 +178,7 @@ export default function SqlCard({ data }) {
 
       {/* Interactive Execution Playground */}
       {data.queries && data.queries.length > 0 && (
-        <div className="border-t border-gray-150 dark:border-[#333] pt-6 mt-6">
+        <div className="border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pt-6 mt-6">
           <h3 className="text-xs font-black text-gray-900 dark:text-white font-mono uppercase tracking-wider mb-4 flex items-center space-x-2">
             <span>Query Playground</span>
             <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 text-[8px] tracking-widest uppercase rounded-sm">SANDBOX</span>
@@ -194,7 +194,7 @@ export default function SqlCard({ data }) {
                   setSelectedQueryIdx(parseInt(e.target.value));
                   setExecuted(false);
                 }}
-                className="w-full bg-white dark:bg-black border border-gray-200 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-3 py-2 rounded-lg focus:outline-none focus:border-red-500"
+                className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-800 dark:text-gray-200 text-xs font-mono px-3 py-2 rounded-lg focus:outline-none focus:border-red-500"
               >
                 {data.queries.map((q, idx) => (
                   <option key={idx} value={idx}>Query {idx + 1}: {q.sql.split('\n')[0].replace('-- ', '')}</option>
@@ -205,7 +205,7 @@ export default function SqlCard({ data }) {
           
           {/* Query Display Block */}
           <div className="relative mb-4">
-            <pre className="bg-gray-100/90 dark:bg-black/90 text-gray-800 dark:text-gray-300 p-4 font-mono text-xs overflow-x-auto border border-gray-200 dark:border-[#333] select-all leading-relaxed rounded-xl pr-28">
+            <pre className="bg-neutral-100/90 dark:bg-neutral-900/90 text-neutral-800 dark:text-neutral-300 p-4 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 select-all leading-relaxed rounded-xl pr-28">
               <code dangerouslySetInnerHTML={{ __html: highlightCode(data.queries[selectedQueryIdx].sql) }} />
             </pre>
             <button
@@ -225,9 +225,9 @@ export default function SqlCard({ data }) {
                 <span className="text-[9px] text-slate-400 font-mono">Time: 0.08ms | Rows: {data.queries[selectedQueryIdx].rows.length}</span>
               </div>
               
-              <div className="overflow-x-auto border border-gray-200 dark:border-[#333] rounded-lg">
-                <table className="w-full text-left text-xs font-mono text-gray-800 dark:text-gray-300">
-                  <thead className="bg-gray-100/50 dark:bg-black/50 border-b border-gray-200 dark:border-[#333]">
+              <div className="overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg">
+                <table className="w-full text-left text-xs font-mono text-neutral-800 dark:text-neutral-300">
+                  <thead className="bg-neutral-100/50 dark:bg-neutral-900/50 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                     <tr>
                       {data.queries[selectedQueryIdx].columns.map((col, idx) => (
                         <th key={idx} className="px-4 py-2 font-bold uppercase tracking-wider text-[10px] text-gray-500 font-bold">
@@ -271,9 +271,9 @@ export default function SqlCard({ data }) {
       {/* Table Data Modal */}
       {activeFullTable && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#333] w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+          <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-250 dark:border-[#333] bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
+            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase">
                   Table View: {activeFullTable.toUpperCase()}
@@ -291,21 +291,21 @@ export default function SqlCard({ data }) {
             </div>
             
             {/* Search filter bar */}
-            <div className="p-4 bg-gray-55/20 dark:bg-neutral-950/20 border-b border-gray-200 dark:border-[#333]">
+            <div className="p-4 bg-gray-55/20 dark:bg-neutral-950/20 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
               <input
                 type="text"
                 placeholder={`Search records in ${activeFullTable}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white dark:bg-black border border-gray-250 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-4 py-3 rounded-xl focus:outline-none focus:border-red-500"
+                className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-800 dark:text-gray-200 text-xs font-mono px-4 py-3 rounded-xl focus:outline-none focus:border-red-500"
               />
             </div>
             
             {/* Table Body Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              <div className="border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden">
+              <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl overflow-hidden">
                 <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-gray-100 dark:bg-neutral-900 border-b border-gray-200 dark:border-[#333] sticky top-0">
+                  <thead className="bg-gray-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 sticky top-0">
                     <tr>
                       {tableHeaders[activeFullTable].map(header => (
                         <th key={header} className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -314,7 +314,7 @@ export default function SqlCard({ data }) {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-150 dark:divide-neutral-900/50 text-gray-800 dark:text-gray-300">
+                  <tbody className="divide-y divide-gray-150 dark:divide-neutral-900/50 text-neutral-800 dark:text-neutral-300">
                     {filteredRows.length === 0 ? (
                       <tr>
                         <td colSpan={tableHeaders[activeFullTable].length} className="px-5 py-8 text-center text-gray-500 italic">
@@ -352,9 +352,9 @@ export default function SqlCard({ data }) {
       {/* SQL Script View Modal */}
       {showFullScriptModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#333] w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+          <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 w-full max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-250 dark:border-[#333] bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
+            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-900/50 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase">
                   Complete Seed Script (DDL & DML)

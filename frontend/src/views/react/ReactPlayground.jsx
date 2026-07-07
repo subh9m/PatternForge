@@ -135,13 +135,13 @@ export default function ReactPlayground() {
     <div className="space-y-6">
       
       {/* Tab selectors */}
-      <div className="flex border-b border-gray-250 dark:border-neutral-900 pb-3 gap-3">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-3 gap-3">
         <button
           onClick={() => setActiveTab('diff')}
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activeTab === 'diff' 
               ? 'bg-sky-500/10 text-sky-500 border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)]' 
-              : 'bg-transparent text-gray-555 dark:text-gray-455 border-gray-200 dark:border-neutral-900 hover:border-sky-500/20'}`}
+              : 'bg-transparent text-gray-555 dark:text-gray-455 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/20'}`}
         >
           <Cpu className="h-4 w-4" />
           <span>Virtual DOM Diffing</span>
@@ -151,7 +151,7 @@ export default function ReactPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activeTab === 'perf' 
               ? 'bg-sky-500/10 text-sky-500 border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)]' 
-              : 'bg-transparent text-gray-555 dark:text-gray-455 border-gray-200 dark:border-neutral-900 hover:border-sky-500/20'}`}
+              : 'bg-transparent text-gray-555 dark:text-gray-455 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/20'}`}
         >
           <Network className="h-4 w-4" />
           <span>Memo & References</span>
@@ -160,8 +160,8 @@ export default function ReactPlayground() {
 
       {activeTab === 'diff' ? (
         // RECONCILIATION DIFFER CANVAS
-        <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-255 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-250 dark:border-neutral-800 pb-4">
+        <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
             <div>
               <h2 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
                 <span>⚛️ Virtual DOM Reconciliation & Diffing Simulator</span>
@@ -193,7 +193,7 @@ export default function ReactPlayground() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
             {/* Control Sidebar */}
-            <div className="lg:col-span-1 bg-gray-55/15 dark:bg-neutral-900/30 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
+            <div className="lg:col-span-1 bg-gray-55/15 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
               <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Heuristic Variables</span>
               
               <div className="space-y-1.5">
@@ -234,7 +234,7 @@ export default function ReactPlayground() {
             </div>
 
             {/* Tree Canvas */}
-            <div className="lg:col-span-3 border border-gray-250 dark:border-neutral-900 bg-neutral-950/65 rounded-xl p-5 min-h-[220px] flex flex-col justify-center relative overflow-hidden font-mono text-[10.5px]">
+            <div className="lg:col-span-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/65 rounded-xl p-5 min-h-[220px] flex flex-col justify-center relative overflow-hidden font-mono text-[10.5px]">
               
               <div className="flex justify-around items-center w-full z-10">
                 
@@ -291,8 +291,8 @@ export default function ReactPlayground() {
         </div>
       ) : (
         // MEMO RENDERING PERFORMANCE VISUALIZER
-        <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-255 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-          <div className="border-b border-gray-250 dark:border-neutral-800 pb-4">
+        <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+          <div className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
               <span>⚛️ React.memo & stable callbacks visualizer</span>
             </h2>
@@ -304,7 +304,7 @@ export default function ReactPlayground() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
             {/* Options Toggle Panel */}
-            <div className="lg:col-span-1 bg-gray-55/15 dark:bg-neutral-900/30 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
+            <div className="lg:col-span-1 bg-gray-55/15 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
               <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Optimization Hooks</span>
               
               <div className="space-y-1.5">
@@ -337,7 +337,7 @@ export default function ReactPlayground() {
             </div>
 
             {/* Render Tree visualization nodes */}
-            <div className="lg:col-span-3 border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 flex flex-col justify-around items-center font-mono">
+            <div className="lg:col-span-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 flex flex-col justify-around items-center font-mono">
               <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest block border-b border-neutral-900 pb-1.5 mb-2 w-full text-left">Rendering propagation Tree</div>
               
               <div className="flex flex-col items-center space-y-6 w-full max-w-sm text-center text-xs">

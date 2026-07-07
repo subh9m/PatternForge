@@ -123,13 +123,13 @@ export default function CnPlayground() {
     <div className="space-y-6">
       
       {/* Selector Tabs */}
-      <div className="flex border-b border-gray-250 dark:border-neutral-900 pb-3 gap-3">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-3 gap-3">
         <button
           onClick={() => setActivePlayground('handshake')}
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'handshake' 
               ? 'bg-cyan-500/10 text-cyan-500 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-cyan-500/20'}`}
+              : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-cyan-500/20'}`}
         >
           <Network className="h-4 w-4" />
           <span>TCP Handshake Simulator</span>
@@ -139,7 +139,7 @@ export default function CnPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'subnet' 
               ? 'bg-cyan-500/10 text-cyan-500 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-cyan-500/20'}`}
+              : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-cyan-500/20'}`}
         >
           <Globe className="h-4 w-4" />
           <span>CIDR & Subnet Calculator</span>
@@ -148,8 +148,8 @@ export default function CnPlayground() {
 
       {activePlayground === 'handshake' ? (
         // HANDSHAKE SIMULATOR
-        <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-250 dark:border-neutral-800 pb-4">
+        <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
             <div>
               <h2 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
                 <span>⚡ TCP Connection Handshake Simulator</span>
@@ -181,7 +181,7 @@ export default function CnPlayground() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
             {/* Left Side Client Node */}
-            <div className="lg:col-span-1 border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-4 text-center space-y-3">
+            <div className="lg:col-span-1 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-4 text-center space-y-3">
               <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-500 text-[8px] font-mono font-black uppercase rounded">Client Endpoint</span>
               <div className="h-16 w-16 bg-cyan-500/5 border border-cyan-500/20 rounded-full flex items-center justify-center text-cyan-500 mx-auto">
                 <Globe className="h-7 w-7 animate-pulse" />
@@ -193,7 +193,7 @@ export default function CnPlayground() {
             </div>
 
             {/* Animation Pathway */}
-            <div className="lg:col-span-2 border border-gray-250 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 min-h-[160px] flex flex-col justify-center relative overflow-hidden">
+            <div className="lg:col-span-2 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 min-h-[160px] flex flex-col justify-center relative overflow-hidden">
               <div className="h-0.5 w-full bg-neutral-800 absolute top-1/2 left-0 transform -translate-y-1/2"></div>
               
               {/* SYN Packet animation */}
@@ -238,7 +238,7 @@ export default function CnPlayground() {
             </div>
 
             {/* Right Side Server Node */}
-            <div className="lg:col-span-1 border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-4 text-center space-y-3">
+            <div className="lg:col-span-1 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-4 text-center space-y-3">
               <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-500 text-[8px] font-mono font-black uppercase rounded">Server Endpoint</span>
               <div className="h-16 w-16 bg-cyan-500/5 border border-cyan-500/20 rounded-full flex items-center justify-center text-cyan-500 mx-auto">
                 <Network className="h-7 w-7" />
@@ -259,15 +259,15 @@ export default function CnPlayground() {
                 <div key={idx}>$ {log}</div>
               ))
             ) : (
-              <div className="text-gray-600">Waiting for connection handshake request...</div>
+              <div className="text-neutral-600 dark:text-neutral-300">Waiting for connection handshake request...</div>
             )}
           </div>
 
         </div>
       ) : (
         // CIDR CALCULATOR
-        <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-          <div className="border-b border-gray-250 dark:border-neutral-800 pb-4">
+        <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+          <div className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
               <span>⚡ Classless Inter-Domain Routing (CIDR) Calculator</span>
             </h2>
@@ -279,7 +279,7 @@ export default function CnPlayground() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Input Config Panel */}
-            <div className="bg-gray-55/10 dark:bg-neutral-900/30 border border-gray-200 dark:border-[#333] rounded-xl p-4 space-y-4">
+            <div className="bg-gray-55/10 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-4 space-y-4">
               <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5 font-bold">Subnet Inputs</span>
               
               <div>
@@ -297,14 +297,14 @@ export default function CnPlayground() {
                 <div className="flex items-center space-x-3">
                   <button 
                     onClick={() => cidr > 24 && setCidr(prev => prev - 1)}
-                    className="p-1.5 border border-gray-200 dark:border-neutral-800 rounded hover:border-cyan-500 cursor-pointer"
+                    className="p-1.5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded hover:border-cyan-500 cursor-pointer"
                   >
                     <Minus className="h-3 w-3" />
                   </button>
-                  <span className="font-mono text-xs font-black text-gray-800 dark:text-gray-250">/{cidr}</span>
+                  <span className="font-mono text-xs font-black text-neutral-800 dark:text-neutral-200">/{cidr}</span>
                   <button 
                     onClick={() => cidr < 30 && setCidr(prev => prev + 1)}
-                    className="p-1.5 border border-gray-200 dark:border-neutral-800 rounded hover:border-cyan-500 cursor-pointer"
+                    className="p-1.5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded hover:border-cyan-500 cursor-pointer"
                   >
                     <Plus className="h-3 w-3" />
                   </button>
@@ -314,7 +314,7 @@ export default function CnPlayground() {
 
             {/* Calculations Output */}
             {subnetDetails && (
-              <div className="md:col-span-2 border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 space-y-4">
+              <div className="md:col-span-2 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 space-y-4">
                 <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest font-mono block border-b border-neutral-900 pb-1.5">Calculated Address Boundaries</span>
                 
                 <div className="grid grid-cols-2 gap-4 text-xs font-mono">

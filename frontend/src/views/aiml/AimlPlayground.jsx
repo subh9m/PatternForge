@@ -178,13 +178,13 @@ export default function AimlPlayground() {
     <div className="space-y-6">
       
       {/* Selector Tabs */}
-      <div className="flex border-b border-gray-250 dark:border-neutral-900 pb-3 gap-3">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-3 gap-3">
         <button
           onClick={() => setActivePlayground('nn')}
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'nn' 
               ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-indigo-500/20'}`}
+              : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-indigo-500/20'}`}
         >
           <Brain className="h-4 w-4" />
           <span>Neural Network Simulator</span>
@@ -194,7 +194,7 @@ export default function AimlPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'rag' 
               ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-indigo-500/20'}`}
+              : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-indigo-500/20'}`}
         >
           <Database className="h-4 w-4" />
           <span>RAG Pipeline Simulator</span>
@@ -203,8 +203,8 @@ export default function AimlPlayground() {
 
       {activePlayground === 'nn' ? (
         // NEURAL NETWORK SIMULATOR
-        <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-250 dark:border-neutral-800 pb-4">
+        <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
             <div>
               <h2 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide flex items-center space-x-2">
                 <span>🧠 Feedforward & Backpropagation Sandbox</span>
@@ -236,7 +236,7 @@ export default function AimlPlayground() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
             {/* Interactive Settings Dashboard */}
-            <div className="lg:col-span-1 bg-gray-55/10 dark:bg-neutral-900/30 border border-gray-200 dark:border-[#333] rounded-xl p-4 space-y-4">
+            <div className="lg:col-span-1 bg-gray-55/10 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-4 space-y-4">
               <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Hyperparameters</span>
               
               {/* Node count */}
@@ -245,14 +245,14 @@ export default function AimlPlayground() {
                 <div className="flex items-center space-x-3">
                   <button 
                     onClick={() => hiddenNodes > 2 && setHiddenNodes(prev => prev - 1)}
-                    className="p-1 border border-gray-200 dark:border-neutral-800 rounded hover:border-indigo-500 cursor-pointer"
+                    className="p-1 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded hover:border-indigo-500 cursor-pointer"
                   >
                     <Minus className="h-3 w-3" />
                   </button>
-                  <span className="font-mono text-xs font-black text-gray-800 dark:text-gray-250">{hiddenNodes}</span>
+                  <span className="font-mono text-xs font-black text-neutral-800 dark:text-neutral-200">{hiddenNodes}</span>
                   <button 
                     onClick={() => hiddenNodes < 5 && setHiddenNodes(prev => prev + 1)}
-                    className="p-1 border border-gray-200 dark:border-neutral-800 rounded hover:border-indigo-500 cursor-pointer"
+                    className="p-1 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded hover:border-indigo-500 cursor-pointer"
                   >
                     <Plus className="h-3 w-3" />
                   </button>
@@ -265,7 +265,7 @@ export default function AimlPlayground() {
                 <select
                   value={activation}
                   onChange={(e) => setActivation(e.target.value)}
-                  className="w-full bg-white dark:bg-black border border-gray-200 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-2 py-1.5 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-800 dark:text-gray-200 text-xs font-mono px-2 py-1.5 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
                   <option value="relu">ReLU</option>
                   <option value="sigmoid">Sigmoid</option>
@@ -278,7 +278,7 @@ export default function AimlPlayground() {
                 <select
                   value={learningRate}
                   onChange={(e) => setLearningRate(parseFloat(e.target.value))}
-                  className="w-full bg-white dark:bg-black border border-gray-200 dark:border-[#333] text-gray-800 dark:text-gray-200 text-xs font-mono px-2 py-1.5 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-800 dark:text-gray-200 text-xs font-mono px-2 py-1.5 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
                   <option value={0.5}>0.5 (Fast/Noisy)</option>
                   <option value={0.1}>0.1 (Recommended)</option>
@@ -287,18 +287,18 @@ export default function AimlPlayground() {
               </div>
 
               {/* Input values trigger */}
-              <div className="pt-2 border-t border-dashed border-gray-200 dark:border-[#333]">
+              <div className="pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5 font-mono">Toggle Input Signals:</span>
                 <div className="grid grid-cols-2 gap-2 font-mono text-xs">
                   <button 
                     onClick={() => setNnInput1(prev => prev === 1 ? 0 : 1)}
-                    className={`py-1.5 border rounded-lg transition-all cursor-pointer ${nnInput1 === 1 ? 'bg-indigo-500/10 border-indigo-500 text-indigo-500' : 'border-gray-200 dark:border-neutral-800 text-gray-400'}`}
+                    className={`py-1.5 border rounded-lg transition-all cursor-pointer ${nnInput1 === 1 ? 'bg-indigo-500/10 border-indigo-500 text-indigo-500' : 'border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-400'}`}
                   >
                     Input X1: {nnInput1}
                   </button>
                   <button 
                     onClick={() => setNnInput2(prev => prev === 1 ? 0 : 1)}
-                    className={`py-1.5 border rounded-lg transition-all cursor-pointer ${nnInput2 === 1 ? 'bg-indigo-500/10 border-indigo-500 text-indigo-500' : 'border-gray-200 dark:border-neutral-800 text-gray-400'}`}
+                    className={`py-1.5 border rounded-lg transition-all cursor-pointer ${nnInput2 === 1 ? 'bg-indigo-500/10 border-indigo-500 text-indigo-500' : 'border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-400'}`}
                   >
                     Input X2: {nnInput2}
                   </button>
@@ -307,7 +307,7 @@ export default function AimlPlayground() {
             </div>
 
             {/* Neural Net Live Visual Graph */}
-            <div className="lg:col-span-3 border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 min-h-[300px] flex flex-col justify-between relative overflow-hidden">
+            <div className="lg:col-span-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 min-h-[300px] flex flex-col justify-between relative overflow-hidden">
               <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest font-mono absolute top-2 left-3">Live Feedforward Weights Graph</span>
               
               {/* Graphic SVG Canvas */}
@@ -397,7 +397,7 @@ export default function AimlPlayground() {
               <div className="border-t border-neutral-900 pt-3 flex flex-wrap items-center justify-between gap-4 font-mono text-[11px] text-gray-300">
                 <div className="flex items-center space-x-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span className="text-gray-400">Target Output: <strong className="text-white">{nnOutput.toFixed(4)}</strong></span>
+                  <span className="text-neutral-500 dark:text-neutral-400">Target Output: <strong className="text-white">{nnOutput.toFixed(4)}</strong></span>
                 </div>
                 <div className="flex space-x-4">
                   <span>Epochs: <strong className="text-white">{nnEpoch}</strong></span>
@@ -409,7 +409,7 @@ export default function AimlPlayground() {
           </div>
 
           {/* Loss graph and logger status */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-150 dark:border-neutral-900">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
             {/* Terminal Log Console */}
             <div className="md:col-span-2 bg-black border border-neutral-900 rounded-xl p-4 font-mono text-xs text-green-400 min-h-[100px] flex items-center">
               <div className="space-y-1">
@@ -441,8 +441,8 @@ export default function AimlPlayground() {
         </div>
       ) : (
         // RAG PIPELINE SIMULATOR
-        <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-250 dark:border-neutral-800 pb-4">
+        <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
             <div>
               <h2 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
                 <span>⚡ RAG Retrieval Pipeline Simulator</span>
@@ -466,7 +466,7 @@ export default function AimlPlayground() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Input Data Source */}
-            <div className="bg-gray-55/10 dark:bg-neutral-900/30 border border-gray-200 dark:border-[#333] rounded-xl p-4 space-y-4">
+            <div className="bg-gray-55/10 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-4 space-y-4">
               <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Unstructured Document</span>
               <textarea
                 value={ragDoc}
@@ -488,7 +488,7 @@ export default function AimlPlayground() {
             </div>
 
             {/* Visual Process Flow */}
-            <div className="border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-4 flex flex-col justify-between min-h-[250px]">
+            <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-4 flex flex-col justify-between min-h-[250px]">
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest font-mono block border-b border-neutral-900 pb-1.5">Visual Pipeline Execution</span>
               
               <div className="flex-1 flex flex-col justify-center space-y-3.5 font-mono text-[10.5px] py-4">
@@ -519,11 +519,11 @@ export default function AimlPlayground() {
             </div>
 
             {/* Retrieve matched vector DB */}
-            <div className="bg-gray-55/10 dark:bg-neutral-900/30 border border-gray-200 dark:border-[#333] rounded-xl p-4 flex flex-col justify-between">
+            <div className="bg-gray-55/10 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-4 flex flex-col justify-between">
               <div>
                 <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Retrieved Database Chunk</span>
                 {retrievedChunk ? (
-                  <div className="p-3 bg-indigo-500/[0.04] border border-indigo-500/20 rounded-xl mt-3 font-sans text-xs text-gray-700 dark:text-gray-300 italic">
+                  <div className="p-3 bg-indigo-500/[0.04] border border-indigo-500/20 rounded-xl mt-3 font-sans text-xs text-neutral-700 dark:text-neutral-300 italic">
                     "{retrievedChunk}"
                   </div>
                 ) : (

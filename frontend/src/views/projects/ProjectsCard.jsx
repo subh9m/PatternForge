@@ -17,22 +17,22 @@ export default function ProjectsCard({ data, activeTab }) {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-5 border border-gray-200 dark:border-neutral-900 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2">
+            <div className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2">
               <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">⚠️ Problem Statement</span>
               <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-light">{data.overview.problem}</p>
             </div>
             
-            <div className="p-5 border border-gray-200 dark:border-neutral-900 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2">
+            <div className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2">
               <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">🎯 Real-World Use Case</span>
               <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-light">{data.overview.useCase}</p>
             </div>
 
-            <div className="p-5 border border-gray-200 dark:border-neutral-900 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2">
+            <div className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2">
               <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">💡 Core Motivation</span>
               <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-light">{data.overview.motivation}</p>
             </div>
 
-            <div className="p-5 border border-gray-200 dark:border-neutral-900 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2">
+            <div className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2">
               <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">🏗️ Architecture Blueprint</span>
               <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-light">{data.overview.architecture}</p>
             </div>
@@ -64,7 +64,7 @@ export default function ProjectsCard({ data, activeTab }) {
 
           <div className="space-y-4">
             {/* React 19 */}
-            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+            <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10">
               <button
                 onClick={() => setExpandedTech(expandedTech === 'react' ? null : 'react')}
                 className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
@@ -76,7 +76,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 {expandedTech === 'react' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
               </button>
               {expandedTech === 'react' && (
-                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
+                <div className="p-5 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
                   <p><strong>Rationale:</strong> Declarative rendering matching active state changes dynamically. Reusable modular design pattern using custom hooks to segregate layout logic from side effects.</p>
                   <p><strong>Internal Workings:</strong> Utilizes React's Fiber engine to batch rendering updates and schedule non-blocking updates. React Router handles path routing entirely client-side, avoiding server requests on tab transitions.</p>
                   <p><strong>Why Chosen:</strong> Blazing-fast virtual DOM reconciliation, excellent hydration controls, and a huge library ecosystem (TanStack Query, Recharts).</p>
@@ -85,7 +85,7 @@ export default function ProjectsCard({ data, activeTab }) {
             </div>
 
             {/* TanStack Query */}
-            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+            <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10">
               <button
                 onClick={() => setExpandedTech(expandedTech === 'query' ? null : 'query')}
                 className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
@@ -97,7 +97,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 {expandedTech === 'query' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
               </button>
               {expandedTech === 'query' && (
-                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
+                <div className="p-5 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
                   <p><strong>Rationale:</strong> Manages remote server-state in-memory caches, removing boilerplate <code>useEffect</code> fetch loops.</p>
                   <p><strong>Internal Workings:</strong> Maintains an absolute client-side cache registry. Automatically triggers background refetches when window focus updates, when network reconnects, or when manual queries are invalidated via mutations.</p>
                   <p><strong>Why Chosen:</strong> Optimistic updates (immediate visual confirmation of checkoffs or removals) and robust loading/error wrappers built-in.</p>
@@ -106,7 +106,7 @@ export default function ProjectsCard({ data, activeTab }) {
             </div>
 
             {/* Tesseract.js */}
-            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+            <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10">
               <button
                 onClick={() => setExpandedTech(expandedTech === 'tesseract' ? null : 'tesseract')}
                 className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
@@ -118,7 +118,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 {expandedTech === 'tesseract' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
               </button>
               {expandedTech === 'tesseract' && (
-                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
+                <div className="p-5 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
                   <p><strong>Rationale:</strong> Allows client-side image character recognition directly in the browser, eliminating GPU/CPU intensive OCR loads on the server.</p>
                   <p><strong>Internal Workings:</strong> Loads compiled WebAssembly (WASM) packages containing the C++ engine. Spawns asynchronous Web Workers to process receipt images off the main thread, keeping the UI thread responsive.</p>
                   <p><strong>Why Chosen:</strong> Offline capability, zero cost per scan, and simple integration wrappers.</p>
@@ -127,7 +127,7 @@ export default function ProjectsCard({ data, activeTab }) {
             </div>
 
             {/* Spring Boot 3.3.0 */}
-            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+            <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10">
               <button
                 onClick={() => setExpandedTech(expandedTech === 'spring' ? null : 'spring')}
                 className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
@@ -139,7 +139,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 {expandedTech === 'spring' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
               </button>
               {expandedTech === 'spring' && (
-                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
+                <div className="p-5 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
                   <p><strong>Rationale:</strong> Highly standardized enterprise MVC routing and inversion-of-control container.</p>
                   <p><strong>Internal Workings:</strong> Spawns an embedded Apache Tomcat servlet engine on port 8080. <code>DispatcherServlet</code> captures inbound REST routes and maps them to Controller handlers. Spring's IoC container instantiates and wires singletons using dependency injection.</p>
                   <p><strong>Why Chosen:</strong> Excellent multithreaded capacity, declarative configuration, and robust transactional boundaries.</p>
@@ -148,7 +148,7 @@ export default function ProjectsCard({ data, activeTab }) {
             </div>
 
             {/* Spring Data JPA & Hibernate */}
-            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+            <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10">
               <button
                 onClick={() => setExpandedTech(expandedTech === 'jpa' ? null : 'jpa')}
                 className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
@@ -160,7 +160,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 {expandedTech === 'jpa' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
               </button>
               {expandedTech === 'jpa' && (
-                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
+                <div className="p-5 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
                   <p><strong>Rationale:</strong> Decouples Java objects from physical SQL schema definitions, managing relationships cleanly.</p>
                   <p><strong>Internal Workings:</strong> Generates dynamic proxies for JPA interface repositories. Integrates Hibernate to snapshot active entities and flush database updates automatically at transaction boundaries via dirty checking.</p>
                   <p><strong>Why Chosen:</strong> Mitigates boilerplate SQL mapping, handles schema relations (One-to-Many cascade deletions), and optimizes transactions via connections pool caching.</p>
@@ -169,7 +169,7 @@ export default function ProjectsCard({ data, activeTab }) {
             </div>
 
             {/* PostgreSQL */}
-            <div className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10">
+            <div className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10">
               <button
                 onClick={() => setExpandedTech(expandedTech === 'postgres' ? null : 'postgres')}
                 className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
@@ -181,7 +181,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 {expandedTech === 'postgres' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
               </button>
               {expandedTech === 'postgres' && (
-                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
+                <div className="p-5 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/30 dark:bg-neutral-950/40 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans space-y-2">
                   <p><strong>Rationale:</strong> Reliable transactional persistence offering structured integrity checks.</p>
                   <p><strong>Internal Workings:</strong> Relational engine executing ACID-compliant B-Tree indexing. Flyway hooks compile migrations, executing incremental SQL versions from the database classpath before app boot to ensure repeatable builds.</p>
                   <p><strong>Why Chosen:</strong> Zero data loss reliability (WAL logging), foreign key checks, and clean composite index lookup performance.</p>
@@ -206,14 +206,14 @@ export default function ProjectsCard({ data, activeTab }) {
               <h3 className="text-xs font-mono font-black text-fuchsia-500 uppercase tracking-widest border-b border-neutral-900 pb-2">📂 Creational, Structural & Behavioral Patterns</h3>
               <div className="grid grid-cols-1 gap-4">
                 {data.patternsAndOops.designPatterns.map((pat, idx) => (
-                  <div key={idx} className="p-5 border border-gray-200 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl space-y-2.5">
+                  <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-900 pb-1.5">
                       <span className="text-xs font-bold text-neutral-950 dark:text-neutral-50 font-mono">{pat.name}</span>
                       <span className="text-[9px] bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 px-1.5 py-0.5 rounded font-mono uppercase font-black">Pattern</span>
                     </div>
                     <div className="text-xs space-y-1.5">
-                      <div><span className="text-gray-400 font-mono font-bold text-[10px] uppercase">Where:</span> <code className="bg-neutral-950 px-1.5 py-0.5 rounded text-fuchsia-300 font-mono text-[10.5px] border border-neutral-900">{pat.where}</code></div>
-                      <div><span className="text-gray-400 font-mono font-bold text-[10px] uppercase">Why:</span> <span className="text-neutral-600 dark:text-neutral-300 font-light">{pat.why}</span></div>
+                      <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[10px] uppercase">Where:</span> <code className="bg-neutral-950 px-1.5 py-0.5 rounded text-fuchsia-300 font-mono text-[10.5px] border border-neutral-900">{pat.where}</code></div>
+                      <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[10px] uppercase">Why:</span> <span className="text-neutral-600 dark:text-neutral-300 font-light">{pat.why}</span></div>
                       <div className="pt-1.5 border-t border-neutral-900 text-gray-500 dark:text-neutral-500 flex items-center space-x-1.5 italic text-[11px]">
                         <span>💡 Analogy:</span>
                         <span>{pat.analogy}</span>
@@ -229,14 +229,14 @@ export default function ProjectsCard({ data, activeTab }) {
               <h3 className="text-xs font-mono font-black text-fuchsia-500 uppercase tracking-widest border-b border-neutral-900 pb-2">☕ Core Object-Oriented Programming (OOP) Principles</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {data.patternsAndOops.oopConcepts.map((oop, idx) => (
-                  <div key={idx} className="p-5 border border-gray-200 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl flex flex-col justify-between space-y-3">
+                  <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl flex flex-col justify-between space-y-3">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center border-b border-neutral-900 pb-1.5">
                         <span className="text-xs font-bold text-neutral-950 dark:text-neutral-50 font-mono">{oop.concept}</span>
                         <span className="text-[9px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded font-mono uppercase font-black">OOP</span>
                       </div>
                       <div className="text-xs space-y-1.5 font-light">
-                        <div><span className="text-gray-400 font-mono font-bold text-[9px] uppercase block mb-0.5">Where:</span> <code className="bg-neutral-950 px-1 py-0.5 rounded text-fuchsia-300 font-mono text-[10px] border border-neutral-900 block overflow-x-auto whitespace-pre-wrap">{oop.where}</code></div>
+                        <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[9px] uppercase block mb-0.5">Where:</span> <code className="bg-neutral-950 px-1 py-0.5 rounded text-fuchsia-300 font-mono text-[10px] border border-neutral-900 block overflow-x-auto whitespace-pre-wrap">{oop.where}</code></div>
                         <p className="text-neutral-600 dark:text-neutral-300 pt-1">{oop.detail}</p>
                       </div>
                     </div>
@@ -291,7 +291,7 @@ export default function ProjectsCard({ data, activeTab }) {
 
           <div className="space-y-6">
             {data.deepDives.frontend.map((item, idx) => (
-              <div key={idx} className="p-5 border border-gray-200 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl space-y-3">
+              <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl space-y-3">
                 <div className="flex items-center justify-between border-b border-neutral-850 pb-2">
                   <strong className="text-sm font-mono text-gray-800 dark:text-gray-200">{item.file}</strong>
                   <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[8px] font-mono font-black uppercase rounded">React Primitive</span>
@@ -307,7 +307,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 </div>
                 
                 {/* Embedded QA Block */}
-                <div className="pt-2 border-t border-dashed border-gray-200 dark:border-neutral-900">
+                <div className="pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
                   <span className="text-[9px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-1">Interview Prep QA</span>
                   <div className="bg-fuchsia-500/[0.02] border border-fuchsia-500/10 rounded-lg p-3 text-xs space-y-1.5">
                     <p className="font-bold text-neutral-800 dark:text-neutral-200 dark:text-gray-200">Q: {item.qa.q}</p>
@@ -329,7 +329,7 @@ export default function ProjectsCard({ data, activeTab }) {
 
           <div className="space-y-6">
             {data.deepDives.backend.map((item, idx) => (
-              <div key={idx} className="p-5 border border-gray-200 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl space-y-3">
+              <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl space-y-3">
                 <div className="flex items-center justify-between border-b border-neutral-850 pb-2">
                   <strong className="text-sm font-mono text-gray-800 dark:text-gray-200">{item.file}</strong>
                   <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[8px] font-mono font-black uppercase rounded">Spring Bean</span>
@@ -338,7 +338,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 
                 {item.endpoints && (
                   <div className="text-xs font-mono">
-                    <span className="text-[9px] text-gray-400 block uppercase mb-1">Endpoints Exponent</span>
+                    <span className="text-[9px] text-neutral-500 dark:text-neutral-400 block uppercase mb-1">Endpoints Exponent</span>
                     <ul className="list-disc pl-4 text-fuchsia-400 space-y-0.5">
                       {item.endpoints.map((ep, i) => <li key={i}>{ep}</li>)}
                     </ul>
@@ -350,7 +350,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 {item.trigger && <p className="text-xs font-mono text-gray-500"><strong>Cron Trigger:</strong> {item.trigger}</p>}
 
                 {/* Embedded QA Block */}
-                <div className="pt-2 border-t border-dashed border-gray-200 dark:border-neutral-900">
+                <div className="pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
                   <span className="text-[9px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-1">Interview Prep QA</span>
                   <div className="bg-fuchsia-500/[0.02] border border-fuchsia-500/10 rounded-lg p-3 text-xs space-y-1.5">
                     <p className="font-bold text-neutral-800 dark:text-neutral-200 dark:text-gray-200">Q: {item.qa.q}</p>
@@ -372,7 +372,7 @@ export default function ProjectsCard({ data, activeTab }) {
 
           <div className="space-y-4">
             {data.designTradeoffs.map((item, idx) => (
-              <div key={idx} className="p-5 border border-gray-200 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl space-y-2">
+              <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl space-y-2">
                 <span className="text-sm font-mono font-bold text-gray-800 dark:text-gray-200 block border-b border-neutral-900 pb-1.5">{item.title}</span>
                 <p className="text-xs text-gray-600 dark:text-neutral-500 dark:text-neutral-450 leading-relaxed font-light pt-1">{item.tradeoff}</p>
               </div>
@@ -395,7 +395,7 @@ export default function ProjectsCard({ data, activeTab }) {
               return (
                 <div 
                   key={secIdx} 
-                  className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-50/50 dark:bg-neutral-900/30"
+                  className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-50/50 dark:bg-neutral-900/30"
                 >
                   <button
                     onClick={() => setExpandedQaSection(isSectionExpanded ? null : secIdx)}
@@ -409,25 +409,25 @@ export default function ProjectsCard({ data, activeTab }) {
                   </button>
 
                   {isSectionExpanded && (
-                    <div className="p-4 border-t border-gray-200 dark:border-neutral-900 space-y-3 bg-gray-50/5 dark:bg-black/20">
+                    <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 space-y-3 bg-gray-50/5 dark:bg-black/20">
                       {sec.questions.map((item, itemIdx) => {
                         const itemKey = `${secIdx}-${itemIdx}`;
                         const isItemExpanded = expandedQaItem === itemKey;
                         return (
                           <div 
                             key={itemIdx} 
-                            className="border border-gray-200 dark:border-neutral-900 rounded-lg overflow-hidden bg-neutral-50/30 dark:bg-neutral-950/40"
+                            className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-lg overflow-hidden bg-neutral-50/30 dark:bg-neutral-950/40"
                           >
                             <button
                               onClick={() => setExpandedQaItem(isItemExpanded ? null : itemKey)}
                               className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-900/20 transition-all text-left cursor-pointer"
                             >
-                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Q: {item.q}</span>
+                              <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Q: {item.q}</span>
                               {isItemExpanded ? <ChevronUp className="h-3.5 w-3.5 text-gray-400" /> : <ChevronDown className="h-3.5 w-3.5 text-gray-400" />}
                             </button>
 
                             {isItemExpanded && (
-                              <div className="p-4 border-t border-gray-200 dark:border-neutral-900 text-xs space-y-3 bg-neutral-50/70 dark:bg-neutral-950/80 font-sans">
+                              <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 text-xs space-y-3 bg-neutral-50/70 dark:bg-neutral-950/80 font-sans">
                                 {item.followups && item.followups.length > 0 && (
                                   <div className="space-y-1">
                                     <span className="block text-[8px] font-mono text-gray-400 uppercase tracking-widest">Follow-up Cross-questions</span>
@@ -436,7 +436,7 @@ export default function ProjectsCard({ data, activeTab }) {
                                     </ul>
                                   </div>
                                 )}
-                                <div className="space-y-1 border-t border-dashed border-gray-200 dark:border-neutral-800 pt-2.5">
+                                <div className="space-y-1 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pt-2.5">
                                   <span className="block text-[8px] font-mono text-fuchsia-500 uppercase tracking-widest font-black">Google L5 Answer</span>
                                   <p className="text-neutral-600 dark:text-neutral-300 dark:text-gray-200 leading-relaxed font-light">{item.a}</p>
                                 </div>

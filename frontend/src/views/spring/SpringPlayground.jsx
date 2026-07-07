@@ -190,13 +190,13 @@ export default function SpringPlayground() {
     <div className="space-y-6">
       
       {/* Selector Tabs */}
-      <div className="flex border-b border-gray-250 dark:border-neutral-900 pb-3 gap-3">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-3 gap-3">
         <button
           onClick={() => setActiveTab('ioc')}
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activeTab === 'ioc' 
               ? 'bg-green-500/10 text-green-500 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]' 
-              : 'bg-transparent text-gray-555 dark:text-gray-455 border-gray-200 dark:border-neutral-900 hover:border-green-500/20'}`}
+              : 'bg-transparent text-gray-555 dark:text-gray-455 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-green-500/20'}`}
         >
           <Cpu className="h-4 w-4" />
           <span>Spring Bean & IoC Container</span>
@@ -206,7 +206,7 @@ export default function SpringPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activeTab === 'mvc' 
               ? 'bg-green-500/10 text-green-500 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]' 
-              : 'bg-transparent text-gray-555 dark:text-gray-455 border-gray-200 dark:border-neutral-900 hover:border-green-500/20'}`}
+              : 'bg-transparent text-gray-555 dark:text-gray-455 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-green-500/20'}`}
         >
           <Network className="h-4 w-4" />
           <span>DispatcherServlet MVC</span>
@@ -215,8 +215,8 @@ export default function SpringPlayground() {
 
       {activeTab === 'ioc' ? (
         // IOC CONTAINER SIMULATOR
-        <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-255 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-250 dark:border-neutral-800 pb-4">
+        <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
             <div>
               <h2 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
                 <span>☕ ApplicationContext IoC Engine Simulator</span>
@@ -248,7 +248,7 @@ export default function SpringPlayground() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
             {/* Input Config Panel */}
-            <div className="lg:col-span-1 bg-gray-55/15 dark:bg-neutral-900/30 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
+            <div className="lg:col-span-1 bg-gray-55/15 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
               <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Container Configs</span>
               
               <div className="space-y-1.5">
@@ -289,7 +289,7 @@ export default function SpringPlayground() {
             </div>
 
             {/* Animation Canvas */}
-            <div className="lg:col-span-3 border border-gray-250 dark:border-neutral-900 bg-neutral-950/65 rounded-xl p-5 min-h-[200px] flex flex-col justify-center relative overflow-hidden">
+            <div className="lg:col-span-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/65 rounded-xl p-5 min-h-[200px] flex flex-col justify-center relative overflow-hidden">
               
               <div className="flex items-center justify-around gap-4 z-10 text-center font-mono text-xs">
                 
@@ -352,8 +352,8 @@ export default function SpringPlayground() {
         </div>
       ) : (
         // DISPATCHER SERVLET FLOW SIMULATOR
-        <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-255 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-          <div className="border-b border-gray-250 dark:border-neutral-800 pb-4">
+        <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+          <div className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
               <span>☕ Front Controller DispatcherServlet Routing</span>
             </h2>
@@ -365,7 +365,7 @@ export default function SpringPlayground() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
             {/* Form Input Variables */}
-            <div className="lg:col-span-1 bg-gray-55/15 dark:bg-neutral-900/30 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
+            <div className="lg:col-span-1 bg-gray-55/15 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
               <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Request Payload</span>
               
               <div>
@@ -398,7 +398,7 @@ export default function SpringPlayground() {
             </div>
 
             {/* HTTP Output response viewer */}
-            <div className="lg:col-span-3 border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 min-h-[220px] flex flex-col justify-between font-mono">
+            <div className="lg:col-span-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/60 rounded-xl p-5 min-h-[220px] flex flex-col justify-between font-mono">
               <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest block border-b border-neutral-900 pb-1.5 mb-2">HTTP Response Viewer</div>
               
               {httpResponse ? (

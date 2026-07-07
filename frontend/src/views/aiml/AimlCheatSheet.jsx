@@ -109,10 +109,10 @@ export default function AimlCheatSheet() {
   };
 
   return (
-    <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+    <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
       
       {/* Header */}
-      <div className="border-b border-gray-150 dark:border-[#333] pb-4">
+      <div className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
         <h2 className="text-xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
           📋 AI/ML Interview Glossary Cheat Sheet
         </h2>
@@ -131,7 +131,7 @@ export default function AimlCheatSheet() {
             placeholder="Search keywords or definitions..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs bg-gray-50/50 dark:bg-black/40 border border-gray-200 dark:border-neutral-800 rounded-xl font-mono text-gray-800 dark:text-gray-300 focus:outline-none focus:border-indigo-500 transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl font-mono text-neutral-800 dark:text-neutral-300 focus:outline-none focus:border-indigo-500 transition-all"
           />
         </div>
 
@@ -145,7 +145,7 @@ export default function AimlCheatSheet() {
               className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg border transition-all cursor-pointer
                 ${category === cat 
                   ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30' 
-                  : 'bg-transparent text-gray-550 dark:text-gray-450 border-gray-200 dark:border-neutral-900 hover:border-indigo-500/20'}`}
+                  : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-indigo-500/20'}`}
             >
               {cat}
             </button>
@@ -159,7 +159,7 @@ export default function AimlCheatSheet() {
           filtered.map((item, idx) => (
             <div 
               key={idx}
-              className="p-5 border border-gray-200 dark:border-neutral-900 bg-white/40 dark:bg-neutral-950/20 hover:border-indigo-500/30 rounded-xl flex flex-col justify-between space-y-4 hover:shadow-md transition-all group relative"
+              className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/40 dark:bg-neutral-950/20 hover:border-indigo-500/30 rounded-xl flex flex-col justify-between space-y-4 hover:shadow-md transition-all group relative"
             >
               {/* Top Row */}
               <div className="space-y-1.5">
@@ -175,7 +175,7 @@ export default function AimlCheatSheet() {
                     {copiedIndex === idx ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                   </button>
                 </div>
-                <h3 className="text-sm font-black text-gray-800 dark:text-gray-250 font-mono">
+                <h3 className="text-sm font-black text-neutral-800 dark:text-neutral-200 font-mono">
                   {item.term}
                 </h3>
               </div>
@@ -203,7 +203,7 @@ export default function AimlCheatSheet() {
             </div>
           ))
         ) : (
-          <div className="col-span-2 flex flex-col items-center justify-center py-10 border border-dashed border-gray-250 dark:border-neutral-800 rounded-xl text-center text-gray-450">
+          <div className="col-span-2 flex flex-col items-center justify-center py-10 border border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl text-center text-gray-450">
             <span className="text-2xl">🔎</span>
             <span className="text-xs font-mono mt-2">No matching glossary items found.</span>
           </div>

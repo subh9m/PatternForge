@@ -21,8 +21,8 @@ export default function ProjectsMainContent({ isOpen, toggleSidebar, activeProje
         onClick={toggleSidebar}
         className={`fixed top-20 z-40 p-3 
                     bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md 
-                    border border-gray-200 dark:border-neutral-800 
-                    rounded-full text-gray-700 dark:text-gray-300 
+                    border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 
+                    rounded-full text-neutral-700 dark:text-neutral-300 
                     hover:text-fuchsia-500 dark:hover:text-fuchsia-500 
                     hover:shadow-[0_0_20px_rgba(217,70,239,0.4)]
                     transition-all duration-500 ease-in-out
@@ -50,12 +50,12 @@ export default function ProjectsMainContent({ isOpen, toggleSidebar, activeProje
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 gap-4 text-center font-mono">
-            <div className="p-3 border border-gray-200 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl">
-              <span className="text-[9px] text-gray-400 block uppercase">Language</span>
+            <div className="p-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl">
+              <span className="text-[9px] text-neutral-500 dark:text-neutral-400 block uppercase">Language</span>
               <strong className="text-xs text-neutral-800 dark:text-neutral-200 dark:text-neutral-700 dark:text-neutral-300">Java / TS</strong>
             </div>
-            <div className="p-3 border border-gray-200 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl">
-              <span className="text-[9px] text-gray-400 block uppercase">Review Tier</span>
+            <div className="p-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-xl">
+              <span className="text-[9px] text-neutral-500 dark:text-neutral-400 block uppercase">Review Tier</span>
               <strong className="text-xs text-fuchsia-500 font-black">Google L5</strong>
             </div>
           </div>

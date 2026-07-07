@@ -8,9 +8,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: 'rgba(10, 15, 30, 0.95)', // Sleek dark slate
-        surface: 'rgba(20, 25, 45, 0.65)',     // Glass translucent surface
-        border: 'rgba(255, 255, 255, 0.1)',
+        background: 'var(--bg-color)', 
+        surface: 'var(--surface-color)',     
+        border: 'var(--border-color)',
         primary: {
           DEFAULT: '#3b82f6', // Bright blue
           hover: '#2563eb',

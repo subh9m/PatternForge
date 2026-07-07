@@ -24,9 +24,9 @@ export default function SpringMainContent({ isOpen, toggleSidebar, activeTab }) 
       <button
         onClick={toggleSidebar}
         className={`fixed top-20 z-40 p-3 
-                    bg-white/60 dark:bg-black/60 backdrop-blur-md 
-                    border border-gray-200 dark:border-[#333] 
-                    rounded-full text-gray-700 dark:text-gray-300 
+                    bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md 
+                    border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 
+                    rounded-full text-neutral-700 dark:text-neutral-300 
                     hover:text-green-500 dark:hover:text-green-500 
                     hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]
                     transition-all duration-500 ease-in-out

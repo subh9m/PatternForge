@@ -49,7 +49,7 @@ export const osConcepts = [
   </tbody>
 </table>
 <br/>
-<img src='/images/usermode_vs_kernelmode.png' alt='User vs Kernel mode' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-950/10 p-2' />`
+<img src='/images/usermode_vs_kernelmode.png' alt='User vs Kernel mode' class='max-w-full my-3 rounded-lg border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-neutral-950/10 p-2' />`
       },
       { 
         method: "System Call vs Library Call", 
@@ -89,7 +89,7 @@ export const osConcepts = [
   </tbody>
 </table>
 <br/>
-<img src='/images/monolithic_vs_microkernel.png' alt='Monolithic vs Microkernel' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
+<img src='/images/monolithic_vs_microkernel.png' alt='Monolithic vs Microkernel' class='max-w-full my-3 rounded-lg border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "🔥 Gotcha: Double Fault & Kernel Panic", 
@@ -163,7 +163,7 @@ export const osConcepts = [
   </tbody>
 </table>
 <br/>
-<img src='/images/process_states_lifecycle.png' alt='Process state transition' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
+<img src='/images/process_states_lifecycle.png' alt='Process state transition' class='max-w-full my-3 rounded-lg border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "What is Context Switching?", 
@@ -366,7 +366,7 @@ export const osConcepts = [
   </tbody>
 </table>
 <br/>
-<img src='/images/paging_in_os.png' alt='Paging memory mapping schematic' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
+<img src='/images/paging_in_os.png' alt='Paging memory mapping schematic' class='max-w-full my-3 rounded-lg border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "Demand Paging & Page Faults", 
@@ -407,7 +407,7 @@ export const osConcepts = [
         params: "Frames count vs total page faults", 
         output: "Increasing frame count increases fault rate", 
         complexity: "FIFO page tracing checks", 
-        desc: "<b>Q: What is Belady's Anomaly? Which page replacement algorithms are immune to it and why?</b><br/><ul><li><b>Belady's Anomaly:</b> The counter-intuitive phenomenon where increasing the number of physical memory frames results in an *increase* in the number of page faults.</li><li><b>Affected Algorithms:</b> FIFO (First-In-First-Out).</li><li><b>Immune Algorithms:</b> LRU (Least Recently Used) and Optimal.</li><li><b>The Stack Property:</b> Immune algorithms satisfy the Stack Property, where the set of pages in memory for $N$ frames is always a subset of the pages in memory for $N+1$ frames. FIFO does not preserve this hierarchy.</li></ul><br/><img src='/images/beladys_anomaly.png' alt='Beladys anomaly diagram' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
+        desc: "<b>Q: What is Belady's Anomaly? Which page replacement algorithms are immune to it and why?</b><br/><ul><li><b>Belady's Anomaly:</b> The counter-intuitive phenomenon where increasing the number of physical memory frames results in an *increase* in the number of page faults.</li><li><b>Affected Algorithms:</b> FIFO (First-In-First-Out).</li><li><b>Immune Algorithms:</b> LRU (Least Recently Used) and Optimal.</li><li><b>The Stack Property:</b> Immune algorithms satisfy the Stack Property, where the set of pages in memory for $N$ frames is always a subset of the pages in memory for $N+1$ frames. FIFO does not preserve this hierarchy.</li></ul><br/><img src='/images/beladys_anomaly.png' alt='Beladys anomaly diagram' class='max-w-full my-3 rounded-lg border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-neutral-955/10 p-2' />" 
       },
       { 
         method: "🔥 Gotcha: Inverted Page Table Overhead", 
@@ -554,7 +554,7 @@ export const osConcepts = [
     <tr><td>RAID 6</td><td>Double Parity</td><td>2 disk loss (2 parity blocks)</td><td>4</td></tr>
   </tbody>
 </table>
-<br/><img src='/images/raid_levels.png' alt='RAID array levels' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
+<br/><img src='/images/raid_levels.png' alt='RAID array levels' class='max-w-full my-3 rounded-lg border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "What is an Inode?", 
@@ -573,7 +573,7 @@ export const osConcepts = [
     <tr><td>Direct and Indirect Block pointers on disk</td><td>Actual file content bytes</td></tr>
   </tbody>
 </table>
-<br/><img src='/images/inode_structure.png' alt='Unix Inode blocks mapping schema' class='max-w-full my-3 rounded-lg border border-gray-250 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
+<br/><img src='/images/inode_structure.png' alt='Unix Inode blocks mapping schema' class='max-w-full my-3 rounded-lg border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-neutral-955/10 p-2' />` 
       },
       { 
         method: "Hard Link vs Soft Link (Symlink)", 

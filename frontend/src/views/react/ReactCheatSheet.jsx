@@ -196,10 +196,10 @@ export default function ReactCheatSheet() {
   };
 
   return (
-    <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-255 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
+    <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
       
       {/* Header */}
-      <div className="border-b border-gray-150 dark:border-[#333] pb-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide">
             📋 React Cheat Sheets & Boilerplates
@@ -210,7 +210,7 @@ export default function ReactCheatSheet() {
         </div>
 
         {/* Tab Selector */}
-        <div className="flex bg-gray-100 dark:bg-neutral-900 p-1.5 rounded-xl border border-gray-200 dark:border-neutral-800">
+        <div className="flex bg-gray-100 dark:bg-neutral-900 p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
           <button
             onClick={() => setViewMode('glossary')}
             className={`flex items-center space-x-1.5 px-4 py-1.5 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer
@@ -246,7 +246,7 @@ export default function ReactCheatSheet() {
                 placeholder="Search hooks or categories..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-xs bg-gray-55/50 dark:bg-black/40 border border-gray-250 dark:border-neutral-905 rounded-xl font-mono text-gray-805 dark:text-gray-300 focus:outline-none focus:border-sky-500 transition-all"
+                className="w-full pl-9 pr-4 py-2 text-xs bg-gray-55/50 dark:bg-black/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-905 rounded-xl font-mono text-gray-805 dark:text-gray-300 focus:outline-none focus:border-sky-500 transition-all"
               />
             </div>
 
@@ -260,7 +260,7 @@ export default function ReactCheatSheet() {
                   className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg border transition-all cursor-pointer
                     ${category === cat 
                       ? 'bg-sky-500/10 text-sky-500 border-sky-500/30' 
-                      : 'bg-transparent text-gray-555 dark:text-gray-455 border-gray-200 dark:border-neutral-900 hover:border-sky-500/20'}`}
+                      : 'bg-transparent text-gray-555 dark:text-gray-455 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/20'}`}
                 >
                   {cat}
                 </button>
@@ -274,7 +274,7 @@ export default function ReactCheatSheet() {
               filtered.map((item, idx) => (
                 <div 
                   key={idx}
-                  className="p-5 border border-gray-200 dark:border-neutral-900 bg-white/40 dark:bg-neutral-950/20 hover:border-sky-500/30 rounded-xl flex flex-col justify-between space-y-4 hover:shadow-md transition-all group relative"
+                  className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/40 dark:bg-neutral-950/20 hover:border-sky-500/30 rounded-xl flex flex-col justify-between space-y-4 hover:shadow-md transition-all group relative"
                 >
                   {/* Top Row */}
                   <div className="space-y-1.5">
@@ -290,7 +290,7 @@ export default function ReactCheatSheet() {
                         {copiedIndex === idx ? <Check className="h-3.5 w-3.5 text-emerald-555" /> : <Copy className="h-3.5 w-3.5" />}
                       </button>
                     </div>
-                    <h3 className="text-sm font-black text-gray-800 dark:text-gray-250 font-mono">
+                    <h3 className="text-sm font-black text-neutral-800 dark:text-neutral-200 font-mono">
                       {item.term}
                     </h3>
                   </div>
@@ -318,7 +318,7 @@ export default function ReactCheatSheet() {
                 </div>
               ))
             ) : (
-              <div className="col-span-2 flex flex-col items-center justify-center py-10 border border-dashed border-gray-250 dark:border-neutral-800 rounded-xl text-center text-gray-455">
+              <div className="col-span-2 flex flex-col items-center justify-center py-10 border border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl text-center text-gray-455">
                 <span className="text-2xl">🔎</span>
                 <span className="text-xs font-mono mt-2">No matching items found.</span>
               </div>
@@ -340,7 +340,7 @@ export default function ReactCheatSheet() {
                 className={`w-full p-4 border rounded-xl text-left transition-all cursor-pointer flex flex-col justify-between space-y-1
                   ${activeSnippetIdx === idx 
                     ? 'border-sky-500/30 bg-sky-500/5 text-sky-500 shadow-md shadow-sky-500/5' 
-                    : 'border-gray-200 dark:border-neutral-900 hover:border-sky-500/10 text-gray-700 dark:text-gray-300'}`}
+                    : 'border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/10 text-neutral-700 dark:text-neutral-300'}`}
               >
                 <strong className="text-[11px] font-black">{snip.name}</strong>
                 <span className="text-[9.5px] text-gray-450 dark:text-gray-500 font-light leading-normal">{snip.desc}</span>
@@ -349,7 +349,7 @@ export default function ReactCheatSheet() {
           </div>
 
           {/* Code Viewer Panel */}
-          <div className="lg:col-span-2 border border-gray-250 dark:border-neutral-900 bg-neutral-950/70 rounded-xl p-5 flex flex-col justify-between min-h-[300px] relative">
+          <div className="lg:col-span-2 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/70 rounded-xl p-5 flex flex-col justify-between min-h-[300px] relative">
             <div className="absolute right-4 top-4 z-10">
               <button
                 onClick={() => handleCopy(REACT_SNIPPETS[activeSnippetIdx].code, activeSnippetIdx)}

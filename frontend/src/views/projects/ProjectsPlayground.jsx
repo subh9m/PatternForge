@@ -133,7 +133,7 @@ export default function ProjectsPlayground() {
     <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
       
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-250 dark:border-neutral-800 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-4">
         <div>
           <h2 className="text-lg font-black text-neutral-950 dark:text-neutral-50 font-mono uppercase tracking-wide">
             ⚙️ Interactive Request Lifecycle Trace Simulator
@@ -164,7 +164,7 @@ export default function ProjectsPlayground() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Scenarios Sidebar */}
-        <div className="lg:col-span-1 bg-neutral-100/15 dark:bg-neutral-900/30 dark:bg-neutral-900/30 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
+        <div className="lg:col-span-1 bg-neutral-100/15 dark:bg-neutral-900/30 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
           <span className="text-[10px] font-black text-neutral-500 dark:text-neutral-400 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Subsystem Scenario</span>
           <div className="flex flex-col space-y-2">
             <label className={`flex items-center space-x-2 p-2 rounded-lg border cursor-pointer transition-all
@@ -186,7 +186,7 @@ export default function ProjectsPlayground() {
         </div>
 
         {/* Visual Architectural Nodes Layout */}
-        <div className="lg:col-span-3 border border-gray-250 dark:border-neutral-900 bg-neutral-950/65 rounded-xl p-5 min-h-[220px] flex flex-col justify-center relative overflow-hidden font-mono text-[10.5px]">
+        <div className="lg:col-span-3 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/65 rounded-xl p-5 min-h-[220px] flex flex-col justify-center relative overflow-hidden font-mono text-[10.5px]">
           <div className="flex flex-col md:flex-row justify-around items-center w-full gap-4 relative z-10">
             
             {/* Node 0: Client Browser */}

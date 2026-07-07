@@ -600,8 +600,8 @@ export default function GitPlayground() {
   return (
     <div className="space-y-6">
       {/* Visual Workspace Dashboard */}
-      <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-[#333] rounded-2xl p-6 md:p-8 shadow-lg">
-        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-250 dark:border-neutral-800 pb-5">
+      <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-lg">
+        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pb-5">
           <div>
             <h1 className="text-2xl font-black text-gray-900 dark:text-white font-mono uppercase tracking-wide flex items-center space-x-2.5">
               <span className="relative flex h-3 w-3">
@@ -630,7 +630,7 @@ export default function GitPlayground() {
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
             
             {/* Left 3/4 Graph Canvas */}
-            <div className="xl:col-span-3 relative border border-gray-200 dark:border-neutral-900 bg-neutral-950/60 dark:bg-black/60 rounded-xl overflow-x-auto p-4 min-h-[240px] scrollbar-thin">
+            <div className="xl:col-span-3 relative border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-neutral-950/60 dark:bg-black/60 rounded-xl overflow-x-auto p-4 min-h-[240px] scrollbar-thin">
               {/* SVG Graph Drawing Canvas */}
               <svg className="w-full h-full" style={{ minWidth: '950px', height: '220px' }}>
                 {/* Connecting lines with stroke drawing effect */}
@@ -854,7 +854,7 @@ export default function GitPlayground() {
                       animate={{ opacity: 1 }}
                       className="space-y-3.5"
                     >
-                      <span className="block text-[10px] font-bold text-gray-400 font-mono">Visual commit helper:</span>
+                      <span className="block text-[10px] font-bold text-neutral-500 dark:text-neutral-400 font-mono">Visual commit helper:</span>
                       <ul className="text-[10.5px] text-gray-500 space-y-2 list-disc pl-3 font-sans leading-relaxed">
                         <li><strong>Commit Circle:</strong> Represents a saved file snapshot.</li>
                         <li><strong>Lines:</strong> Visual parent-child lineage paths.</li>
@@ -910,9 +910,9 @@ export default function GitPlayground() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           
           {/* File Explorer (Left sidebar in Directory Panel) */}
-          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
+          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between border-b border-gray-250 dark:border-neutral-900 pb-2 mb-3">
+              <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-2 mb-3">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">📂 File Explorer</span>
                 <span className="h-2 w-2 rounded-full bg-blue-500"></span>
               </div>
@@ -921,7 +921,7 @@ export default function GitPlayground() {
                 {files.map((file, idx) => {
                   const isSelected = file.name === selectedFile;
                   let statusColor = 'text-gray-400';
-                  let borderStyle = isSelected ? 'border-amber-500 bg-amber-500/[0.04]' : 'border-gray-250 dark:border-neutral-800 bg-white/40 dark:bg-black/30';
+                  let borderStyle = isSelected ? 'border-amber-500 bg-amber-500/[0.04]' : 'border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white/40 dark:bg-black/30';
                   
                   if (file.status === 'modified') statusColor = 'text-red-500';
                   if (file.status === 'staged') statusColor = 'text-green-500';
@@ -935,7 +935,7 @@ export default function GitPlayground() {
                     >
                       <div className="flex items-center space-x-2">
                         <span className="text-xs">📄</span>
-                        <span className="font-mono text-xs font-bold text-gray-700 dark:text-gray-300">{file.name}</span>
+                        <span className="font-mono text-xs font-bold text-neutral-700 dark:text-neutral-300">{file.name}</span>
                       </div>
                       <span className={`text-[8.5px] font-mono font-bold uppercase tracking-wider ${statusColor}`}>
                         {file.status}
@@ -946,7 +946,7 @@ export default function GitPlayground() {
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-dashed border-gray-200 dark:border-neutral-900 grid grid-cols-2 gap-2">
+            <div className="mt-4 pt-3 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleGitAdd(selectedFile)}
                 className="flex items-center justify-center space-x-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-mono font-bold cursor-pointer transition-colors shadow-sm"
@@ -963,9 +963,9 @@ export default function GitPlayground() {
           </div>
 
           {/* Interactive Code Editor (Center pane in Directory Panel) */}
-          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between min-h-[220px]">
+          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between min-h-[220px]">
             <div>
-              <div className="flex items-center justify-between border-b border-gray-250 dark:border-neutral-900 pb-2 mb-3">
+              <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-2 mb-3">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">📝 Code Editor: {selectedFile}</span>
                 <span className="text-[8px] font-mono text-gray-400 uppercase">Write actual code here</span>
               </div>
@@ -998,9 +998,9 @@ export default function GitPlayground() {
           </div>
 
           {/* Staging Index (Right pane in Directory Panel) */}
-          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-gray-200 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
+          <div className="bg-gray-50/50 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between border-b border-gray-250 dark:border-neutral-900 pb-2 mb-3">
+              <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 pb-2 mb-3">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">📦 Staging Area (Index)</span>
                 <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
               </div>
@@ -1022,7 +1022,7 @@ export default function GitPlayground() {
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-28 text-center border border-dashed border-gray-250 dark:border-neutral-800 rounded-lg">
+                  <div className="flex flex-col items-center justify-center h-28 text-center border border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg">
                     <span className="text-xl">🧺</span>
                     <span className="text-[10px] font-mono text-gray-400 mt-1">Staging index empty</span>
                   </div>
@@ -1031,13 +1031,13 @@ export default function GitPlayground() {
             </div>
 
             {stagingArea.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-dashed border-gray-200 dark:border-neutral-900 space-y-2">
+              <div className="mt-4 pt-3 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 space-y-2">
                 <input
                   type="text"
                   id="commitMsg"
                   placeholder="Enter commit message..."
                   defaultValue="Modify config structure"
-                  className="w-full px-2.5 py-1.5 text-xs bg-gray-150 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg font-mono text-gray-800 dark:text-gray-300 focus:outline-none"
+                  className="w-full px-2.5 py-1.5 text-xs bg-gray-150 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg font-mono text-neutral-800 dark:text-neutral-300 focus:outline-none"
                 />
                 <button
                   onClick={() => {
@@ -1058,7 +1058,7 @@ export default function GitPlayground() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* INTERACTIVE GLOSSARY / COMMAND TIPS */}
-        <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-[#333] rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+        <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
           <div>
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest font-mono mb-3">
               💡 Command Tooltips
@@ -1071,7 +1071,7 @@ export default function GitPlayground() {
               {Object.entries(COMMAND_HELP).map(([cmd, definition], idx) => (
                 <div 
                   key={idx} 
-                  className="p-2 border border-gray-150 dark:border-neutral-900 hover:border-amber-500/20 bg-gray-50/30 dark:bg-black/30 rounded-lg group transition-all"
+                  className="p-2 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-amber-500/20 bg-gray-50/30 dark:bg-black/30 rounded-lg group transition-all"
                 >
                   <code className="text-[10.5px] font-mono font-black text-amber-500">{cmd}</code>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-normal font-sans mt-0.5 select-none hidden group-hover:block transition-all animate-fadeIn">
@@ -1141,7 +1141,7 @@ export default function GitPlayground() {
       </div>
 
       {/* QUICK ACTIONS PANEL (Merges & Rebases quick test triggers) */}
-      <div className="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-gray-250 dark:border-[#333] rounded-2xl p-6 shadow-lg">
+      <div className="bg-white/80 dark:bg-neutral-950/70 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 shadow-lg">
         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest font-mono mb-4 flex items-center space-x-1.5">
           <GitBranch className="h-4 w-4 text-amber-500" />
           <span>Quick Branch Merges & Rebases Sandbox Triggers</span>

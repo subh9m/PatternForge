@@ -9,9 +9,9 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             Network Topology Schematics
           </span>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-200 dark:border-neutral-900 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             {/* Star Topology */}
-            <div className="p-4 border border-gray-250 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2 text-center">
+            <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2 text-center">
               <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-500 text-[8px] font-mono font-black uppercase rounded inline-block">Star Topology</span>
               <div className="flex items-center justify-center h-20 relative font-mono text-[10px]">
                 <div className="absolute top-2 left-2 p-1 border border-neutral-300 dark:border-neutral-800 rounded bg-white dark:bg-neutral-900">Node 1</div>
@@ -24,7 +24,7 @@ const renderDiagram = (conceptId) => {
             </div>
 
             {/* Mesh Topology */}
-            <div className="p-4 border border-gray-250 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2 text-center">
+            <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2 text-center">
               <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-500 text-[8px] font-mono font-black uppercase rounded inline-block">Mesh Topology (Full)</span>
               <div className="flex items-center justify-center h-20 relative font-mono text-[10px]">
                 <div className="absolute top-2 left-10 p-1 border border-cyan-500/30 rounded bg-white dark:bg-neutral-900">A</div>
@@ -45,9 +45,9 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             Network Address Translation (NAT) Mapping
           </span>
-          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-200 dark:border-neutral-900 rounded-xl space-y-3">
+          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
             <div className="flex flex-col sm:flex-row items-center justify-around gap-4 font-mono text-xs text-center">
-              <div className="p-3 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
+              <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
                 <strong className="text-gray-800 dark:text-gray-200 block">Private local IP</strong>
                 <span className="text-[10.5px] text-emerald-500">192.168.1.10:8080</span>
               </div>
@@ -61,7 +61,7 @@ const renderDiagram = (conceptId) => {
 
               <div className="flex flex-col items-center"><ArrowRight className="h-4 w-4 text-cyan-500" /></div>
 
-              <div className="p-3 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
+              <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
                 <strong className="text-gray-800 dark:text-gray-200 block">Public Internet IP</strong>
                 <span className="text-[10.5px] text-blue-500">203.0.113.5:1425</span>
               </div>
@@ -76,16 +76,16 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             OSI 7-Layer vs TCP/IP 4-Layer Mapping
           </span>
-          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-200 dark:border-neutral-900 rounded-xl overflow-x-auto">
+          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
             <table className="w-full text-left font-mono text-[10.5px] border-collapse min-w-[500px]">
               <thead>
-                <tr className="border-b border-gray-250 dark:border-neutral-800 text-gray-450">
+                <tr className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-450">
                   <th className="py-2 pr-4 font-black uppercase">OSI 7 Layers</th>
                   <th className="py-2 px-4 font-black uppercase">TCP/IP Layers</th>
                   <th className="py-2 pl-4 font-black uppercase">Data Unit</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-250 dark:divide-neutral-900 text-gray-700 dark:text-gray-300">
+              <tbody className="divide-y divide-gray-250 dark:divide-neutral-900 text-neutral-700 dark:text-neutral-300">
                 <tr>
                   <td className="py-2 pr-4">Application, Presentation, Session</td>
                   <td className="py-2 px-4 text-cyan-500 font-bold">Application</td>
@@ -118,9 +118,9 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             DNS Domain Translation Lookup Flow
           </span>
-          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-200 dark:border-neutral-900 rounded-xl space-y-3">
+          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
             <div className="flex flex-col sm:flex-row items-center justify-around gap-4 font-mono text-xs text-center">
-              <div className="p-3 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
+              <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
                 <strong className="text-gray-800 dark:text-gray-200 block">Browser Request</strong>
                 <span className="text-[10px] text-gray-400">"http://interviewbit.com"</span>
               </div>
@@ -134,7 +134,7 @@ const renderDiagram = (conceptId) => {
 
               <div className="flex flex-col items-center"><ArrowRight className="h-4 w-4 text-cyan-500" /></div>
 
-              <div className="p-3 bg-white dark:bg-neutral-950 border border-gray-250 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
+              <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full sm:w-1/3">
                 <strong className="text-gray-800 dark:text-gray-200 block">Resolved IP Output</strong>
                 <span className="text-[10.5px] text-emerald-500">172.217.166.36</span>
               </div>
@@ -149,23 +149,23 @@ const renderDiagram = (conceptId) => {
           <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
             SSL / TLS Handshake Sequence
           </span>
-          <div className="p-5 bg-gray-50/50 dark:bg-black/40 border border-gray-200 dark:border-neutral-900 rounded-xl space-y-4">
+          <div className="p-5 bg-neutral-50/60 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
             <div className="flex flex-col space-y-3 font-mono text-[10.5px]">
-              <div className="p-3 bg-white dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
+              <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-cyan-500/10 text-cyan-500 rounded">1. ClientHello</span>
-                <span className="text-gray-500">Browser sends supported TLS versions and active cipher list.</span>
+                <span className="text-neutral-600 dark:text-neutral-450">Browser sends supported TLS versions and active cipher list.</span>
               </div>
-              <div className="p-3 bg-white dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
+              <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-cyan-500/10 text-cyan-500 rounded">2. ServerHello</span>
-                <span className="text-gray-500">Server responds with selected cipher and its CA Digital Certificate.</span>
+                <span className="text-neutral-600 dark:text-neutral-450">Server responds with selected cipher and its CA Digital Certificate.</span>
               </div>
-              <div className="p-3 bg-white dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
+              <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-cyan-500/10 text-cyan-500 rounded">3. Key Exchange</span>
-                <span className="text-gray-500">Client verifies Certificate and exchanges session key using Asymmetric encryption.</span>
+                <span className="text-neutral-600 dark:text-neutral-450">Client verifies Certificate and exchanges session key using Asymmetric encryption.</span>
               </div>
               <div className="p-3 bg-cyan-500/5 border border-cyan-500/25 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-cyan-500 text-white rounded font-bold">4. Encrypted Session</span>
-                <span className="text-gray-700 dark:text-gray-300 font-bold">Both sides utilize fast Symmetric encryption for all web packet exchanges.</span>
+                <span className="text-neutral-700 dark:text-neutral-300 font-bold">Both sides utilize fast Symmetric encryption for all web packet exchanges.</span>
               </div>
             </div>
           </div>
@@ -183,10 +183,10 @@ export default function CnCard({ data }) {
   return (
     <section 
       id={data.id}
-      className="w-full bg-white dark:bg-neutral-950 border border-gray-250 dark:border-[#222] rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-cyan-500/25 relative"
+      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-cyan-500/25 relative"
     >
       {/* Section Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-150 dark:border-[#333]">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
         <div className="flex items-center space-x-3">
           <span className="px-3 py-1 bg-cyan-500/10 text-cyan-500 text-[10px] font-black uppercase font-mono tracking-wider rounded-md">
             {data.num}
@@ -216,26 +216,26 @@ export default function CnCard({ data }) {
           return (
             <div 
               key={idx}
-              className="border border-gray-200 dark:border-neutral-900 rounded-xl overflow-hidden bg-gray-50/[0.15] dark:bg-neutral-900/10"
+              className="border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-hidden bg-neutral-100/10 dark:bg-neutral-900/10"
             >
               {/* Accordion Toggle */}
               <button
                 onClick={() => setExpandedSubtopic(isExpanded ? null : idx)}
-                className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-55/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-neutral-100/20 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
                   <span className="h-2 w-2 rounded-full bg-cyan-500"></span>
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-250">{sub.name}</span>
+                  <span className="text-sm font-bold text-neutral-800 dark:text-neutral-200">{sub.name}</span>
                 </div>
                 {isExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
               </button>
 
               {/* Accordion Content */}
               {isExpanded && (
-                <div className="p-5 border-t border-gray-200 dark:border-neutral-900 space-y-6 animate-fadeIn">
+                <div className="p-5 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 space-y-6 animate-fadeIn">
                   
                   {/* Highlighted One-Liner */}
-                  <div className="p-3.5 bg-cyan-500/[0.03] border-l-3 border-cyan-500 text-gray-700 dark:text-gray-300 rounded-r-lg font-sans text-xs flex items-center space-x-3 leading-relaxed">
+                  <div className="p-3.5 bg-cyan-500/[0.03] border-l-3 border-cyan-500 text-neutral-700 dark:text-neutral-300 rounded-r-lg font-sans text-xs flex items-center space-x-3 leading-relaxed">
                     <Sparkles className="h-4 w-4 text-cyan-500 flex-shrink-0" />
                     <div>
                       <span className="font-mono text-[9px] font-black text-cyan-500 uppercase tracking-widest block mb-0.5">Interview One-Liner</span>
@@ -246,32 +246,32 @@ export default function CnCard({ data }) {
                   {/* Core Conceptual Details Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Definition */}
-                    <div className="p-4 bg-white dark:bg-black border border-gray-200 dark:border-neutral-900 rounded-xl">
+                    <div className="p-4 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">🎯 Interview Definition</span>
                       <p className="text-xs text-gray-600 dark:text-gray-300 font-light leading-relaxed">{sub.definition}</p>
                     </div>
 
                     {/* Why Need */}
-                    <div className="p-4 bg-white dark:bg-black border border-gray-200 dark:border-neutral-900 rounded-xl">
+                    <div className="p-4 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">❓ Why Do We Need It?</span>
                       <p className="text-xs text-gray-600 dark:text-gray-300 font-light leading-relaxed">{sub.whyNeed}</p>
                     </div>
 
                     {/* Real World Example */}
-                    <div className="p-4 bg-white dark:bg-black border border-gray-200 dark:border-neutral-900 rounded-xl">
+                    <div className="p-4 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">🌍 Real World Example</span>
                       <p className="text-xs text-gray-600 dark:text-gray-300 font-light leading-relaxed">{sub.example}</p>
                     </div>
 
                     {/* Developer Perspective */}
-                    <div className="p-4 bg-white dark:bg-black border border-gray-200 dark:border-neutral-900 rounded-xl">
+                    <div className="p-4 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">💻 SDE Perspective</span>
                       <p className="text-xs text-gray-600 dark:text-gray-300 font-light leading-relaxed">{sub.devPerspective}</p>
                     </div>
                   </div>
 
                   {/* Questions & Troubleshooting */}
-                  <div className="space-y-4 pt-2 border-t border-dashed border-gray-200 dark:border-neutral-900">
+                  <div className="space-y-4 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       
                       {/* Interview Questions */}
@@ -280,7 +280,7 @@ export default function CnCard({ data }) {
                           <HelpCircle className="h-3.5 w-3.5 text-blue-500" />
                           <span>Interview Questions</span>
                         </span>
-                        <ul className="space-y-2 text-xs text-gray-600 dark:text-gray-350 list-decimal pl-4">
+                        <ul className="space-y-2 text-xs text-neutral-600 dark:text-neutral-400 list-decimal pl-4">
                           {sub.questions.map((q, i) => <li key={i}>{q}</li>)}
                         </ul>
                       </div>
@@ -291,7 +291,7 @@ export default function CnCard({ data }) {
                           <HelpCircle className="h-3.5 w-3.5 text-purple-500" />
                           <span>Important Follow-ups</span>
                         </span>
-                        <ul className="space-y-2 text-xs text-gray-600 dark:text-gray-350 list-disc pl-4">
+                        <ul className="space-y-2 text-xs text-neutral-600 dark:text-neutral-400 list-disc pl-4">
                           {sub.followups.map((f, i) => <li key={i}>{f}</li>)}
                         </ul>
                       </div>
@@ -300,14 +300,14 @@ export default function CnCard({ data }) {
                   </div>
 
                   {/* Common Confusions & Key Takeaways */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200 dark:border-neutral-900">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
                     {/* Common Confusions */}
                     <div className="p-4 bg-amber-500/[0.02] border border-amber-500/10 rounded-xl">
                       <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest font-mono mb-2 flex items-center space-x-1.5">
                         <AlertTriangle className="h-3.5 w-3.5" />
                         <span>⚠️ Common Confusions</span>
                       </span>
-                      <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-350 list-disc pl-4">
+                      <ul className="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400 list-disc pl-4">
                         {sub.confusions.map((c, i) => <li key={i}>{c}</li>)}
                       </ul>
                     </div>
@@ -318,7 +318,7 @@ export default function CnCard({ data }) {
                         <CheckSquare className="h-3.5 w-3.5" />
                         <span>✅ Key Takeaways</span>
                       </span>
-                      <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-350 list-disc pl-4">
+                      <ul className="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400 list-disc pl-4">
                         {sub.takeaways.map((t, i) => <li key={i}>{t}</li>)}
                       </ul>
                     </div>
