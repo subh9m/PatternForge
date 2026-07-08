@@ -21,6 +21,16 @@ public class ProblemGenerationService {
     private final Set<UUID> generatingProblems = ConcurrentHashMap.newKeySet();
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProblemGenerationService.class);
 
+    private static volatile long lastUserRequestTime = 0;
+
+    public static void recordUserActivity() {
+        lastUserRequestTime = System.currentTimeMillis();
+    }
+
+    public static boolean isBackgroundGenerationPaused() {
+        return (System.currentTimeMillis() - lastUserRequestTime) < 60000;
+    }
+
     private static class PrioritizedTask implements Runnable, Comparable<PrioritizedTask> {
         final UUID problemId;
         final int priority; // 1 = HIGH, 2 = LOW
@@ -56,12 +66,19 @@ public class ProblemGenerationService {
         if (generatingProblems.add(problemId)) {
             executor.execute(new PrioritizedTask(problemId, priority, () -> {
                 try {
+                    if (priority > 1) {
+                        while (isBackgroundGenerationPaused()) {
+                            Thread.sleep(5000);
+                        }
+                    }
+
                     Optional<Problem> freshOpt = problemRepository.findById(problemId);
                     if (freshOpt.isPresent()) {
                         generateMissingDetailsInternal(freshOpt.get());
                     }
-                    // Wait 4 seconds between requests to stay below 15 RPM
-                    Thread.sleep(4000);
+                    
+                    long sleepMs = (priority == 1) ? 4000 : 12000;
+                    Thread.sleep(sleepMs);
                 } catch (Exception e) {
                     log.error("Error in sequential problem generation thread", e);
                 } finally {

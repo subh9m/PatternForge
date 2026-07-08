@@ -274,7 +274,9 @@ public class LocalFallbackGenerator {
         if (str == null || str.trim().isEmpty() || "{}".equals(str.trim())) return true;
         String lower = str.toLowerCase();
         return lower.contains("ai solution details unavailable") ||
-               lower.contains("ai details not available");
+               lower.contains("ai details not available") ||
+               lower.contains("refer to standard patterns under") ||
+               lower.contains("analyze the problem constraints and identify");
     }
 
     public static boolean isBoilerplateBasicDetails(String str) {
@@ -282,6 +284,10 @@ public class LocalFallbackGenerator {
         String lower = str.toLowerCase();
         return lower.contains("problem details not loaded") ||
                lower.contains("please refer to leetcode") ||
+               lower.contains("standard parameters as defined in") ||
+               lower.contains("expected optimal output type") ||
+               lower.contains("standard leetcode constraints") ||
+               lower.contains("analyze and implement the algorithm for") ||
                (lower.contains("problem: ") && lower.contains("(leetcode #"));
     }
 }

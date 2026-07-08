@@ -447,6 +447,7 @@ public class ProblemController {
 
     @GetMapping("/{id}/basic-details")
     public ResponseEntity<?> getProblemBasicDetails(Authentication authentication, @PathVariable UUID id) {
+        ProblemGenerationService.recordUserActivity();
         Optional<Problem> problemOpt = problemRepository.findById(id);
         if (problemOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -539,6 +540,7 @@ public class ProblemController {
 
     @GetMapping("/{id}/solution-details")
     public ResponseEntity<?> getProblemSolutionDetails(Authentication authentication, @PathVariable UUID id) {
+        ProblemGenerationService.recordUserActivity();
         Optional<Problem> problemOpt = problemRepository.findById(id);
         if (problemOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
