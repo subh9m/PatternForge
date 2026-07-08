@@ -464,11 +464,22 @@ public class ProblemController {
                             .header("Content-Type", "application/json")
                             .body(p.getBasicDetailsJson());
                 } else {
-                    problemGenerationService.queueGeneration(p.getId(), 1);
-                    String fallbackJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                    return ResponseEntity.ok()
-                            .header("Content-Type", "application/json")
-                            .body(fallbackJson);
+                    try {
+                        String jsonStr = geminiService.generateProblemBasicDetailsJson(
+                                p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+                        mapper.readTree(jsonStr);
+                        p.setBasicDetailsJson(jsonStr);
+                        problemRepository.save(p);
+                        return ResponseEntity.ok()
+                                .header("Content-Type", "application/json")
+                                .body(jsonStr);
+                    } catch (Exception e) {
+                        problemGenerationService.queueGeneration(p.getId(), 1);
+                        String fallbackJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+                        return ResponseEntity.ok()
+                                .header("Content-Type", "application/json")
+                                .body(fallbackJson);
+                    }
                 }
             } catch (Exception e) {
                 // Invalid JSON, discard and try to fall back or regenerate
@@ -545,11 +556,22 @@ public class ProblemController {
                             .header("Content-Type", "application/json")
                             .body(p.getSolutionDetailsJson());
                 } else {
-                    problemGenerationService.queueGeneration(p.getId(), 1);
-                    String fallbackJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                    return ResponseEntity.ok()
-                            .header("Content-Type", "application/json")
-                            .body(fallbackJson);
+                    try {
+                        String jsonStr = geminiService.generateProblemSolutionDetailsJson(
+                                p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+                        mapper.readTree(jsonStr);
+                        p.setSolutionDetailsJson(jsonStr);
+                        problemRepository.save(p);
+                        return ResponseEntity.ok()
+                                .header("Content-Type", "application/json")
+                                .body(jsonStr);
+                    } catch (Exception e) {
+                        problemGenerationService.queueGeneration(p.getId(), 1);
+                        String fallbackJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+                        return ResponseEntity.ok()
+                                .header("Content-Type", "application/json")
+                                .body(fallbackJson);
+                    }
                 }
             } catch (Exception e) {
                 p.setSolutionDetailsJson(null);
