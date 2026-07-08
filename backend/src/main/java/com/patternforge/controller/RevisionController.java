@@ -3,6 +3,7 @@ package com.patternforge.controller;
 import com.patternforge.model.*;
 import com.patternforge.repository.*;
 import com.patternforge.service.GeminiService;
+import com.patternforge.service.LocalFallbackGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
@@ -161,19 +162,8 @@ public class RevisionController {
                 updated = true;
             } catch (Exception e) {
                 try {
-                    Map<String, Object> fallback = new HashMap<>();
-                    fallback.put("problemStatement", "Problem: " + p.getName() + " (LeetCode #" + p.getLeetcodeNumber() + ")");
-                    fallback.put("inputFormat", "Please refer to LeetCode for the full problem statement.");
-                    fallback.put("outputFormat", "Please refer to LeetCode for the output format.");
-                    fallback.put("examples", Collections.emptyList());
-                    fallback.put("constraints", Collections.emptyList());
-                    fallback.put("edgeCases", Collections.emptyList());
-                    fallback.put("followUp", "");
-                    fallback.put("hints", List.of(
-                            "Think about the brute force approach first.",
-                            "Consider what data structures could optimize your solution.",
-                            "Look for patterns related to " + p.getTopic().getName() + "."));
-                    p.setBasicDetailsJson(mapper.writeValueAsString(fallback));
+                    p.setBasicDetailsJson(LocalFallbackGenerator.getBasicDetailsFallbackJson(
+                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName()));
                     updated = true;
                 } catch (Exception ex) {
                     // ignore
@@ -207,15 +197,8 @@ public class RevisionController {
                 updated = true;
             } catch (Exception e) {
                 try {
-                    Map<String, Object> fallback = new HashMap<>();
-                    fallback.put("observation", "This problem falls under " + p.getTopic().getName() + ".");
-                    fallback.put("pattern", p.getTopic().getName());
-                    fallback.put("approach", "Analyze the problem constraints and identify the optimal pattern.");
-                    fallback.put("optimalTimeComplexity", "O(n)");
-                    fallback.put("optimalSpaceComplexity", "O(1)");
-                    fallback.put("fullExplanation", "AI solution details unavailable.");
-                    fallback.put("referenceSolution", "# Reference solution not available.");
-                    p.setSolutionDetailsJson(mapper.writeValueAsString(fallback));
+                    p.setSolutionDetailsJson(LocalFallbackGenerator.getSolutionDetailsFallbackJson(
+                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName()));
                     updated = true;
                 } catch (Exception ex) {
                     // ignore
@@ -246,21 +229,22 @@ public class RevisionController {
                 }
                 updated = true;
             } catch (Exception e) {
-                if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty()) {
-                    p.setSimplifiedStatement("Solve the coding puzzle for " + p.getName() + ".");
-                }
-                if (p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty()) {
-                    try {
-                        Map<String, String> approachMap = new HashMap<>();
-                        approachMap.put("optimal", "Optimal solution using standard categories.");
-                        approachMap.put("better", "");
-                        approachMap.put("bruteForce", "");
-                        p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
-                    } catch (Exception ex) {
-                        // ignore
+                try {
+                    Map<String, String> res = LocalFallbackGenerator.getSimplifiedFallback(p.getName(), p.getTopic().getName());
+                    if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty()) {
+                        p.setSimplifiedStatement(res.get("simplifiedStatement"));
                     }
+                    if (p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() || "{}".equals(p.getSimplifiedApproach())) {
+                        Map<String, String> approachMap = new HashMap<>();
+                        approachMap.put("optimal", res.get("simplifiedOptimal"));
+                        approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
+                        approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
+                        p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
+                    }
+                    updated = true;
+                } catch (Exception ex) {
+                    // ignore
                 }
-                updated = true;
             }
         }
 
