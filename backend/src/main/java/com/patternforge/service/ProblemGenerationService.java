@@ -190,8 +190,8 @@ public class ProblemGenerationService {
                         freshProblem.getName());
 
             } catch (Exception e) {
-                log.error("ProblemGenerationService: Failed to generate unified details via Gemini. Applying local offline fallbacks for: {}",
-                        freshProblem.getName(), e);
+                log.warn("ProblemGenerationService: Gemini details generation failed for problem '{}' ({}). Applying local offline stubs.",
+                        freshProblem.getName(), e.getMessage());
 
                 try {
                     if (LocalFallbackGenerator.isBoilerplateBasicDetails(freshProblem.getBasicDetailsJson())) {

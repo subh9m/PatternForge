@@ -41,6 +41,17 @@ public class APIKeyManager {
             allKeys.add(envKey.trim());
         }
 
+        // Add keys from fallback env variable GEMINI_API_KEYS (comma-separated list)
+        String envKeys = System.getenv("GEMINI_API_KEYS");
+        if (envKeys != null && !envKeys.trim().isEmpty()) {
+            for (String part : envKeys.split(",")) {
+                String trimmed = part.trim();
+                if (!trimmed.isEmpty() && !allKeys.contains(trimmed)) {
+                    allKeys.add(trimmed);
+                }
+            }
+        }
+
         // 3. Add key from fallback Verfalarm .env file
         File envFile = new File("C:\\Users\\rajsh\\Desktop\\Verfalarm\\.env");
         if (envFile.exists()) {
@@ -72,6 +83,10 @@ public class APIKeyManager {
             if (disableUntil == null || now >= disableUntil) {
                 activeKeys.add(key);
             }
+        }
+        if (activeKeys.isEmpty()) {
+            // Last resort fallback: if all keys are disabled, try all of them anyway
+            return new ArrayList<>(allKeys);
         }
         return activeKeys;
     }
