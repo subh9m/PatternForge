@@ -459,9 +459,17 @@ public class ProblemController {
         if (p.getBasicDetailsJson() != null && !p.getBasicDetailsJson().trim().isEmpty()) {
             try {
                 mapper.readTree(p.getBasicDetailsJson());
-                return ResponseEntity.ok()
-                        .header("Content-Type", "application/json")
-                        .body(p.getBasicDetailsJson());
+                if (!LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson())) {
+                    return ResponseEntity.ok()
+                            .header("Content-Type", "application/json")
+                            .body(p.getBasicDetailsJson());
+                } else {
+                    problemGenerationService.queueGeneration(p.getId());
+                    String fallbackJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+                    return ResponseEntity.ok()
+                            .header("Content-Type", "application/json")
+                            .body(fallbackJson);
+                }
             } catch (Exception e) {
                 // Invalid JSON, discard and try to fall back or regenerate
                 p.setBasicDetailsJson(null);
@@ -510,20 +518,11 @@ public class ProblemController {
                     .header("Content-Type", "application/json")
                     .body(jsonStr);
         } catch (Exception e) {
-            // Return fallback basic stub
-            Map<String, Object> fallback = new HashMap<>();
-            fallback.put("problemStatement", "Problem: " + p.getName() + " (LeetCode #" + p.getLeetcodeNumber() + ")");
-            fallback.put("inputFormat", "Please refer to LeetCode for the full problem statement.");
-            fallback.put("outputFormat", "Please refer to LeetCode for the output format.");
-            fallback.put("examples", Collections.emptyList());
-            fallback.put("constraints", Collections.emptyList());
-            fallback.put("edgeCases", Collections.emptyList());
-            fallback.put("followUp", "");
-            fallback.put("hints", List.of(
-                    "Think about the brute force approach first.",
-                    "Consider what data structures could optimize your solution.",
-                    "Look for patterns related to " + p.getTopic().getName() + "."));
-            return ResponseEntity.ok(fallback);
+            problemGenerationService.queueGeneration(p.getId());
+            String fallbackJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .body(fallbackJson);
         }
     }
 
@@ -541,9 +540,17 @@ public class ProblemController {
         if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty() && !"{}".equals(p.getSolutionDetailsJson().trim())) {
             try {
                 mapper.readTree(p.getSolutionDetailsJson());
-                return ResponseEntity.ok()
-                        .header("Content-Type", "application/json")
-                        .body(p.getSolutionDetailsJson());
+                if (!LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson())) {
+                    return ResponseEntity.ok()
+                            .header("Content-Type", "application/json")
+                            .body(p.getSolutionDetailsJson());
+                } else {
+                    problemGenerationService.queueGeneration(p.getId());
+                    String fallbackJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+                    return ResponseEntity.ok()
+                            .header("Content-Type", "application/json")
+                            .body(fallbackJson);
+                }
             } catch (Exception e) {
                 p.setSolutionDetailsJson(null);
                 problemRepository.save(p);
@@ -594,15 +601,11 @@ public class ProblemController {
                     .header("Content-Type", "application/json")
                     .body(jsonStr);
         } catch (Exception e) {
-            Map<String, Object> fallback = new HashMap<>();
-            fallback.put("observation", "This problem falls under " + p.getTopic().getName() + ".");
-            fallback.put("pattern", p.getTopic().getName());
-            fallback.put("approach", "Analyze the problem constraints and identify the optimal pattern.");
-            fallback.put("optimalTimeComplexity", "O(n)");
-            fallback.put("optimalSpaceComplexity", "O(1)");
-            fallback.put("fullExplanation", "Gemini AI details could not be generated. Error: " + e.getMessage());
-            fallback.put("referenceSolution", "# Reference solution not available.");
-            return ResponseEntity.ok(fallback);
+            problemGenerationService.queueGeneration(p.getId());
+            String fallbackJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .body(fallbackJson);
         }
     }
 

@@ -27,6 +27,7 @@ public class PdfProblemImporter implements CommandLineRunner {
 
     private final TopicRepository topicRepository;
     private final ProblemRepository problemRepository;
+    private final ProblemGenerationService problemGenerationService;
 
     @Value("${patternforge.pdf.path}")
     private String configuredPdfPath;
@@ -40,9 +41,10 @@ public class PdfProblemImporter implements CommandLineRunner {
             "Dynamic Programming", "Tries"
     );
 
-    public PdfProblemImporter(TopicRepository topicRepository, ProblemRepository problemRepository) {
+    public PdfProblemImporter(TopicRepository topicRepository, ProblemRepository problemRepository, ProblemGenerationService problemGenerationService) {
         this.topicRepository = topicRepository;
         this.problemRepository = problemRepository;
+        this.problemGenerationService = problemGenerationService;
     }
 
     @Override
@@ -89,6 +91,30 @@ public class PdfProblemImporter implements CommandLineRunner {
             System.err.println("PatternForge Importer: Could not seed full 626 problems from PDF/JSON. Falling back to representative seed...");
             importFallbackSeedData(topicMap);
         }
+
+        // Boot-time auto-generation scan for boilerplate/missing data
+        System.out.println("PatternForge Importer: Initiating background boot-time auto-generation scan for boilerplate/missing data...");
+        new Thread(() -> {
+            try {
+                // Wait 5 seconds for Spring Context boot logs to finalize
+                Thread.sleep(5000);
+                List<Problem> problems = problemRepository.findAll();
+                int queuedCount = 0;
+                for (Problem p : problems) {
+                    boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
+                                               LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()) ||
+                                               LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
+                                               LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
+                    if (needsGeneration) {
+                        problemGenerationService.queueGeneration(p.getId());
+                        queuedCount++;
+                    }
+                }
+                System.out.println("PatternForge Importer: Queued " + queuedCount + " problems for auto-generation sequentially.");
+            } catch (Exception e) {
+                System.err.println("PatternForge Importer: Error in boot-time auto-generation scan: " + e.getMessage());
+            }
+        }).start();
     }
 
     private boolean importFromJson(Map<String, Topic> topicMap) {
