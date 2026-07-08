@@ -387,7 +387,10 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
 
       {/* Premium Detail Overlay Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div 
+          onClick={() => setSelectedItem(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in"
+        >
           {(() => {
             // Parse details JSON
             let details: any = null;
@@ -446,7 +449,10 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
               : activeCode;
 
             return (
-              <div className="glass-panel border border-slate-800 rounded-2xl w-full max-w-[92vw] lg:max-w-7xl xl:max-w-[85vw] h-[85vh] flex flex-col shadow-2xl relative">
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                className="glass-panel border border-slate-800 rounded-2xl w-full max-w-[92vw] lg:max-w-7xl xl:max-w-[85vw] h-[85vh] flex flex-col shadow-2xl relative"
+              >
                 
                 {/* Modal Header */}
                 <div className="flex items-center justify-between p-5 border-b border-slate-900 bg-slate-950/30">
