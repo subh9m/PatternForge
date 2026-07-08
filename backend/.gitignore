@@ -6,3 +6,4 @@ target/
 .idea/
 *.iml
 *.log
+gemini_keys.txt

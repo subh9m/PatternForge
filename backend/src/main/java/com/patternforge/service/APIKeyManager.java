@@ -33,10 +33,18 @@ public class APIKeyManager {
         return t;
     });
 
-    public APIKeyManager(GeminiConfig geminiConfig) {
+    public APIKeyManager(GeminiConfig geminiConfig, ModelSelector modelSelector) {
         this.geminiConfig = geminiConfig;
         initializeKeys();
         startRecoveryTask();
+
+        int keysCount = allKeys.size();
+        int modelsCount = modelSelector.getLoadedModelsCount();
+        System.out.println("========================================");
+        System.out.println("Loaded Keys:\n" + keysCount);
+        System.out.println("Loaded Models:\n" + modelsCount);
+        System.out.println("Total combinations:\n" + (keysCount * modelsCount));
+        System.out.println("========================================");
     }
 
     private void initializeKeys() {
@@ -49,7 +57,24 @@ public class APIKeyManager {
             }
         }
 
-        // 2. Add key from fallback env variable
+        // 2. Add keys from gemini_keys.txt
+        File localKeysFile = new File("gemini_keys.txt");
+        if (localKeysFile.exists()) {
+            try {
+                List<String> lines = Files.readAllLines(localKeysFile.toPath());
+                for (String line : lines) {
+                    line = line.trim();
+                    if (!line.isEmpty() && !line.startsWith("#") && !allKeys.contains(line)) {
+                        allKeys.add(line);
+                    }
+                }
+                log.info("APIKeyManager: Loaded keys from local gemini_keys.txt file.");
+            } catch (IOException e) {
+                log.error("APIKeyManager: Failed to read local gemini_keys.txt", e);
+            }
+        }
+
+        // 3. Add key from fallback env variable
         String envKey = System.getenv("GEMINI_API_KEY");
         if (envKey != null && !envKey.trim().isEmpty() && !allKeys.contains(envKey.trim())) {
             allKeys.add(envKey.trim());
@@ -66,7 +91,7 @@ public class APIKeyManager {
             }
         }
 
-        // 3. Add key from fallback Verfalarm .env file
+        // 4. Add key from fallback Verfalarm .env file
         File envFile = new File("C:\\Users\\rajsh\\Desktop\\Verfalarm\\.env");
         if (envFile.exists()) {
             try {
@@ -171,7 +196,7 @@ public class APIKeyManager {
         return earliest == Long.MAX_VALUE ? null : earliest;
     }
 
-    public Map<String, Object> getStatusMap(int queueSize, int runningJobs, List<String> currentModels) {
+    public Map<String, Object> getStatusMap(int queueSize, int runningJobs, int loadedModels, int supportedModels) {
         Map<String, Object> map = new LinkedHashMap<>();
         int available = 0;
         int cooldown = 0;
@@ -189,21 +214,14 @@ public class APIKeyManager {
             }
         }
 
-        map.put("availableKeys", available);
-        map.put("cooldownKeys", cooldown);
-        map.put("invalidKeys", invalid);
-        map.put("disabledKeys", disabled);
-        map.put("currentQueueSize", queueSize);
-        map.put("runningJobs", runningJobs);
-        map.put("currentModels", currentModels);
-
-        Long earliestExpiry = getEarliestCooldownExpiry();
-        if (earliestExpiry != null) {
-            java.time.Instant instant = java.time.Instant.ofEpochMilli(earliestExpiry);
-            map.put("nextCooldownExpiry", instant.toString());
-        } else {
-            map.put("nextCooldownExpiry", "N/A");
-        }
+        map.put("Loaded Keys", allKeys.size());
+        map.put("Available Keys", available);
+        map.put("Cooldown Keys", cooldown);
+        map.put("Invalid Keys", invalid);
+        map.put("Loaded Models", loadedModels);
+        map.put("Supported Models", supportedModels);
+        map.put("Queue Size", queueSize);
+        map.put("Current Running Job", runningJobs);
 
         return map;
     }

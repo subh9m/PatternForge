@@ -33,7 +33,8 @@ public class AdminAIController {
         Map<String, Object> status = apiKeyManager.getStatusMap(
                 problemGenerationService.getQueueSize(),
                 problemGenerationService.getRunningJobsCount(),
-                modelSelector.getPreferredModels()
+                modelSelector.getLoadedModelsCount(),
+                modelSelector.getSupportedModelsCount()
         );
         return ResponseEntity.ok(status);
     }
