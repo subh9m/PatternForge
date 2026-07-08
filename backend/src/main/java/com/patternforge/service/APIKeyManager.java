@@ -7,22 +7,36 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
 
 @Service
 @Slf4j
 public class APIKeyManager {
 
+    public enum KeyState {
+        AVAILABLE,
+        COOLDOWN,
+        INVALID,
+        DISABLED
+    }
+
     private final GeminiConfig geminiConfig;
     private final List<String> allKeys = new ArrayList<>();
-    private final Map<String, Long> disabledKeys = new ConcurrentHashMap<>();
+    private final Map<String, KeyState> keyStates = new ConcurrentHashMap<>();
+    private final Map<String, Long> cooldowns = new ConcurrentHashMap<>();
+    private final Map<String, String> lastErrors = new ConcurrentHashMap<>();
+    
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "api-key-recovery-scheduler");
+        t.setDaemon(true);
+        return t;
+    });
 
     public APIKeyManager(GeminiConfig geminiConfig) {
         this.geminiConfig = geminiConfig;
         initializeKeys();
+        startRecoveryTask();
     }
 
     private void initializeKeys() {
@@ -72,37 +86,128 @@ public class APIKeyManager {
             }
         }
 
+        // Initialize all keys as AVAILABLE
+        for (String key : allKeys) {
+            keyStates.put(key, KeyState.AVAILABLE);
+        }
+
         log.info("APIKeyManager: Initialized with {} API key(s) in the pool.", allKeys.size());
     }
 
-    public synchronized List<String> getActiveKeys() {
+    private void startRecoveryTask() {
+        scheduler.scheduleAtFixedRate(this::evaluateCooldowns, 1, 1, TimeUnit.MINUTES);
+    }
+
+    public synchronized void evaluateCooldowns() {
         long now = System.currentTimeMillis();
-        List<String> activeKeys = new ArrayList<>();
         for (String key : allKeys) {
-            Long disableUntil = disabledKeys.get(key);
-            if (disableUntil == null || now >= disableUntil) {
-                activeKeys.add(key);
+            if (keyStates.get(key) == KeyState.COOLDOWN) {
+                Long until = cooldowns.get(key);
+                if (until != null && now >= until) {
+                    keyStates.put(key, KeyState.AVAILABLE);
+                    cooldowns.remove(key);
+                    log.info("APIKeyManager: Key {} automatically recovered from COOLDOWN and is now AVAILABLE.", maskKey(key));
+                    notifyAll();
+                }
             }
         }
-        if (activeKeys.isEmpty()) {
-            // Last resort fallback: if all keys are disabled, try all of them anyway
-            return new ArrayList<>(allKeys);
+    }
+
+    public synchronized List<String> getAvailableKeys() {
+        List<String> available = new ArrayList<>();
+        for (String key : allKeys) {
+            if (keyStates.get(key) == KeyState.AVAILABLE) {
+                available.add(key);
+            }
         }
-        return activeKeys;
+        return available;
     }
 
-    public void disableKey(String key, long cooldownMs) {
-        long disableUntil = System.currentTimeMillis() + cooldownMs;
-        disabledKeys.put(key, disableUntil);
-        log.warn("APIKeyManager: Temporarily disabling API key {} due to quota limit or error. Cooldown: {} ms",
-                maskKey(key), cooldownMs);
+    public synchronized void markCooldown(String key, long cooldownMs, String reason) {
+        keyStates.put(key, KeyState.COOLDOWN);
+        cooldowns.put(key, System.currentTimeMillis() + cooldownMs);
+        lastErrors.put(key, reason != null ? reason : "Quota / Rate Limit Exceeded");
+        log.warn("APIKeyManager: Key {} entered COOLDOWN state due to: {}. Cooldown duration: {} ms",
+                maskKey(key), reason, cooldownMs);
     }
 
-    public void markKeySuccess(String key) {
-        disabledKeys.remove(key);
+    public synchronized void markInvalid(String key, String reason) {
+        keyStates.put(key, KeyState.INVALID);
+        cooldowns.remove(key);
+        lastErrors.put(key, reason != null ? reason : "Invalid credentials / authorization failure");
+        log.error("APIKeyManager: Key {} permanently marked INVALID due to: {}.", maskKey(key), reason);
     }
 
-    private String maskKey(String key) {
+    public synchronized void markSuccess(String key) {
+        keyStates.put(key, KeyState.AVAILABLE);
+        cooldowns.remove(key);
+        lastErrors.remove(key);
+    }
+
+    public List<String> getAllKeysRaw() {
+        return new ArrayList<>(allKeys);
+    }
+
+    public synchronized KeyState getKeyState(String key) {
+        return keyStates.getOrDefault(key, KeyState.AVAILABLE);
+    }
+
+    public synchronized Long getCooldownUntil(String key) {
+        return cooldowns.get(key);
+    }
+
+    public synchronized String getLastError(String key) {
+        return lastErrors.get(key);
+    }
+
+    public synchronized Long getEarliestCooldownExpiry() {
+        long earliest = Long.MAX_VALUE;
+        for (Map.Entry<String, Long> entry : cooldowns.entrySet()) {
+            if (keyStates.get(entry.getKey()) == KeyState.COOLDOWN) {
+                earliest = Math.min(earliest, entry.getValue());
+            }
+        }
+        return earliest == Long.MAX_VALUE ? null : earliest;
+    }
+
+    public Map<String, Object> getStatusMap(int queueSize, int runningJobs, List<String> currentModels) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        int available = 0;
+        int cooldown = 0;
+        int invalid = 0;
+        int disabled = 0;
+
+        for (String key : allKeys) {
+            KeyState state = keyStates.get(key);
+            if (state == null) continue;
+            switch (state) {
+                case AVAILABLE -> available++;
+                case COOLDOWN -> cooldown++;
+                case INVALID -> invalid++;
+                case DISABLED -> disabled++;
+            }
+        }
+
+        map.put("availableKeys", available);
+        map.put("cooldownKeys", cooldown);
+        map.put("invalidKeys", invalid);
+        map.put("disabledKeys", disabled);
+        map.put("currentQueueSize", queueSize);
+        map.put("runningJobs", runningJobs);
+        map.put("currentModels", currentModels);
+
+        Long earliestExpiry = getEarliestCooldownExpiry();
+        if (earliestExpiry != null) {
+            java.time.Instant instant = java.time.Instant.ofEpochMilli(earliestExpiry);
+            map.put("nextCooldownExpiry", instant.toString());
+        } else {
+            map.put("nextCooldownExpiry", "N/A");
+        }
+
+        return map;
+    }
+
+    public String maskKey(String key) {
         if (key == null || key.length() < 10) return "***";
         return key.substring(0, 5) + "..." + key.substring(key.length() - 5);
     }

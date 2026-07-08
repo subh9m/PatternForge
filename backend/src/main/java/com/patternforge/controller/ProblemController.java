@@ -20,7 +20,7 @@ import com.patternforge.service.LocalFallbackGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.patternforge.service.ProblemGenerationService;
-import com.patternforge.service.LocalFallbackGenerator;
+import com.patternforge.service.JobPriority;
 
 @RestController
 @RequestMapping("/api/problems")
@@ -453,11 +453,12 @@ public class ProblemController {
         Problem p = problemOpt.get();
         
         // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
-        problemGenerationService.generateMissingDetailsInternal(p);
+        problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
+        Problem fresh = problemRepository.findById(p.getId()).orElse(p);
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/json")
-                .body(p.getBasicDetailsJson() != null ? p.getBasicDetailsJson() : "{}");
+                .body(fresh.getBasicDetailsJson() != null ? fresh.getBasicDetailsJson() : "{}");
     }
 
     @GetMapping("/{id}/solution-details")
@@ -471,11 +472,12 @@ public class ProblemController {
         Problem p = problemOpt.get();
         
         // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
-        problemGenerationService.generateMissingDetailsInternal(p);
+        problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
+        Problem fresh = problemRepository.findById(p.getId()).orElse(p);
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/json")
-                .body(p.getSolutionDetailsJson() != null ? p.getSolutionDetailsJson() : "{}");
+                .body(fresh.getSolutionDetailsJson() != null ? fresh.getSolutionDetailsJson() : "{}");
     }
 
     @PostMapping("/{id}/check-thinking")
@@ -509,13 +511,14 @@ public class ProblemController {
         String expectedSpace = "O(1)";
 
         // Synchronously ensure all missing/boilerplate fields are fetched/populated
-        problemGenerationService.generateMissingDetailsInternal(p);
+        problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
+        Problem fresh = problemRepository.findById(p.getId()).orElse(p);
 
         // Try extracting from solutionDetailsJson first
-        if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty()) {
+        if (fresh.getSolutionDetailsJson() != null && !fresh.getSolutionDetailsJson().trim().isEmpty()) {
             try {
                 ObjectMapper mapper = new ObjectMapper();
-                JsonNode rootNode = mapper.readTree(p.getSolutionDetailsJson());
+                JsonNode rootNode = mapper.readTree(fresh.getSolutionDetailsJson());
                 if (rootNode.has("pattern")) {
                     expectedPattern = rootNode.get("pattern").asText();
                 }
@@ -528,11 +531,11 @@ public class ProblemController {
             } catch (Exception e) {
                 // ignore
             }
-        } else if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
+        } else if (fresh.getProblemDetailsJson() != null && !fresh.getProblemDetailsJson().trim().isEmpty()) {
             // Try extracting from legacy problemDetailsJson second
             try {
                 ObjectMapper mapper = new ObjectMapper();
-                JsonNode rootNode = mapper.readTree(p.getProblemDetailsJson());
+                JsonNode rootNode = mapper.readTree(fresh.getProblemDetailsJson());
                 if (rootNode.has("pattern")) {
                     expectedPattern = rootNode.get("pattern").asText();
                 }
