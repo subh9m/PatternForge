@@ -49,8 +49,25 @@ public class RevisionController {
         for (Attempt a : solvedAttempts) {
             Problem p = a.getProblem();
             
-            // Ensure details are generated on the fly if missing
-            ensureProblemDetailsAndSimplifiedFields(p);
+            // Check if details are missing and need generation
+            boolean isGenerating = (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
+                                    p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
+                                    p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty() ||
+                                    "{}".equals(p.getSolutionDetailsJson()));
+
+            if (isGenerating) {
+                UUID problemId = p.getId();
+                new Thread(() -> {
+                    try {
+                        Optional<Problem> freshOpt = problemRepository.findById(problemId);
+                        if (freshOpt.isPresent()) {
+                            ensureProblemDetailsAndSimplifiedFields(freshOpt.get());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            }
 
             // Get user's latest code submission
             List<Submission> submissions = submissionRepository.findByUserIdAndProblemIdOrderByCreatedAtDesc(userId, p.getId());
@@ -83,6 +100,7 @@ public class RevisionController {
             item.put("isRevisedToday", isRevisedToday);
             item.put("solutionDetails", p.getSolutionDetailsJson() != null ? p.getSolutionDetailsJson() : "{}");
             item.put("problemStatement", p.getEffectiveProblemStatement());
+            item.put("isGenerating", isGenerating);
             
             response.add(item);
         }

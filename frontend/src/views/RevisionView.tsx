@@ -22,6 +22,7 @@ interface RevisionItem {
   solutionDetails?: string;
   spaceComplexity?: string;
   problemStatement?: string;
+  isGenerating?: boolean;
 }
 
 const parseInlineMarkdown = (text: string): React.ReactNode[] => {
@@ -117,10 +118,24 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
   }, [selectedItem]);
 
   const fetchQueue = async () => {
-    setLoading(true);
+    // Check local cache first for instant load
+    const cached = localStorage.getItem('patternforge_revisions');
+    if (cached) {
+      try {
+        setItems(JSON.parse(cached));
+        setLoading(false);
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      setLoading(true);
+    }
+
     try {
       const data = await api.get<RevisionItem[]>('/revisions');
-      setItems(data || []);
+      const itemsList = data || [];
+      setItems(itemsList);
+      localStorage.setItem('patternforge_revisions', JSON.stringify(itemsList));
     } catch (e) {
       console.error('Failed to load revision queue', e);
     } finally {
@@ -138,12 +153,16 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
       await api.post(`/revisions/${problemId}/complete`, {});
       
       // Update state local list
-      setItems(prev => prev.map(item => {
-        if (item.id === problemId) {
-          return { ...item, isRevisedToday: true };
-        }
-        return item;
-      }));
+      setItems(prev => {
+        const updated = prev.map(item => {
+          if (item.id === problemId) {
+            return { ...item, isRevisedToday: true };
+          }
+          return item;
+        });
+        localStorage.setItem('patternforge_revisions', JSON.stringify(updated));
+        return updated;
+      });
       
       // Update active selection state if open
       if (selectedItem && selectedItem.id === problemId) {
@@ -293,9 +312,11 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredItems.map(item => {
+            const isGen = !!item.isGenerating;
+
             // Extract optimal approach description defensively
             let optimalBrief = "";
-            if (item.simplifiedApproach) {
+            if (item.simplifiedApproach && !isGen) {
               try {
                 const parsed = JSON.parse(item.simplifiedApproach);
                 optimalBrief = (parsed && parsed.optimal) ? parsed.optimal : item.simplifiedApproach;
@@ -307,76 +328,114 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
             return (
               <div 
                 key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className={`glass-panel border p-5 rounded-2xl hover:border-slate-750 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4 relative overflow-hidden group ${
-                  item.isRevisedToday ? 'bg-emerald-950/5 border-emerald-500/20' : 'bg-slate-900/20 border-slate-900'
+                onClick={() => {
+                  if (!isGen) {
+                    setSelectedItem(item);
+                  }
+                }}
+                className={`glass-panel border p-5 rounded-2xl hover:border-slate-750 transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group ${
+                  isGen 
+                    ? 'border-slate-900/60 bg-slate-955/10 cursor-wait select-none'
+                    : 'cursor-pointer ' + (item.isRevisedToday ? 'bg-emerald-950/5 border-emerald-500/20' : 'bg-slate-900/20 border-slate-900')
                 }`}
               >
                 
                 {/* Corner completion glow */}
-                {item.isRevisedToday && (
+                {!isGen && item.isRevisedToday && (
                   <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
                 )}
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-slate-500 font-mono uppercase">#{item.masterNumber}</span>
-                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
-                      item.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400' :
-                      item.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
-                      'bg-red-500/10 text-red-400'
-                    }`}>
-                      {item.difficulty}
-                    </span>
+                    {isGen ? (
+                      <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 animate-pulse border border-blue-500/20 font-mono uppercase tracking-wide">
+                        AI Generating
+                      </span>
+                    ) : (
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                        item.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400' :
+                        item.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
+                        'bg-red-500/10 text-red-400'
+                      }`}>
+                        {item.difficulty}
+                      </span>
+                    )}
                   </div>
                   
                   <h3 className="text-sm font-extrabold text-slate-200 group-hover:text-slate-100 transition-colors">
                     {item.name}
                   </h3>
 
-                  {/* Brief Problem Description */}
-                  {item.simplifiedStatement && (
-                    <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
-                      <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Problem Brief</strong>
-                      {item.simplifiedStatement}
-                    </p>
-                  )}
+                  {isGen ? (
+                    <div className="space-y-2 py-1 animate-pulse">
+                      <div className="h-2.5 bg-slate-800/60 rounded w-full"></div>
+                      <div className="h-2.5 bg-slate-800/60 rounded w-11/12"></div>
+                      <div className="h-2.5 bg-slate-800/60 rounded w-3/4"></div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Brief Problem Description */}
+                      {item.simplifiedStatement && (
+                        <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
+                          <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Problem Brief</strong>
+                          {item.simplifiedStatement}
+                        </p>
+                      )}
 
-                  {/* Simplified Optimal Approach */}
-                  {optimalBrief && (
-                    <p className="text-slate-450 text-xs leading-relaxed line-clamp-2">
-                      <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Simplified Approach</strong>
-                      {optimalBrief}
-                    </p>
+                      {/* Simplified Optimal Approach */}
+                      {optimalBrief && (
+                        <p className="text-slate-450 text-xs leading-relaxed line-clamp-2">
+                          <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Simplified Approach</strong>
+                          {optimalBrief}
+                        </p>
+                      )}
+                    </>
                   )}
                   
                   <div className="flex items-center justify-between pt-1.5 border-t border-slate-900/50">
                     <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-slate-950 px-2.5 py-1 rounded border border-slate-900 font-mono">
                       {item.topicName}
                     </span>
-                    <div className="flex items-center space-x-2.5 text-[10px] font-bold font-mono text-slate-500">
-                      <span>T: <strong className="text-blue-400">{item.timeComplexity || 'O(N)'}</strong></span>
-                      <span>S: <strong className="text-purple-400">{item.spaceComplexity || 'O(1)'}</strong></span>
-                    </div>
+                    {isGen ? (
+                      <div className="h-3 bg-slate-800/60 rounded w-20 animate-pulse"></div>
+                    ) : (
+                      <div className="flex items-center space-x-2.5 text-[10px] font-bold font-mono text-slate-500">
+                        <span>T: <strong className="text-blue-400">{item.timeComplexity || 'O(N)'}</strong></span>
+                        <span>S: <strong className="text-purple-400">{item.spaceComplexity || 'O(1)'}</strong></span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between border-t border-slate-900/60 pt-3">
-                  <span className="text-[10px] font-semibold text-slate-500 flex items-center space-x-1">
-                    <BookOpen className="h-3 w-3" />
-                    <span>Click to review details</span>
-                  </span>
-
-                  {item.isRevisedToday ? (
-                    <span className="flex items-center space-x-1 text-emerald-400 text-[10px] font-black uppercase font-mono">
-                      <CheckCircle className="h-3.5 w-3.5" />
-                      <span>Revised</span>
+                  {isGen ? (
+                    <span className="text-[10px] font-semibold text-blue-400 flex items-center space-x-1.5 animate-pulse font-mono uppercase tracking-wider">
+                      <span className="flex h-1.5 w-1.5 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
+                      </span>
+                      <span>Compiling models...</span>
                     </span>
                   ) : (
-                    <span className="flex items-center space-x-1 text-amber-400 text-[10px] font-black uppercase font-mono">
-                      <Circle className="h-3.5 w-3.5" />
-                      <span>Pending</span>
-                    </span>
+                    <>
+                      <span className="text-[10px] font-semibold text-slate-500 flex items-center space-x-1">
+                        <BookOpen className="h-3 w-3" />
+                        <span>Click to review details</span>
+                      </span>
+
+                      {item.isRevisedToday ? (
+                        <span className="flex items-center space-x-1 text-emerald-400 text-[10px] font-black uppercase font-mono">
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          <span>Revised</span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center space-x-1 text-amber-400 text-[10px] font-black uppercase font-mono">
+                          <Circle className="h-3.5 w-3.5" />
+                          <span>Pending</span>
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

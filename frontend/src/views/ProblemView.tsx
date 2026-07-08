@@ -344,11 +344,32 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
           setActiveTab('coding');
         }
 
+        // Check browser cache for details first
+        const cacheKey = `pf_details_${problemId}`;
+        const cachedDetails = localStorage.getItem(cacheKey);
+        if (cachedDetails) {
+          try {
+            const parsed = JSON.parse(cachedDetails);
+            setDetails(parsed);
+            setLoadingDetails(false);
+            setLoadingSolutions(false);
+          } catch (e) {
+            setLoadingDetails(true);
+            setLoadingSolutions(true);
+          }
+        } else {
+          setLoadingDetails(true);
+          setLoadingSolutions(true);
+        }
+
         // 1. Fetch basic details (fast description render)
-        setLoadingDetails(true);
         api.get<ProblemDetailsJson>(`/problems/${problemId}/basic-details`)
           .then(data => {
-            setDetails(prev => prev ? { ...prev, ...data } : data);
+            setDetails(prev => {
+              const merged = prev ? { ...prev, ...data } : data;
+              localStorage.setItem(cacheKey, JSON.stringify(merged));
+              return merged;
+            });
             setLoadingDetails(false);
           })
           .catch(err => {
@@ -357,10 +378,13 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
           });
 
         // 2. Fetch solution details in background (complexities, approach)
-        setLoadingSolutions(true);
         api.get<ProblemDetailsJson>(`/problems/${problemId}/solution-details`)
           .then(data => {
-            setDetails(prev => prev ? { ...prev, ...data } : data);
+            setDetails(prev => {
+              const merged = prev ? { ...prev, ...data } : data;
+              localStorage.setItem(cacheKey, JSON.stringify(merged));
+              return merged;
+            });
             setLoadingSolutions(false);
           })
           .catch(err => {
