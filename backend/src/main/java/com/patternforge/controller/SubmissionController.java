@@ -6,6 +6,8 @@ import com.patternforge.model.*;
 import com.patternforge.repository.*;
 import com.patternforge.service.CodeExecutionService;
 import com.patternforge.service.GeminiService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -249,39 +251,144 @@ public class SubmissionController {
     }
 
     public void generateAndSaveSimplifiedFields(Problem problem) {
-        if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty() ||
-            problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
-            
+        UUID problemId = problem.getId();
+        new Thread(() -> {
+            try {
+                Optional<Problem> freshOpt = problemRepository.findById(problemId);
+                if (freshOpt.isPresent()) {
+                    generateMissingDetails(freshOpt.get());
+                }
+            } catch (Exception e) {
+                System.err.println("PatternForge: Error in async generateAndSaveSimplifiedFields in SubmissionController: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    private void generateMissingDetails(Problem p) {
+        boolean updated = false;
+        ObjectMapper mapper = new ObjectMapper();
+
+        // 1. Ensure basicDetailsJson
+        if (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty()) {
+            try {
+                if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
+                    JsonNode root = mapper.readTree(p.getProblemDetailsJson());
+                    Map<String, Object> basic = new LinkedHashMap<>();
+                    basic.put("problemStatement", root.path("problemStatement").asText(""));
+                    basic.put("inputFormat", root.path("inputFormat").asText(""));
+                    basic.put("outputFormat", root.path("outputFormat").asText(""));
+                    basic.put("examples", mapper.convertValue(root.path("examples"), List.class));
+                    basic.put("constraints", mapper.convertValue(root.path("constraints"), List.class));
+                    basic.put("edgeCases", mapper.convertValue(root.path("edgeCases"), List.class));
+                    basic.put("followUp", root.path("followUp").asText(""));
+                    basic.put("hints", mapper.convertValue(root.path("hints"), List.class));
+                    p.setBasicDetailsJson(mapper.writeValueAsString(basic));
+                } else {
+                    String jsonStr = geminiService.generateProblemBasicDetailsJson(
+                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+                    p.setBasicDetailsJson(jsonStr);
+                }
+                updated = true;
+            } catch (Exception e) {
+                try {
+                    Map<String, Object> fallback = new HashMap<>();
+                    fallback.put("problemStatement", "Problem: " + p.getName() + " (LeetCode #" + p.getLeetcodeNumber() + ")");
+                    fallback.put("inputFormat", "Please refer to LeetCode for the full problem statement.");
+                    fallback.put("outputFormat", "Please refer to LeetCode for the output format.");
+                    fallback.put("examples", Collections.emptyList());
+                    fallback.put("constraints", Collections.emptyList());
+                    fallback.put("edgeCases", Collections.emptyList());
+                    fallback.put("followUp", "");
+                    fallback.put("hints", List.of(
+                            "Think about the brute force approach first.",
+                            "Consider what data structures could optimize your solution.",
+                            "Look for patterns related to " + p.getTopic().getName() + "."));
+                    p.setBasicDetailsJson(mapper.writeValueAsString(fallback));
+                    updated = true;
+                } catch (Exception ex) {}
+            }
+        }
+
+        // 2. Ensure solutionDetailsJson
+        if (p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty() || "{}".equals(p.getSolutionDetailsJson())) {
+            try {
+                if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
+                    JsonNode root = mapper.readTree(p.getProblemDetailsJson());
+                    Map<String, Object> sol = new LinkedHashMap<>();
+                    sol.put("observation", root.path("observation").asText(""));
+                    sol.put("pattern", root.path("pattern").asText(""));
+                    sol.put("approach", root.path("approach").asText(""));
+                    sol.put("optimalTimeComplexity", root.path("optimalTimeComplexity").asText(""));
+                    sol.put("optimalSpaceComplexity", root.path("optimalSpaceComplexity").asText(""));
+                    sol.put("fullExplanation", root.path("fullExplanation").asText(""));
+                    sol.put("referenceSolution", root.path("referenceSolution").asText(""));
+                    sol.put("referenceSolutions", mapper.convertValue(root.path("referenceSolutions"), Map.class));
+                    sol.put("bruteForce", mapper.convertValue(root.path("bruteForce"), Map.class));
+                    sol.put("better", mapper.convertValue(root.path("better"), Map.class));
+                    sol.put("optimal", mapper.convertValue(root.path("optimal"), Map.class));
+                    p.setSolutionDetailsJson(mapper.writeValueAsString(sol));
+                } else {
+                    String jsonStr = geminiService.generateProblemSolutionDetailsJson(
+                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+                    p.setSolutionDetailsJson(jsonStr);
+                }
+                updated = true;
+            } catch (Exception e) {
+                try {
+                    Map<String, Object> fallback = new HashMap<>();
+                    fallback.put("observation", "This problem falls under " + p.getTopic().getName() + ".");
+                    fallback.put("pattern", p.getTopic().getName());
+                    fallback.put("approach", "Analyze the problem constraints and identify the optimal pattern.");
+                    fallback.put("optimalTimeComplexity", "O(n)");
+                    fallback.put("optimalSpaceComplexity", "O(1)");
+                    fallback.put("fullExplanation", "AI solution details unavailable.");
+                    fallback.put("referenceSolution", "# Reference solution not available.");
+                    p.setSolutionDetailsJson(mapper.writeValueAsString(fallback));
+                    updated = true;
+                } catch (Exception ex) {}
+            }
+        }
+
+        // 3. Ensure simplifiedStatement and simplifiedApproach
+        if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
+            p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty()) {
             try {
                 Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
-                        problem.getName(),
-                        problem.getEffectiveProblemStatement(),
-                        problem.getSolutionDetailsJson()
+                        p.getName(),
+                        p.getEffectiveProblemStatement(),
+                        p.getSolutionDetailsJson()
                 );
                 
-                if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty()) {
-                    problem.setSimplifiedStatement(res.get("simplifiedStatement"));
+                if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty()) {
+                    p.setSimplifiedStatement(res.get("simplifiedStatement"));
                 }
-                if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
+                if (p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty()) {
                     Map<String, String> approachMap = new HashMap<>();
                     approachMap.put("optimal", res.get("simplifiedOptimal"));
                     approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
                     approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
-                    
-                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                    String serialized = mapper.writeValueAsString(approachMap);
-                    problem.setSimplifiedApproach(serialized);
+                    p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
                 }
-                problemRepository.save(problem);
+                updated = true;
             } catch (Exception e) {
-                if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty()) {
-                    problem.setSimplifiedStatement("Solve the coding puzzle for " + problem.getName() + ".");
+                if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty()) {
+                    p.setSimplifiedStatement("Solve the coding puzzle for " + p.getName() + ".");
                 }
-                if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
-                    problem.setSimplifiedApproach("{\"optimal\":\"Optimal solution using standard categories.\",\"better\":\"\",\"bruteForce\":\"\"}");
+                if (p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty()) {
+                    try {
+                        Map<String, String> approachMap = new HashMap<>();
+                        approachMap.put("optimal", "Optimal solution using standard categories.");
+                        approachMap.put("better", "");
+                        approachMap.put("bruteForce", "");
+                        p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
+                    } catch (Exception ex) {}
                 }
-                problemRepository.save(problem);
+                updated = true;
             }
+        }
+
+        if (updated) {
+            problemRepository.save(p);
         }
     }
 }

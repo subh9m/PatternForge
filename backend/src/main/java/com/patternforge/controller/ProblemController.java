@@ -844,40 +844,17 @@ public class ProblemController {
     }
 
     public void generateAndSaveSimplifiedFields(Problem problem) {
-        if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty() ||
-            problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
-            
+        UUID problemId = problem.getId();
+        new Thread(() -> {
             try {
-                Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
-                        problem.getName(),
-                        problem.getEffectiveProblemStatement(),
-                        problem.getSolutionDetailsJson()
-                );
-                
-                if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty()) {
-                    problem.setSimplifiedStatement(res.get("simplifiedStatement"));
+                Optional<Problem> freshOpt = problemRepository.findById(problemId);
+                if (freshOpt.isPresent()) {
+                    generateMissingDetails(freshOpt.get());
                 }
-                if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
-                    Map<String, String> approachMap = new HashMap<>();
-                    approachMap.put("optimal", res.get("simplifiedOptimal"));
-                    approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
-                    approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
-                    
-                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                    String serialized = mapper.writeValueAsString(approachMap);
-                    problem.setSimplifiedApproach(serialized);
-                }
-                problemRepository.save(problem);
             } catch (Exception e) {
-                if (problem.getSimplifiedStatement() == null || problem.getSimplifiedStatement().trim().isEmpty()) {
-                    problem.setSimplifiedStatement("Solve the coding puzzle for " + problem.getName() + ".");
-                }
-                if (problem.getSimplifiedApproach() == null || problem.getSimplifiedApproach().trim().isEmpty()) {
-                    problem.setSimplifiedApproach("{\"optimal\":\"Optimal solution using standard categories.\",\"better\":\"\",\"bruteForce\":\"\"}");
-                }
-                problemRepository.save(problem);
+                System.err.println("PatternForge: Error in async generateAndSaveSimplifiedFields in ProblemController: " + e.getMessage());
             }
-        }
+        }).start();
     }
 
     private int calculateStreak(Set<java.time.LocalDate> activityDates) {
