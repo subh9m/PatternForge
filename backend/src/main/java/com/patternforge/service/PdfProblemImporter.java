@@ -14,10 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.patternforge.repository.AttemptRepository;
+import com.patternforge.repository.BookmarkRepository;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +31,8 @@ public class PdfProblemImporter implements CommandLineRunner {
     private final TopicRepository topicRepository;
     private final ProblemRepository problemRepository;
     private final ProblemGenerationService problemGenerationService;
+    private final AttemptRepository attemptRepository;
+    private final BookmarkRepository bookmarkRepository;
 
     @Value("${patternforge.pdf.path}")
     private String configuredPdfPath;
@@ -41,10 +46,16 @@ public class PdfProblemImporter implements CommandLineRunner {
             "Dynamic Programming", "Tries"
     );
 
-    public PdfProblemImporter(TopicRepository topicRepository, ProblemRepository problemRepository, ProblemGenerationService problemGenerationService) {
+    public PdfProblemImporter(TopicRepository topicRepository, 
+                              ProblemRepository problemRepository, 
+                              ProblemGenerationService problemGenerationService,
+                              AttemptRepository attemptRepository,
+                              BookmarkRepository bookmarkRepository) {
         this.topicRepository = topicRepository;
         this.problemRepository = problemRepository;
         this.problemGenerationService = problemGenerationService;
+        this.attemptRepository = attemptRepository;
+        this.bookmarkRepository = bookmarkRepository;
     }
 
     @Override
@@ -98,19 +109,30 @@ public class PdfProblemImporter implements CommandLineRunner {
             try {
                 // Wait 5 seconds for Spring Context boot logs to finalize
                 Thread.sleep(5000);
-                List<Problem> problems = problemRepository.findAll();
+                Set<UUID> targetIds = new HashSet<>();
+                attemptRepository.findAll().forEach(a -> {
+                    if (a.getProblem() != null) targetIds.add(a.getProblem().getId());
+                });
+                bookmarkRepository.findAll().forEach(b -> {
+                    if (b.getProblem() != null) targetIds.add(b.getProblem().getId());
+                });
+
                 int queuedCount = 0;
-                for (Problem p : problems) {
-                    boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
-                                               LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()) ||
-                                               LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
-                                               LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
-                    if (needsGeneration) {
-                        problemGenerationService.queueGeneration(p.getId(), 2);
-                        queuedCount++;
+                for (UUID id : targetIds) {
+                    Optional<Problem> pOpt = problemRepository.findById(id);
+                    if (pOpt.isPresent()) {
+                        Problem p = pOpt.get();
+                        boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
+                                                   LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()) ||
+                                                   LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
+                                                   LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
+                        if (needsGeneration) {
+                            problemGenerationService.queueGeneration(p.getId(), 2);
+                            queuedCount++;
+                        }
                     }
                 }
-                System.out.println("PatternForge Importer: Queued " + queuedCount + " problems for auto-generation sequentially.");
+                System.out.println("PatternForge Importer: Queued " + queuedCount + " active/attempted problems for auto-generation sequentially.");
             } catch (Exception e) {
                 System.err.println("PatternForge Importer: Error in boot-time auto-generation scan: " + e.getMessage());
             }
