@@ -19,6 +19,8 @@ import com.patternforge.service.GeminiService;
 import com.patternforge.service.LocalFallbackGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.patternforge.service.ProblemGenerationService;
+import com.patternforge.service.LocalFallbackGenerator;
 
 @RestController
 @RequestMapping("/api/problems")
@@ -35,6 +37,7 @@ public class ProblemController {
     private final GeminiService geminiService;
     private final SubmissionRepository submissionRepository;
     private final ProblemChatMessageRepository problemChatMessageRepository;
+    private final ProblemGenerationService problemGenerationService;
 
     public ProblemController(ProblemRepository problemRepository,
                              TopicRepository topicRepository,
@@ -46,7 +49,8 @@ public class ProblemController {
                              UserRepository userRepository,
                              GeminiService geminiService,
                              SubmissionRepository submissionRepository,
-                             ProblemChatMessageRepository problemChatMessageRepository) {
+                             ProblemChatMessageRepository problemChatMessageRepository,
+                             ProblemGenerationService problemGenerationService) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -58,6 +62,7 @@ public class ProblemController {
         this.geminiService = geminiService;
         this.submissionRepository = submissionRepository;
         this.problemChatMessageRepository = problemChatMessageRepository;
+        this.problemGenerationService = problemGenerationService;
     }
 
     @GetMapping
@@ -845,17 +850,7 @@ public class ProblemController {
     }
 
     public void generateAndSaveSimplifiedFields(Problem problem) {
-        UUID problemId = problem.getId();
-        new Thread(() -> {
-            try {
-                Optional<Problem> freshOpt = problemRepository.findById(problemId);
-                if (freshOpt.isPresent()) {
-                    generateMissingDetails(freshOpt.get());
-                }
-            } catch (Exception e) {
-                System.err.println("PatternForge: Error in async generateAndSaveSimplifiedFields in ProblemController: " + e.getMessage());
-            }
-        }).start();
+        problemGenerationService.queueGeneration(problem.getId());
     }
 
     private int calculateStreak(Set<java.time.LocalDate> activityDates) {
@@ -988,28 +983,18 @@ public class ProblemController {
         new Thread(() -> {
             try {
                 List<Problem> problems = problemRepository.findAll();
-                System.out.println("PatternForge: Starting pre-generation for " + problems.size() + " problems.");
+                System.out.println("PatternForge: Starting pre-generation queueing for " + problems.size() + " problems.");
                 for (Problem p : problems) {
-                    boolean needsGeneration = (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty() ||
-                                               p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty() ||
-                                               p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
-                                               p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
-                                               "{}".equals(p.getSolutionDetailsJson()));
+                    boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
+                                               LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()) ||
+                                               LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
+                                               LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
                     
                     if (needsGeneration) {
-                        try {
-                            Optional<Problem> freshOpt = problemRepository.findById(p.getId());
-                            if (freshOpt.isPresent()) {
-                                generateMissingDetails(freshOpt.get());
-                                // Sleep 2.5 seconds to respect Gemini API rate limits
-                                Thread.sleep(2500);
-                            }
-                        } catch (Exception e) {
-                            System.err.println("PatternForge pre-generate error on problem " + p.getName() + ": " + e.getMessage());
-                        }
+                        problemGenerationService.queueGeneration(p.getId());
                     }
                 }
-                System.out.println("PatternForge: Completed pre-generation task for all problems.");
+                System.out.println("PatternForge: Completed pre-generation task queueing for all problems.");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -1019,117 +1004,6 @@ public class ProblemController {
             "success", true,
             "message", "Pre-generation task kicked off successfully in the background for all problems."
         ));
-    }
-
-    private void generateMissingDetails(Problem p) {
-        boolean updated = false;
-        ObjectMapper mapper = new ObjectMapper();
-
-        // 1. Ensure basicDetailsJson
-        if (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson())) {
-            try {
-                if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
-                    JsonNode root = mapper.readTree(p.getProblemDetailsJson());
-                    Map<String, Object> basic = new LinkedHashMap<>();
-                    basic.put("problemStatement", root.path("problemStatement").asText(""));
-                    basic.put("inputFormat", root.path("inputFormat").asText(""));
-                    basic.put("outputFormat", root.path("outputFormat").asText(""));
-                    basic.put("examples", mapper.convertValue(root.path("examples"), List.class));
-                    basic.put("constraints", mapper.convertValue(root.path("constraints"), List.class));
-                    basic.put("edgeCases", mapper.convertValue(root.path("edgeCases"), List.class));
-                    basic.put("followUp", root.path("followUp").asText(""));
-                    basic.put("hints", mapper.convertValue(root.path("hints"), List.class));
-                    p.setBasicDetailsJson(mapper.writeValueAsString(basic));
-                } else {
-                    String jsonStr = geminiService.generateProblemBasicDetailsJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                    p.setBasicDetailsJson(jsonStr);
-                }
-                updated = true;
-            } catch (Exception e) {
-                try {
-                    p.setBasicDetailsJson(LocalFallbackGenerator.getBasicDetailsFallbackJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName()));
-                    updated = true;
-                } catch (Exception ex) {}
-            }
-        }
-
-        // 2. Ensure solutionDetailsJson
-        if (LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson())) {
-            try {
-                if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
-                    JsonNode root = mapper.readTree(p.getProblemDetailsJson());
-                    Map<String, Object> sol = new LinkedHashMap<>();
-                    sol.put("observation", root.path("observation").asText(""));
-                    sol.put("pattern", root.path("pattern").asText(""));
-                    sol.put("approach", root.path("approach").asText(""));
-                    sol.put("optimalTimeComplexity", root.path("optimalTimeComplexity").asText(""));
-                    sol.put("optimalSpaceComplexity", root.path("optimalSpaceComplexity").asText(""));
-                    sol.put("fullExplanation", root.path("fullExplanation").asText(""));
-                    sol.put("referenceSolution", root.path("referenceSolution").asText(""));
-                    sol.put("referenceSolutions", mapper.convertValue(root.path("referenceSolutions"), Map.class));
-                    sol.put("bruteForce", mapper.convertValue(root.path("bruteForce"), Map.class));
-                    sol.put("better", mapper.convertValue(root.path("better"), Map.class));
-                    sol.put("optimal", mapper.convertValue(root.path("optimal"), Map.class));
-                    p.setSolutionDetailsJson(mapper.writeValueAsString(sol));
-                } else {
-                    String jsonStr = geminiService.generateProblemSolutionDetailsJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                    p.setSolutionDetailsJson(jsonStr);
-                }
-                updated = true;
-            } catch (Exception e) {
-                try {
-                    p.setSolutionDetailsJson(LocalFallbackGenerator.getSolutionDetailsFallbackJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName()));
-                    updated = true;
-                } catch (Exception ex) {}
-            }
-        }
-
-        // 3. Ensure simplifiedStatement and simplifiedApproach
-        if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
-            LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
-            try {
-                Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
-                        p.getName(),
-                        p.getEffectiveProblemStatement(),
-                        p.getSolutionDetailsJson()
-                );
-                
-                if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
-                    p.setSimplifiedStatement(res.get("simplifiedStatement"));
-                }
-                if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
-                    Map<String, String> approachMap = new HashMap<>();
-                    approachMap.put("optimal", res.get("simplifiedOptimal"));
-                    approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
-                    approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
-                    p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
-                }
-                updated = true;
-            } catch (Exception e) {
-                try {
-                    Map<String, String> res = LocalFallbackGenerator.getSimplifiedFallback(p.getName(), p.getTopic().getName());
-                    if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
-                        p.setSimplifiedStatement(res.get("simplifiedStatement"));
-                    }
-                    if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
-                        Map<String, String> approachMap = new HashMap<>();
-                        approachMap.put("optimal", res.get("simplifiedOptimal"));
-                        approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
-                        approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
-                        p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
-                    }
-                    updated = true;
-                } catch (Exception ex) {}
-            }
-        }
-
-        if (updated) {
-            problemRepository.save(p);
-        }
     }
 }
 

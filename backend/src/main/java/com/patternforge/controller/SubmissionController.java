@@ -9,6 +9,7 @@ import com.patternforge.service.GeminiService;
 import com.patternforge.service.LocalFallbackGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.patternforge.service.ProblemGenerationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,7 @@ public class SubmissionController {
     private final SubmissionRepository submissionRepository;
     private final TestCaseRepository testCaseRepository;
     private final GeminiService geminiService;
+    private final ProblemGenerationService problemGenerationService;
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SubmissionController.class);
 
     public SubmissionController(CodeExecutionService codeExecutionService,
@@ -33,13 +35,15 @@ public class SubmissionController {
                                 AttemptRepository attemptRepository,
                                 SubmissionRepository submissionRepository,
                                 TestCaseRepository testCaseRepository,
-                                GeminiService geminiService) {
+                                GeminiService geminiService,
+                                ProblemGenerationService problemGenerationService) {
         this.codeExecutionService = codeExecutionService;
         this.problemRepository = problemRepository;
         this.attemptRepository = attemptRepository;
         this.submissionRepository = submissionRepository;
         this.testCaseRepository = testCaseRepository;
         this.geminiService = geminiService;
+        this.problemGenerationService = problemGenerationService;
     }
 
     @PostMapping("/run")
@@ -252,127 +256,6 @@ public class SubmissionController {
     }
 
     public void generateAndSaveSimplifiedFields(Problem problem) {
-        UUID problemId = problem.getId();
-        new Thread(() -> {
-            try {
-                Optional<Problem> freshOpt = problemRepository.findById(problemId);
-                if (freshOpt.isPresent()) {
-                    generateMissingDetails(freshOpt.get());
-                }
-            } catch (Exception e) {
-                System.err.println("PatternForge: Error in async generateAndSaveSimplifiedFields in SubmissionController: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    private void generateMissingDetails(Problem p) {
-        boolean updated = false;
-        ObjectMapper mapper = new ObjectMapper();
-
-        // 1. Ensure basicDetailsJson
-        if (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson())) {
-            try {
-                if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
-                    JsonNode root = mapper.readTree(p.getProblemDetailsJson());
-                    Map<String, Object> basic = new LinkedHashMap<>();
-                    basic.put("problemStatement", root.path("problemStatement").asText(""));
-                    basic.put("inputFormat", root.path("inputFormat").asText(""));
-                    basic.put("outputFormat", root.path("outputFormat").asText(""));
-                    basic.put("examples", mapper.convertValue(root.path("examples"), List.class));
-                    basic.put("constraints", mapper.convertValue(root.path("constraints"), List.class));
-                    basic.put("edgeCases", mapper.convertValue(root.path("edgeCases"), List.class));
-                    basic.put("followUp", root.path("followUp").asText(""));
-                    basic.put("hints", mapper.convertValue(root.path("hints"), List.class));
-                    p.setBasicDetailsJson(mapper.writeValueAsString(basic));
-                } else {
-                    String jsonStr = geminiService.generateProblemBasicDetailsJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                    p.setBasicDetailsJson(jsonStr);
-                }
-                updated = true;
-            } catch (Exception e) {
-                try {
-                    p.setBasicDetailsJson(LocalFallbackGenerator.getBasicDetailsFallbackJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName()));
-                    updated = true;
-                } catch (Exception ex) {}
-            }
-        }
-
-        // 2. Ensure solutionDetailsJson
-        if (LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson())) {
-            try {
-                if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
-                    JsonNode root = mapper.readTree(p.getProblemDetailsJson());
-                    Map<String, Object> sol = new LinkedHashMap<>();
-                    sol.put("observation", root.path("observation").asText(""));
-                    sol.put("pattern", root.path("pattern").asText(""));
-                    sol.put("approach", root.path("approach").asText(""));
-                    sol.put("optimalTimeComplexity", root.path("optimalTimeComplexity").asText(""));
-                    sol.put("optimalSpaceComplexity", root.path("optimalSpaceComplexity").asText(""));
-                    sol.put("fullExplanation", root.path("fullExplanation").asText(""));
-                    sol.put("referenceSolution", root.path("referenceSolution").asText(""));
-                    sol.put("referenceSolutions", mapper.convertValue(root.path("referenceSolutions"), Map.class));
-                    sol.put("bruteForce", mapper.convertValue(root.path("bruteForce"), Map.class));
-                    sol.put("better", mapper.convertValue(root.path("better"), Map.class));
-                    sol.put("optimal", mapper.convertValue(root.path("optimal"), Map.class));
-                    p.setSolutionDetailsJson(mapper.writeValueAsString(sol));
-                } else {
-                    String jsonStr = geminiService.generateProblemSolutionDetailsJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                    p.setSolutionDetailsJson(jsonStr);
-                }
-                updated = true;
-            } catch (Exception e) {
-                try {
-                    p.setSolutionDetailsJson(LocalFallbackGenerator.getSolutionDetailsFallbackJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName()));
-                    updated = true;
-                } catch (Exception ex) {}
-            }
-        }
-
-        // 3. Ensure simplifiedStatement and simplifiedApproach
-        if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
-            LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
-            try {
-                Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
-                        p.getName(),
-                        p.getEffectiveProblemStatement(),
-                        p.getSolutionDetailsJson()
-                );
-                
-                if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
-                    p.setSimplifiedStatement(res.get("simplifiedStatement"));
-                }
-                if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
-                    Map<String, String> approachMap = new HashMap<>();
-                    approachMap.put("optimal", res.get("simplifiedOptimal"));
-                    approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
-                    approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
-                    p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
-                }
-                updated = true;
-            } catch (Exception e) {
-                try {
-                    Map<String, String> res = LocalFallbackGenerator.getSimplifiedFallback(p.getName(), p.getTopic().getName());
-                    if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
-                        p.setSimplifiedStatement(res.get("simplifiedStatement"));
-                    }
-                    if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
-                        Map<String, String> approachMap = new HashMap<>();
-                        approachMap.put("optimal", res.get("simplifiedOptimal"));
-                        approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
-                        approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
-                        p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
-                    }
-                    updated = true;
-                } catch (Exception ex) {}
-            }
-        }
-
-        if (updated) {
-            problemRepository.save(p);
-        }
+        problemGenerationService.queueGeneration(problem.getId());
     }
 }
