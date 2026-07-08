@@ -454,88 +454,13 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
-        ObjectMapper mapper = new ObjectMapper();
+        
+        // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
+        problemGenerationService.generateMissingDetailsInternal(p);
 
-        // 1. Check if basic details are already cached in DB and valid JSON
-        if (p.getBasicDetailsJson() != null && !p.getBasicDetailsJson().trim().isEmpty()) {
-            try {
-                mapper.readTree(p.getBasicDetailsJson());
-                if (!LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson())) {
-                    return ResponseEntity.ok()
-                            .header("Content-Type", "application/json")
-                            .body(p.getBasicDetailsJson());
-                } else {
-                    try {
-                        String jsonStr = geminiService.generateProblemBasicDetailsJson(
-                                p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                        mapper.readTree(jsonStr);
-                        p.setBasicDetailsJson(jsonStr);
-                        problemRepository.save(p);
-                        return ResponseEntity.ok()
-                                .header("Content-Type", "application/json")
-                                .body(jsonStr);
-                    } catch (Exception e) {
-                        problemGenerationService.queueGeneration(p.getId(), 1);
-                        String fallbackJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                        return ResponseEntity.ok()
-                                .header("Content-Type", "application/json")
-                                .body(fallbackJson);
-                    }
-                }
-            } catch (Exception e) {
-                // Invalid JSON, discard and try to fall back or regenerate
-                p.setBasicDetailsJson(null);
-                problemRepository.save(p);
-            }
-        }
-
-        // 2. Check if legacy full JSON is present and extract basic fields from it
-        if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
-            try {
-                JsonNode root = mapper.readTree(p.getProblemDetailsJson());
-                Map<String, Object> basic = new LinkedHashMap<>();
-                basic.put("problemStatement", root.path("problemStatement").asText(""));
-                basic.put("inputFormat", root.path("inputFormat").asText(""));
-                basic.put("outputFormat", root.path("outputFormat").asText(""));
-                basic.put("examples", mapper.convertValue(root.path("examples"), List.class));
-                basic.put("constraints", mapper.convertValue(root.path("constraints"), List.class));
-                basic.put("edgeCases", mapper.convertValue(root.path("edgeCases"), List.class));
-                basic.put("followUp", root.path("followUp").asText(""));
-                basic.put("hints", mapper.convertValue(root.path("hints"), List.class));
-
-                String basicJson = mapper.writeValueAsString(basic);
-                p.setBasicDetailsJson(basicJson);
-                problemRepository.save(p);
-
-                return ResponseEntity.ok()
-                        .header("Content-Type", "application/json")
-                        .body(basicJson);
-            } catch (Exception e) {
-                // Invalid legacy JSON, ignore and regenerate
-            }
-        }
-
-        // 3. Generate fresh basic details using Gemini
-        try {
-            String jsonStr = geminiService.generateProblemBasicDetailsJson(
-                    p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-            
-            // Validate JSON
-            mapper.readTree(jsonStr);
-
-            p.setBasicDetailsJson(jsonStr);
-            problemRepository.save(p);
-
-            return ResponseEntity.ok()
-                    .header("Content-Type", "application/json")
-                    .body(jsonStr);
-        } catch (Exception e) {
-            problemGenerationService.queueGeneration(p.getId(), 1);
-            String fallbackJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-            return ResponseEntity.ok()
-                    .header("Content-Type", "application/json")
-                    .body(fallbackJson);
-        }
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/json")
+                .body(p.getBasicDetailsJson() != null ? p.getBasicDetailsJson() : "{}");
     }
 
     @GetMapping("/{id}/solution-details")
@@ -547,90 +472,13 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
-        ObjectMapper mapper = new ObjectMapper();
+        
+        // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
+        problemGenerationService.generateMissingDetailsInternal(p);
 
-        // 1. Check if solution details are cached and valid
-        if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty() && !"{}".equals(p.getSolutionDetailsJson().trim())) {
-            try {
-                mapper.readTree(p.getSolutionDetailsJson());
-                if (!LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson())) {
-                    return ResponseEntity.ok()
-                            .header("Content-Type", "application/json")
-                            .body(p.getSolutionDetailsJson());
-                } else {
-                    try {
-                        String jsonStr = geminiService.generateProblemSolutionDetailsJson(
-                                p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                        mapper.readTree(jsonStr);
-                        p.setSolutionDetailsJson(jsonStr);
-                        problemRepository.save(p);
-                        return ResponseEntity.ok()
-                                .header("Content-Type", "application/json")
-                                .body(jsonStr);
-                    } catch (Exception e) {
-                        problemGenerationService.queueGeneration(p.getId(), 1);
-                        String fallbackJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                        return ResponseEntity.ok()
-                                .header("Content-Type", "application/json")
-                                .body(fallbackJson);
-                    }
-                }
-            } catch (Exception e) {
-                p.setSolutionDetailsJson(null);
-                problemRepository.save(p);
-            }
-        }
-
-        // 2. Check if legacy full JSON is present and extract solution fields
-        if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
-            try {
-                JsonNode root = mapper.readTree(p.getProblemDetailsJson());
-                Map<String, Object> sol = new LinkedHashMap<>();
-                sol.put("observation", root.path("observation").asText(""));
-                sol.put("pattern", root.path("pattern").asText(""));
-                sol.put("approach", root.path("approach").asText(""));
-                sol.put("optimalTimeComplexity", root.path("optimalTimeComplexity").asText(""));
-                sol.put("optimalSpaceComplexity", root.path("optimalSpaceComplexity").asText(""));
-                sol.put("fullExplanation", root.path("fullExplanation").asText(""));
-                sol.put("referenceSolution", root.path("referenceSolution").asText(""));
-                sol.put("referenceSolutions", mapper.convertValue(root.path("referenceSolutions"), Map.class));
-                sol.put("bruteForce", mapper.convertValue(root.path("bruteForce"), Map.class));
-                sol.put("better", mapper.convertValue(root.path("better"), Map.class));
-                sol.put("optimal", mapper.convertValue(root.path("optimal"), Map.class));
-
-                String solJson = mapper.writeValueAsString(sol);
-                p.setSolutionDetailsJson(solJson);
-                problemRepository.save(p);
-
-                return ResponseEntity.ok()
-                        .header("Content-Type", "application/json")
-                        .body(solJson);
-            } catch (Exception e) {
-                // Ignore and regenerate
-            }
-        }
-
-        // 3. Generate fresh solution details using Gemini
-        try {
-            String jsonStr = geminiService.generateProblemSolutionDetailsJson(
-                    p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-            
-            // Validate JSON
-            mapper.readTree(jsonStr);
-
-            p.setSolutionDetailsJson(jsonStr);
-            problemRepository.save(p);
-
-            return ResponseEntity.ok()
-                    .header("Content-Type", "application/json")
-                    .body(jsonStr);
-        } catch (Exception e) {
-            problemGenerationService.queueGeneration(p.getId(), 1);
-            String fallbackJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-            return ResponseEntity.ok()
-                    .header("Content-Type", "application/json")
-                    .body(fallbackJson);
-        }
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/json")
+                .body(p.getSolutionDetailsJson() != null ? p.getSolutionDetailsJson() : "{}");
     }
 
     @PostMapping("/{id}/check-thinking")
