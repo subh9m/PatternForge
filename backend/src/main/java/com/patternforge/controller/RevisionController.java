@@ -53,7 +53,9 @@ public class RevisionController {
             Problem p = a.getProblem();
             
             // Check if details are missing and need generation
-            boolean isGenerating = (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
+            boolean isGenerating = (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty() ||
+                                    "{}".equals(p.getBasicDetailsJson()) ||
+                                    p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
                                     p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
                                     "{}".equals(p.getSimplifiedApproach()) ||
                                     p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty() ||
@@ -140,7 +142,7 @@ public class RevisionController {
         ObjectMapper mapper = new ObjectMapper();
 
         // 1. Ensure basicDetailsJson is present (essential for problem description)
-        if (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty()) {
+        if (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty() || "{}".equals(p.getBasicDetailsJson())) {
             try {
                 if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
                     JsonNode root = mapper.readTree(p.getProblemDetailsJson());

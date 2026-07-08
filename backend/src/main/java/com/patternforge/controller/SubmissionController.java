@@ -270,7 +270,7 @@ public class SubmissionController {
         ObjectMapper mapper = new ObjectMapper();
 
         // 1. Ensure basicDetailsJson
-        if (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty()) {
+        if (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty() || "{}".equals(p.getBasicDetailsJson())) {
             try {
                 if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
                     JsonNode root = mapper.readTree(p.getProblemDetailsJson());
