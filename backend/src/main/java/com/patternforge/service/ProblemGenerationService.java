@@ -51,6 +51,18 @@ public class ProblemGenerationService {
         public int compareTo(PrioritizedTask other) {
             return Integer.compare(this.priority, other.priority);
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof PrioritizedTask)) return false;
+            return Objects.equals(this.problemId, ((PrioritizedTask) obj).problemId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(problemId);
+        }
     }
 
     public ProblemGenerationService(ProblemRepository problemRepository, GeminiService geminiService) {
@@ -63,6 +75,13 @@ public class ProblemGenerationService {
     }
 
     public void queueGeneration(UUID problemId, int priority) {
+        if (priority == 1) {
+            PrioritizedTask dummy = new PrioritizedTask(problemId, 2, () -> {});
+            if (queue.remove(dummy)) {
+                generatingProblems.remove(problemId);
+            }
+        }
+
         if (generatingProblems.add(problemId)) {
             executor.execute(new PrioritizedTask(problemId, priority, () -> {
                 try {
