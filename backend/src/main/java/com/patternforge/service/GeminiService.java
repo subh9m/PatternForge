@@ -92,6 +92,60 @@ public class GeminiService {
         return trimmed;
     }
 
+    private HttpResponse<String> sendRequestWithRetry(HttpRequest request) throws Exception {
+        int maxRetries = 3;
+        int attempt = 0;
+        long backoffMs = 4000;
+
+        while (true) {
+            attempt++;
+            try {
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                
+                if (response.statusCode() == 429) {
+                    long sleepMs = backoffMs;
+                    try {
+                        String body = response.body();
+                        com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(body);
+                        com.fasterxml.jackson.databind.JsonNode details = root.path("error").path("details");
+                        if (details.isArray()) {
+                            for (com.fasterxml.jackson.databind.JsonNode detail : details) {
+                                if (detail.path("@type").asText("").contains("RetryInfo")) {
+                                    String delayStr = detail.path("retryDelay").asText("");
+                                    if (delayStr.endsWith("s")) {
+                                        double delaySec = Double.parseDouble(delayStr.substring(0, delayStr.length() - 1));
+                                        sleepMs = (long) (delaySec * 1000) + 1000;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception parseEx) {
+                        // ignore
+                    }
+                    
+                    if (attempt >= maxRetries) {
+                        log.error("Gemini API: Exceeded max retries (3) on 429 Rate Limit. Failing.");
+                        return response;
+                    }
+                    
+                    log.warn("Gemini API: Hit 429 Rate Limit. Retrying in {} seconds (Attempt {}/{})", (sleepMs / 1000.0), attempt, maxRetries);
+                    Thread.sleep(sleepMs);
+                    backoffMs *= 2;
+                    continue;
+                }
+                
+                return response;
+            } catch (Exception e) {
+                if (attempt >= maxRetries) {
+                    throw e;
+                }
+                log.warn("Gemini API: Request failed with exception. Retrying in {} seconds...", (backoffMs / 1000.0), e);
+                Thread.sleep(backoffMs);
+                backoffMs *= 2;
+            }
+        }
+    }
+
     /**
      * Generate LeetCode description, examples, constraints, hints basic details.
      */
@@ -135,7 +189,7 @@ public class GeminiService {
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = sendRequestWithRetry(request);
 
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Gemini API call failed with status code " + response.statusCode() + ": " + response.body());
@@ -213,7 +267,7 @@ public class GeminiService {
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = sendRequestWithRetry(request);
 
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Gemini API call failed with status code " + response.statusCode() + ": " + response.body());
@@ -303,7 +357,7 @@ public class GeminiService {
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = sendRequestWithRetry(request);
 
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Gemini API call failed with status: " + response.statusCode());
@@ -432,7 +486,7 @@ public class GeminiService {
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = sendRequestWithRetry(request);
 
             if (response.statusCode() != 200) {
                 log.error("Gemini API error during chat: Status = {}, Body = {}", response.statusCode(), response.body());
@@ -491,7 +545,7 @@ public class GeminiService {
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = sendRequestWithRetry(request);
 
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Gemini API call failed with status code " + response.statusCode());
