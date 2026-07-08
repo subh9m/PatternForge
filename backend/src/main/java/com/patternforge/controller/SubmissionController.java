@@ -5,7 +5,6 @@ import com.patternforge.dto.CodeRunResponse;
 import com.patternforge.model.*;
 import com.patternforge.repository.*;
 import com.patternforge.service.CodeExecutionService;
-import com.patternforge.service.GeminiService;
 import com.patternforge.service.LocalFallbackGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,7 +25,6 @@ public class SubmissionController {
     private final AttemptRepository attemptRepository;
     private final SubmissionRepository submissionRepository;
     private final TestCaseRepository testCaseRepository;
-    private final GeminiService geminiService;
     private final ProblemGenerationService problemGenerationService;
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SubmissionController.class);
 
@@ -35,14 +33,12 @@ public class SubmissionController {
                                 AttemptRepository attemptRepository,
                                 SubmissionRepository submissionRepository,
                                 TestCaseRepository testCaseRepository,
-                                GeminiService geminiService,
                                 ProblemGenerationService problemGenerationService) {
         this.codeExecutionService = codeExecutionService;
         this.problemRepository = problemRepository;
         this.attemptRepository = attemptRepository;
         this.submissionRepository = submissionRepository;
         this.testCaseRepository = testCaseRepository;
-        this.geminiService = geminiService;
         this.problemGenerationService = problemGenerationService;
     }
 

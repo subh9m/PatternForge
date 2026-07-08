@@ -4,76 +4,24 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.List;
 import java.util.Map;
-import com.patternforge.model.ProblemChatMessage;
 
 @Service
 @Slf4j
 public class GeminiService {
 
-    @Value("${gemini.api-key:}")
-    private String apiKey;
-
-    private final HttpClient httpClient;
+    private final RetryExecutor retryExecutor;
     private final ObjectMapper objectMapper;
 
-    public GeminiService() {
-        this.httpClient = HttpClient.newHttpClient();
+    public GeminiService(RetryExecutor retryExecutor) {
+        this.retryExecutor = retryExecutor;
         this.objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
     }
 
-    private String getApiKey() {
-        if (apiKey != null && !apiKey.trim().isEmpty()) {
-            return apiKey.trim();
-        }
-        
-        // Fallback: check System env variable
-        String envKey = System.getenv("GEMINI_API_KEY");
-        if (envKey != null && !envKey.trim().isEmpty()) {
-            return envKey.trim();
-        }
-
-        // Fallback: check Verfalarm's .env file on Desktop
-        File envFile = new File("C:\\Users\\rajsh\\Desktop\\Verfalarm\\.env");
-        if (envFile.exists()) {
-            try {
-                List<String> lines = Files.readAllLines(envFile.toPath());
-                for (String line : lines) {
-                    line = line.trim();
-                    if (line.startsWith("GEMINI_API_KEY=")) {
-                        String key = line.substring("GEMINI_API_KEY=".length()).trim();
-                        if (!key.isEmpty()) {
-                            log.info("GeminiService: Found API key fallback in Verfalarm .env file.");
-                            return key;
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                log.error("GeminiService: Failed to read Verfalarm .env file", e);
-            }
-        }
-
-        log.warn("GeminiService: No API key found. Calls will fail.");
-        return "";
-    }
-
-    /**
-     * Generate LeetCode description, examples, constraints, hints, solution JSON on the fly for caching.
-     */
     public static String cleanJsonString(String rawJson) {
         if (rawJson == null) return "";
         String trimmed = rawJson.trim();
@@ -92,211 +40,84 @@ public class GeminiService {
         return trimmed;
     }
 
-    private HttpResponse<String> sendRequestWithRetry(HttpRequest request) throws Exception {
-        int maxRetries = 3;
-        int attempt = 0;
-        long backoffMs = 4000;
-        HttpRequest activeRequest = request;
-
-        while (true) {
-            attempt++;
-            try {
-                HttpResponse<String> response = httpClient.send(activeRequest, HttpResponse.BodyHandlers.ofString());
-                
-                if (response.statusCode() == 429) {
-                    long sleepMs = backoffMs;
-                    try {
-                        String body = response.body();
-                        com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(body);
-                        com.fasterxml.jackson.databind.JsonNode details = root.path("error").path("details");
-                        if (details.isArray()) {
-                            for (com.fasterxml.jackson.databind.JsonNode detail : details) {
-                                if (detail.path("@type").asText("").contains("RetryInfo")) {
-                                    String delayStr = detail.path("retryDelay").asText("");
-                                    if (delayStr.endsWith("s")) {
-                                        double delaySec = Double.parseDouble(delayStr.substring(0, delayStr.length() - 1));
-                                        sleepMs = (long) (delaySec * 1000) + 1000;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception parseEx) {
-                        // ignore
-                    }
-                    
-                    if (attempt >= maxRetries) {
-                        log.error("Gemini API: Exceeded max retries (3) on 429 Rate Limit. Failing.");
-                        return response;
-                    }
-                    
-                    log.warn("Gemini API: Hit 429 Rate Limit. Retrying in {} seconds (Attempt {}/{})", (sleepMs / 1000.0), attempt, maxRetries);
-                    Thread.sleep(sleepMs);
-                    backoffMs *= 2;
-                    continue;
-                }
-                
-                return response;
-            } catch (Exception e) {
-                if (attempt >= maxRetries) {
-                    throw e;
-                }
-                log.warn("Gemini API: Request failed with exception. Retrying in {} seconds...", (backoffMs / 1000.0), e);
-                Thread.sleep(backoffMs);
-                backoffMs *= 2;
-            }
-        }
-    }
-
-    /**
-     * Generate LeetCode description, examples, constraints, hints basic details.
-     */
-    public String generateProblemBasicDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
-        String key = getApiKey();
-        if (key.isEmpty()) {
-            throw new IllegalStateException("Gemini API key is not configured.");
-        }
-
-        String prompt = "Generate LeetCode-like basic problem description details in JSON format for the problem '" 
-                + problemName + "' (LeetCode #" + leetcodeNumber + ") under topic '" + topicName + "'.\n"
-                + "Return a single JSON object with the following properties:\n"
-                + "1. 'problemStatement': Detailed description markdown text explaining the problem context and goals.\n"
-                + "2. 'inputFormat': Markdown text detailing parameters and constraints.\n"
-                + "3. 'outputFormat': Markdown text detailing what needs to be returned.\n"
-                + "4. 'examples': Array of 2 to 3 example objects containing 'input' string, 'output' string, and 'explanation' markdown string.\n"
-                + "5. 'constraints': Array of string constraints (e.g. n <= 10^5).\n"
-                + "6. 'edgeCases': Array of 2 to 3 strings highlighting edge case challenges.\n"
-                + "7. 'followUp': Markdown string follow-up questions if available.\n"
-                + "8. 'hints': Array of exactly 3 progressive hints.";
+    public String generateAllProblemDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
+        String prompt = "Generate comprehensive LeetCode-like problem description details, optimal solution details, and simplified daily revision contents in a single structured JSON object for the problem '" 
+                + problemName + "' (LeetCode #" + leetcodeNumber + ") under topic '" + topicName + "'.\n\n"
+                + "Return EXACTLY a single JSON object with the following properties:\n"
+                + "{\n"
+                + "  \"basicDetails\": {\n"
+                + "    \"problemStatement\": \"Detailed description markdown text explaining the problem context and goals.\",\n"
+                + "    \"inputFormat\": \"Markdown text detailing parameters and constraints.\",\n"
+                + "    \"outputFormat\": \"Markdown text detailing what needs to be returned.\",\n"
+                + "    \"examples\": [\n"
+                + "      {\n"
+                + "        \"input\": \"string representing input parameters\",\n"
+                + "        \"output\": \"string representing expected output\",\n"
+                + "        \"explanation\": \"markdown string explaining the example\"\n"
+                + "      }\n"
+                + "    ],\n"
+                + "    \"constraints\": [\"string constraints, e.g. n <= 10^5\"],\n"
+                + "    \"edgeCases\": [\"2 to 3 string edge cases\"],\n"
+                + "    \"followUp\": \"markdown string follow-up questions if available\",\n"
+                + "    \"hints\": [\"exactly 3 progressive hint strings\"]\n"
+                + "  },\n"
+                + "  \"solutionDetails\": {\n"
+                + "    \"observation\": \"markdown string of key patterns/notes to observe\",\n"
+                + "    \"pattern\": \"the master algorithmic pattern name (e.g. 'Two Pointers')\",\n"
+                + "    \"approach\": \"short summary markdown string of the optimal approach strategy\",\n"
+                + "    \"optimalTimeComplexity\": \"optimal time complexity, e.g. 'O(n)'\",\n"
+                + "    \"optimalSpaceComplexity\": \"optimal space complexity, e.g. 'O(1)'\",\n"
+                + "    \"fullExplanation\": \"in-depth markdown explanation of optimal code strategy\",\n"
+                + "    \"referenceSolution\": \"C++ optimal code snippet\",\n"
+                + "    \"referenceSolutions\": {\n"
+                + "      \"cpp\": \"clean C++ code\",\n"
+                + "      \"java\": \"clean Java code\"\n"
+                + "    },\n"
+                + "    \"bruteForce\": {\n"
+                + "      \"approach\": \"summary markdown\",\n"
+                + "      \"timeComplexity\": \"complexity string\",\n"
+                + "      \"spaceComplexity\": \"complexity string\",\n"
+                + "      \"code\": {\n"
+                + "        \"cpp\": \"C++ code\",\n"
+                + "        \"java\": \"Java code\"\n"
+                + "      }\n"
+                + "    },\n"
+                + "    \"better\": {\n"
+                + "      \"approach\": \"summary markdown (or null if not distinct)\",\n"
+                + "      \"timeComplexity\": \"complexity string\",\n"
+                + "      \"spaceComplexity\": \"complexity string\",\n"
+                + "      \"code\": {\n"
+                + "        \"cpp\": \"C++ code\",\n"
+                + "        \"java\": \"Java code\"\n"
+                + "      }\n"
+                + "    },\n"
+                + "    \"optimal\": {\n"
+                + "      \"approach\": \"summary markdown\",\n"
+                + "      \"timeComplexity\": \"complexity string\",\n"
+                + "      \"spaceComplexity\": \"complexity string\",\n"
+                + "      \"code\": {\n"
+                + "        \"cpp\": \"C++ code\",\n"
+                + "        \"java\": \"Java code\"\n"
+                + "      }\n"
+                + "    }\n"
+                + "  },\n"
+                + "  \"revisionDetails\": {\n"
+                + "    \"simplifiedStatement\": \"A very brief and simple description of the problem statement (2-3 lines in simple, plain, easy-to-understand words, focusing only on the core goal).\",\n"
+                + "    \"simplifiedOptimal\": \"A very brief explanation of the optimal strategy/approach in simple, plain words (2-3 lines explaining the core pattern or intuition).\",\n"
+                + "    \"simplifiedBetter\": \"A very brief explanation of the better/improved strategy/approach if it exists in the details (else empty/null).\",\n"
+                + "    \"simplifiedBrute\": \"A very brief explanation of the brute force strategy/approach if it exists in the details (else empty/null).\"\n"
+                + "  }\n"
+                + "}";
 
         try {
-            String escapedPrompt = escapeJsonString(prompt);
-
-            String requestBody = "{"
-                    + "\"contents\": [{"
-                    + "  \"parts\": [{"
-                    + "    \"text\": \"" + escapedPrompt + "\""
-                    + "  }]"
-                    + "}],"
-                    + "\"generationConfig\": {"
-                    + "  \"responseMimeType\": \"application/json\""
-                    + "}"
-                    + "}";
-
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
-                    .build();
-
-            HttpResponse<String> response = sendRequestWithRetry(request);
-
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Gemini API call failed with status code " + response.statusCode() + ": " + response.body());
-            }
-
-            String responseBody = response.body();
-            String jsonText = extractCandidateText(responseBody);
-            
-            if (jsonText == null || jsonText.trim().isEmpty()) {
-                throw new RuntimeException("Gemini returned invalid empty candidate content.");
-            }
-
-            return cleanJsonString(jsonText);
+            String rawJson = retryExecutor.executeWithFallback(prompt, "application/json");
+            return cleanJsonString(extractCandidateText(rawJson));
         } catch (Exception e) {
-            log.error("Failed to generate basic problem details via Gemini API", e);
-            throw new RuntimeException("Failed to generate basic problem details via Gemini: " + e.getMessage(), e);
+            log.error("Failed to generate unified problem details via Gemini API", e);
+            throw new RuntimeException("Failed to generate unified problem details: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Generate optimal strategy, complexities, code solutions details in JSON.
-     */
-    public String generateProblemSolutionDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
-        String key = getApiKey();
-        if (key.isEmpty()) {
-            throw new IllegalStateException("Gemini API key is not configured.");
-        }
-
-        String prompt = "Generate LeetCode-like optimal strategy and code solution details in JSON format for the problem '" 
-                + problemName + "' (LeetCode #" + leetcodeNumber + ") under topic '" + topicName + "'.\n"
-                + "Return a single JSON object with the following properties:\n"
-                + "1. 'observation': Markdown string of key patterns/notes to observe.\n"
-                + "2. 'pattern': A single string detailing the master pattern name (e.g., 'Two Pointers').\n"
-                + "3. 'approach': Short summary markdown string of the optimal approach strategy.\n"
-                + "4. 'optimalTimeComplexity': The big-O optimal time complexity (e.g. 'O(n)').\n"
-                + "5. 'optimalSpaceComplexity': The big-O space complexity (e.g. 'O(1)').\n"
-                + "6. 'fullExplanation': In-depth markdown explanation of how to solve the problem optimal code strategy.\n"
-                + "7. 'referenceSolution': Code snippet block of the optimal solution in C++.\n"
-                + "8. 'referenceSolutions': A JSON object containing key-value pairs mapping language name ('cpp', 'java') to clean code solution strings (with C++ as the primary focus).\n"
-                + "9. 'bruteForce': A JSON object containing:\n"
-                + "    - 'approach': Short summary markdown explanation of the brute force strategy.\n"
-                + "    - 'timeComplexity': The big-O time complexity (e.g. 'O(n^2)').\n"
-                + "    - 'spaceComplexity': The big-O space complexity (e.g. 'O(1)').\n"
-                + "    - 'code': A JSON object containing 'cpp' and 'java' fields with clean code implementations.\n"
-                + "10. 'better': (Optional, set to null if no distinct 'better' approach exists) A JSON object containing:\n"
-                + "    - 'approach': Short summary markdown explanation of the better strategy.\n"
-                + "    - 'timeComplexity': The big-O time complexity (e.g. 'O(n log n)').\n"
-                + "    - 'spaceComplexity': The big-O space complexity (e.g. 'O(n)').\n"
-                + "    - 'code': A JSON object containing 'cpp' and 'java' fields with clean code implementations.\n"
-                + "11. 'optimal': A JSON object containing:\n"
-                + "    - 'approach': Short summary markdown explanation of the optimal strategy.\n"
-                + "    - 'timeComplexity': The big-O time complexity (e.g. 'O(n)').\n"
-                + "    - 'spaceComplexity': The big-O space complexity (e.g. 'O(1)' or 'O(n)').\n"
-                + "    - 'code': A JSON object containing 'cpp' and 'java' fields with clean code implementations.";
-
-        try {
-            String escapedPrompt = escapeJsonString(prompt);
-
-            String requestBody = "{"
-                    + "\"contents\": [{"
-                    + "  \"parts\": [{"
-                    + "    \"text\": \"" + escapedPrompt + "\""
-                    + "  }]"
-                    + "}],"
-                    + "\"generationConfig\": {"
-                    + "  \"responseMimeType\": \"application/json\""
-                    + "}"
-                    + "}";
-
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
-                    .build();
-
-            HttpResponse<String> response = sendRequestWithRetry(request);
-
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Gemini API call failed with status code " + response.statusCode() + ": " + response.body());
-            }
-
-            String responseBody = response.body();
-            String jsonText = extractCandidateText(responseBody);
-            
-            if (jsonText == null || jsonText.trim().isEmpty()) {
-                throw new RuntimeException("Gemini returned invalid empty candidate content.");
-            }
-
-            return cleanJsonString(jsonText);
-        } catch (Exception e) {
-            log.error("Failed to generate solution details via Gemini API", e);
-            throw new RuntimeException("Failed to generate solution details via Gemini: " + e.getMessage(), e);
-        }
-    }
-
-    @Deprecated
-    public String generateProblemDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
-        // Fallback that returns basic details format
-        return generateProblemBasicDetailsJson(problemName, leetcodeNumber, topicName);
-    }
-
-    /**
-     * Compare the user's prediction values against the expected optimal solution and output feedback.
-     */
     public Map<String, Object> evaluateUserThinking(
             String problemName,
             String optimalPattern,
@@ -309,11 +130,6 @@ public class GeminiService {
             String userBruteForce,
             String userApproach
     ) {
-        String key = getApiKey();
-        if (key.isEmpty()) {
-            throw new IllegalStateException("Gemini API key is not configured.");
-        }
-
         String prompt = "Perform a detailed evaluation review of the candidate's strategic solution approach draft for LeetCode problem: '" + problemName + "'.\n\n"
                 + "Optimal Solution Information:\n"
                 + "- Expected Pattern: " + optimalPattern + "\n"
@@ -340,44 +156,19 @@ public class GeminiService {
                 + "   - DO NOT reveal the final code solution.";
 
         try {
-            String escapedPrompt = escapeJsonString(prompt);
-
-            String requestBody = "{"
-                    + "\"contents\": [{"
-                    + "  \"parts\": [{"
-                    + "    \"text\": \"" + escapedPrompt + "\""
-                    + "  }]"
-                    + "}]"
-                    + "}";
-
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
-                    .build();
-
-            HttpResponse<String> response = sendRequestWithRetry(request);
-
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Gemini API call failed with status: " + response.statusCode());
-            }
-
-            String responseBody = response.body();
-            String rawText = extractCandidateText(responseBody);
-            
-            if (rawText == null || rawText.trim().isEmpty()) {
-                throw new RuntimeException("Gemini returned invalid response body.");
+            String rawText = retryExecutor.executeWithFallback(prompt, "text/plain");
+            String extractedText = extractCandidateText(rawText);
+            if (extractedText == null) {
+                extractedText = rawText;
             }
 
             String patternsMatch = "Partially Correct";
             String timeComplexityMatch = "Correct";
             String spaceComplexityMatch = "Correct";
             String explanationScore = "N/A";
-            String feedback = rawText;
+            String feedback = extractedText;
 
-            String[] lines = rawText.split("\n");
+            String[] lines = extractedText.split("\n");
             StringBuilder feedbackBuilder = new StringBuilder();
             boolean foundStart = false;
 
@@ -429,155 +220,8 @@ public class GeminiService {
         }
     }
 
-    public String generateChatResponse(
-            String problemName,
-            String problemStatement,
-            List<ProblemChatMessage> chatHistory,
-            String latestUserMessage,
-            String currentCode
-    ) {
-        String key = getApiKey();
-        if (key.isEmpty()) {
-            throw new IllegalStateException("Gemini API key is not configured.");
-        }
-
-        // Construct the chat system instructions and context
-        StringBuilder contextBuilder = new StringBuilder();
-        contextBuilder.append("You are the Gemini DSA Mentor. You are helping the candidate solve the problem '")
-                .append(problemName).append("'.\n\n")
-                .append("Problem Statement:\n")
-                .append(problemStatement).append("\n\n");
-
-        if (currentCode != null && !currentCode.trim().isEmpty()) {
-            contextBuilder.append("Current Code in the Editor:\n")
-                    .append("```\n")
-                    .append(currentCode)
-                    .append("\n```\n\n");
-        }
-
-        if (!chatHistory.isEmpty()) {
-            contextBuilder.append("Conversation History:\n");
-            for (ProblemChatMessage msg : chatHistory) {
-                contextBuilder.append(msg.getSender()).append(": ").append(msg.getContent()).append("\n");
-            }
-            contextBuilder.append("\n");
-        }
-
-        contextBuilder.append("Candidate's new message: ").append(latestUserMessage).append("\n\n")
-                .append("Act as an interactive DSA coach. Review their logic or code, answer their questions, suggest optimizations or edge cases, but do NOT give them the full solution code directly. Encourage them to figure it out step-by-step. Keep responses concise and formatted in markdown.");
-
-        String prompt = contextBuilder.toString();
-
-        try {
-            String escapedPrompt = escapeJsonString(prompt);
-
-            String requestBody = "{"
-                    + "\"contents\": [{"
-                    + "  \"parts\": [{"
-                    + "    \"text\": \"" + escapedPrompt + "\""
-                    + "  }]"
-                    + "}]"
-                    + "}";
-
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                    .build();
-
-            HttpResponse<String> response = sendRequestWithRetry(request);
-
-            if (response.statusCode() != 200) {
-                log.error("Gemini API error during chat: Status = {}, Body = {}", response.statusCode(), response.body());
-                return "I'm sorry, I'm having trouble connecting to my AI core right now. (Status: " + response.statusCode() + ")";
-            }
-
-            String aiResponseText = extractCandidateText(response.body());
-            if (aiResponseText == null || aiResponseText.trim().isEmpty()) {
-                return "I received an empty response from Gemini. Let's try again.";
-            }
-
-            return aiResponseText;
-        } catch (Exception e) {
-            log.error("Failed to generate chat response from Gemini API", e);
-            return "I encountered an error while processing your request. Please try again. (" + e.getMessage() + ")";
-        }
-    }
-
-    public Map<String, String> generateSimplifiedProblemAndApproach(String problemName, String fullStatement, String solutionDetailsJson) {
-        String key = getApiKey();
-        if (key.isEmpty()) {
-            throw new IllegalStateException("Gemini API key is not configured.");
-        }
-
-        String prompt = "Review the following coding problem details for '" + problemName + "'.\n\n"
-                + "Full Problem Statement:\n"
-                + fullStatement + "\n\n"
-                + "Optimal Solution/Approach Context:\n"
-                + solutionDetailsJson + "\n\n"
-                + "Generate a simplified response in JSON format. Provide exactly these fields:\n"
-                + "1. 'simplifiedStatement': A very brief and simple description of the problem statement (2-3 lines in simple, plain, easy-to-understand words, focusing only on the core goal).\n"
-                + "2. 'simplifiedOptimal': A very brief explanation of the optimal strategy/approach in simple, plain words (2-3 lines explaining the core pattern or intuition).\n"
-                + "3. 'simplifiedBetter': A very brief explanation of the better/improved strategy/approach if it exists in the details (else empty/null).\n"
-                + "4. 'simplifiedBrute': A very brief explanation of the brute force strategy/approach if it exists in the details (else empty/null).\n\n"
-                + "Return a single JSON object with these properties.";
-
-        try {
-            String escapedPrompt = escapeJsonString(prompt);
-
-            String requestBody = "{"
-                    + "\"contents\": [{"
-                    + "  \"parts\": [{"
-                    + "    \"text\": \"" + escapedPrompt + "\""
-                    + "  }]"
-                    + "}],"
-                    + "\"generationConfig\": {"
-                    + "  \"responseMimeType\": \"application/json\""
-                    + "}"
-                    + "}";
-
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
-                    .build();
-
-            HttpResponse<String> response = sendRequestWithRetry(request);
-
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Gemini API call failed with status code " + response.statusCode());
-            }
-
-            String jsonText = extractCandidateText(response.body());
-            if (jsonText == null || jsonText.trim().isEmpty()) {
-                throw new RuntimeException("Gemini returned empty candidate text.");
-            }
-
-            return objectMapper.readValue(cleanJsonString(jsonText), new com.fasterxml.jackson.core.type.TypeReference<Map<String, String>>() {});
-        } catch (Exception e) {
-            log.error("Failed to generate simplified problem statement and approach via Gemini", e);
-            return Map.of(
-                "simplifiedStatement", "Please solve " + problemName + ".",
-                "simplifiedOptimal", "Optimal solution using standard patterns.",
-                "simplifiedBetter", "",
-                "simplifiedBrute", ""
-            );
-        }
-    }
-
-    private String escapeJsonString(String val) {
-        if (val == null) return "";
-        return val.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r");
-    }
-
     private String extractCandidateText(String responseBody) {
+        if (responseBody == null) return null;
         try {
             com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(responseBody);
             com.fasterxml.jackson.databind.JsonNode candidates = root.path("candidates");

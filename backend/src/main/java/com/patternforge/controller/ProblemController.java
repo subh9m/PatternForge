@@ -36,7 +36,6 @@ public class ProblemController {
     private final UserRepository userRepository;
     private final GeminiService geminiService;
     private final SubmissionRepository submissionRepository;
-    private final ProblemChatMessageRepository problemChatMessageRepository;
     private final ProblemGenerationService problemGenerationService;
 
     public ProblemController(ProblemRepository problemRepository,
@@ -49,7 +48,6 @@ public class ProblemController {
                              UserRepository userRepository,
                              GeminiService geminiService,
                              SubmissionRepository submissionRepository,
-                             ProblemChatMessageRepository problemChatMessageRepository,
                              ProblemGenerationService problemGenerationService) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
@@ -61,7 +59,6 @@ public class ProblemController {
         this.userRepository = userRepository;
         this.geminiService = geminiService;
         this.submissionRepository = submissionRepository;
-        this.problemChatMessageRepository = problemChatMessageRepository;
         this.problemGenerationService = problemGenerationService;
     }
 
@@ -511,18 +508,8 @@ public class ProblemController {
         String expectedTime = "O(n)";
         String expectedSpace = "O(1)";
 
-        // Synchronously generate solution details if they don't exist in any cache
-        if ((p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty()) &&
-            (p.getProblemDetailsJson() == null || p.getProblemDetailsJson().trim().isEmpty())) {
-            try {
-                String generatedSol = geminiService.generateProblemSolutionDetailsJson(
-                        p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                p.setSolutionDetailsJson(generatedSol);
-                problemRepository.save(p);
-            } catch (Exception e) {
-                // ignore
-            }
-        }
+        // Synchronously ensure all missing/boilerplate fields are fetched/populated
+        problemGenerationService.generateMissingDetailsInternal(p);
 
         // Try extracting from solutionDetailsJson first
         if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty()) {
@@ -749,109 +736,7 @@ public class ProblemController {
         return currentStreak;
     }
 
-    @GetMapping("/{id}/chat")
-    public ResponseEntity<List<Map<String, Object>>> getChatMessages(
-            @PathVariable UUID id,
-            Authentication authentication
-    ) {
-        UUID userId = (UUID) authentication.getPrincipal();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("User not found"));
 
-        List<ProblemChatMessage> messages = problemChatMessageRepository
-                .findByUserIdAndProblemIdOrderByCreatedAtAsc(user.getId(), id);
-
-        List<Map<String, Object>> response = messages.stream().map(msg -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("sender", msg.getSender());
-            map.put("content", msg.getContent());
-            map.put("createdAt", msg.getCreatedAt());
-            return map;
-        }).collect(Collectors.toList());
-
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/{id}/chat")
-    public ResponseEntity<Map<String, Object>> postChatMessage(
-            @PathVariable UUID id,
-            Authentication authentication,
-            @RequestBody Map<String, String> body
-    ) {
-        UUID userId = (UUID) authentication.getPrincipal();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("User not found"));
-
-        Problem problem = problemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
-
-        String userMessageContent = body.get("message");
-        if (userMessageContent == null || userMessageContent.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Message cannot be empty"));
-        }
-
-        String currentCode = body.get("code");
-
-        // 1. Save user's chat message to the DB
-        ProblemChatMessage userMessage = ProblemChatMessage.builder()
-                .user(user)
-                .problem(problem)
-                .sender("USER")
-                .content(userMessageContent)
-                .build();
-        problemChatMessageRepository.save(userMessage);
-
-        // 2. Fetch history (including this message) to feed Gemini context
-        List<ProblemChatMessage> history = problemChatMessageRepository
-                .findByUserIdAndProblemIdOrderByCreatedAtAsc(user.getId(), id);
-
-        // 3. Generate Mentor response via Gemini
-        String aiResponseContent = geminiService.generateChatResponse(
-                problem.getName(),
-                problem.getEffectiveProblemStatement(),
-                history,
-                userMessageContent,
-                currentCode
-        );
-
-        // 4. Save AI's response to the DB
-        ProblemChatMessage aiMessage = ProblemChatMessage.builder()
-                .user(user)
-                .problem(problem)
-                .sender("AI")
-                .content(aiResponseContent)
-                .build();
-        problemChatMessageRepository.save(aiMessage);
-
-        // 5. Automatically trim messages if they exceed 20
-        List<ProblemChatMessage> allMessages = problemChatMessageRepository
-                .findByUserIdAndProblemIdOrderByCreatedAtAsc(user.getId(), id);
-        if (allMessages.size() > 20) {
-            int toDeleteCount = allMessages.size() - 20;
-            for (int i = 0; i < toDeleteCount; i++) {
-                problemChatMessageRepository.delete(allMessages.get(i));
-            }
-        }
-
-        // Return the AI message details
-        return ResponseEntity.ok(Map.of(
-                "sender", "AI",
-                "content", aiResponseContent,
-                "createdAt", aiMessage.getCreatedAt() != null ? aiMessage.getCreatedAt() : LocalDateTime.now()
-        ));
-    }
-
-    @DeleteMapping("/{id}/chat")
-    public ResponseEntity<Map<String, Object>> clearChatMessages(
-            @PathVariable UUID id,
-            Authentication authentication
-    ) {
-        UUID userId = (UUID) authentication.getPrincipal();
-        List<ProblemChatMessage> messages = problemChatMessageRepository
-                .findByUserIdAndProblemIdOrderByCreatedAtAsc(userId, id);
-        problemChatMessageRepository.deleteAll(messages);
-        return ResponseEntity.ok(Map.of("success", true));
-    }
 
     @PostMapping("/pre-generate-all")
     public ResponseEntity<?> preGenerateAllDetails() {

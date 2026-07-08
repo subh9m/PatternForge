@@ -19,6 +19,7 @@ public class ProblemGenerationService {
             1, 1, 0L, TimeUnit.MILLISECONDS, queue
     );
     private final Set<UUID> generatingProblems = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<UUID, Object> problemLocks = new ConcurrentHashMap<>();
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProblemGenerationService.class);
 
     private static volatile long lastUserRequestTime = 0;
@@ -137,119 +138,91 @@ public class ProblemGenerationService {
     }
 
     public void generateMissingDetailsInternal(Problem p) {
-        boolean updated = false;
-        ObjectMapper mapper = new ObjectMapper();
+        Object lock = problemLocks.computeIfAbsent(p.getId(), id -> new Object());
+        synchronized (lock) {
+            Problem freshProblem = problemRepository.findById(p.getId()).orElse(p);
 
-        // 1. Ensure basicDetailsJson is present (essential for problem description)
-        if (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson())) {
-            try {
-                if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
-                    JsonNode root = mapper.readTree(p.getProblemDetailsJson());
-                    Map<String, Object> basic = new LinkedHashMap<>();
-                    basic.put("problemStatement", root.path("problemStatement").asText(""));
-                    basic.put("inputFormat", root.path("inputFormat").asText(""));
-                    basic.put("outputFormat", root.path("outputFormat").asText(""));
-                    basic.put("examples", mapper.convertValue(root.path("examples"), List.class));
-                    basic.put("constraints", mapper.convertValue(root.path("constraints"), List.class));
-                    basic.put("edgeCases", mapper.convertValue(root.path("edgeCases"), List.class));
-                    basic.put("followUp", root.path("followUp").asText(""));
-                    basic.put("hints", mapper.convertValue(root.path("hints"), List.class));
-                    p.setBasicDetailsJson(mapper.writeValueAsString(basic));
-                } else {
-                    String jsonStr = geminiService.generateProblemBasicDetailsJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                    p.setBasicDetailsJson(jsonStr);
-                }
-                updated = true;
-            } catch (Exception e) {
-                try {
-                    p.setBasicDetailsJson(LocalFallbackGenerator.getBasicDetailsFallbackJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName()));
-                    updated = true;
-                } catch (Exception ex) {
-                    // ignore
-                }
+            boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(freshProblem.getBasicDetailsJson()) ||
+                                       LocalFallbackGenerator.isBoilerplateSolutionDetails(freshProblem.getSolutionDetailsJson()) ||
+                                       LocalFallbackGenerator.isBoilerplateSimplifiedStatement(freshProblem.getSimplifiedStatement()) ||
+                                       LocalFallbackGenerator.isBoilerplateSimplifiedApproach(freshProblem.getSimplifiedApproach()));
+
+            if (!needsGeneration) {
+                return;
             }
-        }
 
-        // 2. Ensure solutionDetailsJson is present (essential for code snippets and approach tabs)
-        if (LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson())) {
+            ObjectMapper mapper = new ObjectMapper();
             try {
-                if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
-                    JsonNode root = mapper.readTree(p.getProblemDetailsJson());
-                    Map<String, Object> sol = new LinkedHashMap<>();
-                    sol.put("observation", root.path("observation").asText(""));
-                    sol.put("pattern", root.path("pattern").asText(""));
-                    sol.put("approach", root.path("approach").asText(""));
-                    sol.put("optimalTimeComplexity", root.path("optimalTimeComplexity").asText(""));
-                    sol.put("optimalSpaceComplexity", root.path("optimalSpaceComplexity").asText(""));
-                    sol.put("fullExplanation", root.path("fullExplanation").asText(""));
-                    sol.put("referenceSolution", root.path("referenceSolution").asText(""));
-                    sol.put("referenceSolutions", mapper.convertValue(root.path("referenceSolutions"), Map.class));
-                    sol.put("bruteForce", mapper.convertValue(root.path("bruteForce"), Map.class));
-                    sol.put("better", mapper.convertValue(root.path("better"), Map.class));
-                    sol.put("optimal", mapper.convertValue(root.path("optimal"), Map.class));
-                    p.setSolutionDetailsJson(mapper.writeValueAsString(sol));
-                } else {
-                    String jsonStr = geminiService.generateProblemSolutionDetailsJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
-                    p.setSolutionDetailsJson(jsonStr);
-                }
-                updated = true;
-            } catch (Exception e) {
-                try {
-                    p.setSolutionDetailsJson(LocalFallbackGenerator.getSolutionDetailsFallbackJson(
-                            p.getName(), p.getLeetcodeNumber(), p.getTopic().getName()));
-                    updated = true;
-                } catch (Exception ex) {
-                    // ignore
-                }
-            }
-        }
+                log.info("ProblemGenerationService: Performing single-pass details generation for problem: {} (#{})",
+                        freshProblem.getName(), freshProblem.getLeetcodeNumber());
 
-        // 3. Ensure simplified fields are present (essential for brief task description and brief approach cards)
-        if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
-            LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
-            try {
-                Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
-                        p.getName(),
-                        p.getEffectiveProblemStatement(),
-                        p.getSolutionDetailsJson()
-                );
-                
-                if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
-                    p.setSimplifiedStatement(res.get("simplifiedStatement"));
+                String unifiedJsonStr = geminiService.generateAllProblemDetailsJson(
+                        freshProblem.getName(), freshProblem.getLeetcodeNumber(), freshProblem.getTopic().getName());
+
+                JsonNode root = mapper.readTree(unifiedJsonStr);
+
+                // 1. Basic Details
+                JsonNode basicNode = root.path("basicDetails");
+                if (!basicNode.isMissingNode() && !basicNode.isNull()) {
+                    freshProblem.setBasicDetailsJson(mapper.writeValueAsString(basicNode));
                 }
-                if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
+
+                // 2. Solution Details
+                JsonNode solutionNode = root.path("solutionDetails");
+                if (!solutionNode.isMissingNode() && !solutionNode.isNull()) {
+                    freshProblem.setSolutionDetailsJson(mapper.writeValueAsString(solutionNode));
+                }
+
+                // 3. Revision Details
+                JsonNode revisionNode = root.path("revisionDetails");
+                if (!revisionNode.isMissingNode() && !revisionNode.isNull()) {
+                    freshProblem.setSimplifiedStatement(revisionNode.path("simplifiedStatement").asText(""));
+
                     Map<String, String> approachMap = new HashMap<>();
-                    approachMap.put("optimal", res.get("simplifiedOptimal"));
-                    approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
-                    approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
-                    p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
+                    approachMap.put("optimal", revisionNode.path("simplifiedOptimal").asText(""));
+                    approachMap.put("better", revisionNode.path("simplifiedBetter").asText(""));
+                    approachMap.put("bruteForce", revisionNode.path("simplifiedBrute").asText(""));
+                    freshProblem.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
                 }
-                updated = true;
-            } catch (Exception e) {
-                try {
-                    Map<String, String> res = LocalFallbackGenerator.getSimplifiedFallback(p.getName(), p.getTopic().getName());
-                    if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
-                        p.setSimplifiedStatement(res.get("simplifiedStatement"));
-                    }
-                    if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
-                        Map<String, String> approachMap = new HashMap<>();
-                        approachMap.put("optimal", res.get("simplifiedOptimal"));
-                        approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
-                        approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
-                        p.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
-                    }
-                    updated = true;
-                } catch (Exception ex) {
-                    // ignore
-                }
-            }
-        }
 
-        if (updated) {
-            problemRepository.save(p);
+                problemRepository.save(freshProblem);
+                log.info("ProblemGenerationService: Single-pass details successfully generated and saved for problem: {}",
+                        freshProblem.getName());
+
+            } catch (Exception e) {
+                log.error("ProblemGenerationService: Failed to generate unified details via Gemini. Applying local offline fallbacks for: {}",
+                        freshProblem.getName(), e);
+
+                try {
+                    if (LocalFallbackGenerator.isBoilerplateBasicDetails(freshProblem.getBasicDetailsJson())) {
+                        freshProblem.setBasicDetailsJson(LocalFallbackGenerator.getBasicDetailsFallbackJson(
+                                freshProblem.getName(), freshProblem.getLeetcodeNumber(), freshProblem.getTopic().getName()));
+                    }
+                    if (LocalFallbackGenerator.isBoilerplateSolutionDetails(freshProblem.getSolutionDetailsJson())) {
+                        freshProblem.setSolutionDetailsJson(LocalFallbackGenerator.getSolutionDetailsFallbackJson(
+                                freshProblem.getName(), freshProblem.getLeetcodeNumber(), freshProblem.getTopic().getName()));
+                    }
+                    if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(freshProblem.getSimplifiedStatement()) ||
+                        LocalFallbackGenerator.isBoilerplateSimplifiedApproach(freshProblem.getSimplifiedApproach())) {
+                        Map<String, String> res = LocalFallbackGenerator.getSimplifiedFallback(freshProblem.getName(), freshProblem.getTopic().getName());
+                        if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(freshProblem.getSimplifiedStatement())) {
+                            freshProblem.setSimplifiedStatement(res.get("simplifiedStatement"));
+                        }
+                        if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(freshProblem.getSimplifiedApproach())) {
+                            Map<String, String> approachMap = new HashMap<>();
+                            approachMap.put("optimal", res.get("simplifiedOptimal"));
+                            approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
+                            approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
+                            freshProblem.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
+                        }
+                    }
+                    problemRepository.save(freshProblem);
+                } catch (Exception ex) {
+                    log.error("ProblemGenerationService: Extremely unexpected critical failure when writing offline stubs", ex);
+                }
+            } finally {
+                problemLocks.remove(freshProblem.getId());
+            }
         }
     }
 }

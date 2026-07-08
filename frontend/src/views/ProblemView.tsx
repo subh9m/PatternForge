@@ -6,7 +6,7 @@ import {
   Play, Send, Clock, Lock,
   Code, FileText, Brain, HelpCircle, 
   CheckCircle, ChevronDown, ChevronUp, Save,
-  MessageSquare, Award
+  Award
 } from 'lucide-react';
 
 interface ProblemDetails {
@@ -196,85 +196,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [isResizing, setIsResizing] = useState<boolean>(false);
   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1024);
 
-  // AI Chat Workspace states
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ sender: 'USER' | 'AI'; content: string; createdAt?: string }[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [sendingChatMessage, setSendingChatMessage] = useState(false);
-  const [loadingChatHistory, setLoadingChatHistory] = useState(false);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  const loadChatHistory = async () => {
-    setLoadingChatHistory(true);
-    try {
-      const res = await api.get<{ sender: 'USER' | 'AI'; content: string; createdAt?: string }[]>(`/problems/${problemId}/chat`);
-      setChatMessages(res);
-    } catch (err) {
-      console.error('Failed to load chat history', err);
-    } finally {
-      setLoadingChatHistory(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isChatOpen) {
-      loadChatHistory();
-    }
-  }, [isChatOpen, problemId]);
-
-  useEffect(() => {
-    if (isChatOpen && chatBottomRef.current) {
-      setTimeout(() => {
-        chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 80);
-    }
-  }, [chatMessages, isChatOpen]);
-
-  const handleSendChatMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim() || sendingChatMessage) return;
-
-    const userMsgText = chatInput;
-    setChatInput('');
-    setSendingChatMessage(true);
-
-    // Add user message locally instantly
-    setChatMessages(prev => [...prev, { sender: 'USER', content: userMsgText, createdAt: new Date().toISOString() }]);
-
-    try {
-      const aiResponse = await api.post<{ sender: 'AI'; content: string; createdAt?: string }>(
-        `/problems/${problemId}/chat`,
-        {
-          message: userMsgText,
-          code: code
-        }
-      );
-      setChatMessages(prev => [...prev, aiResponse]);
-    } catch (err: any) {
-      setChatMessages(prev => [
-        ...prev,
-        {
-          sender: 'AI',
-          content: `Failed to retrieve response: ${err.message || 'Server error'}. Please try again.`
-        }
-      ]);
-    } finally {
-      setSendingChatMessage(false);
-    }
-  };
-
-  const handleClearChat = async () => {
-    if (chatMessages.length === 0) return;
-    if (!window.confirm("Are you sure you want to clear your conversation history? This cannot be undone.")) return;
-
-    try {
-      await api.delete(`/problems/${problemId}/chat`);
-      setChatMessages([]);
-    } catch (err) {
-      console.error("Failed to clear chat history", err);
-      alert("Failed to clear conversation history. Please try again.");
-    }
-  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -1660,15 +1582,6 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <option value="cpp">C++</option>
                         <option value="java">Java</option>
                       </select>
-
-                      {/* Ask AI button */}
-                      <button
-                        onClick={() => setIsChatOpen(true)}
-                        className="px-2.5 py-1.5 bg-blue-600/10 hover:bg-blue-600/25 border border-blue-500/30 hover:border-blue-400 text-blue-400 rounded-lg flex items-center space-x-1.5 text-[10px] font-extrabold transition-smooth shadow-glow-primary cursor-pointer"
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        <span>Ask AI Mentor</span>
-                      </button>
                     </div>
                   </div>
 
@@ -1970,121 +1883,6 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
       </div>
 
-      {/* AI CHAT MENTOR MODAL */}
-      {isChatOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm transition-opacity duration-300">
-          <div className="w-full max-w-2xl bg-surface border border-slate-800 rounded-2xl flex flex-col h-[80vh] shadow-glow-primary overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-900 bg-slate-900/30">
-              <div className="flex items-center space-x-2">
-                <div className="p-1.5 bg-blue-500/10 rounded-lg text-blue-400">
-                  <Brain className="h-4.5 w-4.5 animate-pulse" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-100 uppercase tracking-wider">AI Mentor Guidance</h3>
-                  <span className="text-[10px] text-slate-500 font-bold block mt-0.5">Persistent DSA Coach Context: {problem?.name}</span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={handleClearChat}
-                  disabled={chatMessages.length === 0}
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-1 text-xs font-bold transition-smooth cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  Clear Chat
-                </button>
-                <button
-                  onClick={() => setIsChatOpen(false)}
-                  className="text-slate-500 hover:text-slate-300 transition-smooth p-1 text-xs font-bold font-mono border border-slate-900 hover:border-slate-800 rounded-lg px-2.5 py-1"
-                >
-                  CLOSE [ESC]
-                </button>
-              </div>
-            </div>
-
-            {/* Message Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 bg-slate-950/40">
-              {loadingChatHistory ? (
-                <div className="flex flex-col items-center justify-center h-full space-y-2">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                  <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Loading Mentor History...</span>
-                </div>
-              ) : chatMessages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center max-w-sm mx-auto space-y-3">
-                  <MessageSquare className="h-8 w-8 text-blue-500/20" />
-                  <div>
-                    <h4 className="text-xs font-extrabold text-slate-355 uppercase tracking-wide">No messages yet</h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed mt-1">
-                      Ask your mentor a question! It automatically reviews the problem description and your active editor code context to help you logic-check, optimize, or trace bugs.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {chatMessages.map((msg, idx) => (
-                    <div 
-                      key={idx}
-                      className={`flex ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div 
-                        className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
-                          msg.sender === 'USER'
-                            ? 'bg-blue-600 text-white font-medium border border-blue-500/20 shadow-glow-primary rounded-tr-none'
-                            : 'bg-slate-900 border border-slate-855 text-slate-200 rounded-tl-none'
-                        }`}
-                      >
-                        {msg.sender === 'AI' ? (
-                          <div className="space-y-2 select-text font-sans">
-                            {renderMarkdown(msg.content)}
-                          </div>
-                        ) : (
-                          <span className="select-text font-sans whitespace-pre-wrap">{msg.content}</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {sendingChatMessage && (
-                    <div className="flex justify-start">
-                      <div className="bg-slate-900 border border-slate-855 text-slate-400 rounded-2xl rounded-tl-none px-4 py-3 text-xs flex items-center space-x-2">
-                        <div className="flex space-x-1">
-                          <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                          <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                          <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                        </div>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Mentor is writing...</span>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={chatBottomRef} />
-                </div>
-              )}
-            </div>
-
-            {/* Input Box */}
-            <form 
-              onSubmit={handleSendChatMessage}
-              className="p-3 border-t border-slate-900 bg-slate-900/10 flex items-center space-x-2"
-            >
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask details, logic checking, optimization hints..."
-                disabled={sendingChatMessage || loadingChatHistory}
-                className="flex-1 glass-input rounded-xl text-xs py-2 pr-3"
-              />
-              <button
-                type="submit"
-                disabled={!chatInput.trim() || sendingChatMessage || loadingChatHistory}
-                className="p-2 bg-primary hover:bg-primary-hover text-white transition-smooth shadow-glow-primary rounded-xl cursor-pointer disabled:opacity-40"
-              >
-                <Send className="h-4 w-4" />
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

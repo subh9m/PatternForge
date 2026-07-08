@@ -109,30 +109,19 @@ public class PdfProblemImporter implements CommandLineRunner {
             try {
                 // Wait 5 seconds for Spring Context boot logs to finalize
                 Thread.sleep(5000);
-                Set<UUID> targetIds = new HashSet<>();
-                attemptRepository.findAll().forEach(a -> {
-                    if (a.getProblem() != null) targetIds.add(a.getProblem().getId());
-                });
-                bookmarkRepository.findAll().forEach(b -> {
-                    if (b.getProblem() != null) targetIds.add(b.getProblem().getId());
-                });
-
+                List<Problem> problems = problemRepository.findAll();
                 int queuedCount = 0;
-                for (UUID id : targetIds) {
-                    Optional<Problem> pOpt = problemRepository.findById(id);
-                    if (pOpt.isPresent()) {
-                        Problem p = pOpt.get();
-                        boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
-                                                   LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()) ||
-                                                   LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
-                                                   LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
-                        if (needsGeneration) {
-                            problemGenerationService.queueGeneration(p.getId(), 2);
-                            queuedCount++;
-                        }
+                for (Problem p : problems) {
+                    boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
+                                               LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()) ||
+                                               LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
+                                               LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
+                    if (needsGeneration) {
+                        problemGenerationService.queueGeneration(p.getId(), 2);
+                        queuedCount++;
                     }
                 }
-                System.out.println("PatternForge Importer: Queued " + queuedCount + " active/attempted problems for auto-generation sequentially.");
+                System.out.println("PatternForge Importer: Queued " + queuedCount + " incomplete problems for auto-generation sequentially.");
             } catch (Exception e) {
                 System.err.println("PatternForge Importer: Error in boot-time auto-generation scan: " + e.getMessage());
             }
