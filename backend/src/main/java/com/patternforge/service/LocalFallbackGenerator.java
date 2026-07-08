@@ -129,8 +129,8 @@ public class LocalFallbackGenerator {
             return db.get(name);
         }
         // Generic fallback based on topicName
-        String statement = "Solve the coding puzzle for '" + name + "' under the topic '" + topicName + "'.";
-        String optimal = "Utilize standard optimal patterns for " + topicName + " (such as hashing, two pointers, binary search, or dynamic programming transitions) to process inputs in optimal time.";
+        String statement = "Analyze and implement the algorithm for " + name + ".";
+        String optimal = "Apply key algorithmic techniques under the " + topicName + " category to process inputs efficiently.";
         String brute = "Implement a naive solution using linear scans, nested loops, or brute-force combinations first to verify correctness.";
         String observation = "Identify core properties, constraints, and relationships in the input data to select the correct algorithmic pattern.";
         
@@ -203,18 +203,20 @@ public class LocalFallbackGenerator {
 
     public static boolean isBoilerplateSimplifiedApproach(String str) {
         if (str == null || str.trim().isEmpty() || "{}".equals(str.trim())) return true;
-        String lower = str.toLowerCase();
+        String lower = str.toLowerCase().trim();
         return lower.contains("optimal solution using standard categories") ||
                lower.contains("optimal solution using standard patterns") ||
                lower.contains("short optimal strategy") ||
-               lower.contains("standard categories") ||
-               lower.contains("standard patterns");
+               lower.equals("optimal solution using standard patterns.") ||
+               lower.equals("optimal solution using standard categories.") ||
+               lower.equals("short optimal strategy.");
     }
 
     public static boolean isBoilerplateSimplifiedStatement(String str) {
         if (str == null || str.trim().isEmpty()) return true;
         String lower = str.toLowerCase();
-        return lower.contains("solve the coding puzzle for") ||
+        return lower.contains("please solve ") ||
+               lower.contains("solve the coding puzzle for") ||
                lower.contains("solve the puzzle in brief");
     }
 
