@@ -147,6 +147,30 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     fetchQueue();
   }, []);
 
+  // Poll for generating items
+  useEffect(() => {
+    const hasGenerating = items.some(item => item.isGenerating);
+    if (!hasGenerating) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const data = await api.get<RevisionItem[]>('/revisions');
+        const itemsList = data || [];
+        setItems(itemsList);
+        localStorage.setItem('patternforge_revisions', JSON.stringify(itemsList));
+        
+        // If none are generating anymore, clear the interval
+        if (!itemsList.some(item => item.isGenerating)) {
+          clearInterval(interval);
+        }
+      } catch (e) {
+        console.error('Failed to poll revisions', e);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [items]);
+
   const handleMarkRevised = async (problemId: string) => {
     setActionLoading(true);
     try {

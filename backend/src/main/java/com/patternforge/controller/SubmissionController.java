@@ -351,7 +351,8 @@ public class SubmissionController {
 
         // 3. Ensure simplifiedStatement and simplifiedApproach
         if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
-            p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty()) {
+            p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
+            "{}".equals(p.getSimplifiedApproach())) {
             try {
                 Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
                         p.getName(),

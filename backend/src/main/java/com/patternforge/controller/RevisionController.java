@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/revisions")
@@ -21,6 +22,7 @@ public class RevisionController {
     private final NoteRepository noteRepository;
     private final ProblemRepository problemRepository;
     private final GeminiService geminiService;
+    private static final Set<UUID> generatingProblems = ConcurrentHashMap.newKeySet();
 
     public RevisionController(AttemptRepository attemptRepository,
                               SubmissionRepository submissionRepository,
@@ -52,21 +54,26 @@ public class RevisionController {
             // Check if details are missing and need generation
             boolean isGenerating = (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
                                     p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
+                                    "{}".equals(p.getSimplifiedApproach()) ||
                                     p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty() ||
                                     "{}".equals(p.getSolutionDetailsJson()));
 
             if (isGenerating) {
                 UUID problemId = p.getId();
-                new Thread(() -> {
-                    try {
-                        Optional<Problem> freshOpt = problemRepository.findById(problemId);
-                        if (freshOpt.isPresent()) {
-                            ensureProblemDetailsAndSimplifiedFields(freshOpt.get());
+                if (generatingProblems.add(problemId)) {
+                    new Thread(() -> {
+                        try {
+                            Optional<Problem> freshOpt = problemRepository.findById(problemId);
+                            if (freshOpt.isPresent()) {
+                                ensureProblemDetailsAndSimplifiedFields(freshOpt.get());
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            generatingProblems.remove(problemId);
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }).start();
+                    }).start();
+                }
             }
 
             // Get user's latest code submission
@@ -175,7 +182,7 @@ public class RevisionController {
         }
 
         // 2. Ensure solutionDetailsJson is present (essential for code snippets and approach tabs)
-        if (p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty()) {
+        if (p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty() || "{}".equals(p.getSolutionDetailsJson())) {
             try {
                 if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
                     JsonNode root = mapper.readTree(p.getProblemDetailsJson());
@@ -218,7 +225,8 @@ public class RevisionController {
 
         // 3. Ensure simplified fields are present (essential for brief task description and brief approach cards)
         if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
-            p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty()) {
+            p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
+            "{}".equals(p.getSimplifiedApproach())) {
             try {
                 Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
                         p.getName(),

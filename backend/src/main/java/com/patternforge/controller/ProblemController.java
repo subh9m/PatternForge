@@ -532,7 +532,7 @@ public class ProblemController {
         ObjectMapper mapper = new ObjectMapper();
 
         // 1. Check if solution details are cached and valid
-        if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty()) {
+        if (p.getSolutionDetailsJson() != null && !p.getSolutionDetailsJson().trim().isEmpty() && !"{}".equals(p.getSolutionDetailsJson().trim())) {
             try {
                 mapper.readTree(p.getSolutionDetailsJson());
                 return ResponseEntity.ok()
@@ -1107,7 +1107,8 @@ public class ProblemController {
 
         // 3. Ensure simplifiedStatement and simplifiedApproach
         if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
-            p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty()) {
+            p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
+            "{}".equals(p.getSimplifiedApproach())) {
             try {
                 Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
                         p.getName(),
