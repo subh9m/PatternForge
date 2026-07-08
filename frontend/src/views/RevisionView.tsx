@@ -3,7 +3,8 @@ import { api } from '../services/api';
 import MonacoEditor from '@monaco-editor/react';
 import { 
   CheckCircle2, Circle, Play, Search, Award, 
-  BookOpen, Code2, X, Info, CheckCircle, Brain
+  BookOpen, Code2, X, Info, CheckCircle, Brain,
+  FileText
 } from 'lucide-react';
 
 interface RevisionItem {
@@ -20,7 +21,78 @@ interface RevisionItem {
   isRevisedToday: boolean;
   solutionDetails?: string;
   spaceComplexity?: string;
+  problemStatement?: string;
 }
+
+const parseInlineMarkdown = (text: string): React.ReactNode[] => {
+  if (!text) return [];
+  
+  let parts: (string | React.ReactNode)[] = [text];
+  
+  if (text.includes('**')) {
+    const splitParts = text.split('**');
+    parts = splitParts.map((part, i) => 
+      i % 2 === 1 ? <strong key={`b-${i}`} className="text-slate-50 font-black">{part}</strong> : part
+    );
+  }
+  
+  const finalParts: React.ReactNode[] = [];
+  parts.forEach((part, partIdx) => {
+    if (typeof part !== 'string') {
+      finalParts.push(part);
+    } else if (!part.includes('`')) {
+      finalParts.push(part);
+    } else {
+      const splitParts = part.split('`');
+      splitParts.forEach((subPart, i) => {
+        if (i % 2 === 1) {
+          finalParts.push(
+            <code key={`code-${partIdx}-${i}`} className="bg-slate-900 px-1.5 py-0.5 rounded text-[12px] font-mono text-amber-400 font-bold border border-slate-800/80">
+              {subPart}
+            </code>
+          );
+        } else {
+          finalParts.push(subPart);
+        }
+      });
+    }
+  });
+  
+  return finalParts;
+};
+
+const renderMarkdown = (text: string) => {
+  if (!text) return null;
+  return text.split('\n').map((para, idx) => {
+    const trimmed = para.trim();
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      return (
+        <li key={idx} className="ml-4 list-disc text-slate-200 my-1.5 font-sans text-[13.5px] leading-relaxed font-medium">
+          {parseInlineMarkdown(trimmed.substring(2))}
+        </li>
+      );
+    }
+    if (trimmed.startsWith('### ')) {
+      return (
+        <h4 key={idx} className="text-xs font-bold text-slate-100 mt-3 mb-1.5 uppercase tracking-wider font-sans">
+          {parseInlineMarkdown(trimmed.substring(4))}
+        </h4>
+      );
+    }
+    if (trimmed.startsWith('## ')) {
+      return (
+        <h3 key={idx} className="text-sm font-extrabold text-slate-50 mt-4 mb-2 font-sans">
+          {parseInlineMarkdown(trimmed.substring(3))}
+        </h3>
+      );
+    }
+    return (
+      <p key={idx} className="text-[13.5px] text-slate-200 my-2 leading-relaxed font-sans font-medium">
+        {parseInlineMarkdown(para)}
+      </p>
+    );
+  });
+};
 
 interface RevisionViewProps {
   navigateToProblem: (id: string) => void;
@@ -471,6 +543,19 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                       </div>
                     </div>
 
+                    {/* Full Problem Description */}
+                    {selectedItem.problemStatement && selectedItem.problemStatement !== "Problem details not loaded." && (
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono flex items-center space-x-1">
+                          <FileText className="h-3.5 w-3.5 text-indigo-400" />
+                          <span>Full Problem Description</span>
+                        </h4>
+                        <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-900 text-slate-300 text-xs leading-relaxed font-sans max-h-60 overflow-y-auto custom-scrollbar">
+                          {renderMarkdown(selectedItem.problemStatement)}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Simplified Active Approach */}
                     <div className="space-y-2">
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono flex items-center space-x-1">
@@ -483,14 +568,18 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                     </div>
 
                     {/* Meta details */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900 space-y-1">
                         <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block font-mono">Topic Category</span>
-                        <span className="text-xs font-bold text-slate-200 uppercase">{selectedItem.topicName}</span>
+                        <span className="text-xs font-bold text-slate-200 uppercase truncate" title={selectedItem.topicName}>{selectedItem.topicName}</span>
                       </div>
                       <div className="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900 space-y-1">
                         <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block font-mono">Time Complexity</span>
-                        <span className="text-xs font-bold text-blue-400 font-mono">{activeComplexity}</span>
+                        <span className="text-xs font-bold text-blue-400 font-mono truncate" title={activeComplexity}>{activeComplexity}</span>
+                      </div>
+                      <div className="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900 space-y-1">
+                        <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block font-mono">Space Complexity</span>
+                        <span className="text-xs font-bold text-purple-400 font-mono truncate" title={selectedItem.spaceComplexity || 'O(1)'}>{selectedItem.spaceComplexity || 'O(1)'}</span>
                       </div>
                     </div>
                   </div>
