@@ -59,10 +59,11 @@ public class RevisionController {
                                     LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
 
             if (isGenerating) {
-                problemGenerationService.queueGeneration(p.getId());
+                problemGenerationService.queueGeneration(p.getId(), 1);
             }
 
             boolean activeGenerating = isGenerating || problemGenerationService.isGenerating(p.getId());
+            int estimatedTimeSeconds = problemGenerationService.getEstimatedTimeSeconds(p.getId());
 
             // Get user's latest code submission
             List<Submission> submissions = submissionRepository.findByUserIdAndProblemIdOrderByCreatedAtDesc(userId, p.getId());
@@ -96,6 +97,7 @@ public class RevisionController {
             item.put("solutionDetails", p.getSolutionDetailsJson() != null ? p.getSolutionDetailsJson() : "{}");
             item.put("problemStatement", p.getEffectiveProblemStatement());
             item.put("isGenerating", activeGenerating);
+            item.put("estimatedTimeSeconds", estimatedTimeSeconds);
             
             response.add(item);
         }

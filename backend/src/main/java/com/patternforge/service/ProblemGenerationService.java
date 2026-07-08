@@ -14,9 +14,34 @@ public class ProblemGenerationService {
 
     private final ProblemRepository problemRepository;
     private final GeminiService geminiService;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final BlockingQueue<Runnable> queue = new PriorityBlockingQueue<>();
+    private final ExecutorService executor = new ThreadPoolExecutor(
+            1, 1, 0L, TimeUnit.MILLISECONDS, queue
+    );
     private final Set<UUID> generatingProblems = ConcurrentHashMap.newKeySet();
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProblemGenerationService.class);
+
+    private static class PrioritizedTask implements Runnable, Comparable<PrioritizedTask> {
+        final UUID problemId;
+        final int priority; // 1 = HIGH, 2 = LOW
+        private final Runnable runnable;
+
+        public PrioritizedTask(UUID problemId, int priority, Runnable runnable) {
+            this.problemId = problemId;
+            this.priority = priority;
+            this.runnable = runnable;
+        }
+
+        @Override
+        public void run() {
+            runnable.run();
+        }
+
+        @Override
+        public int compareTo(PrioritizedTask other) {
+            return Integer.compare(this.priority, other.priority);
+        }
+    }
 
     public ProblemGenerationService(ProblemRepository problemRepository, GeminiService geminiService) {
         this.problemRepository = problemRepository;
@@ -27,9 +52,9 @@ public class ProblemGenerationService {
         return generatingProblems.contains(problemId);
     }
 
-    public void queueGeneration(UUID problemId) {
+    public void queueGeneration(UUID problemId, int priority) {
         if (generatingProblems.add(problemId)) {
-            executor.submit(() -> {
+            executor.execute(new PrioritizedTask(problemId, priority, () -> {
                 try {
                     Optional<Problem> freshOpt = problemRepository.findById(problemId);
                     if (freshOpt.isPresent()) {
@@ -42,8 +67,37 @@ public class ProblemGenerationService {
                 } finally {
                     generatingProblems.remove(problemId);
                 }
-            });
+            }));
         }
+    }
+
+    public int getEstimatedTimeSeconds(UUID problemId) {
+        if (!generatingProblems.contains(problemId)) {
+            return 0;
+        }
+        
+        Object[] array = queue.toArray();
+        List<PrioritizedTask> tasks = new ArrayList<>();
+        for (Object obj : array) {
+            if (obj instanceof PrioritizedTask) {
+                tasks.add((PrioritizedTask) obj);
+            }
+        }
+        Collections.sort(tasks);
+
+        int index = -1;
+        for (int i = 0; i < tasks.size(); i++) {
+            if (tasks.get(i).problemId.equals(problemId)) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index == -1) {
+            return 4; // Currently running task
+        }
+
+        return (index + 2) * 4;
     }
 
     public void generateMissingDetailsInternal(Problem p) {

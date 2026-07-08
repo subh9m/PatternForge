@@ -23,6 +23,7 @@ interface RevisionItem {
   spaceComplexity?: string;
   problemStatement?: string;
   isGenerating?: boolean;
+  estimatedTimeSeconds?: number;
 }
 
 const parseInlineMarkdown = (text: string): React.ReactNode[] => {
@@ -169,6 +170,23 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     }, 4000);
 
     return () => clearInterval(interval);
+  }, [items]);
+
+  // Smooth client-side decrement of estimatedTimeSeconds every second
+  useEffect(() => {
+    const hasGeneratingWithTime = items.some(item => item.isGenerating && item.estimatedTimeSeconds && item.estimatedTimeSeconds > 0);
+    if (!hasGeneratingWithTime) return;
+
+    const countdown = setInterval(() => {
+      setItems(prev => prev.map(item => {
+        if (item.isGenerating && item.estimatedTimeSeconds && item.estimatedTimeSeconds > 0) {
+          return { ...item, estimatedTimeSeconds: item.estimatedTimeSeconds - 1 };
+        }
+        return item;
+      }));
+    }, 1000);
+
+    return () => clearInterval(countdown);
   }, [items]);
 
   const handleMarkRevised = async (problemId: string) => {
@@ -439,7 +457,12 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
                       </span>
-                      <span>Compiling models...</span>
+                      <span>
+                        Compiling models...
+                        {item.estimatedTimeSeconds && item.estimatedTimeSeconds > 0 
+                          ? ` (Est. ${item.estimatedTimeSeconds}s)` 
+                          : ' (Almost ready)'}
+                      </span>
                     </span>
                   ) : (
                     <>

@@ -106,7 +106,7 @@ public class PdfProblemImporter implements CommandLineRunner {
                                                LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
                                                LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
                     if (needsGeneration) {
-                        problemGenerationService.queueGeneration(p.getId());
+                        problemGenerationService.queueGeneration(p.getId(), 2);
                         queuedCount++;
                     }
                 }

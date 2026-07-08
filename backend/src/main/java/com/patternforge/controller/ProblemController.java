@@ -464,7 +464,7 @@ public class ProblemController {
                             .header("Content-Type", "application/json")
                             .body(p.getBasicDetailsJson());
                 } else {
-                    problemGenerationService.queueGeneration(p.getId());
+                    problemGenerationService.queueGeneration(p.getId(), 1);
                     String fallbackJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
                     return ResponseEntity.ok()
                             .header("Content-Type", "application/json")
@@ -518,7 +518,7 @@ public class ProblemController {
                     .header("Content-Type", "application/json")
                     .body(jsonStr);
         } catch (Exception e) {
-            problemGenerationService.queueGeneration(p.getId());
+            problemGenerationService.queueGeneration(p.getId(), 1);
             String fallbackJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
             return ResponseEntity.ok()
                     .header("Content-Type", "application/json")
@@ -545,7 +545,7 @@ public class ProblemController {
                             .header("Content-Type", "application/json")
                             .body(p.getSolutionDetailsJson());
                 } else {
-                    problemGenerationService.queueGeneration(p.getId());
+                    problemGenerationService.queueGeneration(p.getId(), 1);
                     String fallbackJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
                     return ResponseEntity.ok()
                             .header("Content-Type", "application/json")
@@ -601,7 +601,7 @@ public class ProblemController {
                     .header("Content-Type", "application/json")
                     .body(jsonStr);
         } catch (Exception e) {
-            problemGenerationService.queueGeneration(p.getId());
+            problemGenerationService.queueGeneration(p.getId(), 1);
             String fallbackJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
             return ResponseEntity.ok()
                     .header("Content-Type", "application/json")
@@ -853,7 +853,7 @@ public class ProblemController {
     }
 
     public void generateAndSaveSimplifiedFields(Problem problem) {
-        problemGenerationService.queueGeneration(problem.getId());
+        problemGenerationService.queueGeneration(problem.getId(), 1);
     }
 
     private int calculateStreak(Set<java.time.LocalDate> activityDates) {
@@ -994,7 +994,7 @@ public class ProblemController {
                                                LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
                     
                     if (needsGeneration) {
-                        problemGenerationService.queueGeneration(p.getId());
+                        problemGenerationService.queueGeneration(p.getId(), 2);
                     }
                 }
                 System.out.println("PatternForge: Completed pre-generation task queueing for all problems.");

@@ -256,6 +256,6 @@ public class SubmissionController {
     }
 
     public void generateAndSaveSimplifiedFields(Problem problem) {
-        problemGenerationService.queueGeneration(problem.getId());
+        problemGenerationService.queueGeneration(problem.getId(), 1);
     }
 }
