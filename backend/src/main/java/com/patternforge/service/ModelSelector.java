@@ -32,7 +32,7 @@ public class ModelSelector {
             // Default fallbacks
             preferredModels.add("gemini-2.5-flash");
             preferredModels.add("gemini-2.0-flash");
-            preferredModels.add("gemini-1.5-flash-8b");
+            preferredModels.add("gemini-1.5-flash");
         }
 
         log.info("ModelSelector: Initialized with preferred model order: {}", preferredModels);

@@ -114,6 +114,7 @@ public class APIKeyManager {
     }
 
     public synchronized List<String> getAvailableKeys() {
+        evaluateCooldowns();
         List<String> available = new ArrayList<>();
         for (String key : allKeys) {
             if (keyStates.get(key) == KeyState.AVAILABLE) {
