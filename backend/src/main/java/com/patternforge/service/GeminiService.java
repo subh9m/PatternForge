@@ -96,11 +96,12 @@ public class GeminiService {
         int maxRetries = 3;
         int attempt = 0;
         long backoffMs = 4000;
+        HttpRequest activeRequest = request;
 
         while (true) {
             attempt++;
             try {
-                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> response = httpClient.send(activeRequest, HttpResponse.BodyHandlers.ofString());
                 
                 if (response.statusCode() == 429) {
                     long sleepMs = backoffMs;
@@ -124,6 +125,19 @@ public class GeminiService {
                     }
                     
                     if (attempt >= maxRetries) {
+                        if (activeRequest.uri().toString().contains("gemini-2.5-flash")) {
+                            log.warn("Gemini API: Model gemini-2.5-flash daily quota exhausted. Falling back to gemini-1.5-flash...");
+                            String newUrl = activeRequest.uri().toString().replace("gemini-2.5-flash", "gemini-1.5-flash");
+                            HttpRequest fallbackRequest = HttpRequest.newBuilder()
+                                    .uri(URI.create(newUrl))
+                                    .header("Content-Type", "application/json")
+                                    .method(activeRequest.method(), activeRequest.bodyPublisher().orElse(HttpRequest.BodyPublishers.noBody()))
+                                    .build();
+                            attempt = 0;
+                            backoffMs = 4000;
+                            activeRequest = fallbackRequest;
+                            continue;
+                        }
                         log.error("Gemini API: Exceeded max retries (3) on 429 Rate Limit. Failing.");
                         return response;
                     }
@@ -137,6 +151,19 @@ public class GeminiService {
                 return response;
             } catch (Exception e) {
                 if (attempt >= maxRetries) {
+                    if (activeRequest.uri().toString().contains("gemini-2.5-flash")) {
+                        log.warn("Gemini API: Request failed for gemini-2.5-flash. Falling back to gemini-1.5-flash...", e);
+                        String newUrl = activeRequest.uri().toString().replace("gemini-2.5-flash", "gemini-1.5-flash");
+                        HttpRequest fallbackRequest = HttpRequest.newBuilder()
+                                .uri(URI.create(newUrl))
+                                .header("Content-Type", "application/json")
+                                .method(activeRequest.method(), activeRequest.bodyPublisher().orElse(HttpRequest.BodyPublishers.noBody()))
+                                .build();
+                        attempt = 0;
+                        backoffMs = 4000;
+                        activeRequest = fallbackRequest;
+                        continue;
+                    }
                     throw e;
                 }
                 log.warn("Gemini API: Request failed with exception. Retrying in {} seconds...", (backoffMs / 1000.0), e);
