@@ -15,8 +15,13 @@ public class LocalFallbackGenerator {
         public String observation;
         public String timeComplexity;
         public String spaceComplexity;
+        public String referenceSolution;
 
         public FallbackProblemData(String statement, String optimal, String better, String brute, String observation, String timeComplexity, String spaceComplexity) {
+            this(statement, optimal, better, brute, observation, timeComplexity, spaceComplexity, "");
+        }
+
+        public FallbackProblemData(String statement, String optimal, String better, String brute, String observation, String timeComplexity, String spaceComplexity, String referenceSolution) {
             this.statement = statement;
             this.optimal = optimal;
             this.better = better;
@@ -24,6 +29,7 @@ public class LocalFallbackGenerator {
             this.observation = observation;
             this.timeComplexity = timeComplexity;
             this.spaceComplexity = spaceComplexity;
+            this.referenceSolution = referenceSolution;
         }
     }
 
@@ -122,6 +128,50 @@ public class LocalFallbackGenerator {
             "O(log N)",
             "O(1)"
         ));
+
+        db.put("Sort an Array", new FallbackProblemData(
+            "Sort an array of integers in ascending order using various standard sorting techniques (Selection, Bubble, Insertion, Merge, Quick, Heap).",
+            "Implement and compare Merge Sort, Quick Sort, and Heap Sort for O(N log N) time complexity. Merge Sort uses divide-and-conquer with extra space. Quick Sort uses a partition pivot. Heap Sort uses a binary heap structure.",
+            "",
+            "Bubble Sort, Selection Sort, and Insertion Sort run in O(N^2) time by repeatedly swapping, selecting minimums, or shifting elements.",
+            "Different sorting algorithms have different trade-offs. O(N^2) algorithms are simple but inefficient for large arrays. Merge Sort is stable but uses O(N) space. Quick Sort is in-place but has O(N^2) worst-case. Heap Sort is in-place and guaranteed O(N log N) but unstable.",
+            "O(N log N)",
+            "O(N)",
+            "// 1. Selection Sort - O(N^2) Time, O(1) Space\nvoid selectionSort(vector<int>& arr) {\n    int n = arr.size();\n    for (int i = 0; i < n - 1; i++) {\n        int minIdx = i;\n        for (int j = i + 1; j < n; j++) {\n            if (arr[j] < arr[minIdx]) minIdx = j;\n        }\n        swap(arr[i], arr[minIdx]);\n    }\n}\n\n// 2. Bubble Sort - O(N^2) Time, O(1) Space\nvoid bubbleSort(vector<int>& arr) {\n    int n = arr.size();\n    for (int i = 0; i < n - 1; i++) {\n        bool swapped = false;\n        for (int j = 0; j < n - i - 1; j++) {\n            if (arr[j] > arr[j+1]) {\n                swap(arr[j], arr[j+1]);\n                swapped = true;\n            }\n        }\n        if (!swapped) break;\n    }\n}\n\n// 3. Insertion Sort - O(N^2) Time, O(1) Space\nvoid insertionSort(vector<int>& arr) {\n    int n = arr.size();\n    for (int i = 1; i < n; i++) {\n        int key = arr[i];\n        int j = i - 1;\n        while (j >= 0 && arr[j] > key) {\n            arr[j + 1] = arr[j];\n            j--;\n        }\n        arr[j + 1] = key;\n    }\n}\n\n// 4. Merge Sort - O(N log N) Time, O(N) Space\nvoid merge(vector<int>& arr, int l, int m, int r) {\n    vector<int> temp;\n    int i = l, j = m + 1;\n    while (i <= m && j <= r) {\n        if (arr[i] <= arr[j]) temp.push_back(arr[i++]);\n        else temp.push_back(arr[j++]);\n    }\n    while (i <= m) temp.push_back(arr[i++]);\n    while (j <= r) temp.push_back(arr[j++]);\n    for (int k = 0; k < temp.size(); k++) arr[l + k] = temp[k];\n}\nvoid mergeSort(vector<int>& arr, int l, int r) {\n    if (l >= r) return;\n    int m = l + (r - l) / 2;\n    mergeSort(arr, l, m);\n    mergeSort(arr, m + 1, r);\n    merge(arr, l, m, r);\n}\n\n// 5. Quick Sort - O(N log N) Time, O(log N) Space\nint partition(vector<int>& arr, int low, int high) {\n    int pivot = arr[high];\n    int i = low - 1;\n    for (int j = low; j < high; j++) {\n        if (arr[j] < pivot) {\n            i++;\n            swap(arr[i], arr[j]);\n        }\n    }\n    swap(arr[i + 1], arr[high]);\n    return i + 1;\n}\nvoid quickSort(vector<int>& arr, int low, int high) {\n    if (low < high) {\n        int pi = partition(arr, low, high);\n        quickSort(arr, low, pi - 1);\n        quickSort(arr, pi + 1, high);\n    }\n}\n\n// 6. Heap Sort - O(N log N) Time, O(1) Space\nvoid heapify(vector<int>& arr, int n, int i) {\n    int largest = i;\n    int l = 2 * i + 1;\n    int r = 2 * i + 2;\n    if (l < n && arr[l] > arr[largest]) largest = l;\n    if (r < n && arr[r] > arr[largest]) largest = r;\n    if (largest != i) {\n        swap(arr[i], arr[largest]);\n        heapify(arr, n, largest);\n    }\n}\nvoid heapSort(vector<int>& arr) {\n    int n = arr.size();\n    for (int i = n / 2 - 1; i >= 0; i--) heapify(arr, n, i);\n    for (int i = n - 1; i > 0; i--) {\n        swap(arr[0], arr[i]);\n        heapify(arr, i, 0);\n    }\n}"
+        ));
+
+        db.put("Valid Parentheses", new FallbackProblemData(
+            "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid. An input string is valid if open brackets are closed by the same type of brackets, open brackets are closed in the correct order, and every close bracket has a corresponding open bracket of the same type.",
+            "Use a stack to store opening brackets. Iterate through the string character by character. For each opening bracket, push it onto the stack. For each closing bracket, check if the stack is empty or if the top of the stack is not of the matching opening type. If so, return false. Otherwise, pop the opening bracket. At the end, return true if the stack is empty.",
+            "",
+            "Repeatedly replace adjacent matching bracket pairs (i.e. '()', '[]', '{}') with empty strings until no more replacements can be made. If the final string is empty, it is valid. This takes O(N^2) time due to string shifting on replacements.",
+            "Brackets must be closed in the reverse order of their opening. This Last-In-First-Out (LIFO) property maps perfectly to a stack. The top of the stack always represents the most recent unmatched opening bracket.",
+            "O(N)",
+            "O(N)",
+            "#include <string>\n#include <stack>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool isValid(string s) {\n        stack<char> st;\n        for (char c : s) {\n            if (c == '(' || c == '{' || c == '[') {\n                st.push(c);\n            } else {\n                if (st.empty()) return false;\n                if (c == ')' && st.top() != '(') return false;\n                if (c == '}' && st.top() != '{') return false;\n                if (c == ']' && st.top() != '[') return false;\n                st.pop();\n            }\n        }\n        return st.empty();\n    }\n};"
+        ));
+
+        db.put("Edit Distance", new FallbackProblemData(
+            "Given two strings word1 and word2, return the minimum number of operations required to convert word1 to word2. You have the following three operations permitted on a word: Insert a character, Delete a character, Replace a character.",
+            "Use a 2D Dynamic Programming table dp[m+1][n+1], where dp[i][j] represents the minimum edit distance between word1[0...i-1] and word2[0...j-1]. If word1[i-1] == word2[j-1], then dp[i][j] = dp[i-1][j-1]. Otherwise, dp[i][j] = 1 + min({dp[i-1][j] (delete), dp[i][j-1] (insert), dp[i-1][j-1] (replace)}). Base cases are dp[i][0] = i and dp[0][j] = j.",
+            "",
+            "Use a recursive function solve(i, j) that tries all three operations for mismatched characters and returns the minimum path. Without memoization, this runs in exponential O(3^(M+N)) time.",
+            "We solve the edit distance by finding subproblems matching prefixes of both words. Since subproblems overlap, we can memoize the results. The 2D table can be optimized to 1D space since we only need the current and previous row to compute updates.",
+            "O(M * N)",
+            "O(M * N)",
+            "#include <string>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\nclass Solution {\npublic:\n    int minDistance(string word1, string word2) {\n        int m = word1.length();\n        int n = word2.length();\n        vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n        \n        for (int i = 0; i <= m; i++) dp[i][0] = i;\n        for (int j = 0; j <= n; j++) dp[0][j] = j;\n        \n        for (int i = 1; i <= m; i++) {\n            for (int j = 1; j <= n; j++) {\n                if (word1[i-1] == word2[j-1]) {\n                    dp[i][j] = dp[i-1][j-1];\n                } else {\n                    dp[i][j] = 1 + min({dp[i-1][j],    // Delete\n                                        dp[i][j-1],    // Insert\n                                        dp[i-1][j-1]}); // Replace\n                } \n            }\n        }\n        return dp[m][n];\n    }\n};"
+        ));
+
+        db.put("Kth Largest Element in a Stream", new FallbackProblemData(
+            "Design a class to find the kth largest element in a stream. Note that it is the kth largest element in the sorted order, not the kth distinct element. Implement the KthLargest class: KthLargest(int k, int[] nums) Initializes the object with the integer k and the stream of integers nums. int add(int val) Appends the integer val to the stream and returns the element representing the kth largest element in the stream.",
+            "Use a Min-Heap (priority_queue in C++) of maximum size k. The heap will store the k largest elements seen so far. When adding a new value, push it to the heap. If the heap size exceeds k, pop the smallest element. The top of the min-heap will always represent the kth largest element.",
+            "",
+            "Store all numbers in a dynamic array. Each time add() is called, append the value, sort the entire array in descending order, and return the element at index k-1. This takes O(N log N) per insertion.",
+            "We only care about the k largest elements, not the rest. A min-heap allows us to efficiently keep track of the k largest elements. The smallest of these k elements (the heap root) is the kth largest overall. Inserting into a heap of size k takes O(log k) time.",
+            "O(log k) per add()",
+            "O(k)",
+            "#include <vector>\n#include <queue>\nusing namespace std;\n\nclass KthLargest {\nprivate:\n    priority_queue<int, vector<int>, greater<int>> minHeap;\n    int kSize;\n\npublic:\n    KthLargest(int k, vector<int>& nums) {\n        kSize = k;\n        for (int num : nums) {\n            add(num);\n        }\n    }\n    \n    int add(int val) {\n        minHeap.push(val);\n        if (minHeap.size() > kSize) {\n            minHeap.pop();\n        }\n        return minHeap.top();\n    }\n};"
+        ));
     }
 
     public static FallbackProblemData getFallback(String name, String topicName) {
@@ -169,7 +219,7 @@ public class LocalFallbackGenerator {
             map.put("optimalTimeComplexity", data.timeComplexity);
             map.put("optimalSpaceComplexity", data.spaceComplexity);
             map.put("fullExplanation", "Refer to standard patterns under " + topicName + ".");
-            map.put("referenceSolution", "# Reference solution not available.");
+            map.put("referenceSolution", (data.referenceSolution != null && !data.referenceSolution.isEmpty()) ? data.referenceSolution : "# Reference solution not available.");
             
             Map<String, Object> bruteMap = new LinkedHashMap<>();
             bruteMap.put("approach", data.brute);
