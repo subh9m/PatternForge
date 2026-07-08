@@ -52,14 +52,11 @@ public class RevisionController {
         for (Attempt a : solvedAttempts) {
             Problem p = a.getProblem();
             
-            // Check if details are missing and need generation
-            boolean isGenerating = (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty() ||
-                                    "{}".equals(p.getBasicDetailsJson()) ||
-                                    p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
-                                    p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
-                                    "{}".equals(p.getSimplifiedApproach()) ||
-                                    p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty() ||
-                                    "{}".equals(p.getSolutionDetailsJson()));
+            // Check if details are missing or contain boilerplate, and need generation
+            boolean isGenerating = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
+                                    LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
+                                    LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()) ||
+                                    LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
 
             if (isGenerating) {
                 UUID problemId = p.getId();
@@ -142,7 +139,7 @@ public class RevisionController {
         ObjectMapper mapper = new ObjectMapper();
 
         // 1. Ensure basicDetailsJson is present (essential for problem description)
-        if (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty() || "{}".equals(p.getBasicDetailsJson())) {
+        if (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson())) {
             try {
                 if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
                     JsonNode root = mapper.readTree(p.getProblemDetailsJson());
@@ -174,7 +171,7 @@ public class RevisionController {
         }
 
         // 2. Ensure solutionDetailsJson is present (essential for code snippets and approach tabs)
-        if (p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty() || "{}".equals(p.getSolutionDetailsJson())) {
+        if (LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson())) {
             try {
                 if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
                     JsonNode root = mapper.readTree(p.getProblemDetailsJson());
@@ -209,9 +206,8 @@ public class RevisionController {
         }
 
         // 3. Ensure simplified fields are present (essential for brief task description and brief approach cards)
-        if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
-            p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
-            "{}".equals(p.getSimplifiedApproach())) {
+        if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
+            LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
             try {
                 Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
                         p.getName(),
@@ -219,10 +215,10 @@ public class RevisionController {
                         p.getSolutionDetailsJson()
                 );
                 
-                if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty()) {
+                if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
                     p.setSimplifiedStatement(res.get("simplifiedStatement"));
                 }
-                if (p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty()) {
+                if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
                     Map<String, String> approachMap = new HashMap<>();
                     approachMap.put("optimal", res.get("simplifiedOptimal"));
                     approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
@@ -233,10 +229,10 @@ public class RevisionController {
             } catch (Exception e) {
                 try {
                     Map<String, String> res = LocalFallbackGenerator.getSimplifiedFallback(p.getName(), p.getTopic().getName());
-                    if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty()) {
+                    if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
                         p.setSimplifiedStatement(res.get("simplifiedStatement"));
                     }
-                    if (p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() || "{}".equals(p.getSimplifiedApproach())) {
+                    if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
                         Map<String, String> approachMap = new HashMap<>();
                         approachMap.put("optimal", res.get("simplifiedOptimal"));
                         approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));

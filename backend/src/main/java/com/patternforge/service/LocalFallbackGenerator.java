@@ -200,4 +200,36 @@ public class LocalFallbackGenerator {
         res.put("simplifiedBrute", data.brute);
         return res;
     }
+
+    public static boolean isBoilerplateSimplifiedApproach(String str) {
+        if (str == null || str.trim().isEmpty() || "{}".equals(str.trim())) return true;
+        String lower = str.toLowerCase();
+        return lower.contains("optimal solution using standard categories") ||
+               lower.contains("optimal solution using standard patterns") ||
+               lower.contains("short optimal strategy") ||
+               lower.contains("standard categories") ||
+               lower.contains("standard patterns");
+    }
+
+    public static boolean isBoilerplateSimplifiedStatement(String str) {
+        if (str == null || str.trim().isEmpty()) return true;
+        String lower = str.toLowerCase();
+        return lower.contains("solve the coding puzzle for") ||
+               lower.contains("solve the puzzle in brief");
+    }
+
+    public static boolean isBoilerplateSolutionDetails(String str) {
+        if (str == null || str.trim().isEmpty() || "{}".equals(str.trim())) return true;
+        String lower = str.toLowerCase();
+        return lower.contains("ai solution details unavailable") ||
+               lower.contains("ai details not available");
+    }
+
+    public static boolean isBoilerplateBasicDetails(String str) {
+        if (str == null || str.trim().isEmpty() || "{}".equals(str.trim())) return true;
+        String lower = str.toLowerCase();
+        return lower.contains("problem details not loaded") ||
+               lower.contains("please refer to leetcode") ||
+               (lower.contains("problem: ") && lower.contains("(leetcode #"));
+    }
 }

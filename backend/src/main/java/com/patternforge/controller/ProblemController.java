@@ -1026,7 +1026,7 @@ public class ProblemController {
         ObjectMapper mapper = new ObjectMapper();
 
         // 1. Ensure basicDetailsJson
-        if (p.getBasicDetailsJson() == null || p.getBasicDetailsJson().trim().isEmpty() || "{}".equals(p.getBasicDetailsJson())) {
+        if (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson())) {
             try {
                 if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
                     JsonNode root = mapper.readTree(p.getProblemDetailsJson());
@@ -1056,7 +1056,7 @@ public class ProblemController {
         }
 
         // 2. Ensure solutionDetailsJson
-        if (p.getSolutionDetailsJson() == null || p.getSolutionDetailsJson().trim().isEmpty() || "{}".equals(p.getSolutionDetailsJson())) {
+        if (LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson())) {
             try {
                 if (p.getProblemDetailsJson() != null && !p.getProblemDetailsJson().trim().isEmpty()) {
                     JsonNode root = mapper.readTree(p.getProblemDetailsJson());
@@ -1089,9 +1089,8 @@ public class ProblemController {
         }
 
         // 3. Ensure simplifiedStatement and simplifiedApproach
-        if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty() ||
-            p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() ||
-            "{}".equals(p.getSimplifiedApproach())) {
+        if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
+            LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
             try {
                 Map<String, String> res = geminiService.generateSimplifiedProblemAndApproach(
                         p.getName(),
@@ -1099,10 +1098,10 @@ public class ProblemController {
                         p.getSolutionDetailsJson()
                 );
                 
-                if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty()) {
+                if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
                     p.setSimplifiedStatement(res.get("simplifiedStatement"));
                 }
-                if (p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty()) {
+                if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
                     Map<String, String> approachMap = new HashMap<>();
                     approachMap.put("optimal", res.get("simplifiedOptimal"));
                     approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
@@ -1113,10 +1112,10 @@ public class ProblemController {
             } catch (Exception e) {
                 try {
                     Map<String, String> res = LocalFallbackGenerator.getSimplifiedFallback(p.getName(), p.getTopic().getName());
-                    if (p.getSimplifiedStatement() == null || p.getSimplifiedStatement().trim().isEmpty()) {
+                    if (LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
                         p.setSimplifiedStatement(res.get("simplifiedStatement"));
                     }
-                    if (p.getSimplifiedApproach() == null || p.getSimplifiedApproach().trim().isEmpty() || "{}".equals(p.getSimplifiedApproach())) {
+                    if (LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach())) {
                         Map<String, String> approachMap = new HashMap<>();
                         approachMap.put("optimal", res.get("simplifiedOptimal"));
                         approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
