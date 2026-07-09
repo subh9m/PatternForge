@@ -4,7 +4,7 @@ import {
   Flame, BookOpen, Code2, Database, Cpu, 
   GitBranch, Brain, Globe, Coffee, Atom, FolderGit2, 
   Calendar, Play, AlertTriangle, Plus, Sparkles, X, Pause,
-  Sun, Moon
+  Sun, Moon, ShieldCheck, LogOut
 } from 'lucide-react';
 
 interface HeatmapDay {
@@ -48,16 +48,16 @@ interface MasterDashboardProps {
 }
 
 const MODULES_CONFIG = [
-  { id: 'dsa', name: 'DSA Practice', icon: Code2, color: 'text-blue-400', border: 'hover:border-blue-500', bg: 'bg-blue-500/10' },
-  { id: 'stl', name: 'STL & Collections', icon: BookOpen, color: 'text-emerald-400', border: 'hover:border-emerald-500', bg: 'bg-emerald-500/10' },
-  { id: 'sql', name: 'SQL Playground', icon: Database, color: 'text-purple-400', border: 'hover:border-purple-500', bg: 'bg-purple-500/10' },
-  { id: 'os', name: 'OS Revision', icon: Cpu, color: 'text-amber-400', border: 'hover:border-amber-500', bg: 'bg-amber-500/10' },
-  { id: 'git', name: 'Git & GitHub', icon: GitBranch, color: 'text-red-400', border: 'hover:border-red-500', bg: 'bg-red-500/10' },
-  { id: 'aiml', name: 'AI / ML System', icon: Brain, color: 'text-indigo-400', border: 'hover:border-indigo-500', bg: 'bg-indigo-500/10' },
-  { id: 'cn', name: 'CN Revision', icon: Globe, color: 'text-cyan-400', border: 'hover:border-cyan-500', bg: 'bg-cyan-500/10' },
-  { id: 'spring', name: 'Spring Boot', icon: Coffee, color: 'text-green-400', border: 'hover:border-green-500', bg: 'bg-green-500/10' },
-  { id: 'react', name: 'React JS', icon: Atom, color: 'text-sky-400', border: 'hover:border-sky-500', bg: 'bg-sky-400/10' },
-  { id: 'projects', name: 'Projects Architecture', icon: FolderGit2, color: 'text-fuchsia-400', border: 'hover:border-fuchsia-500', bg: 'bg-fuchsia-500/10' }
+  { id: 'dsa', name: 'DSA Practice', icon: Code2, color: 'text-blue-400', border: 'hover:border-blue-500/50 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]', bg: 'bg-blue-500/10' },
+  { id: 'stl', name: 'STL & Collections', icon: BookOpen, color: 'text-emerald-400', border: 'hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]', bg: 'bg-emerald-500/10' },
+  { id: 'sql', name: 'SQL Playground', icon: Database, color: 'text-purple-400', border: 'hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]', bg: 'bg-purple-500/10' },
+  { id: 'os', name: 'OS Revision', icon: Cpu, color: 'text-amber-400', border: 'hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]', bg: 'bg-amber-500/10' },
+  { id: 'git', name: 'Git & GitHub', icon: GitBranch, color: 'text-red-400', border: 'hover:border-red-500/50 hover:shadow-[0_0_20px_rgba(239,68,68,0.15)]', bg: 'bg-red-500/10' },
+  { id: 'aiml', name: 'AI / ML System', icon: Brain, color: 'text-indigo-400', border: 'hover:border-indigo-500/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]', bg: 'bg-indigo-500/10' },
+  { id: 'cn', name: 'CN Revision', icon: Globe, color: 'text-cyan-400', border: 'hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]', bg: 'bg-cyan-500/10' },
+  { id: 'spring', name: 'Spring Boot', icon: Coffee, color: 'text-green-400', border: 'hover:border-green-500/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.15)]', bg: 'bg-green-500/10' },
+  { id: 'react', name: 'React JS', icon: Atom, color: 'text-sky-400', border: 'hover:border-sky-500/50 hover:shadow-[0_0_20px_rgba(56,189,248,0.15)]', bg: 'bg-sky-450/10' },
+  { id: 'projects', name: 'Projects Architecture', icon: FolderGit2, color: 'text-fuchsia-400', border: 'hover:border-fuchsia-500/50 hover:shadow-[0_0_20px_rgba(217,70,239,0.15)]', bg: 'bg-fuchsia-500/10' }
 ] as const;
 
 const MOTIVATION_QUOTES = [
@@ -274,10 +274,10 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-slate-955">
+      <div className="flex h-screen w-screen items-center justify-center bg-[#07070e]">
         <div className="flex flex-col items-center space-y-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
-          <p className="text-slate-400 text-sm animate-pulse font-sans">Syncing Master Dashboard...</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-slate-400 text-xs tracking-widest font-mono uppercase animate-pulse">Syncing Command Center...</p>
         </div>
       </div>
     );
@@ -337,7 +337,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
       progressText: `${stats.todayGoalSolved} / ${stats.todayGoalTarget} Solved`,
       percent: stats.todayGoalTarget > 0 ? Math.min(100, Math.round((stats.todayGoalSolved / stats.todayGoalTarget) * 100)) : 100,
       isCompleted: stats.todayGoalSolved >= stats.todayGoalTarget,
-      warningText: stats.todayGoalSolved < stats.todayGoalTarget ? 'Pending goal completion' : ''
+      warningText: stats.todayGoalSolved < stats.todayGoalTarget ? 'Pending goal completion' : '',
+      accentColor: 'from-blue-500 to-cyan-400'
     },
     {
       id: 'revision_goal',
@@ -347,66 +348,74 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
         ? Math.round((stats.todayRevisedCount / (stats.revisionDueTodayCount + stats.todayRevisedCount)) * 100)
         : 100,
       isCompleted: stats.revisionDueTodayCount === 0,
-      warningText: stats.revisionDueTodayCount > 0 ? `${stats.revisionDueTodayCount} revisions remaining` : ''
+      warningText: stats.revisionDueTodayCount > 0 ? `${stats.revisionDueTodayCount} revisions remaining` : '',
+      accentColor: 'from-purple-500 to-pink-500'
     }
   ];
 
   return (
-    <div className="min-h-screen w-screen bg-[#07070e] text-slate-100 px-4 py-8 relative overflow-y-auto font-sans">
+    <div className="min-h-screen w-screen bg-[#07070e] text-slate-100 px-4 py-8 relative overflow-y-auto font-sans scrollbar-none">
       
-      {/* Top Controls */}
-      <div className="absolute top-6 right-6 z-50 flex items-center space-x-3">
+      {/* Top Floating Control Toolbar */}
+      <div className="absolute top-6 right-6 z-50 flex items-center space-x-3 bg-slate-900/40 border border-slate-900/80 backdrop-blur-md px-3.5 py-2 rounded-2xl">
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
           title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-slate-100 transition-smooth cursor-pointer"
+          className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-900 transition-smooth cursor-pointer"
         >
-          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
         </button>
 
+        <div className="h-4 w-px bg-slate-800/80"></div>
+
+        {/* Logout */}
         <button
           onClick={onLogout}
-          className="px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-red-500/50 hover:text-red-400 text-slate-400 transition-smooth flex items-center space-x-2 text-xs font-black cursor-pointer"
+          title="Sign Out Session"
+          className="p-2 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-950/20 transition-smooth cursor-pointer flex items-center space-x-1"
         >
-          <span>SIGN OUT</span>
+          <LogOut className="h-4.5 w-4.5" />
         </button>
       </div>
 
       <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* Banner Header */}
-        <div className="glass-panel p-8 rounded-2xl border border-slate-900 relative overflow-hidden bg-slate-950/20">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+        {/* Dynamic Header Banner */}
+        <div className="glass-panel p-8 rounded-3xl border border-slate-900/60 relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-950/90 to-[#07070e]">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[150px] pointer-events-none"></div>
+          <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none"></div>
           
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="space-y-3 max-w-xl">
-              <span className="text-[10px] text-blue-400 font-extrabold uppercase tracking-widest font-mono">
-                Command Center
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
+            <div className="space-y-3.5 max-w-xl">
+              <span className="text-[9px] text-blue-400 font-extrabold uppercase tracking-widest font-mono bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">
+                Unified Portal Command Center
               </span>
-              <h1 className="text-3xl font-black bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent uppercase tracking-tight font-heading">
+              <h1 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-slate-50 via-slate-200 to-slate-400 bg-clip-text text-transparent tracking-tight font-heading">
                 {getGreeting()}, Developer
               </h1>
-              <p className="text-xs text-slate-400 leading-relaxed font-medium italic">
+              <p className="text-xs text-slate-450 leading-relaxed font-sans italic opacity-85">
                 "{motivationQuote}"
               </p>
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3 bg-slate-900/50 border border-slate-800/80 p-4 rounded-2xl">
-                <Flame className="h-7 w-7 text-orange-500 fill-orange-500/10 animate-pulse" />
+              <div className="flex items-center space-x-3.5 bg-slate-900/40 border border-slate-850 p-4.5 rounded-2xl backdrop-blur-sm">
+                <div className="h-10 w-10 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center justify-center">
+                  <Flame className="h-6 w-6 text-orange-500 fill-orange-500/20 animate-pulse" />
+                </div>
                 <div>
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block font-mono">Consistency Streak</span>
-                  <span className="text-lg font-black font-heading text-slate-100">{stats.currentStreak} Days</span>
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block font-mono">Streak</span>
+                  <span className="text-xl font-bold font-heading text-slate-100">{stats.currentStreak} Days</span>
                 </div>
               </div>
 
               <button
                 onClick={onGoToModules}
-                className="px-5 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black tracking-wider uppercase transition-smooth shadow-glow-primary cursor-pointer flex items-center space-x-2"
+                className="px-6 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold tracking-wider uppercase transition-all duration-300 hover:-translate-y-0.5 shadow-glow-primary hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] cursor-pointer flex items-center space-x-2.5"
               >
-                <Code2 className="h-4 w-4" />
-                <span>LAUNCH PORTALS</span>
+                <Code2 className="h-4.5 w-4.5" />
+                <span>Launch Portals</span>
               </button>
             </div>
           </div>
@@ -418,31 +427,36 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
           {/* LEFT: Permanent Daily Goals */}
           <div className="space-y-6 lg:col-span-1">
             <div className="flex items-center space-x-2">
-              <Sparkles className="h-4 w-4 text-amber-400" />
-              <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest font-mono">Permanent Goals</h3>
+              <Sparkles className="h-4.5 w-4.5 text-amber-400" />
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Permanent Goals</h3>
             </div>
 
             <div className="space-y-4">
               {permanentTasks.map(task => (
-                <div key={task.id} className="glass-panel p-5 rounded-2xl border border-slate-900 bg-slate-950/20 space-y-4 relative overflow-hidden">
+                <div 
+                  key={task.id} 
+                  className="glass-panel p-6 rounded-2xl border border-slate-900 bg-slate-950/20 space-y-4 relative overflow-hidden transition-all duration-300 hover:border-slate-800"
+                >
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black text-slate-200 uppercase tracking-wider">{task.name}</h4>
+                    <h4 className="text-xs font-bold text-slate-350 uppercase tracking-wider">{task.name}</h4>
                     {task.isCompleted ? (
-                      <span className="h-6 w-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">✓</span>
+                      <span className="h-6 w-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-450 text-xs font-bold shadow-[0_0_10px_rgba(16,185,129,0.15)]">✓</span>
                     ) : (
-                      <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse">⚠️ Goal Due</span>
+                      <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse">Pending</span>
                     )}
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-[11px] font-mono">
                       <span className="text-slate-400 font-bold">{task.progressText}</span>
-                      <span className={`${task.isCompleted ? 'text-emerald-400' : 'text-slate-500'} font-black`}>{task.percent}%</span>
+                      <span className={`${task.isCompleted ? 'text-emerald-400' : 'text-slate-500'} font-bold`}>{task.percent}%</span>
                     </div>
 
-                    <div className="h-2 bg-slate-900 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-slate-900/80 rounded-full overflow-hidden">
                       <div 
-                        className={`h-full transition-all duration-300 ${task.isCompleted ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-amber-500'}`} 
+                        className={`h-full transition-all duration-300 bg-gradient-to-r ${task.accentColor} ${
+                          task.isCompleted ? 'shadow-[0_0_10px_rgba(16,185,129,0.3)]' : ''
+                        }`} 
                         style={{ width: `${task.percent}%` }}
                       ></div>
                     </div>
@@ -462,14 +476,14 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
           <div className="space-y-6 lg:col-span-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-blue-400" />
-                <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest font-mono">Reading & Revision Tasks</h3>
+                <Calendar className="h-4.5 w-4.5 text-blue-400" />
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Reading & Theory Tasks</h3>
               </div>
               
               {!showCreator && (
                 <button
                   onClick={() => setShowCreator(true)}
-                  className="px-3.5 py-1.5 bg-blue-600/10 border border-blue-500/30 hover:bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-wider rounded-xl transition-smooth flex items-center space-x-1 cursor-pointer"
+                  className="px-4 py-2 bg-blue-600/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all duration-300 hover:-translate-y-0.5 cursor-pointer flex items-center space-x-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>Add Reading Task</span>
@@ -479,19 +493,19 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
 
             {/* Reading Task Creator Panel */}
             {showCreator && (
-              <div className="glass-panel p-6 rounded-2xl border border-blue-500/20 bg-slate-950/40 space-y-4 animate-fade-in relative">
+              <div className="glass-panel p-6 rounded-3xl border border-blue-500/20 bg-slate-950/60 space-y-4 animate-fade-in relative shadow-glow-primary/5">
                 <button
                   onClick={() => {
                     setShowCreator(false);
                     setCreatorModule('');
                   }}
-                  className="absolute top-4 right-4 text-slate-500 hover:text-slate-350 cursor-pointer"
+                  className="absolute top-4.5 right-4.5 text-slate-500 hover:text-slate-300 transition-smooth cursor-pointer"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4.5 w-4.5" />
                 </button>
 
                 <div className="space-y-1">
-                  <h4 className="text-xs font-black uppercase text-slate-200">Configure New Reading Task</h4>
+                  <h4 className="text-xs font-bold uppercase text-slate-200">Configure New Reading Task</h4>
                   <p className="text-[10px] text-slate-500">Select a portal and target time to plan your study session.</p>
                 </div>
 
@@ -502,7 +516,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                     <select
                       value={creatorModule}
                       onChange={(e) => setCreatorModule(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 text-slate-250 text-xs px-3.5 py-2.5 rounded-xl cursor-pointer focus:outline-none focus:border-blue-500/50"
+                      className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-xs px-3.5 py-3 rounded-xl cursor-pointer focus:outline-none focus:border-blue-500/50"
                     >
                       <option value="" disabled>-- Choose Module Portal --</option>
                       {MODULES_CONFIG.map(mod => {
@@ -531,7 +545,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                         step="5"
                         value={creatorDuration}
                         onChange={(e) => setCreatorDuration(parseInt(e.target.value))}
-                        className="w-full h-1.5 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-blue-500 mt-2"
+                        className="w-full h-1.5 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-blue-500 mt-2.5"
                       />
                     </div>
                   )}
@@ -541,13 +555,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                   <div className="flex gap-3 pt-2">
                     <button
                       onClick={handleAddTaskOnly}
-                      className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-extrabold uppercase text-xs rounded-xl transition-smooth cursor-pointer"
+                      className="flex-1 py-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-350 font-bold uppercase text-xs rounded-xl transition-smooth cursor-pointer"
                     >
                       Add Task
                     </button>
                     <button
                       onClick={handleStartFocusMode}
-                      className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white border border-transparent font-black uppercase text-xs rounded-xl transition-smooth shadow-glow-primary cursor-pointer"
+                      className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white border border-transparent font-bold uppercase text-xs rounded-xl transition-smooth shadow-glow-primary cursor-pointer"
                     >
                       Start Focus Mode
                     </button>
@@ -599,19 +613,19 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                   return (
                     <div 
                       key={mod.id} 
-                      className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between min-h-[175px] ${
-                        isCompleted ? 'bg-emerald-950/5 border-emerald-500/25 shadow-[0_0_15px_rgba(16,185,129,0.08)]' :
-                        'bg-slate-900/40 border-slate-800'
+                      className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between min-h-[185px] group ${mod.border} ${
+                        isCompleted ? 'bg-emerald-950/5 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.05)]' :
+                        'bg-slate-900/40 border-slate-900/60'
                       }`}
                     >
                       {/* Header */}
                       <div className="flex items-start justify-between w-full">
                         <div className="flex items-center space-x-3">
-                          <div className={`h-8.5 w-8.5 rounded-xl flex items-center justify-center ${mod.bg} ${mod.color}`}>
-                            <mod.icon className="h-4.5 w-4.5" />
+                          <div className={`h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${mod.bg} ${mod.color}`}>
+                            <mod.icon className="h-5 w-5" />
                           </div>
                           <div>
-                            <h4 className="text-xs font-black uppercase text-slate-200">{mod.name}</h4>
+                            <h4 className="text-xs font-bold uppercase text-slate-200">{mod.name}</h4>
                             <span className="text-[9px] text-slate-500 font-mono tracking-wider font-extrabold uppercase">
                               {mod.id === 'dsa' ? 'Coding Portal' : 'Theory Portal'}
                             </span>
@@ -619,26 +633,35 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                         </div>
 
                         {/* Status tag */}
-                        <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                        <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border flex items-center space-x-1.5 ${
                           isCompleted ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
                           status === 'RUNNING' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 animate-pulse' :
                           status === 'PAUSED' ? 'bg-orange-500/10 border-orange-500/30 text-orange-400' :
                           'bg-slate-900/60 border-slate-800 text-slate-400'
                         }`}>
-                          {isCompleted ? 'Completed' : status.replace('_', ' ')}
+                          <span className={`h-1.5 w-1.5 rounded-full ${
+                            isCompleted ? 'bg-emerald-400' :
+                            status === 'RUNNING' ? 'bg-blue-400 animate-ping' :
+                            status === 'PAUSED' ? 'bg-orange-400' :
+                            'bg-slate-500'
+                          }`}></span>
+                          <span>{isCompleted ? 'Completed' : status.replace('_', ' ')}</span>
                         </span>
                       </div>
 
                       {/* Main progress bar section */}
-                      <div className="space-y-3 pt-3">
+                      <div className="space-y-3 pt-4">
                         <div className="flex items-center justify-between text-[10px] font-bold font-mono">
                           <span className="text-slate-400">{renderTimerDisplay()}</span>
-                          <span className={`${isCompleted ? 'text-emerald-400' : 'text-blue-400'}`}>{Math.round(progressPercent)}%</span>
+                          <span className={`${isCompleted ? 'text-emerald-450' : 'text-blue-405'}`}>{Math.round(progressPercent)}%</span>
                         </div>
 
-                        <div className="h-1.5 bg-slate-900/80 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-slate-950/80 rounded-full overflow-hidden">
                           <div 
-                            className={`h-full transition-all duration-300 ${isCompleted ? 'bg-emerald-500' : 'bg-blue-500'}`} 
+                            className={`h-full transition-all duration-300 bg-gradient-to-r from-blue-500 to-cyan-400 ${
+                              isCompleted ? 'from-emerald-500 to-teal-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]' :
+                              status === 'RUNNING' ? 'shadow-[0_0_8px_rgba(59,130,246,0.3)]' : ''
+                            }`} 
                             style={{ width: `${progressPercent}%` }}
                           ></div>
                         </div>
@@ -652,21 +675,21 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                             {/* Pause button (disabled visual mockup since pause happens in overlay) */}
                             <button
                               disabled
-                              className="p-1.5 rounded-lg bg-slate-900 border border-slate-850 text-slate-600 cursor-not-allowed"
+                              className="p-1.5 rounded-xl bg-slate-950 border border-slate-900 text-slate-700 cursor-not-allowed"
                               title="Timer can only be paused from full-screen overlay"
                             >
-                              <Pause className="h-3 w-3" />
+                              <Pause className="h-3.5 w-3.5" />
                             </button>
 
                             <button
                               onClick={() => handleResumeFocus(mod.id, targetMins)}
-                              className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center space-x-1 transition-smooth cursor-pointer ${
+                              className={`px-3.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider flex items-center space-x-1.5 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer ${
                                 isCompleted 
-                                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20' 
-                                  : 'bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 shadow-glow-primary'
+                                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-405 hover:bg-emerald-500/20' 
+                                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-glow-primary hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]'
                               }`}
                             >
-                              <Play className="h-3 w-3 fill-current" />
+                              <Play className="h-3.5 w-3.5 fill-current" />
                               <span>{isCompleted ? 'Study More' : 'Resume'}</span>
                             </button>
                           </div>
@@ -681,11 +704,11 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
         </div>
 
         {/* Heatmap Section */}
-        <div className="glass-panel rounded-2xl p-6 border border-slate-900 bg-slate-950/20">
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-5 w-5 text-slate-300" />
-              <h3 className="text-xs font-extrabold font-heading text-slate-350 uppercase tracking-wider">Consistency Heatmap</h3>
+        <div className="glass-panel rounded-3xl p-6 border border-slate-900/60 bg-slate-950/20">
+          <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+            <div className="flex items-center space-x-2.5">
+              <Calendar className="h-5 w-5 text-slate-400" />
+              <h3 className="text-xs font-bold font-heading text-slate-350 uppercase tracking-widest">Consistency Heatmap</h3>
             </div>
             
             {/* Heatmap Legend */}
@@ -695,7 +718,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                 <span>No Task Set</span>
               </div>
               <div className="flex items-center space-x-1.5">
-                <div className="h-3 w-3 bg-red-900 border border-red-850 rounded-sm"></div>
+                <div className="h-3 w-3 bg-red-950 border border-red-900/60 rounded-sm"></div>
                 <span>Task Failed</span>
               </div>
               <div className="flex items-center space-x-1.5">
@@ -708,14 +731,14 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
           {heatmapError && (
             <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center space-x-2 animate-fade-in font-sans">
               <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span>Failed to fetch stats: {heatmapError}. Click on "Logout" and re-authenticate to refresh your session.</span>
+              <span>Failed to fetch stats: {heatmapError}. Click logout and re-authenticate to refresh your session.</span>
             </div>
           )}
 
           {/* Heatmap component */}
-          <div className="w-full overflow-x-auto p-4 bg-slate-955/50 border border-slate-900 custom-scrollbar rounded-xl">
+          <div className="w-full overflow-x-auto p-4 bg-slate-955/20 border border-slate-900 custom-scrollbar rounded-2xl">
             <div className="flex gap-2 min-w-[760px] select-none">
-              <div className="flex flex-col justify-between text-[9px] text-slate-500 font-mono pt-5 pb-1 pr-1.5 h-[112px]">
+              <div className="flex flex-col justify-between text-[9px] text-slate-500 font-mono pt-5 pb-1 pr-2 h-[112px]">
                 <span>Mon</span>
                 <span>Wed</span>
                 <span>Fri</span>
@@ -800,7 +823,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                               if (isDone) {
                                 bgClass = "bg-[#2cbb5d]/60 border border-[#2cbb5d]/85 text-white hover:border-emerald-400 shadow-[0_0_8px_rgba(44,187,93,0.2)]";
                               } else {
-                                bgClass = "bg-red-900 border border-red-800 text-red-200 hover:border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]";
+                                bgClass = "bg-red-950 border border-red-900/60 text-red-200 hover:border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]";
                               }
                             } else if (count > 0) {
                               if (count <= 2) {
@@ -833,9 +856,9 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
           </div>
 
           {selectedDay && (
-            <div className="mt-4 p-4 bg-slate-900/60 border border-slate-800 rounded-xl animate-fade-in text-xs font-sans space-y-1.5">
+            <div className="mt-4 p-4 bg-slate-905/60 border border-slate-900 rounded-xl animate-fade-in text-xs font-sans space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-355">Date: {new Date(selectedDay.date).toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
+                <span className="font-bold text-slate-300">Date: {new Date(selectedDay.date).toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
                 {selectedDay.hasDailyTask && (
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedDay.isDailyTaskCompleted ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'}`}>
                     {selectedDay.isDailyTaskCompleted ? 'Focus Goal Completed' : 'Focus Goal Failed'}
@@ -843,46 +866,52 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                 )}
               </div>
               {selectedDay.selectedModules && (
-                <div className="text-slate-400">Scheduled: <span className="text-slate-200 font-mono font-bold uppercase">{selectedDay.selectedModules}</span></div>
+                <div className="text-slate-400 font-medium">Scheduled: <span className="text-slate-200 font-mono font-bold uppercase">{selectedDay.selectedModules}</span></div>
               )}
               {selectedDay.completedModules && (
                 <div className="text-slate-400 font-medium">Completed: <span className="text-emerald-400 font-mono font-bold uppercase">{selectedDay.completedModules}</span></div>
               )}
               {selectedDay.count > 0 && (
-                <div className="text-slate-400">DSA Problems Solved: <span className="text-blue-400 font-bold">{selectedDay.count}</span></div>
+                <div className="text-slate-400 font-medium">DSA Problems Solved: <span className="text-blue-400 font-bold">{selectedDay.count}</span></div>
               )}
             </div>
           )}
         </div>
 
         {/* BOTTOM STATS GRID */}
-        <div className="glass-panel p-6 rounded-2xl border border-slate-900 bg-slate-950/20">
+        <div className="glass-panel p-6 rounded-3xl border border-slate-900 bg-slate-950/20">
           <div className="flex items-center space-x-2 mb-6">
             <Sparkles className="h-4.5 w-4.5 text-blue-400" />
-            <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest font-mono">Today's Performance Stats</h3>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Performance Indicators</h3>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="bg-slate-950/40 border border-slate-900 p-4.5 rounded-2xl text-center">
+            <div className="bg-slate-950/40 border border-slate-900/60 p-5 rounded-2xl text-center transition-all duration-300 hover:border-slate-800">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block font-mono">Questions Solved</span>
-              <span className="text-2xl font-black text-blue-400 mt-1 block">{stats.todayGoalSolved}</span>
+              <span className="text-3xl font-black text-blue-450 mt-1 block tracking-tight font-heading">{stats.todayGoalSolved}</span>
             </div>
 
-            <div className="bg-slate-950/40 border border-slate-900 p-4.5 rounded-2xl text-center">
+            <div className="bg-slate-950/40 border border-slate-900/60 p-5 rounded-2xl text-center transition-all duration-300 hover:border-slate-800">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block font-mono">Questions Revised</span>
-              <span className="text-2xl font-black text-purple-400 mt-1 block">{stats.todayRevisedCount}</span>
+              <span className="text-3xl font-black text-purple-450 mt-1 block tracking-tight font-heading">{stats.todayRevisedCount}</span>
             </div>
 
-            <div className="bg-slate-950/40 border border-slate-900 p-4.5 rounded-2xl text-center">
+            <div className="bg-slate-950/40 border border-slate-900/60 p-5 rounded-2xl text-center transition-all duration-300 hover:border-slate-800">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block font-mono">Study Minutes</span>
-              <span className="text-2xl font-black text-emerald-400 mt-1 block">{stats.studyMinutes} Min</span>
+              <span className="text-3xl font-black text-emerald-450 mt-1 block tracking-tight font-heading">{stats.studyMinutes} Min</span>
             </div>
 
-            <div className="bg-slate-950/40 border border-slate-900 p-4.5 rounded-2xl text-center">
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block font-mono">Current Streak</span>
-              <span className="text-2xl font-black text-orange-500 mt-1 block">{stats.currentStreak} Days</span>
+            <div className="bg-slate-950/40 border border-slate-900/60 p-5 rounded-2xl text-center transition-all duration-300 hover:border-slate-800">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block font-mono">Consistency Streak</span>
+              <span className="text-3xl font-black text-orange-500 mt-1 block tracking-tight font-heading">{stats.currentStreak} Days</span>
             </div>
           </div>
+        </div>
+
+        {/* Footer info */}
+        <div className="flex items-center justify-center space-x-2.5 text-[10px] text-slate-600 font-sans tracking-wide">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500/80" />
+          <span>PatternForge command center synchronization is active and secure</span>
         </div>
 
       </div>

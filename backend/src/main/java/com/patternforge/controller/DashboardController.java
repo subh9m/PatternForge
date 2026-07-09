@@ -27,6 +27,7 @@ public class DashboardController {
     private final RevisionRepository revisionRepository;
     private final SettingsRepository settingsRepository;
     private final DailyTaskRepository dailyTaskRepository;
+    private final UserRepository userRepository;
 
     public DashboardController(ProblemRepository problemRepository,
                                TopicRepository topicRepository,
@@ -34,7 +35,8 @@ public class DashboardController {
                                SubmissionRepository submissionRepository,
                                RevisionRepository revisionRepository,
                                SettingsRepository settingsRepository,
-                               DailyTaskRepository dailyTaskRepository) {
+                               DailyTaskRepository dailyTaskRepository,
+                               UserRepository userRepository) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -42,6 +44,7 @@ public class DashboardController {
         this.revisionRepository = revisionRepository;
         this.settingsRepository = settingsRepository;
         this.dailyTaskRepository = dailyTaskRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -50,6 +53,9 @@ public class DashboardController {
             @org.springframework.web.bind.annotation.RequestParam(required = false) Integer year
     ) {
         UUID userId = (UUID) authentication.getPrincipal();
+        if (!userRepository.existsById(userId)) {
+            return ResponseEntity.status(401).body("Session invalid. User not found.");
+        }
 
         List<Problem> problems = problemRepository.findAll();
         List<Topic> topics = topicRepository.findAll();

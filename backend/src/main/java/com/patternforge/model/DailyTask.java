@@ -51,6 +51,7 @@ public class DailyTask {
     @Column(columnDefinition = "TEXT")
     private String statuses;
 
+    @Builder.Default
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean archived = false;
 }
