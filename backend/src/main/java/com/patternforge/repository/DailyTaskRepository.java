@@ -13,4 +13,5 @@ import java.util.UUID;
 public interface DailyTaskRepository extends JpaRepository<DailyTask, UUID> {
     Optional<DailyTask> findByUserIdAndDate(UUID userId, LocalDate date);
     List<DailyTask> findByUserIdAndDateBetween(UUID userId, LocalDate startDate, LocalDate endDate);
+    List<DailyTask> findByDateBeforeAndArchivedFalse(LocalDate date);
 }

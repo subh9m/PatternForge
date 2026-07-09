@@ -951,6 +951,28 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     );
   }
 
+  // Show AI generation loading screen when:
+  // 1. Still fetching details from backend (first load, no cache), OR
+  // 2. Details are present but are boilerplate (AI hasn't generated real content yet)
+  // This prevents users from ever seeing boilerplate content on their first visit.
+  if (loadingDetails || (isAiPending && isBoilerplateDetails(details))) {
+    return (
+      <div className="space-y-4">
+        {/* Minimal back button so user isn't fully trapped */}
+        <button
+          onClick={onBack}
+          className="flex items-center space-x-2 text-xs font-bold text-slate-400 hover:text-slate-200 transition-smooth"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>Back to catalog</span>
+        </button>
+        <AiGenerationLoadingScreen failed={generationFailed} onRetry={handleRetry} />
+      </div>
+    );
+  }
+
   // Determine if code editing is allowed
   const isCodeEditable = thinkingStarted && !timerRunning && notes.thinkingChecked;
 

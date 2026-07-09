@@ -189,6 +189,35 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     loadDashboardData(stats === null);
   }, [selectedYear]);
 
+  // 2AM IST Nightly Reset: Clear stale caches and re-fetch when the day rolls over
+  useEffect(() => {
+    const scheduleMidnightReset = () => {
+      const now = new Date();
+      // 2:00 AM IST = UTC+5:30, so target hour is 2 in IST
+      const nextReset = new Date();
+      nextReset.setHours(2, 0, 0, 0); // 2:00:00 AM local time
+      if (nextReset <= now) {
+        // Already past 2AM today, schedule for tomorrow
+        nextReset.setDate(nextReset.getDate() + 1);
+      }
+      const msUntilReset = nextReset.getTime() - now.getTime();
+
+      const timer = setTimeout(() => {
+        // Clear revision cache so the tab shows fresh pending state
+        localStorage.removeItem('patternforge_revisions');
+        // Reload dashboard data to get today's fresh empty daily task
+        loadDashboardData(true);
+        // Reschedule for the following day
+        scheduleMidnightReset();
+      }, msUntilReset);
+
+      return timer;
+    };
+
+    const timer = scheduleMidnightReset();
+    return () => clearTimeout(timer);
+  }, []);
+
   // BUTTON 1: Add Task only (does not launch timer)
   const handleAddTaskOnly = async () => {
     if (!creatorModule) return;

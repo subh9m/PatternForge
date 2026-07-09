@@ -377,6 +377,33 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     fetchQueue();
   }, []);
 
+  // 2AM IST Nightly Reset: Clear cache and re-fetch so all items show as "pending" again
+  useEffect(() => {
+    const scheduleMidnightReset = () => {
+      const now = new Date();
+      const nextReset = new Date();
+      nextReset.setHours(2, 0, 0, 0); // 2:00:00 AM local time
+      if (nextReset <= now) {
+        nextReset.setDate(nextReset.getDate() + 1);
+      }
+      const msUntilReset = nextReset.getTime() - now.getTime();
+
+      const timer = setTimeout(() => {
+        // Clear stale revision cache — isRevisedToday is computed from today's date on the backend,
+        // so a fresh fetch will correctly mark all items as pending for the new day.
+        localStorage.removeItem('patternforge_revisions');
+        fetchQueue();
+        // Reschedule for the following day
+        scheduleMidnightReset();
+      }, msUntilReset);
+
+      return timer;
+    };
+
+    const timer = scheduleMidnightReset();
+    return () => clearTimeout(timer);
+  }, []);
+
   // Poll for generating items
   useEffect(() => {
     const hasGenerating = items.some(item => item.isGenerating);
