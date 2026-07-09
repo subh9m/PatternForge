@@ -109,6 +109,9 @@ public class RevisionController {
 
         Attempt attempt = attemptOpt.get();
         attempt.setLastRevisedAt(LocalDateTime.now());
+        if (Boolean.TRUE.equals(attempt.getNeedRevision()) && attempt.getRevisionLevel() != null && attempt.getRevisionLevel() > 0) {
+            attempt.setNextRevisionDate(LocalDateTime.now().plusDays(attempt.getRevisionLevel()));
+        }
         attemptRepository.save(attempt);
 
         return ResponseEntity.ok(Map.of("success", true));

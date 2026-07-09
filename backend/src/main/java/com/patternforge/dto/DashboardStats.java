@@ -28,6 +28,9 @@ public class DashboardStats {
     private String weakestTopic;
     private String strongestTopic;
 
+    private Integer todayRevisedCount;
+    private Integer studyMinutes;
+
     private Map<String, Long> problemsPerTopicSolved; // solved per topic
     private Map<String, Long> problemsPerTopicTotal;  // total per topic
     

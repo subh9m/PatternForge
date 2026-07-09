@@ -23,14 +23,19 @@ const MODULE_NAMES: Record<string, string> = {
 };
 
 const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDurationMins, initialRemainingSecs, onExit }) => {
-  const [secondsRemaining, setSecondsRemaining] = useState(
-    initialRemainingSecs !== undefined && initialRemainingSecs > 0
-      ? initialRemainingSecs
-      : initialDurationMins * 60
-  );
+  const targetSeconds = initialDurationMins * 60;
+  
+  const [elapsedSeconds, setElapsedSeconds] = useState(() => {
+    if (initialRemainingSecs !== undefined && initialRemainingSecs > 0) {
+      return Math.max(0, targetSeconds - initialRemainingSecs);
+    }
+    return 0;
+  });
+
   const [isFocusActive, setIsFocusActive] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
   const [savingProgress, setSavingProgress] = useState(false);
+  const [celebrated, setCelebrated] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const timerIntervalRef = useRef<any>(null);
 
@@ -41,10 +46,9 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
       setIsFocusActive(isFs);
     };
 
-    // Try to request fullscreen initially when mounted
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {
-        // Ignored, user will click resume button
+        // Ignored
       });
     } else {
       setIsFocusActive(true);
@@ -56,18 +60,11 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
     };
   }, []);
 
-  // Timer Tick implementation
+  // Timer Tick implementation - counts elapsed time UPWARD
   useEffect(() => {
-    if (isFocusActive && secondsRemaining > 0 && !isCompleted) {
+    if (isFocusActive) {
       timerIntervalRef.current = setInterval(() => {
-        setSecondsRemaining(prev => {
-          if (prev <= 1) {
-            clearInterval(timerIntervalRef.current!);
-            handleSessionCompletion();
-            return 0;
-          }
-          return prev - 1;
-        });
+        setElapsedSeconds(prev => prev + 1);
       }, 1000);
     } else {
       if (timerIntervalRef.current) {
@@ -78,29 +75,46 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [isFocusActive, secondsRemaining, isCompleted]);
+  }, [isFocusActive]);
 
-  const handleSessionCompletion = async () => {
-    setIsCompleted(true);
-    setSavingProgress(true);
-    
-    // Exit fullscreen
-    if (document.fullscreenElement) {
+  const isCompleted = elapsedSeconds >= targetSeconds;
+
+  // Handle completion check and celebration popup
+  useEffect(() => {
+    if (isCompleted && !celebrated) {
+      setCelebrated(true);
+      setShowCelebration(true);
+      
+      // Auto save on completion
+      api.post(`/daily-tasks/today/progress`, { 
+        module, 
+        elapsedSeconds, 
+        status: "COMPLETED" 
+      }).catch(err => {
+        console.error("Failed to complete focus task", err);
+      });
+    }
+  }, [isCompleted, celebrated, module, elapsedSeconds]);
+
+  // Auto save progress every 5 seconds
+  useEffect(() => {
+    if (!isFocusActive) return;
+
+    const autoSaveInterval = setInterval(async () => {
       try {
-        await document.exitFullscreen();
+        const currentStatus = elapsedSeconds >= targetSeconds ? "COMPLETED" : "RUNNING";
+        await api.post(`/daily-tasks/today/progress`, {
+          module,
+          elapsedSeconds,
+          status: currentStatus
+        });
       } catch (err) {
-        // ignore
+        console.error("Auto-save failed", err);
       }
-    }
+    }, 5000);
 
-    try {
-      await api.post(`/daily-tasks/today/complete`, { module });
-    } catch (err) {
-      console.error("Failed to complete focus task", err);
-    } finally {
-      setSavingProgress(false);
-    }
-  };
+    return () => clearInterval(autoSaveInterval);
+  }, [isFocusActive, elapsedSeconds, targetSeconds, module]);
 
   const handleResumeFocus = () => {
     document.documentElement.requestFullscreen().then(() => {
@@ -111,12 +125,18 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
   };
 
   const saveProgressAndExit = async () => {
-    if (secondsRemaining > 0 && !isCompleted) {
-      try {
-        await api.post(`/daily-tasks/today/pause`, { module, remainingSeconds: secondsRemaining });
-      } catch (err) {
-        console.error("Failed to save paused progress", err);
-      }
+    setSavingProgress(true);
+    try {
+      const currentStatus = elapsedSeconds >= targetSeconds ? "COMPLETED" : "PAUSED";
+      await api.post(`/daily-tasks/today/progress`, { 
+        module, 
+        elapsedSeconds, 
+        status: currentStatus 
+      });
+    } catch (err) {
+      console.error("Failed to save progress", err);
+    } finally {
+      setSavingProgress(false);
     }
 
     if (document.fullscreenElement) {
@@ -135,32 +155,45 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
     return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
   };
 
-  const progressPercent = ((initialDurationMins * 60 - secondsRemaining) / (initialDurationMins * 60)) * 100;
+  const progressPercent = Math.min(100, (elapsedSeconds / targetSeconds) * 100);
+
+  // Time displayed inside timer
+  const renderTimeText = () => {
+    if (elapsedSeconds >= targetSeconds) {
+      return `+${formatTime(elapsedSeconds - targetSeconds)}`;
+    } else {
+      return formatTime(targetSeconds - elapsedSeconds);
+    }
+  };
 
   return (
     <>
       {/* Top Floating Glass Bar (when active) */}
-      {isFocusActive && !isCompleted && (
-        <div className="fixed top-0 left-0 w-full z-[9999] bg-slate-950/80 backdrop-blur-md border-b border-emerald-500/20 px-6 py-2 flex items-center justify-between text-white select-none animate-fade-in font-sans">
+      {isFocusActive && !showCelebration && (
+        <div className="fixed top-0 left-0 w-full z-[9999] bg-slate-955/80 backdrop-blur-md border-b border-emerald-500/20 px-6 py-2.5 flex items-center justify-between text-white select-none animate-fade-in font-sans">
           <div className="flex items-center space-x-3">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className={`h-2.5 w-2.5 rounded-full ${isCompleted ? 'bg-emerald-500' : 'bg-blue-500 animate-pulse'}`}></span>
             <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">
               Focus Session: <strong className="text-slate-100">{MODULE_NAMES[module] || module}</strong>
+              {isCompleted && <span className="ml-2 text-emerald-400 font-extrabold">(Completed)</span>}
             </span>
           </div>
 
           <div className="flex items-center space-x-6">
             {/* Progress indicator */}
-            <div className="hidden sm:flex items-center space-x-2 w-32 md:w-48">
+            <div className="hidden sm:flex items-center space-x-2.5 w-32 md:w-48">
               <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${progressPercent}%` }}></div>
+                <div 
+                  className={`h-full transition-all duration-300 ${isCompleted ? 'bg-emerald-500' : 'bg-blue-500'}`} 
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
               </div>
               <span className="text-[9px] font-mono text-slate-400 font-bold">{Math.round(progressPercent)}%</span>
             </div>
 
             {/* Timer digits */}
-            <span className="text-sm font-black font-mono tracking-wider bg-slate-900 border border-slate-800 px-3 py-1 rounded-lg text-emerald-400">
-              {formatTime(secondsRemaining)}
+            <span className={`text-sm font-black font-mono tracking-wider bg-slate-900 border border-slate-800 px-3 py-1 rounded-lg ${isCompleted ? 'text-emerald-400' : 'text-blue-400'}`}>
+              {renderTimeText()}
             </span>
 
             {/* Pause controls */}
@@ -176,7 +209,7 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
       )}
 
       {/* Focus Mode Suspended Overlay */}
-      {!isFocusActive && !isCompleted && (
+      {!isFocusActive && !showCelebration && (
         <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/95 backdrop-blur-md px-4 font-sans select-none">
           <div className="glass-panel border border-slate-900 rounded-2xl w-full max-w-sm p-6 text-center space-y-6 shadow-2xl relative">
             <div className="h-12 w-12 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto animate-pulse">
@@ -209,7 +242,7 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
       )}
 
       {/* Focus Session Completed Celebration Modal */}
-      {isCompleted && (
+      {showCelebration && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/98 backdrop-blur-lg px-4 font-sans select-none animate-fade-in">
           <div className="glass-panel border border-emerald-500/20 rounded-2xl w-full max-w-sm p-8 text-center space-y-6 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-[60px] pointer-events-none"></div>
@@ -225,20 +258,32 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
               </p>
             </div>
 
-            <button
-              onClick={saveProgressAndExit}
-              disabled={savingProgress}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-xs rounded-xl transition-smooth shadow-glow-primary cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-2"
-            >
-              {savingProgress ? (
-                <>
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                  <span>Logging progress...</span>
-                </>
-              ) : (
-                <span>Return to Dashboard</span>
-              )}
-            </button>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setShowCelebration(false);
+                  // Trigger fullscreen again to keep studying
+                  handleResumeFocus();
+                }}
+                className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-350 font-black uppercase text-xs rounded-xl transition-smooth cursor-pointer"
+              >
+                Keep Studying
+              </button>
+              <button
+                onClick={saveProgressAndExit}
+                disabled={savingProgress}
+                className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-xs rounded-xl transition-smooth shadow-glow-primary cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-1.5"
+              >
+                {savingProgress ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <span>Return</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

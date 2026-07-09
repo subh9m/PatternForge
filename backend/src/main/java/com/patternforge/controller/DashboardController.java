@@ -55,11 +55,19 @@ public class DashboardController {
         List<Topic> topics = topicRepository.findAll();
         List<Attempt> attempts = attemptRepository.findByUserId(userId);
         List<Submission> submissions = submissionRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        long solvedAttemptsCount = attempts.stream().filter(a -> "SOLVED".equals(a.getStatus())).count();
+        
+        LocalDate todayDate = LocalDate.now();
         long revisedTodayCount = attempts.stream()
-                .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastRevisedAt() != null && a.getLastRevisedAt().toLocalDate().equals(LocalDate.now()))
+                .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastRevisedAt() != null && a.getLastRevisedAt().toLocalDate().equals(todayDate))
                 .count();
-        long revisionDueTodayCount = solvedAttemptsCount - revisedTodayCount;
+                
+        long revisionDueTodayCount = attempts.stream()
+                .filter(a -> "SOLVED".equals(a.getStatus()) 
+                        && Boolean.TRUE.equals(a.getNeedRevision()) 
+                        && a.getNextRevisionDate() != null 
+                        && !a.getNextRevisionDate().toLocalDate().isAfter(todayDate)
+                        && (a.getLastRevisedAt() == null || a.getLastRevisedAt().toLocalDate().isBefore(a.getNextRevisionDate().toLocalDate())))
+                .count();
 
         long solvedCount = attempts.stream().filter(a -> a.getStatus().equals("SOLVED")).count();
         long attemptedCount = attempts.size();
@@ -71,6 +79,26 @@ public class DashboardController {
         // Load daily goal from settings
         Settings userSettings = settingsRepository.findByUserId(userId).orElse(null);
         int dailyGoal = (userSettings != null && userSettings.getDailyGoal() != null) ? userSettings.getDailyGoal() : 3;
+
+        // Calculate study minutes
+        long studyMinutes = 0;
+        Optional<DailyTask> todayTaskOpt = dailyTaskRepository.findByUserIdAndDate(userId, todayDate);
+        if (todayTaskOpt.isPresent()) {
+            DailyTask dt = todayTaskOpt.get();
+            String elapsedStr = dt.getElapsedDurations();
+            long totalSecs = 0;
+            if (elapsedStr != null && !elapsedStr.trim().isEmpty()) {
+                for (String part : elapsedStr.split(",")) {
+                    String[] pair = part.split(":");
+                    if (pair.length == 2) {
+                        try {
+                            totalSecs += Integer.parseInt(pair[1].trim());
+                        } catch (Exception e) {}
+                    }
+                }
+            }
+            studyMinutes = totalSecs / 60;
+        }
 
         // Count solved problems per day to see if they met daily goal for streak
         Map<LocalDate, Long> solvedCountByDate = attempts.stream()
@@ -207,6 +235,8 @@ public class DashboardController {
                 .recentlySolved(recentlySolved)
                 .continueLastSession(continueLastSession)
                 .revisionDueTodayCount((int) revisionDueTodayCount)
+                .todayRevisedCount((int) revisedTodayCount)
+                .studyMinutes((int) studyMinutes)
                 .weakestTopic(weakestTopic)
                 .strongestTopic(strongestTopic)
                 .problemsPerTopicSolved(problemsPerTopicSolved)

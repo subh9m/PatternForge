@@ -29,6 +29,14 @@ const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision'>('dashboard');
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
 
+  // Enforce Master Dashboard default landing page on logout/login
+  React.useEffect(() => {
+    if (!user) {
+      localStorage.setItem('activePortal', 'master_dashboard');
+      setActivePortal('master_dashboard');
+    }
+  }, [user]);
+
   // Focus mode session state
   const [focusSession, setFocusSession] = useState<{ 
     module: 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects'; 

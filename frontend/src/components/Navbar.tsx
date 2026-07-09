@@ -13,6 +13,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
   const { logout, user } = useAuth();
   const [streak, setStreak] = useState(0);
   const [solved, setSolved] = useState(0);
+  const [pendingRevisions, setPendingRevisions] = useState(0);
 
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
@@ -45,16 +46,19 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
 
     const fetchNavbarStats = async () => {
       try {
-        const stats = await api.get<{ currentStreak: number; problemsSolved: number }>('/dashboard/stats');
+        const stats = await api.get<{ currentStreak: number; problemsSolved: number; revisionDueTodayCount?: number }>('/dashboard/stats');
         setStreak(stats.currentStreak);
         setSolved(stats.problemsSolved);
+        if (stats.revisionDueTodayCount !== undefined) {
+          setPendingRevisions(stats.revisionDueTodayCount);
+        }
       } catch (e) {
         // Silently capture
       }
     };
 
     const handleRefresh = (e: Event) => {
-      const customEvent = e as CustomEvent<{ solvedDelta?: number; streakDelta?: number; newStreak?: number; newSolved?: number }>;
+      const customEvent = e as CustomEvent<{ solvedDelta?: number; streakDelta?: number; newStreak?: number; newSolved?: number; revisionDueDelta?: number }>;
       if (customEvent.detail) {
         if (typeof customEvent.detail.newSolved === 'number') {
           setSolved(customEvent.detail.newSolved);
@@ -66,6 +70,10 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
           setStreak(customEvent.detail.newStreak);
         } else if (typeof customEvent.detail.streakDelta === 'number') {
           setStreak(prev => Math.max(0, prev + customEvent.detail.streakDelta!));
+        }
+
+        if (typeof customEvent.detail.revisionDueDelta === 'number') {
+          setPendingRevisions(prev => Math.max(0, prev + customEvent.detail.revisionDueDelta!));
         }
       }
       if (fetchTimeout) clearTimeout(fetchTimeout);
@@ -119,13 +127,16 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
           </button>
           <button
             onClick={() => setActiveTab('revision')}
-            className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth ${
+            className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth flex items-center space-x-1.5 ${
               activeTab === 'revision'
                 ? 'border border-text-primary text-text-primary bg-surface/40'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
-            Revision
+            <span>Revision</span>
+            {pendingRevisions > 0 && (
+              <span className="inline-block text-[10px] animate-pulse text-red-500 font-extrabold" title={`${pendingRevisions} pending revisions`}>⚠️</span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('settings')}

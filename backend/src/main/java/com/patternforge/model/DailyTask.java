@@ -42,4 +42,15 @@ public class DailyTask {
     // Comma-separated list of remaining durations in seconds (e.g., "dsa:940,stl:1500")
     @Column(columnDefinition = "TEXT")
     private String remainingDurations;
+
+    // Comma-separated list of elapsed durations in seconds (e.g., "dsa:180,stl:0")
+    @Column(columnDefinition = "TEXT")
+    private String elapsedDurations;
+
+    // Comma-separated list of module statuses (e.g., "dsa:RUNNING,stl:NOT_STARTED")
+    @Column(columnDefinition = "TEXT")
+    private String statuses;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean archived = false;
 }
