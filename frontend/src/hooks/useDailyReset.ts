@@ -7,12 +7,16 @@ export function getResetTime(): string {
   return localStorage.getItem('patternforge_reset_time') || DEFAULT_RESET_TIME;
 }
 
+export function setResetTime(hour: number, minute: number): void {
+  const h = String(hour).padStart(2, '0');
+  const m = String(minute).padStart(2, '0');
+  localStorage.setItem('patternforge_reset_time', `${h}:${m}`);
+}
+
 export function seedResetTimeFromSettings(): void {
   api.get<{ dailyResetHour?: number; dailyResetMinute?: number }>('/settings')
     .then((data) => {
-      const h = String(data.dailyResetHour ?? 2).padStart(2, '0');
-      const m = String(data.dailyResetMinute ?? 0).padStart(2, '0');
-      localStorage.setItem('patternforge_reset_time', `${h}:${m}`);
+      setResetTime(data.dailyResetHour ?? 2, data.dailyResetMinute ?? 0);
     })
     .catch(() => {
       if (!localStorage.getItem('patternforge_reset_time')) {
@@ -21,57 +25,75 @@ export function seedResetTimeFromSettings(): void {
     });
 }
 
-/**
- * Schedules the daily reset at the user's configured time.
- * Triggers server-side reset, clears client caches, and dispatches a global event.
- */
-export function useDailyReset(onReset?: () => void) {
-  const onResetRef = useRef(onReset);
-  onResetRef.current = onReset;
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+/** Runs the server reset and broadcasts a global event so every view refreshes instantly. */
+export async function executeDailyReset(): Promise<void> {
+  try {
+    await api.post('/daily-reset/execute', {});
+  } catch (e) {
+    console.error('Daily reset API call failed', e);
+  }
+  localStorage.removeItem('patternforge_revisions');
+  window.dispatchEvent(new CustomEvent('daily-reset'));
+  window.dispatchEvent(new CustomEvent('refresh-stats'));
+}
 
+let schedulerTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearSchedulerTimer() {
+  if (schedulerTimer) {
+    clearTimeout(schedulerTimer);
+    schedulerTimer = null;
+  }
+}
+
+function scheduleNextReset() {
+  clearSchedulerTimer();
+  const now = new Date();
+  const resetTime = getResetTime();
+  const [resetHour, resetMinute] = resetTime.split(':').map(Number);
+  const nextReset = new Date();
+  nextReset.setHours(resetHour, resetMinute, 0, 0);
+  if (nextReset <= now) {
+    nextReset.setDate(nextReset.getDate() + 1);
+  }
+  const msUntilReset = nextReset.getTime() - now.getTime();
+
+  schedulerTimer = setTimeout(async () => {
+    await executeDailyReset();
+    scheduleNextReset();
+  }, msUntilReset);
+}
+
+/** Mount once at app root — single timer for the entire site. */
+export function useDailyResetScheduler(enabled: boolean) {
   useEffect(() => {
-    const clearTimer = () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
+    if (!enabled) {
+      clearSchedulerTimer();
+      return;
+    }
 
-    const scheduleReset = () => {
-      clearTimer();
-      const now = new Date();
-      const resetTime = getResetTime();
-      const [resetHour, resetMinute] = resetTime.split(':').map(Number);
-      const nextReset = new Date();
-      nextReset.setHours(resetHour, resetMinute, 0, 0);
-      if (nextReset <= now) {
-        nextReset.setDate(nextReset.getDate() + 1);
-      }
-      const msUntilReset = nextReset.getTime() - now.getTime();
+    scheduleNextReset();
 
-      timerRef.current = setTimeout(async () => {
-        try {
-          await api.post('/daily-reset/execute', {});
-        } catch (e) {
-          console.error('Daily reset API call failed', e);
-        }
-        localStorage.removeItem('patternforge_revisions');
-        window.dispatchEvent(new CustomEvent('daily-reset'));
-        window.dispatchEvent(new CustomEvent('refresh-stats'));
-        onResetRef.current?.();
-        scheduleReset();
-      }, msUntilReset);
-    };
-
-    scheduleReset();
-
-    const handleSettingsSaved = () => scheduleReset();
-    window.addEventListener('settings-saved', handleSettingsSaved);
+    const reschedule = () => scheduleNextReset();
+    window.addEventListener('settings-saved', reschedule);
+    window.addEventListener('reset-time-changed', reschedule);
 
     return () => {
-      clearTimer();
-      window.removeEventListener('settings-saved', handleSettingsSaved);
+      clearSchedulerTimer();
+      window.removeEventListener('settings-saved', reschedule);
+      window.removeEventListener('reset-time-changed', reschedule);
     };
+  }, [enabled]);
+}
+
+/** Subscribe any component to the global daily-reset event. */
+export function useOnDailyReset(onReset: () => void) {
+  const callbackRef = useRef(onReset);
+  callbackRef.current = onReset;
+
+  useEffect(() => {
+    const handler = () => callbackRef.current();
+    window.addEventListener('daily-reset', handler);
+    return () => window.removeEventListener('daily-reset', handler);
   }, []);
 }

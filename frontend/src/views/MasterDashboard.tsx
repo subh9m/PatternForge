@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { useDailyReset } from '../hooks/useDailyReset';
+import { useOnDailyReset } from '../hooks/useDailyReset';
 import HeatmapDayDetailModal from '../components/HeatmapDayDetailModal';
 import { 
   Flame, BookOpen, Code2, Database, Cpu, 
@@ -191,7 +191,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     loadDashboardData(stats === null);
   }, [selectedYear]);
 
-  useDailyReset(() => loadDashboardData(true));
+  useOnDailyReset(() => loadDashboardData(true));
 
   // BUTTON 1: Add Task only (does not launch timer)
   const handleAddTaskOnly = async () => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { useDailyReset } from '../hooks/useDailyReset';
+import { useOnDailyReset } from '../hooks/useDailyReset';
 import HeatmapDayDetailModal from '../components/HeatmapDayDetailModal';
 import type { ProblemDto } from './Explorer';
 import { 
@@ -85,7 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
     loadStats();
   }, [selectedYear]);
 
-  useDailyReset(() => {
+  useOnDailyReset(() => {
     api.get<DashboardStats>(`/dashboard/stats?year=${selectedYear}`)
       .then(setStats)
       .catch(() => {});

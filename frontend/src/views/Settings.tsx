@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import { setResetTime } from '../hooks/useDailyReset';
 import { Settings, Save, Monitor, Terminal } from 'lucide-react';
 
 interface SettingsDto {
@@ -38,9 +39,7 @@ const SettingsView: React.FC = () => {
         const data = await api.get<SettingsDto>('/settings');
         setSettings(data);
         // Seed localStorage with "HH:mm" so timer components always have the latest reset time
-        const h = String(data.dailyResetHour ?? 2).padStart(2, '0');
-        const m = String(data.dailyResetMinute ?? 0).padStart(2, '0');
-        localStorage.setItem('patternforge_reset_time', `${h}:${m}`);
+        setResetTime(data.dailyResetHour ?? 2, data.dailyResetMinute ?? 0);
       } catch (e) {
         console.error("Failed to load settings", e);
       } finally {
@@ -141,9 +140,7 @@ const SettingsView: React.FC = () => {
     try {
       await api.put('/settings', settings);
       // Cache the full "HH:mm" reset time in localStorage so timer components can read it instantly
-      const h = String(settings.dailyResetHour ?? 2).padStart(2, '0');
-      const m = String(settings.dailyResetMinute ?? 0).padStart(2, '0');
-      localStorage.setItem('patternforge_reset_time', `${h}:${m}`);
+      setResetTime(settings.dailyResetHour ?? 2, settings.dailyResetMinute ?? 0);
       window.dispatchEvent(new CustomEvent('settings-saved'));
       setSuccessMsg('Settings saved successfully!');
       setTimeout(() => setSuccessMsg(''), 3000);
@@ -313,30 +310,17 @@ const SettingsView: React.FC = () => {
                 <span className="text-xs font-bold text-slate-200 block">Daily Progress Reset Time</span>
                 <span className="text-[10px] text-slate-500">Time each night when the revision tab and daily tasks reset for the new day.</span>
               </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={settings.dailyResetHour ?? 2}
-                  onChange={(e) => setSettings({ ...settings, dailyResetHour: Number(e.target.value), dailyResetMinute: 0 })}
-                  className="glass-input rounded-lg px-3 py-1.5 text-xs font-semibold w-28 bg-slate-900 border border-slate-800"
-                >
-                  {Array.from({ length: 24 }, (_, h) => {
-                    const display = h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
-                    return (
-                      <option key={h} value={h} className="bg-slate-900">{display}</option>
-                    );
-                  })}
-                </select>
-                <input
-                  type="time"
-                  value={`${String(settings.dailyResetHour ?? 2).padStart(2, '0')}:${String(settings.dailyResetMinute ?? 0).padStart(2, '0')}`}
-                  onChange={(e) => {
-                    const [h, m] = (e.target.value || '02:00').split(':').map(Number);
-                    setSettings({ ...settings, dailyResetHour: h, dailyResetMinute: m });
-                  }}
-                  className="glass-input rounded-lg px-3 py-1.5 text-xs font-semibold w-28 bg-slate-900 border border-slate-800 text-slate-200 [color-scheme:dark] cursor-pointer"
-                  title="Enter exact time with minutes"
-                />
-              </div>
+              <input
+                type="time"
+                value={`${String(settings.dailyResetHour ?? 2).padStart(2, '0')}:${String(settings.dailyResetMinute ?? 0).padStart(2, '0')}`}
+                onChange={(e) => {
+                  const [h, m] = (e.target.value || '02:00').split(':').map(Number);
+                  setSettings({ ...settings, dailyResetHour: h, dailyResetMinute: m });
+                  setResetTime(h, m);
+                  window.dispatchEvent(new CustomEvent('reset-time-changed'));
+                }}
+                className="glass-input rounded-lg px-3 py-1.5 text-xs font-semibold w-32 bg-slate-900 border border-slate-800 text-slate-200 [color-scheme:dark] cursor-pointer"
+              />
             </div>
           </div>
         </div>

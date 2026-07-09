@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { useDailyReset } from '../hooks/useDailyReset';
+import { useOnDailyReset } from '../hooks/useDailyReset';
 
 import { 
   CheckCircle2, Circle, Play, Search, Award, 
@@ -378,7 +378,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     fetchQueue();
   }, []);
 
-  useDailyReset(() => fetchQueue());
+  useOnDailyReset(() => fetchQueue());
 
   // Poll for generating items
   useEffect(() => {

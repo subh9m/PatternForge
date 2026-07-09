@@ -21,7 +21,7 @@ import ProjectsGuide from './views/projects/ProjectsGuide';
 import RevisionView from './views/RevisionView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from './services/api';
-import { seedResetTimeFromSettings } from './hooks/useDailyReset';
+import { seedResetTimeFromSettings, useDailyResetScheduler } from './hooks/useDailyReset';
 import AiGenerationFullscreenLoader from './components/AiGenerationFullscreenLoader';
 
 const MainApp: React.FC = () => {
@@ -80,6 +80,9 @@ const MainApp: React.FC = () => {
     }
     prevUserRef.current = user;
   }, [user, loading]);
+
+  // Single global daily-reset scheduler — fires instant UI refresh site-wide
+  useDailyResetScheduler(!!user && !loading);
 
   // Focus mode session state
   const [focusSession, setFocusSession] = useState<{ 

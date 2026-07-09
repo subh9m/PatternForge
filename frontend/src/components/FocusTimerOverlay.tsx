@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
+import { useOnDailyReset } from '../hooks/useDailyReset';
 import { Pause, Award, RefreshCw, AlertTriangle } from 'lucide-react';
 
 interface FocusTimerOverlayProps {
@@ -59,6 +60,9 @@ const FocusTimerOverlay: React.FC<FocusTimerOverlayProps> = ({ module, initialDu
       document.removeEventListener('fullscreenchange', checkFullscreen);
     };
   }, []);
+
+  // Exit focus mode instantly when the daily reset fires
+  useOnDailyReset(() => onExit());
 
   // Timer Tick implementation - counts elapsed time UPWARD
   useEffect(() => {
