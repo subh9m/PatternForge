@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import MonacoEditor from '@monaco-editor/react';
+
 import { 
   CheckCircle2, Circle, Play, Search, Award, 
   BookOpen, Code2, X, Info, CheckCircle, Brain,
@@ -116,6 +116,18 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
       setActiveApproach('optimal');
       setCodeView('reference');
     }
+  }, [selectedItem]);
+
+  // Lock body scroll when revision modal is open
+  useEffect(() => {
+    if (selectedItem) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [selectedItem]);
 
   const fetchQueue = async () => {
@@ -728,24 +740,13 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                       </span>
                     </div>
 
-                    <div className="flex-1 w-full relative">
+                    <div className="flex-1 w-full relative flex flex-col min-h-0 bg-[#0d0d12]">
                       {displayedCode ? (
-                        <MonacoEditor
-                          height="100%"
-                          language={selectedItem.language === 'cpp' ? 'cpp' : (selectedItem.language === 'java' ? 'java' : 'python')}
-                          theme="vs-dark"
-                          value={displayedCode.trim()}
-                          options={{
-                            readOnly: true,
-                            minimap: { enabled: false },
-                            scrollBeyondLastLine: false,
-                            automaticLayout: true,
-                            fontSize: 12.5,
-                            fontFamily: "'Fira Code', 'Courier New', monospace"
-                          }}
-                        />
+                        <pre className="flex-1 w-full p-4 overflow-auto text-xs text-emerald-450 dark:text-emerald-400 font-mono bg-black select-text whitespace-pre leading-relaxed custom-scrollbar">
+                          <code>{displayedCode.trim()}</code>
+                        </pre>
                       ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-xs font-sans p-6 text-center select-none">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-xs font-sans p-6 text-center select-none bg-[#0d0d12]">
                           <Code2 className="h-8 w-8 mb-2 animate-pulse" />
                           <span>No code snippet is configured for this approach category level.</span>
                         </div>
