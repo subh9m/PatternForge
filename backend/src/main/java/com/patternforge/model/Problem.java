@@ -53,6 +53,13 @@ public class Problem {
     @Column(columnDefinition = "TEXT")
     private String simplifiedApproach;
 
+    public boolean isAiReady() {
+        return (basicDetailsJson != null && !basicDetailsJson.trim().isEmpty() && !com.patternforge.service.LocalFallbackGenerator.isBoilerplateBasicDetails(basicDetailsJson))
+            && (solutionDetailsJson != null && !solutionDetailsJson.trim().isEmpty() && !com.patternforge.service.LocalFallbackGenerator.isBoilerplateSolutionDetails(solutionDetailsJson))
+            && (simplifiedStatement != null && !simplifiedStatement.trim().isEmpty() && !com.patternforge.service.LocalFallbackGenerator.isBoilerplateSimplifiedStatement(simplifiedStatement))
+            && (simplifiedApproach != null && !simplifiedApproach.trim().isEmpty() && !com.patternforge.service.LocalFallbackGenerator.isBoilerplateSimplifiedApproach(simplifiedApproach));
+    }
+
     public String getEffectiveProblemStatement() {
         if (basicDetailsJson != null && !basicDetailsJson.trim().isEmpty()) {
             try {

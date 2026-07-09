@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { 
   Search, CheckCircle2, Bookmark, BookmarkCheck,
-  AlertCircle, ArrowUpDown, XCircle, Grid
+  AlertCircle, ArrowUpDown, XCircle, Grid, Sparkles
 } from 'lucide-react';
 
 export interface ProblemDto {
@@ -18,6 +18,7 @@ export interface ProblemDto {
   needRevision: boolean;
   confidenceRating: number;
   approachSaved: boolean;
+  isAiReady: boolean;
 }
 
 interface TopicStats {
@@ -38,6 +39,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
   const [problems, setProblems] = useState<ProblemDto[]>([]);
   const [topics, setTopics] = useState<TopicStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generatingIds, setGeneratingIds] = useState<Record<string, boolean>>({});
 
   // Filter States
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,6 +80,27 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
       }));
     } catch (err) {
       // Ignored
+    }
+  };
+
+  const handleAiClick = async (id: string, e: React.MouseEvent, isAlreadyReady: boolean) => {
+    e.stopPropagation();
+    if (isAlreadyReady || generatingIds[id]) {
+      return;
+    }
+    setGeneratingIds(prev => ({ ...prev, [id]: true }));
+    try {
+      await api.post(`/problems/${id}/regenerate`, {});
+      setProblems(prev => prev.map(p => {
+        if (p.id === id) {
+          return { ...p, isAiReady: true };
+        }
+        return p;
+      }));
+    } catch (err) {
+      console.error("AI details generation failed", err);
+    } finally {
+      setGeneratingIds(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -284,13 +307,14 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                   <th className="py-4 px-4 w-28">Topic</th>
                   <th className="py-4 px-4 w-20">Difficulty</th>
                   <th className="py-4 px-4 w-16 text-center">Status</th>
+                  <th className="py-4 px-2 w-12 text-center"></th>
                   <th className="py-4 px-5 w-12 text-center"></th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProblems.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-500 font-medium">
+                    <td colSpan={8} className="py-12 text-center text-slate-500 font-medium">
                       No problems match the current filter selection.
                     </td>
                   </tr>
@@ -342,6 +366,33 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                           )}
                           {p.status === 'UNSOLVED' && (
                             <div className="h-2.5 w-2.5 rounded-full border border-slate-700 bg-transparent"></div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-2 text-center">
+                        <div className="flex justify-center">
+                          {generatingIds[p.id] ? (
+                            <span 
+                              title="Generating AI details..."
+                              className="inline-flex items-center justify-center p-1 text-blue-400 cursor-default"
+                            >
+                              <Sparkles className="h-[16px] w-[16px] animate-spin" />
+                            </span>
+                          ) : p.isAiReady ? (
+                            <span 
+                              title="AI details already generated. Loaded instantly from MongoDB."
+                              className="inline-flex items-center justify-center p-1 text-emerald-400 hover:drop-shadow-[0_0_8px_rgba(16,185,129,0.3)] cursor-default transition-all duration-300"
+                            >
+                              <Sparkles className="h-[16px] w-[16px]" />
+                            </span>
+                          ) : (
+                            <span 
+                              onClick={(e) => handleAiClick(p.id, e, false)}
+                              title="AI details not generated. Open the problem or click this icon to generate and permanently cache the AI data."
+                              className="inline-flex items-center justify-center p-1 text-slate-500 hover:text-slate-300 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] cursor-pointer transition-all duration-300"
+                            >
+                              <Sparkles className="h-[16px] w-[16px]" />
+                            </span>
                           )}
                         </div>
                       </td>

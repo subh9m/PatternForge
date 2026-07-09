@@ -230,6 +230,7 @@ public class DashboardController {
                 .needRevision(a != null && Boolean.TRUE.equals(a.getNeedRevision()))
                 .confidenceRating(a != null && a.getConfidenceRating() != null ? a.getConfidenceRating() : 0)
                 .approachSaved(a != null && Boolean.TRUE.equals(a.getApproachSaved()))
+                .isAiReady(p.isAiReady())
                 .build();
     }
 

@@ -22,4 +22,5 @@ public class ProblemDto {
     private Boolean needRevision;
     private Integer confidenceRating;
     private Boolean approachSaved;
+    private Boolean isAiReady;
 }

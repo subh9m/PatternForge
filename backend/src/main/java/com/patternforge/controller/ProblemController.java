@@ -103,6 +103,7 @@ public class ProblemController {
                             .needRevision(a != null && Boolean.TRUE.equals(a.getNeedRevision()))
                             .confidenceRating(a != null && a.getConfidenceRating() != null ? a.getConfidenceRating() : 0)
                             .approachSaved(a != null && Boolean.TRUE.equals(a.getApproachSaved()))
+                            .isAiReady(p.isAiReady())
                             .build();
                 })
                 .filter(p -> difficulty == null || p.getDifficulty().equalsIgnoreCase(difficulty))
@@ -410,6 +411,7 @@ public class ProblemController {
                 .needRevision(a != null && Boolean.TRUE.equals(a.getNeedRevision()))
                 .confidenceRating(a != null ? a.getConfidenceRating() : 0)
                 .approachSaved(a != null && Boolean.TRUE.equals(a.getApproachSaved()))
+                .isAiReady(chosen.isAiReady())
                 .build());
     }
 

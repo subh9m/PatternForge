@@ -3,7 +3,7 @@ import MonacoEditor from '@monaco-editor/react';
 import { api } from '../services/api';
 import { 
   ArrowLeft, Bookmark, BookmarkCheck, 
-  Play, Send, Clock, Lock,
+  Play, Clock, Lock,
   Code, FileText, Brain, HelpCircle, 
   CheckCircle, ChevronDown, ChevronUp, Save,
   Award
