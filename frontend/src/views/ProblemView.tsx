@@ -8,6 +8,7 @@ import {
   CheckCircle, ChevronDown, ChevronUp, Save,
   Award
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProblemDetails {
   id: string;
@@ -139,11 +140,142 @@ const CODE_TEMPLATES: Record<string, string> = {
   cpp: `// Write your approach logic before coding!\n#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    // Write your solution here\n    return 0;\n}`
 };
 
+const TIMELINE_ITEMS = [
+  "Problem Summary",
+  "Input & Output",
+  "Examples",
+  "Constraints",
+  "Hints",
+  "Pattern Recognition",
+  "Brute Force",
+  "Better Solution",
+  "Optimal Solution",
+  "Complexity Analysis",
+  "Reference Code",
+  "Revision Notes"
+];
+
+const AiGenerationLoadingScreen: React.FC<{
+  onRetry?: () => void;
+  failed?: boolean;
+}> = ({ onRetry, failed }) => {
+  const [activeStep, setActiveStep] = useState(0);
+  const [currentMessage, setCurrentMessage] = useState("Analyzing algorithmic patterns...");
+
+  const messages = [
+    "Analyzing algorithmic patterns...",
+    "Finding optimal approach...",
+    "Generating interviewer-quality explanation...",
+    "Preparing revision notes...",
+    "Checking important edge cases...",
+    "Optimizing complexity analysis..."
+  ];
+
+  // Rotate steps
+  useEffect(() => {
+    if (failed) return;
+    const stepInterval = setInterval(() => {
+      setActiveStep(prev => (prev < TIMELINE_ITEMS.length - 1 ? prev + 1 : prev));
+    }, 2500);
+
+    return () => clearInterval(stepInterval);
+  }, [failed]);
+
+  // Rotate messages
+  useEffect(() => {
+    if (failed) return;
+    const msgInterval = setInterval(() => {
+      setCurrentMessage(prev => {
+        const filtered = messages.filter(m => m !== prev);
+        return filtered[Math.floor(Math.random() * filtered.length)];
+      });
+    }, 4000);
+
+    return () => clearInterval(msgInterval);
+  }, [failed]);
+
+  if (failed) {
+    return (
+      <div className="flex h-[70vh] flex-col items-center justify-center text-center p-6 bg-slate-900/40 rounded-2xl border border-slate-800 shadow-2xl w-full">
+        <div className="text-5xl mb-4">🤖</div>
+        <h2 className="text-base font-black text-red-400 uppercase tracking-wider mb-2 font-mono">Generation Failed</h2>
+        <p className="text-slate-400 text-xs max-w-sm mb-6 font-medium leading-relaxed">
+          We encountered an issue communicating with Gemini API or all loaded keys are temporarily throttled.
+        </p>
+        <button
+          onClick={onRetry}
+          className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-red-500 hover:bg-red-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.35)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center py-12 px-6 bg-slate-900/45 rounded-2xl border border-slate-900 shadow-2xl w-full min-h-[70vh]">
+      <div className="text-5xl mb-5 animate-bounce">🤖</div>
+      
+      <h2 className="text-base font-black text-slate-100 uppercase tracking-widest font-mono">
+        Generating AI Learning Guide
+      </h2>
+      <p className="text-slate-400 text-[11px] font-bold text-center mt-2 max-w-md leading-relaxed">
+        This only happens once. The generated content will be permanently stored and will load instantly next time.
+      </p>
+
+      {/* Animated progress timeline */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-3.5 my-10 max-w-lg w-full px-4 py-6 rounded-2xl bg-slate-950/50 border border-slate-900 font-mono text-[11px] font-bold">
+        {TIMELINE_ITEMS.map((item, idx) => {
+          let symbol = "○";
+          let colorClass = "text-slate-600";
+          let isCurrent = idx === activeStep;
+
+          if (idx < activeStep) {
+            symbol = "✓";
+            colorClass = "text-emerald-400";
+          } else if (isCurrent) {
+            symbol = "⟳";
+            colorClass = "text-blue-400";
+          }
+
+          return (
+            <div key={item} className={`flex items-center space-x-2 transition-all duration-300 ${colorClass}`}>
+              <span className={`text-[12px] ${isCurrent ? 'animate-spin inline-block' : ''}`}>{symbol}</span>
+              <span className={isCurrent ? 'text-blue-200 font-black' : ''}>{item}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Rotating Friendly Messages */}
+      <div className="h-6 flex items-center justify-center">
+        <p className="text-blue-400 text-xs font-bold font-mono tracking-wide animate-pulse">
+          {currentMessage}
+        </p>
+      </div>
+
+      {/* Estimated Time */}
+      <div className="mt-8 text-center bg-slate-900/40 border border-slate-800/80 px-4 py-2 rounded-xl">
+        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block font-mono">Estimated:</span>
+        <span className="text-slate-300 text-xs font-black font-mono">25–40 seconds</span>
+      </div>
+    </div>
+  );
+};
+
 const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [problem, setProblem] = useState<ProblemDetails | null>(null);
   const [details, setDetails] = useState<ProblemDetailsJson | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(true);
   const [loadingSolutions, setLoadingSolutions] = useState(true);
+  const [generationFailed, setGenerationFailed] = useState(false);
+
+  const handleRetry = () => {
+    setGenerationFailed(false);
+    setLoadingDetails(true);
+    setLoadingSolutions(true);
+    loadData();
+  };
   
   const [notes, setNotes] = useState<NoteData>({
     observations: '', bruteForce: '', possiblePatterns: '', chosenPattern: '',
@@ -249,77 +381,79 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const notesRef = useRef(notes);
   notesRef.current = notes;
 
-  useEffect(() => {
-    const loadData = async () => {
+  const loadData = async () => {
+    setGenerationFailed(false);
+    setLoadingDetails(true);
+    setLoadingSolutions(true);
+    try {
+      const [probData, notesData] = await Promise.all([
+        api.get<ProblemDetails>(`/problems/${problemId}`),
+        api.get<NoteData>(`/problems/${problemId}/notes`)
+      ]);
+      setProblem(probData);
+      setRevisionLevel(probData.revisionLevel);
+      setNotes(notesData);
+      
+      // If they already validated thinking previously, set state to loaded
+      if (notesData.thinkingChecked) {
+        setThinkingStarted(true);
+        setActiveTab('coding');
+      }
+
+      // Check browser cache for details first
+      const cacheKey = `pf_details_${problemId}`;
+      const cachedDetails = localStorage.getItem(cacheKey);
+      if (cachedDetails) {
+        try {
+          const parsed = JSON.parse(cachedDetails);
+          setDetails(parsed);
+          setLoadingDetails(false);
+          setLoadingSolutions(false);
+          return;
+        } catch (e) {
+          // ignore cache error
+        }
+      }
+
+      // 1. Fetch basic details (fast description render)
       try {
-        const [probData, notesData] = await Promise.all([
-          api.get<ProblemDetails>(`/problems/${problemId}`),
-          api.get<NoteData>(`/problems/${problemId}/notes`)
-        ]);
-        setProblem(probData);
-        setRevisionLevel(probData.revisionLevel);
-        setNotes(notesData);
-        
-        // If they already validated thinking previously, set state to loaded
-        if (notesData.thinkingChecked) {
-          setThinkingStarted(true);
-          setActiveTab('coding');
-        }
-
-        // Check browser cache for details first
-        const cacheKey = `pf_details_${problemId}`;
-        const cachedDetails = localStorage.getItem(cacheKey);
-        if (cachedDetails) {
-          try {
-            const parsed = JSON.parse(cachedDetails);
-            setDetails(parsed);
-            setLoadingDetails(false);
-            setLoadingSolutions(false);
-          } catch (e) {
-            setLoadingDetails(true);
-            setLoadingSolutions(true);
-          }
-        } else {
-          setLoadingDetails(true);
-          setLoadingSolutions(true);
-        }
-
-        // 1. Fetch basic details (fast description render)
-        api.get<ProblemDetailsJson>(`/problems/${problemId}/basic-details`)
-          .then(data => {
-            setDetails(prev => {
-              const merged = prev ? { ...prev, ...data } : data;
-              localStorage.setItem(cacheKey, JSON.stringify(merged));
-              return merged;
-            });
-            setLoadingDetails(false);
-          })
-          .catch(err => {
-            console.error("Failed to load basic details", err);
-            setLoadingDetails(false);
-          });
-
-        // 2. Fetch solution details in background (complexities, approach)
-        api.get<ProblemDetailsJson>(`/problems/${problemId}/solution-details`)
-          .then(data => {
-            setDetails(prev => {
-              const merged = prev ? { ...prev, ...data } : data;
-              localStorage.setItem(cacheKey, JSON.stringify(merged));
-              return merged;
-            });
-            setLoadingSolutions(false);
-          })
-          .catch(err => {
-            console.error("Failed to load solution details", err);
-            setLoadingSolutions(false);
-          });
-
-      } catch (e) {
-        console.error("Failed to load problem workspace data", e);
+        const basicData = await api.get<ProblemDetailsJson>(`/problems/${problemId}/basic-details`);
+        setDetails(prev => {
+          const merged = prev ? { ...prev, ...basicData } : basicData;
+          localStorage.setItem(cacheKey, JSON.stringify(merged));
+          return merged;
+        });
         setLoadingDetails(false);
+      } catch (err) {
+        console.error("Failed to load basic details", err);
+        setGenerationFailed(true);
+        setLoadingDetails(false);
+        return;
+      }
+
+      // 2. Fetch solution details in background (complexities, approach)
+      try {
+        const solData = await api.get<ProblemDetailsJson>(`/problems/${problemId}/solution-details`);
+        setDetails(prev => {
+          const merged = prev ? { ...prev, ...solData } : solData;
+          localStorage.setItem(cacheKey, JSON.stringify(merged));
+          return merged;
+        });
+        setLoadingSolutions(false);
+      } catch (err) {
+        console.error("Failed to load solution details", err);
         setLoadingSolutions(false);
       }
-    };
+
+    } catch (e) {
+      console.error("Failed to load problem workspace data", e);
+      setGenerationFailed(true);
+      setLoadingDetails(false);
+      setLoadingSolutions(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
 
     // Autosave notes interval every 15s
@@ -741,11 +875,32 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       </div>
 
       {/* Main Double Column Workspace Layout */}
-      <div 
-        id="main-split-container"
-        className={`flex flex-col lg:flex-row gap-4 min-h-[calc(100vh-10rem)] items-stretch ${isResizing ? 'select-none' : ''}`}
-        style={isResizing ? { cursor: 'col-resize' } : undefined}
-      >
+      <AnimatePresence mode="wait">
+        {loadingDetails || generationFailed ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+            className="w-full font-sans"
+          >
+            <AiGenerationLoadingScreen 
+              failed={generationFailed} 
+              onRetry={handleRetry} 
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="workspace"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+            id="main-split-container"
+            className={`flex flex-col lg:flex-row gap-4 min-h-[calc(100vh-10rem)] items-stretch w-full ${isResizing ? 'select-none' : ''}`}
+            style={isResizing ? { cursor: 'col-resize' } : undefined}
+          >
         
         {/* LEFT PANEL: Scrollable Problem Details and Locked Accordion Hints */}
         <div 
@@ -831,12 +986,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
             </div>
           </div>
 
-          {loadingDetails ? (
-            <div className="flex flex-col items-center justify-center py-10 space-y-3">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-              <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Generating Problem Workspace Details...</p>
-            </div>
-          ) : details ? (
+          {details ? (
             <div className="space-y-6">
                         {/* Problem Description Content */}
               <div className="space-y-4 text-slate-200">
@@ -1881,7 +2031,9 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
         </div>
 
-      </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
 
     </div>
   );
