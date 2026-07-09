@@ -279,6 +279,12 @@ const isBoilerplateDetails = (data: any) => {
   const lower = statement.toLowerCase();
   const approach = data.approach || "";
   const lowerApproach = approach.toLowerCase();
+
+  // If examples array is empty or missing, it is a boilerplate stub/fallback
+  if (!data.examples || !Array.isArray(data.examples) || data.examples.length === 0) {
+    return true;
+  }
+
   return lower.includes("problem details not loaded") ||
          lower.includes("please refer to leetcode") ||
          lower.includes("standard parameters as defined in") ||

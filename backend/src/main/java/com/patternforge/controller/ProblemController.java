@@ -457,10 +457,10 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
-        entityManager.detach(p); // Evict from Hibernate L1 cache to retrieve fresh AI generated values
         
         // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
         problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
+        entityManager.clear(); // Clear L1 cache completely to ensure next query hits the DB
         Problem fresh = problemRepository.findById(p.getId()).orElse(p);
 
         return ResponseEntity.ok()
@@ -477,10 +477,10 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
-        entityManager.detach(p); // Evict from Hibernate L1 cache to retrieve fresh AI generated values
         
         // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
         problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
+        entityManager.clear(); // Clear L1 cache completely to ensure next query hits the DB
         Problem fresh = problemRepository.findById(p.getId()).orElse(p);
 
         return ResponseEntity.ok()
@@ -501,7 +501,6 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
-        entityManager.detach(p); // Evict from Hibernate L1 cache to retrieve fresh AI generated values
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return ResponseEntity.status(401).body("User not found");
@@ -521,6 +520,7 @@ public class ProblemController {
 
         // Synchronously ensure all missing/boilerplate fields are fetched/populated
         problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
+        entityManager.clear(); // Clear L1 cache completely to ensure next query hits the DB
         Problem fresh = problemRepository.findById(p.getId()).orElse(p);
 
         // Try extracting from solutionDetailsJson first

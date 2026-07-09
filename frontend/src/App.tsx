@@ -26,18 +26,37 @@ const MainApp: React.FC = () => {
     const saved = localStorage.getItem('activePortal');
     return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml' || saved === 'cn' || saved === 'spring' || saved === 'react' || saved === 'projects' || saved === 'selection' || saved === 'master_dashboard') ? saved : 'master_dashboard';
   });
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision'>('dashboard');
-  const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision'>(() => {
+    const saved = localStorage.getItem('activeTab');
+    return (saved === 'dashboard' || saved === 'explorer' || saved === 'problem' || saved === 'settings' || saved === 'revision') ? saved : 'dashboard';
+  });
+  const [activeProblemId, setActiveProblemId] = useState<string | null>(() => {
+    return localStorage.getItem('activeProblemId');
+  });
 
   const prevUserRef = React.useRef<any>(null);
+
+  // Sync tab & problemId to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
+
+  React.useEffect(() => {
+    if (activeProblemId) {
+      localStorage.setItem('activeProblemId', activeProblemId);
+    } else {
+      localStorage.removeItem('activeProblemId');
+    }
+  }, [activeProblemId]);
 
   // Enforce Master Dashboard default landing page on logout/login
   React.useEffect(() => {
     if (!user) {
       localStorage.setItem('activePortal', 'master_dashboard');
       setActivePortal('master_dashboard');
-    } else if (user && !prevUserRef.current) {
-      // User just logged in or session restored on mount
+    } else if (user && sessionStorage.getItem('pf_login_redirect') === 'true') {
+      // User just logged in (fresh login)
+      sessionStorage.removeItem('pf_login_redirect');
       localStorage.setItem('activePortal', 'master_dashboard');
       setActivePortal('master_dashboard');
     }

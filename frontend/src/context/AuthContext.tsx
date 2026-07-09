@@ -48,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
     });
     localStorage.setItem('token', data.token);
+    sessionStorage.setItem('pf_login_redirect', 'true');
     setUser({ username: data.username, userId: data.userId, email: data.email });
   };
 
@@ -58,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
     });
     localStorage.setItem('token', data.token);
+    sessionStorage.setItem('pf_login_redirect', 'true');
     setUser({ username: data.username, userId: data.userId, email: data.email });
   };
 
