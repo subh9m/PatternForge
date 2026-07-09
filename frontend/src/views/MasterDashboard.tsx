@@ -130,8 +130,10 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
   };
 
-  const loadDashboardData = async () => {
-    setLoading(true);
+  const loadDashboardData = async (showSpinner = false) => {
+    if (showSpinner) {
+      setLoading(true);
+    }
     setHeatmapError(null);
 
     // 1. Fetch dashboard stats
@@ -141,17 +143,19 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     } catch (err: any) {
       console.error("Failed to load dashboard stats", err);
       setHeatmapError(err.message || String(err));
-      setStats({
-        currentStreak: 0,
-        problemsSolved: 0,
-        problemsAttempted: 0,
-        todayGoalSolved: 0,
-        todayGoalTarget: 3,
-        revisionDueTodayCount: 0,
-        todayRevisedCount: 0,
-        studyMinutes: 0,
-        monthlyHeatmap: []
-      });
+      if (!stats) {
+        setStats({
+          currentStreak: 0,
+          problemsSolved: 0,
+          problemsAttempted: 0,
+          todayGoalSolved: 0,
+          todayGoalTarget: 3,
+          revisionDueTodayCount: 0,
+          todayRevisedCount: 0,
+          studyMinutes: 0,
+          monthlyHeatmap: []
+        });
+      }
     }
 
     // 2. Fetch daily tasks selection
@@ -160,20 +164,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
       setDailyTask(dailyData);
     } catch (err: any) {
       console.error("Failed to load daily tasks today data", err);
-      setDailyTask({
-        selectedModules: '',
-        completedModules: '',
-        targetDurations: '',
-        elapsedDurations: '',
-        statuses: ''
-      });
     }
 
     setLoading(false);
   };
 
   useEffect(() => {
-    loadDashboardData();
+    loadDashboardData(stats === null);
   }, [selectedYear]);
 
   // BUTTON 1: Add Task only (does not launch timer)
@@ -200,23 +197,41 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     durationMap.set(creatorModule, creatorDuration);
     const targetDurationsStr = nextSelected.map(id => `${id}:${durationMap.get(id) || 25}`).join(',');
 
-    try {
-      const updated = await api.post<DailyTaskData>(`/daily-tasks/today/select`, {
-        selectedModules: selectedStr,
-        targetDurations: targetDurationsStr
-      });
-      setDailyTask(updated);
-      
-      // Reset creator state
-      setShowCreator(false);
-      setCreatorModule('');
-      setCreatorDuration(25);
-      
-      // Reload stats
-      loadDashboardData();
-    } catch (err) {
-      console.error("Failed to add task", err);
+    // Optimistically update the list in the UI immediately
+    const originalDailyTask = { ...dailyTask };
+    const statusList = dailyTask.statuses ? dailyTask.statuses.split(',') : [];
+    if (!statusList.some(s => s.startsWith(`${creatorModule}:`))) {
+      statusList.push(`${creatorModule}:NOT_STARTED`);
     }
+    const elapsedList = dailyTask.elapsedDurations ? dailyTask.elapsedDurations.split(',') : [];
+    if (!elapsedList.some(e => e.startsWith(`${creatorModule}:`))) {
+      elapsedList.push(`${creatorModule}:0`);
+    }
+
+    setDailyTask(prev => ({
+      ...prev,
+      selectedModules: selectedStr,
+      targetDurations: targetDurationsStr,
+      statuses: statusList.join(','),
+      elapsedDurations: elapsedList.join(',')
+    }));
+
+    // Instantly close creator view
+    setShowCreator(false);
+    setCreatorModule('');
+    setCreatorDuration(25);
+
+    // Save in the background
+    api.post<DailyTaskData>(`/daily-tasks/today/select`, {
+      selectedModules: selectedStr,
+      targetDurations: targetDurationsStr
+    }).then(updated => {
+      setDailyTask(updated);
+      loadDashboardData(false);
+    }).catch(err => {
+      console.error("Failed to add task", err);
+      setDailyTask(originalDailyTask);
+    });
   };
 
   // BUTTON 2: Start Focus Mode (creates task if necessary and immediately starts timer)
@@ -238,26 +253,43 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     durationMap.set(creatorModule, creatorDuration);
     const targetDurationsStr = nextSelected.map(id => `${id}:${durationMap.get(id) || 25}`).join(',');
 
-    try {
-      const updated = await api.post<DailyTaskData>(`/daily-tasks/today/select`, {
-        selectedModules: selectedStr,
-        targetDurations: targetDurationsStr
-      });
-      setDailyTask(updated);
-      
-      const moduleToLaunch = creatorModule;
-      const durationToLaunch = creatorDuration;
+    const moduleToLaunch = creatorModule;
+    const durationToLaunch = creatorDuration;
 
-      // Reset creator state
-      setShowCreator(false);
-      setCreatorModule('');
-      setCreatorDuration(25);
-
-      // Launch full screen focus mode
-      onEnterFocusMode(moduleToLaunch as any, durationToLaunch);
-    } catch (err) {
-      console.error("Failed to start focus mode", err);
+    // Optimistically update the list in the UI immediately
+    const statusList = dailyTask.statuses ? dailyTask.statuses.split(',') : [];
+    if (!statusList.some(s => s.startsWith(`${creatorModule}:`))) {
+      statusList.push(`${creatorModule}:NOT_STARTED`);
     }
+    const elapsedList = dailyTask.elapsedDurations ? dailyTask.elapsedDurations.split(',') : [];
+    if (!elapsedList.some(e => e.startsWith(`${creatorModule}:`))) {
+      elapsedList.push(`${creatorModule}:0`);
+    }
+
+    setDailyTask(prev => ({
+      ...prev,
+      selectedModules: selectedStr,
+      targetDurations: targetDurationsStr,
+      statuses: statusList.join(','),
+      elapsedDurations: elapsedList.join(',')
+    }));
+
+    // Instantly close creator view and launch focus mode timer overlay
+    setShowCreator(false);
+    setCreatorModule('');
+    setCreatorDuration(25);
+
+    onEnterFocusMode(moduleToLaunch as any, durationToLaunch);
+
+    // Save in the background
+    api.post<DailyTaskData>(`/daily-tasks/today/select`, {
+      selectedModules: selectedStr,
+      targetDurations: targetDurationsStr
+    }).then(updated => {
+      setDailyTask(updated);
+    }).catch(err => {
+      console.error("Failed to start focus mode", err);
+    });
   };
 
   // Resume Focus for an already scheduled card
