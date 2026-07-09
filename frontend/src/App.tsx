@@ -21,6 +21,7 @@ import ProjectsGuide from './views/projects/ProjectsGuide';
 import RevisionView from './views/RevisionView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from './services/api';
+import { seedResetTimeFromSettings } from './hooks/useDailyReset';
 import AiGenerationFullscreenLoader from './components/AiGenerationFullscreenLoader';
 
 const MainApp: React.FC = () => {
@@ -72,6 +73,10 @@ const MainApp: React.FC = () => {
       sessionStorage.removeItem('pf_login_redirect');
       localStorage.setItem('activePortal', 'master_dashboard');
       setActivePortal('master_dashboard');
+      seedResetTimeFromSettings();
+    }
+    if (user) {
+      seedResetTimeFromSettings();
     }
     prevUserRef.current = user;
   }, [user, loading]);

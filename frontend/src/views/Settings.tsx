@@ -144,6 +144,7 @@ const SettingsView: React.FC = () => {
       const h = String(settings.dailyResetHour ?? 2).padStart(2, '0');
       const m = String(settings.dailyResetMinute ?? 0).padStart(2, '0');
       localStorage.setItem('patternforge_reset_time', `${h}:${m}`);
+      window.dispatchEvent(new CustomEvent('settings-saved'));
       setSuccessMsg('Settings saved successfully!');
       setTimeout(() => setSuccessMsg(''), 3000);
     } catch (e) {

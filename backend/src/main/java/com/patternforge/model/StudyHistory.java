@@ -38,4 +38,7 @@ public class StudyHistory {
 
     @Column(nullable = false)
     private Boolean completed;
+
+    // Module status at archive time (e.g. COMPLETED, PAUSED, NOT_STARTED)
+    private String status;
 }

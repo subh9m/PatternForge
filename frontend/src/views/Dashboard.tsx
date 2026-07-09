@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import { useDailyReset } from '../hooks/useDailyReset';
+import HeatmapDayDetailModal from '../components/HeatmapDayDetailModal';
 import type { ProblemDto } from './Explorer';
 import { 
   Flame, Award, Brain, 
@@ -64,7 +66,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState<HeatmapDay | null>(null);
+  const [selectedDayDate, setSelectedDayDate] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
 
   useEffect(() => {
@@ -73,7 +75,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
       try {
         const data = await api.get<DashboardStats>(`/dashboard/stats?year=${selectedYear}`);
         setStats(data);
-        setSelectedDay(null);
+        setSelectedDayDate(null);
       } catch (e) {
         console.error("Failed to load dashboard stats", e);
       } finally {
@@ -82,6 +84,12 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
     };
     loadStats();
   }, [selectedYear]);
+
+  useDailyReset(() => {
+    api.get<DashboardStats>(`/dashboard/stats?year=${selectedYear}`)
+      .then(setStats)
+      .catch(() => {});
+  });
 
   const triggerRandomizer = async (type: string) => {
     try {
@@ -369,11 +377,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
                       return (
                         <div
                           key={dayIdx}
-                          onClick={() => {
-                            if (day.problems && day.problems.length > 0) {
-                              setSelectedDay(day === selectedDay ? null : day);
-                            }
-                          }}
+                          onClick={() => setSelectedDayDate(day.date === selectedDayDate ? null : day.date)}
                           className={`h-[11px] w-[11px] rounded-[2px] cursor-pointer transition-smooth flex items-center justify-center ${bgClass}`}
                           title={`Solved: ${count}\nRevised: ${day.revisionCount || 0}\nRevision Time: ${formatRevisionTime(day.revisionTime || 0)}`}
                         >
@@ -402,52 +406,11 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
           </div>
         </div>
 
-        {/* Interactive Day Details Card */}
-        {selectedDay && (
-          <div className="mt-4 p-4 border border-border bg-surface/50 space-y-3 transition-smooth">
-            <div className="flex items-center justify-between border-b border-border pb-2">
-              <span className="text-xs font-black font-heading uppercase tracking-widest text-text-primary">
-                Activity on {selectedDay.date}
-              </span>
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-bold font-mono text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                  {selectedDay.count} Solved
-                </span>
-                <span className="text-[10px] font-bold font-mono text-purple-400 uppercase bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">
-                  {selectedDay.revisionCount || 0} Revised ({formatRevisionTime(selectedDay.revisionTime || 0)})
-                </span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              {selectedDay.problems && selectedDay.problems.length > 0 ? (
-                selectedDay.problems.map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => navigateToProblem(p.id)}
-                    className="flex items-center justify-between p-2.5 border border-border hover:border-text-primary bg-background cursor-pointer transition-smooth"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="text-[11px] font-bold font-mono text-text-secondary">#{p.leetcodeNumber}</span>
-                      <span className="text-xs font-bold text-text-primary hover:underline">{p.name}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-[10px] text-text-secondary uppercase tracking-wider">{p.topicName}</span>
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                        p.difficulty === 'EASY' ? 'text-emerald-400 bg-emerald-500/10' :
-                        p.difficulty === 'MEDIUM' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'
-                      }`}>
-                        {p.difficulty}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <span className="text-xs text-text-secondary font-mono">No problems solved on this day.</span>
-              )}
-            </div>
-          </div>
-        )}
+        <HeatmapDayDetailModal
+          date={selectedDayDate}
+          onClose={() => setSelectedDayDate(null)}
+          onNavigateProblem={navigateToProblem}
+        />
       </div>
 
       {/* Grid Dashboard Content */}

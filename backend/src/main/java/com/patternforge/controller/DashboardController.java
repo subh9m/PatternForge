@@ -4,6 +4,8 @@ import com.patternforge.dto.DashboardStats;
 import com.patternforge.dto.ProblemDto;
 import com.patternforge.model.*;
 import com.patternforge.repository.*;
+import com.patternforge.service.DailyBoundaryService;
+import com.patternforge.service.DailyResetService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +31,8 @@ public class DashboardController {
     private final DailyTaskRepository dailyTaskRepository;
     private final UserRepository userRepository;
     private final RevisionSessionRepository revisionSessionRepository;
+    private final DailyResetService dailyResetService;
+    private final DailyBoundaryService dailyBoundaryService;
 
     public DashboardController(ProblemRepository problemRepository,
                                TopicRepository topicRepository,
@@ -38,7 +42,9 @@ public class DashboardController {
                                SettingsRepository settingsRepository,
                                DailyTaskRepository dailyTaskRepository,
                                UserRepository userRepository,
-                               RevisionSessionRepository revisionSessionRepository) {
+                               RevisionSessionRepository revisionSessionRepository,
+                               DailyResetService dailyResetService,
+                               DailyBoundaryService dailyBoundaryService) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -48,6 +54,8 @@ public class DashboardController {
         this.dailyTaskRepository = dailyTaskRepository;
         this.userRepository = userRepository;
         this.revisionSessionRepository = revisionSessionRepository;
+        this.dailyResetService = dailyResetService;
+        this.dailyBoundaryService = dailyBoundaryService;
     }
 
     @GetMapping
@@ -60,17 +68,20 @@ public class DashboardController {
             return ResponseEntity.status(401).body("Session invalid. User not found.");
         }
 
+        dailyResetService.ensureDailyReset(userId);
+        Settings userSettings = dailyResetService.getOrCreateSettings(userId);
+        LocalDate todayDate = dailyBoundaryService.getCurrentEffectiveDate(userSettings);
+
         List<Problem> problems = problemRepository.findAll();
         List<Topic> topics = topicRepository.findAll();
         List<Attempt> attempts = attemptRepository.findByUserId(userId);
         List<Submission> submissions = submissionRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        
-        LocalDate todayDate = LocalDate.now();
+
         long solvedCount = attempts.stream().filter(a -> "SOLVED".equals(a.getStatus())).count();
         long attemptedCount = attempts.size();
 
         long revisedTodayCount = attempts.stream()
-                .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastRevisedAt() != null && a.getLastRevisedAt().toLocalDate().equals(todayDate))
+                .filter(a -> "SOLVED".equals(a.getStatus()) && dailyBoundaryService.isOnCurrentEffectiveDay(a.getLastRevisedAt(), userSettings))
                 .count();
                 
         long revisionDueTodayCount = solvedCount - revisedTodayCount;
@@ -80,8 +91,7 @@ public class DashboardController {
         double approachAccuracy = attemptedCount > 0 ? ((double) approachSavedCount / attemptedCount) * 100 : 0.0;
 
         // Load daily goal from settings
-        Settings userSettings = settingsRepository.findByUserId(userId).orElse(null);
-        int dailyGoal = (userSettings != null && userSettings.getDailyGoal() != null) ? userSettings.getDailyGoal() : 3;
+        int dailyGoal = (userSettings.getDailyGoal() != null) ? userSettings.getDailyGoal() : 3;
 
         // Calculate study minutes
         long studyMinutes = 0;
@@ -108,11 +118,11 @@ public class DashboardController {
                 .mapToInt(RevisionSession::getElapsedTime)
                 .sum();
 
-        // Count solved problems per day to see if they met daily goal for streak
+        // Count solved problems per effective day for streak
         Map<LocalDate, Long> solvedCountByDate = attempts.stream()
                 .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastAttemptedAt() != null)
                 .collect(Collectors.groupingBy(
-                        a -> a.getLastAttemptedAt().toLocalDate(),
+                        a -> dailyBoundaryService.getEffectiveDateForTimestamp(a.getLastAttemptedAt(), userSettings),
                         Collectors.counting()
                 ));
 
@@ -151,7 +161,7 @@ public class DashboardController {
         });
 
         // Streaks engine
-        int streak = calculateStreak(activityDates);
+        int streak = calculateStreak(activityDates, todayDate);
 
         // Topic progress map
         Map<UUID, List<Problem>> problemsByTopic = problems.stream()
@@ -221,14 +231,14 @@ public class DashboardController {
         }
 
         // Submissions activity (calendar heatmap with problem arrays for selected year)
-        List<Map<String, Object>> monthlyHeatmap = getHeatmapData(userId, attempts, year);
+        List<Map<String, Object>> monthlyHeatmap = getHeatmapData(userId, attempts, year, userSettings);
 
         // Weekly activity (last 7 days counts)
-        List<Map<String, Object>> weeklyActivity = getWeeklyActivityData(attempts);
+        List<Map<String, Object>> weeklyActivity = getWeeklyActivityData(attempts, userSettings);
 
-        // Calculate solve goal for today
+        // Calculate solve goal for current effective day
         long todayGoalSolved = attempts.stream()
-                .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastAttemptedAt() != null && a.getLastAttemptedAt().toLocalDate().equals(LocalDate.now()))
+                .filter(a -> "SOLVED".equals(a.getStatus()) && dailyBoundaryService.isOnCurrentEffectiveDay(a.getLastAttemptedAt(), userSettings))
                 .count();
 
         return ResponseEntity.ok(DashboardStats.builder()
@@ -273,10 +283,9 @@ public class DashboardController {
                 .build();
     }
 
-    private int calculateStreak(Set<LocalDate> activityDates) {
+    private int calculateStreak(Set<LocalDate> activityDates, LocalDate today) {
         if (activityDates.isEmpty()) return 0;
 
-        LocalDate today = LocalDate.now();
         LocalDate yesterday = today.minusDays(1);
 
         if (!activityDates.contains(today) && !activityDates.contains(yesterday)) {
@@ -294,8 +303,8 @@ public class DashboardController {
         return currentStreak;
     }
 
-    private List<Map<String, Object>> getHeatmapData(UUID userId, List<Attempt> attempts, Integer selectedYear) {
-        LocalDate today = LocalDate.now();
+    private List<Map<String, Object>> getHeatmapData(UUID userId, List<Attempt> attempts, Integer selectedYear, Settings settings) {
+        LocalDate today = dailyBoundaryService.getCurrentEffectiveDate(settings);
         int activeYear = (selectedYear != null) ? selectedYear : today.getYear();
 
         LocalDate startDate = LocalDate.of(activeYear, 1, 1);
@@ -309,23 +318,22 @@ public class DashboardController {
         Map<LocalDate, List<Problem>> solvedByDate = attempts.stream()
                 .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastAttemptedAt() != null)
                 .filter(a -> {
-                    LocalDate date = a.getLastAttemptedAt().toLocalDate();
-                    return !date.isBefore(startDate) && !date.isAfter(endDate);
+                    LocalDate date = dailyBoundaryService.getEffectiveDateForTimestamp(a.getLastAttemptedAt(), settings);
+                    return date != null && !date.isBefore(startDate) && !date.isAfter(endDate);
                 })
                 .collect(Collectors.groupingBy(
-                        a -> a.getLastAttemptedAt().toLocalDate(),
+                        a -> dailyBoundaryService.getEffectiveDateForTimestamp(a.getLastAttemptedAt(), settings),
                         Collectors.mapping(Attempt::getProblem, Collectors.toList())
                 ));
 
-        // Group attempts revised by date
         Map<LocalDate, Long> revisedCountByDate = attempts.stream()
                 .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastRevisedAt() != null)
                 .filter(a -> {
-                    LocalDate date = a.getLastRevisedAt().toLocalDate();
-                    return !date.isBefore(startDate) && !date.isAfter(endDate);
+                    LocalDate date = dailyBoundaryService.getEffectiveDateForTimestamp(a.getLastRevisedAt(), settings);
+                    return date != null && !date.isBefore(startDate) && !date.isAfter(endDate);
                 })
                 .collect(Collectors.groupingBy(
-                        a -> a.getLastRevisedAt().toLocalDate(),
+                        a -> dailyBoundaryService.getEffectiveDateForTimestamp(a.getLastRevisedAt(), settings),
                         Collectors.counting()
                 ));
 
@@ -400,11 +408,12 @@ public class DashboardController {
         return heatmapList;
     }
 
-    private List<Map<String, Object>> getWeeklyActivityData(List<Attempt> attempts) {
-        LocalDate today = LocalDate.now();
+    private List<Map<String, Object>> getWeeklyActivityData(List<Attempt> attempts, Settings settings) {
+        LocalDate today = dailyBoundaryService.getCurrentEffectiveDate(settings);
         Map<LocalDate, Long> dateCounts = attempts.stream()
                 .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastAttemptedAt() != null)
-                .map(a -> a.getLastAttemptedAt().toLocalDate())
+                .map(a -> dailyBoundaryService.getEffectiveDateForTimestamp(a.getLastAttemptedAt(), settings))
+                .filter(Objects::nonNull)
                 .filter(date -> date.isAfter(today.minusDays(7)))
                 .collect(Collectors.groupingBy(date -> date, Collectors.counting()));
 

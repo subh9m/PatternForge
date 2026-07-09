@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import { useDailyReset } from '../hooks/useDailyReset';
 
 import { 
   CheckCircle2, Circle, Play, Search, Award, 
@@ -377,35 +378,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     fetchQueue();
   }, []);
 
-  // Nightly Reset: Clear cache and re-fetch so all items show as "pending" again
-  useEffect(() => {
-    const scheduleMidnightReset = () => {
-      const now = new Date();
-      // Read the user's configured reset time from localStorage ("HH:mm", set by Settings page)
-      const resetTime = localStorage.getItem('patternforge_reset_time') || '02:00';
-      const [resetHour, resetMinute] = resetTime.split(':').map(Number);
-      const nextReset = new Date();
-      nextReset.setHours(resetHour, resetMinute, 0, 0);
-      if (nextReset <= now) {
-        nextReset.setDate(nextReset.getDate() + 1);
-      }
-      const msUntilReset = nextReset.getTime() - now.getTime();
-
-      const timer = setTimeout(() => {
-        // Clear stale revision cache — isRevisedToday is computed from today's date on the backend,
-        // so a fresh fetch will correctly mark all items as pending for the new day.
-        localStorage.removeItem('patternforge_revisions');
-        fetchQueue();
-        // Reschedule for the following day
-        scheduleMidnightReset();
-      }, msUntilReset);
-
-      return timer;
-    };
-
-    const timer = scheduleMidnightReset();
-    return () => clearTimeout(timer);
-  }, []);
+  useDailyReset(() => fetchQueue());
 
   // Poll for generating items
   useEffect(() => {

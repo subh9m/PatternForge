@@ -2,6 +2,7 @@ package com.patternforge.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -49,4 +50,7 @@ public class Settings {
     // Minute (0-59) of the reset time (default: 0)
     @Builder.Default
     private Integer dailyResetMinute = 0;
+
+    // Tracks the last effective study day that was fully processed (archived)
+    private LocalDate lastProcessedEffectiveDate;
 }

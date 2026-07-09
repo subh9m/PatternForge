@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import { useDailyReset } from '../hooks/useDailyReset';
+import HeatmapDayDetailModal from '../components/HeatmapDayDetailModal';
 import { 
   Flame, BookOpen, Code2, Database, Cpu, 
   GitBranch, Brain, Globe, Coffee, Atom, FolderGit2, 
@@ -97,7 +99,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
   
   const [loading, setLoading] = useState(true);
   const [selectedYear] = useState<number>(() => new Date().getFullYear());
-  const [selectedDay, setSelectedDay] = useState<HeatmapDay | null>(null);
+  const [selectedDayDate, setSelectedDayDate] = useState<string | null>(null);
   const [heatmapError, setHeatmapError] = useState<string | null>(null);
   const [motivationQuote] = useState(() => MOTIVATION_QUOTES[Math.floor(Math.random() * MOTIVATION_QUOTES.length)]);
 
@@ -189,36 +191,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     loadDashboardData(stats === null);
   }, [selectedYear]);
 
-  // Nightly Reset: Clear stale caches and re-fetch when the day rolls over
-  useEffect(() => {
-    const scheduleMidnightReset = () => {
-      const now = new Date();
-      // Read the user's configured reset time from localStorage ("HH:mm", set by Settings page)
-      const resetTime = localStorage.getItem('patternforge_reset_time') || '02:00';
-      const [resetHour, resetMinute] = resetTime.split(':').map(Number);
-      const nextReset = new Date();
-      nextReset.setHours(resetHour, resetMinute, 0, 0);
-      if (nextReset <= now) {
-        // Already past the reset time today, schedule for tomorrow
-        nextReset.setDate(nextReset.getDate() + 1);
-      }
-      const msUntilReset = nextReset.getTime() - now.getTime();
-
-      const timer = setTimeout(() => {
-        // Clear revision cache so the tab shows fresh pending state
-        localStorage.removeItem('patternforge_revisions');
-        // Reload dashboard data to get today's fresh empty daily task
-        loadDashboardData(true);
-        // Reschedule for the following day
-        scheduleMidnightReset();
-      }, msUntilReset);
-
-      return timer;
-    };
-
-    const timer = scheduleMidnightReset();
-    return () => clearTimeout(timer);
-  }, []);
+  useDailyReset(() => loadDashboardData(true));
 
   // BUTTON 1: Add Task only (does not launch timer)
   const handleAddTaskOnly = async () => {
@@ -937,7 +910,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                             return (
                               <div
                                 key={dayIdx}
-                                onClick={() => setSelectedDay(day === selectedDay ? null : day)}
+                                onClick={() => setSelectedDayDate(day.date === selectedDayDate ? null : day.date)}
                                 className={`h-[11px] w-[11px] rounded-sm transition-all duration-150 cursor-pointer ${bgClass}`}
                                 title={`Solved: ${count}\nRevised: ${day.revisionCount || 0}\nRevision Time: ${formatRevisionTime(day.revisionTime || 0)}`}
                               />
@@ -955,30 +928,10 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
             </div>
           </div>
 
-          {selectedDay && (
-            <div className="mt-4 p-4 bg-background border border-border rounded-xl animate-fade-in text-xs font-sans space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-text-primary">Date: {new Date(selectedDay.date).toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
-                {selectedDay.hasDailyTask && (
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedDay.isDailyTaskCompleted ? 'bg-accent/10 border border-accent/20 text-accent' : 'bg-accent/5 border border-accent/20 text-accent/80'}`}>
-                    {selectedDay.isDailyTaskCompleted ? 'Focus Goal Completed' : 'Focus Goal Failed'}
-                  </span>
-                )}
-              </div>
-              {selectedDay.selectedModules && (
-                <div className="text-text-secondary font-medium">Scheduled: <span className="text-text-primary font-mono font-bold uppercase">{selectedDay.selectedModules}</span></div>
-              )}
-              {selectedDay.completedModules && (
-                <div className="text-text-secondary font-medium">Completed: <span className="text-accent font-mono font-bold uppercase">{selectedDay.completedModules}</span></div>
-              )}
-              <div className="text-text-secondary font-medium">
-                Solved: <span className="text-text-primary font-bold">{selectedDay.count} {selectedDay.count === 1 ? 'Question' : 'Questions'}</span>
-              </div>
-              <div className="text-text-secondary font-medium">
-                Revision: <span className="text-accent font-mono font-bold">{selectedDay.revisionCount || 0} {selectedDay.revisionCount === 1 ? 'Question' : 'Questions'}</span> <span className="text-text-primary font-bold font-mono">({formatRevisionTime(selectedDay.revisionTime || 0)})</span>
-              </div>
-            </div>
-          )}
+          <HeatmapDayDetailModal
+            date={selectedDayDate}
+            onClose={() => setSelectedDayDate(null)}
+          />
         </div>
 
         {/* BOTTOM STATS GRID */}

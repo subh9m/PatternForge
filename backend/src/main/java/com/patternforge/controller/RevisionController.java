@@ -5,6 +5,8 @@ import com.patternforge.repository.*;
 import com.patternforge.service.GeminiService;
 import com.patternforge.service.LocalFallbackGenerator;
 import com.patternforge.service.ProblemGenerationService;
+import com.patternforge.service.DailyBoundaryService;
+import com.patternforge.service.DailyResetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,8 @@ public class RevisionController {
     private final ProblemGenerationService problemGenerationService;
     private final RevisionSessionRepository revisionSessionRepository;
     private final UserRepository userRepository;
+    private final DailyResetService dailyResetService;
+    private final DailyBoundaryService dailyBoundaryService;
 
     public RevisionController(AttemptRepository attemptRepository,
                               SubmissionRepository submissionRepository,
@@ -34,7 +38,9 @@ public class RevisionController {
                               ProblemRepository problemRepository,
                               ProblemGenerationService problemGenerationService,
                               RevisionSessionRepository revisionSessionRepository,
-                              UserRepository userRepository) {
+                              UserRepository userRepository,
+                              DailyResetService dailyResetService,
+                              DailyBoundaryService dailyBoundaryService) {
         this.attemptRepository = attemptRepository;
         this.submissionRepository = submissionRepository;
         this.noteRepository = noteRepository;
@@ -42,19 +48,22 @@ public class RevisionController {
         this.problemGenerationService = problemGenerationService;
         this.revisionSessionRepository = revisionSessionRepository;
         this.userRepository = userRepository;
+        this.dailyResetService = dailyResetService;
+        this.dailyBoundaryService = dailyBoundaryService;
     }
 
     @GetMapping
     public ResponseEntity<?> getRevisionQueue(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
-        
-        // Query solved attempts
+
+        dailyResetService.ensureDailyReset(userId);
+        Settings settings = dailyResetService.getOrCreateSettings(userId);
+
         List<Attempt> solvedAttempts = attemptRepository.findByUserId(userId).stream()
                 .filter(a -> "SOLVED".equals(a.getStatus()))
                 .toList();
 
         List<Map<String, Object>> response = new ArrayList<>();
-        java.time.LocalDate today = java.time.LocalDate.now();
 
         for (Attempt a : solvedAttempts) {
             Problem p = a.getProblem();
@@ -76,7 +85,7 @@ public class RevisionController {
                 timeComplexity = getOptimalTimeComplexity(p);
             }
 
-            boolean isRevisedToday = (a.getLastRevisedAt() != null && a.getLastRevisedAt().toLocalDate().equals(today));
+            boolean isRevisedToday = dailyBoundaryService.isOnCurrentEffectiveDay(a.getLastRevisedAt(), settings);
 
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
@@ -157,6 +166,10 @@ public class RevisionController {
     public ResponseEntity<?> startSession(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
         User user = userRepository.findById(userId).orElseThrow();
+
+        dailyResetService.ensureDailyReset(userId);
+        Settings settings = dailyResetService.getOrCreateSettings(userId);
+        LocalDate effectiveDate = dailyBoundaryService.getCurrentEffectiveDate(settings);
         
         Optional<RevisionSession> activeSessionOpt = revisionSessionRepository
             .findByUserIdAndStatusIn(userId, List.of("RUNNING", "PAUSED"))
@@ -172,7 +185,7 @@ public class RevisionController {
         
         RevisionSession newSession = RevisionSession.builder()
             .user(user)
-            .date(LocalDate.now())
+            .date(effectiveDate)
             .startTime(LocalDateTime.now())
             .elapsedTime(0)
             .status("RUNNING")
