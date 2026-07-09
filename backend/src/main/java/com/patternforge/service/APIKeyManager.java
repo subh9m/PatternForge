@@ -59,6 +59,9 @@ public class APIKeyManager {
 
         // 2. Add keys from gemini_keys.txt
         File localKeysFile = new File("gemini_keys.txt");
+        if (!localKeysFile.exists()) {
+            localKeysFile = new File("backend/gemini_keys.txt");
+        }
         if (localKeysFile.exists()) {
             try {
                 List<String> lines = Files.readAllLines(localKeysFile.toPath());
@@ -68,7 +71,7 @@ public class APIKeyManager {
                         allKeys.add(line);
                     }
                 }
-                log.info("APIKeyManager: Loaded keys from local gemini_keys.txt file.");
+                log.info("APIKeyManager: Loaded keys from local gemini_keys.txt file at: {}", localKeysFile.getAbsolutePath());
             } catch (IOException e) {
                 log.error("APIKeyManager: Failed to read local gemini_keys.txt", e);
             }

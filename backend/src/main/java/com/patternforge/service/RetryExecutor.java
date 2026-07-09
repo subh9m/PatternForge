@@ -28,13 +28,13 @@ public class RetryExecutor {
         }
 
         for (String key : availableKeys) {
-            boolean keyHasInvalidError = false;
+            boolean skipKey = false;
             
             // Retrieve preferred models list dynamically inside the loop in case models are blacklisted in real-time
             List<String> preferredModels = modelSelector.getPreferredModels();
 
             for (String model : preferredModels) {
-                if (keyHasInvalidError) {
+                if (skipKey) {
                     break;
                 }
 
@@ -57,7 +57,7 @@ public class RetryExecutor {
                             String reason = "Auth Failure (status " + statusCode + ")";
                             System.out.println("↓\n" + reason);
                             apiKeyManager.markInvalid(key, reason);
-                            keyHasInvalidError = true;
+                            skipKey = true;
                             break; 
                         } else if (statusCode == 404) {
                             System.out.println("↓\n404 (Model Unavailable)");
@@ -67,6 +67,7 @@ public class RetryExecutor {
                             int delaySec = geminiClient.parseRetryDelay(response.body());
                             System.out.println("↓\n429");
                             apiKeyManager.markCooldown(key, delaySec * 1000L, "Quota / Rate limit hit on " + model);
+                            skipKey = true;
                             break; 
                         } else if (statusCode >= 500) {
                             System.out.println("↓\n500 (attempt " + attempt + "/" + maxTransientAttempts + ")");
