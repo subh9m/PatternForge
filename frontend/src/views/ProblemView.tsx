@@ -333,43 +333,6 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [copyingState, setCopyingState] = useState(false);
 
-  // Derived state values for code viewer solutions
-  const optimalCpp = (details?.optimal?.code?.cpp || details?.referenceSolutions?.cpp || details?.referenceSolution || '').trim();
-  const optimalApproach = (details?.optimal?.approach || details?.approach || '').trim();
-  const bruteCpp = (details?.bruteForce?.code?.cpp || '').trim();
-  const bruteApproach = (details?.bruteForce?.approach || '').trim();
-  const betterCpp = (details?.better?.code?.cpp || '').trim();
-  const betterApproach = (details?.better?.approach || '').trim();
-
-  const hasDistinctBrute = !!(details?.bruteForce && 
-    bruteCpp !== '' && 
-    bruteCpp !== optimalCpp && 
-    bruteApproach !== optimalApproach);
-
-  const hasDistinctBetter = !!(details?.better && 
-    betterCpp !== '' && 
-    betterCpp !== optimalCpp && 
-    (!hasDistinctBrute || betterCpp !== bruteCpp) &&
-    betterApproach !== optimalApproach);
-
-  const activeSubTab = (selectedSolutionTab === 'brute' && hasDistinctBrute)
-    ? 'brute'
-    : (selectedSolutionTab === 'better' && hasDistinctBetter)
-    ? 'better'
-    : 'optimal';
-
-  const currentSol = (activeSubTab === 'brute' ? details?.bruteForce : null)
-    || (activeSubTab === 'better' ? details?.better : null)
-    || details?.optimal
-    || {
-        approach: details?.approach || '',
-        timeComplexity: details?.optimalTimeComplexity || '',
-        spaceComplexity: details?.optimalSpaceComplexity || '',
-        code: {
-          cpp: details?.referenceSolutions?.cpp || details?.referenceSolution || '',
-          java: details?.referenceSolutions?.java || details?.referenceSolution || ''
-        }
-      };
 
   const handleRetry = () => {
     setGenerationFailed(false);
@@ -429,7 +392,43 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [isResizing, setIsResizing] = useState<boolean>(false);
   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1024);
 
+  // Derived state values for code viewer solutions
+  const optimalCpp = (details?.optimal?.code?.cpp || details?.referenceSolutions?.cpp || details?.referenceSolution || '').trim();
+  const optimalApproach = (details?.optimal?.approach || details?.approach || '').trim();
+  const bruteCpp = (details?.bruteForce?.code?.cpp || '').trim();
+  const bruteApproach = (details?.bruteForce?.approach || '').trim();
+  const betterCpp = (details?.better?.code?.cpp || '').trim();
+  const betterApproach = (details?.better?.approach || '').trim();
 
+  const hasDistinctBrute = !!(details?.bruteForce && 
+    bruteCpp !== '' && 
+    bruteCpp !== optimalCpp && 
+    bruteApproach !== optimalApproach);
+
+  const hasDistinctBetter = !!(details?.better && 
+    betterCpp !== '' && 
+    betterCpp !== optimalCpp && 
+    (!hasDistinctBrute || betterCpp !== bruteCpp) &&
+    betterApproach !== optimalApproach);
+
+  const activeSubTab = (selectedSolutionTab === 'brute' && hasDistinctBrute)
+    ? 'brute'
+    : (selectedSolutionTab === 'better' && hasDistinctBetter)
+    ? 'better'
+    : 'optimal';
+
+  const currentSol = (activeSubTab === 'brute' ? details?.bruteForce : null)
+    || (activeSubTab === 'better' ? details?.better : null)
+    || details?.optimal
+    || {
+        approach: details?.approach || '',
+        timeComplexity: details?.optimalTimeComplexity || '',
+        spaceComplexity: details?.optimalSpaceComplexity || '',
+        code: {
+          cpp: details?.referenceSolutions?.cpp || details?.referenceSolution || '',
+          java: details?.referenceSolutions?.java || details?.referenceSolution || ''
+        }
+      };
 
   useEffect(() => {
     const handleResize = () => {
@@ -1893,6 +1892,8 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       <div className="text-slate-600">Compiler output will display here.</div>
                     )}
                   </div>
+                </div>
+              )}
                      {/* TAB 3: SOLUTIONS WORKSPACE */}
               {activeTab === 'solutions' && (
                 loadingSolutions ? (
