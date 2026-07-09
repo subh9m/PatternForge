@@ -14,4 +14,5 @@ public class SettingsDto {
     private Integer autosaveInterval;
     private Boolean keyboardShortcutsEnabled;
     private Integer dailyGoal;
+    private Integer dailyResetHour; // 0-23, hour of day to reset daily progress
 }

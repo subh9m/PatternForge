@@ -193,11 +193,12 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
   useEffect(() => {
     const scheduleMidnightReset = () => {
       const now = new Date();
-      // 2:00 AM IST = UTC+5:30, so target hour is 2 in IST
+      // Read the user's configured reset hour from localStorage (set by Settings page, default 2)
+      const resetHour = parseInt(localStorage.getItem('patternforge_reset_hour') || '2', 10);
       const nextReset = new Date();
-      nextReset.setHours(2, 0, 0, 0); // 2:00:00 AM local time
+      nextReset.setHours(resetHour, 0, 0, 0);
       if (nextReset <= now) {
-        // Already past 2AM today, schedule for tomorrow
+        // Already past the reset hour today, schedule for tomorrow
         nextReset.setDate(nextReset.getDate() + 1);
       }
       const msUntilReset = nextReset.getTime() - now.getTime();

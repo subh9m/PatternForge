@@ -43,6 +43,7 @@ public class SettingsController {
                 .autosaveInterval(settings.getAutosaveInterval())
                 .keyboardShortcutsEnabled(settings.getKeyboardShortcutsEnabled())
                 .dailyGoal(settings.getDailyGoal() != null ? settings.getDailyGoal() : 3)
+                .dailyResetHour(settings.getDailyResetHour() != null ? settings.getDailyResetHour() : 2)
                 .build());
     }
 
@@ -59,6 +60,7 @@ public class SettingsController {
         settings.setAutosaveInterval(dto.getAutosaveInterval());
         settings.setKeyboardShortcutsEnabled(dto.getKeyboardShortcutsEnabled());
         settings.setDailyGoal(dto.getDailyGoal() != null ? dto.getDailyGoal() : 3);
+        settings.setDailyResetHour(dto.getDailyResetHour() != null ? dto.getDailyResetHour() : 2);
 
         settingsRepository.save(settings);
         return ResponseEntity.ok(Map.of("success", true));

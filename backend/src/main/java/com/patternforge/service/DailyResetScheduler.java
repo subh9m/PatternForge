@@ -41,10 +41,14 @@ public class DailyResetScheduler {
     }
 
     /**
-     * Cron: 0 30 20 * * ? — runs at 20:30 UTC = 02:00 AM IST every day.
-     * Zones: Asia/Kolkata is UTC+5:30, so 2:00 AM IST = 20:30 UTC (previous day).
+     * Cron: 0 0 0 * * ? — runs at midnight UTC (05:30 AM IST) every day.
+     *
+     * Server-side archiving runs once per day at midnight.
+     * The user-configurable reset time (stored in Settings.dailyResetHour) controls
+     * only the FRONTEND cache-clear timers (MasterDashboard + RevisionView) which
+     * clear localStorage and re-fetch data at the user's chosen hour.
      */
-    @Scheduled(cron = "0 30 20 * * ?", zone = "UTC")
+    @Scheduled(cron = "0 0 0 * * ?", zone = "UTC")
     public void performDailyReset() {
         System.out.println("[DailyResetScheduler] Running 2AM IST nightly reset...");
 

@@ -10,6 +10,7 @@ interface SettingsDto {
   autosaveInterval: number;
   keyboardShortcutsEnabled: boolean;
   dailyGoal: number;
+  dailyResetHour: number; // 0-23
 }
 
 const SettingsView: React.FC = () => {
@@ -21,6 +22,7 @@ const SettingsView: React.FC = () => {
     autosaveInterval: 30,
     keyboardShortcutsEnabled: true,
     dailyGoal: 3,
+    dailyResetHour: 2,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,6 +35,8 @@ const SettingsView: React.FC = () => {
       try {
         const data = await api.get<SettingsDto>('/settings');
         setSettings(data);
+        // Seed localStorage so timer components always have the latest reset hour
+        localStorage.setItem('patternforge_reset_hour', String(data.dailyResetHour ?? 2));
       } catch (e) {
         console.error("Failed to load settings", e);
       } finally {
@@ -132,6 +136,8 @@ const SettingsView: React.FC = () => {
     setSuccessMsg('');
     try {
       await api.put('/settings', settings);
+      // Cache the reset hour in localStorage so timer components can read it instantly
+      localStorage.setItem('patternforge_reset_hour', String(settings.dailyResetHour ?? 2));
       setSuccessMsg('Settings saved successfully!');
       setTimeout(() => setSuccessMsg(''), 3000);
     } catch (e) {
@@ -291,6 +297,27 @@ const SettingsView: React.FC = () => {
                 {[1, 2, 3, 4, 5, 8, 10].map(val => (
                   <option key={val} value={val} className="bg-slate-900">{val} {val === 1 ? 'Problem' : 'Problems'}</option>
                 ))}
+              </select>
+            </div>
+
+            {/* Daily Reset Time */}
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-slate-200 block">Daily Progress Reset Time</span>
+                <span className="text-[10px] text-slate-500">Time each night when the revision tab and daily tasks reset for the new day.</span>
+              </div>
+              <select
+                value={settings.dailyResetHour ?? 2}
+                onChange={(e) => setSettings({ ...settings, dailyResetHour: Number(e.target.value) })}
+                className="glass-input rounded-lg px-3 py-1.5 text-xs font-semibold w-28 bg-slate-900 border border-slate-800"
+              >
+                {Array.from({ length: 24 }, (_, h) => {
+                  const ampm = h < 12 ? 'AM' : 'PM';
+                  const display = h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
+                  return (
+                    <option key={h} value={h} className="bg-slate-900">{display}</option>
+                  );
+                })}
               </select>
             </div>
           </div>

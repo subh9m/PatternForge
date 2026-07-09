@@ -41,4 +41,8 @@ public class Settings {
 
     @Builder.Default
     private Integer dailyGoal = 3;
+
+    // Hour of day (0-23) when daily progress resets (default: 2 = 2:00 AM)
+    @Builder.Default
+    private Integer dailyResetHour = 2;
 }
