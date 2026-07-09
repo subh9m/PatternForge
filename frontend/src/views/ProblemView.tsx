@@ -263,6 +263,25 @@ const AiGenerationLoadingScreen: React.FC<{
   );
 };
 
+const isBoilerplateDetails = (data: any) => {
+  if (!data) return true;
+  const statement = data.problemStatement || "";
+  const lower = statement.toLowerCase();
+  const approach = data.approach || "";
+  const lowerApproach = approach.toLowerCase();
+  return lower.includes("problem details not loaded") ||
+         lower.includes("please refer to leetcode") ||
+         lower.includes("standard parameters as defined in") ||
+         lower.includes("expected optimal output type") ||
+         lower.includes("standard leetcode constraints") ||
+         lower.includes("analyze and implement the algorithm for") ||
+         (lower.includes("problem: ") && lower.includes("(leetcode #")) ||
+         !approach ||
+         lowerApproach.includes("optimal solution using standard") ||
+         lowerApproach.includes("short optimal strategy") ||
+         lowerApproach.includes("refer to standard patterns under");
+};
+
 const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [problem, setProblem] = useState<ProblemDetails | null>(null);
   const [details, setDetails] = useState<ProblemDetailsJson | null>(null);
@@ -406,10 +425,12 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       if (cachedDetails) {
         try {
           const parsed = JSON.parse(cachedDetails);
-          setDetails(parsed);
-          setLoadingDetails(false);
-          setLoadingSolutions(false);
-          return;
+          if (!isBoilerplateDetails(parsed)) {
+            setDetails(parsed);
+            setLoadingDetails(false);
+            setLoadingSolutions(false);
+            return;
+          }
         } catch (e) {
           // ignore cache error
         }
