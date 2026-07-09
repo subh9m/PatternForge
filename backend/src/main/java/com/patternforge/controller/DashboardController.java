@@ -57,20 +57,14 @@ public class DashboardController {
         List<Submission> submissions = submissionRepository.findByUserIdOrderByCreatedAtDesc(userId);
         
         LocalDate todayDate = LocalDate.now();
+        long solvedCount = attempts.stream().filter(a -> "SOLVED".equals(a.getStatus())).count();
+        long attemptedCount = attempts.size();
+
         long revisedTodayCount = attempts.stream()
                 .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastRevisedAt() != null && a.getLastRevisedAt().toLocalDate().equals(todayDate))
                 .count();
                 
-        long revisionDueTodayCount = attempts.stream()
-                .filter(a -> "SOLVED".equals(a.getStatus()) 
-                        && Boolean.TRUE.equals(a.getNeedRevision()) 
-                        && a.getNextRevisionDate() != null 
-                        && !a.getNextRevisionDate().toLocalDate().isAfter(todayDate)
-                        && (a.getLastRevisedAt() == null || a.getLastRevisedAt().toLocalDate().isBefore(a.getNextRevisionDate().toLocalDate())))
-                .count();
-
-        long solvedCount = attempts.stream().filter(a -> a.getStatus().equals("SOLVED")).count();
-        long attemptedCount = attempts.size();
+        long revisionDueTodayCount = solvedCount - revisedTodayCount;
 
         // Calculate approach accuracy defensively
         long approachSavedCount = attempts.stream().filter(a -> Boolean.TRUE.equals(a.getApproachSaved())).count();

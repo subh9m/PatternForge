@@ -1024,7 +1024,7 @@ export const api = {
       method: 'GET',
       headers,
     });
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('token');
       if (unauthorizedListener) unauthorizedListener();
       throw new Error('Session expired or unauthorized');
@@ -1053,7 +1053,7 @@ export const api = {
       method: 'DELETE',
       headers,
     });
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('token');
       if (unauthorizedListener) unauthorizedListener();
       throw new Error('Session expired or unauthorized');
@@ -1083,7 +1083,7 @@ export const api = {
       headers,
       body: JSON.stringify(body),
     });
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('token');
       if (unauthorizedListener) unauthorizedListener();
       throw new Error('Session expired or unauthorized');
@@ -1113,7 +1113,7 @@ export const api = {
       headers,
       body: JSON.stringify(body),
     });
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('token');
       if (unauthorizedListener) unauthorizedListener();
       throw new Error('Session expired or unauthorized');
