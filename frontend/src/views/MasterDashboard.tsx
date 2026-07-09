@@ -3,7 +3,8 @@ import { api } from '../services/api';
 import { 
   Flame, BookOpen, Code2, Database, Cpu, 
   GitBranch, Brain, Globe, Coffee, Atom, FolderGit2, 
-  Calendar, Play, AlertTriangle, Plus, Sparkles, X, Pause
+  Calendar, Play, AlertTriangle, Plus, Sparkles, X, Pause,
+  Sun, Moon
 } from 'lucide-react';
 
 interface HeatmapDay {
@@ -88,6 +89,33 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
   const [showCreator, setShowCreator] = useState(false);
   const [creatorModule, setCreatorModule] = useState<string>('');
   const [creatorDuration, setCreatorDuration] = useState<number>(25);
+
+  // Theme State & Toggle Handler
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+      return 'light';
+    }
+    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('light');
+    return 'dark';
+  });
+
+  const toggleTheme = () => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+      setTheme('light');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+      localStorage.setItem('theme', 'dark');
+      setTheme('dark');
+    }
+  };
 
   const getGreeting = () => {
     const hr = new Date().getHours();
@@ -326,8 +354,17 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
   return (
     <div className="min-h-screen w-screen bg-[#07070e] text-slate-100 px-4 py-8 relative overflow-y-auto font-sans">
       
-      {/* Sign Out Button */}
-      <div className="absolute top-6 right-6 z-50">
+      {/* Top Controls */}
+      <div className="absolute top-6 right-6 z-50 flex items-center space-x-3">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-slate-100 transition-smooth cursor-pointer"
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+
         <button
           onClick={onLogout}
           className="px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-red-500/50 hover:text-red-400 text-slate-400 transition-smooth flex items-center space-x-2 text-xs font-black cursor-pointer"

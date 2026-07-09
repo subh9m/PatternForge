@@ -45,6 +45,8 @@
   --color-text-secondary: var(--text-secondary);
   --color-accent: var(--accent-color);
   --color-accent-hover: var(--accent-hover);
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
 }
 
 body {
