@@ -161,6 +161,16 @@ const AiGenerationLoadingScreen: React.FC<{
 }> = ({ onRetry, failed }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [currentMessage, setCurrentMessage] = useState("Analyzing algorithmic patterns...");
+  const [timeLeft, setTimeLeft] = useState(35);
+
+  // Backward countdown timer
+  useEffect(() => {
+    if (failed) return;
+    const countdown = setInterval(() => {
+      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(countdown);
+  }, [failed]);
 
   const messages = [
     "Analyzing algorithmic patterns...",
@@ -255,9 +265,9 @@ const AiGenerationLoadingScreen: React.FC<{
       </div>
 
       {/* Estimated Time */}
-      <div className="mt-8 text-center bg-slate-900/40 border border-slate-800/80 px-4 py-2 rounded-xl">
-        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block font-mono">Estimated:</span>
-        <span className="text-slate-300 text-xs font-black font-mono">25–40 seconds</span>
+      <div className="mt-8 text-center bg-slate-900/40 border border-slate-800/80 px-6 py-3 rounded-xl min-w-[220px]">
+        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block font-mono">Estimated Waiting Time</span>
+        <span className="text-slate-300 text-sm font-black font-mono mt-0.5 block">{timeLeft} seconds</span>
       </div>
     </div>
   );
@@ -897,7 +907,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
       {/* Main Double Column Workspace Layout */}
       <AnimatePresence mode="wait">
-        {loadingDetails || generationFailed ? (
+        {loadingDetails || loadingSolutions || generationFailed ? (
           <motion.div
             key="loading"
             initial={{ opacity: 0, y: 10 }}

@@ -6,6 +6,7 @@ import com.patternforge.repository.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import jakarta.persistence.EntityManager;
 
 import com.patternforge.dto.ImportResultDto;
 import com.patternforge.service.PdfProblemImporter;
@@ -37,6 +38,7 @@ public class ProblemController {
     private final GeminiService geminiService;
     private final SubmissionRepository submissionRepository;
     private final ProblemGenerationService problemGenerationService;
+    private final EntityManager entityManager;
 
     public ProblemController(ProblemRepository problemRepository,
                              TopicRepository topicRepository,
@@ -48,7 +50,8 @@ public class ProblemController {
                              UserRepository userRepository,
                              GeminiService geminiService,
                              SubmissionRepository submissionRepository,
-                             ProblemGenerationService problemGenerationService) {
+                             ProblemGenerationService problemGenerationService,
+                             EntityManager entityManager) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -60,6 +63,7 @@ public class ProblemController {
         this.geminiService = geminiService;
         this.submissionRepository = submissionRepository;
         this.problemGenerationService = problemGenerationService;
+        this.entityManager = entityManager;
     }
 
     @GetMapping
@@ -453,6 +457,7 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
+        entityManager.detach(p); // Evict from Hibernate L1 cache to retrieve fresh AI generated values
         
         // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
         problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
@@ -472,6 +477,7 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
+        entityManager.detach(p); // Evict from Hibernate L1 cache to retrieve fresh AI generated values
         
         // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
         problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
@@ -495,6 +501,7 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
+        entityManager.detach(p); // Evict from Hibernate L1 cache to retrieve fresh AI generated values
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return ResponseEntity.status(401).body("User not found");
