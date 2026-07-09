@@ -250,6 +250,11 @@ public class ProblemController {
         return ResponseEntity.ok(res);
     }
 
+    @GetMapping("/generation-jobs")
+    public ResponseEntity<?> getGenerationJobs() {
+        return ResponseEntity.ok(com.patternforge.service.ProblemGenerationService.getActiveJobsList());
+    }
+
     @PostMapping("/{id}/bookmark")
     public ResponseEntity<?> toggleBookmark(Authentication authentication, @PathVariable UUID id) {
         Optional<Problem> problemOpt = problemRepository.findById(id);

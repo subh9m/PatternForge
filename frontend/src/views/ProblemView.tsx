@@ -6,7 +6,7 @@ import {
   Play, Clock, Lock,
   Code, FileText, Brain, HelpCircle, 
   CheckCircle, ChevronDown, ChevronUp, Save,
-  Award, Maximize2
+  Award, Maximize2, Copy, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FullscreenCodeModal from '../components/FullscreenCodeModal';
@@ -331,6 +331,45 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [loadingSolutions, setLoadingSolutions] = useState(true);
   const [generationFailed, setGenerationFailed] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const [copyingState, setCopyingState] = useState(false);
+
+  // Derived state values for code viewer solutions
+  const optimalCpp = (details?.optimal?.code?.cpp || details?.referenceSolutions?.cpp || details?.referenceSolution || '').trim();
+  const optimalApproach = (details?.optimal?.approach || details?.approach || '').trim();
+  const bruteCpp = (details?.bruteForce?.code?.cpp || '').trim();
+  const bruteApproach = (details?.bruteForce?.approach || '').trim();
+  const betterCpp = (details?.better?.code?.cpp || '').trim();
+  const betterApproach = (details?.better?.approach || '').trim();
+
+  const hasDistinctBrute = !!(details?.bruteForce && 
+    bruteCpp !== '' && 
+    bruteCpp !== optimalCpp && 
+    bruteApproach !== optimalApproach);
+
+  const hasDistinctBetter = !!(details?.better && 
+    betterCpp !== '' && 
+    betterCpp !== optimalCpp && 
+    (!hasDistinctBrute || betterCpp !== bruteCpp) &&
+    betterApproach !== optimalApproach);
+
+  const activeSubTab = (selectedSolutionTab === 'brute' && hasDistinctBrute)
+    ? 'brute'
+    : (selectedSolutionTab === 'better' && hasDistinctBetter)
+    ? 'better'
+    : 'optimal';
+
+  const currentSol = (activeSubTab === 'brute' ? details?.bruteForce : null)
+    || (activeSubTab === 'better' ? details?.better : null)
+    || details?.optimal
+    || {
+        approach: details?.approach || '',
+        timeComplexity: details?.optimalTimeComplexity || '',
+        spaceComplexity: details?.optimalSpaceComplexity || '',
+        code: {
+          cpp: details?.referenceSolutions?.cpp || details?.referenceSolution || '',
+          java: details?.referenceSolutions?.java || details?.referenceSolution || ''
+        }
+      };
 
   const handleRetry = () => {
     setGenerationFailed(false);
@@ -1854,60 +1893,15 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       <div className="text-slate-600">Compiler output will display here.</div>
                     )}
                   </div>
-                </div>
-              )}
-
-              {/* TAB 3: SOLUTIONS WORKSPACE */}
+                     {/* TAB 3: SOLUTIONS WORKSPACE */}
               {activeTab === 'solutions' && (
                 loadingSolutions ? (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 animate-pulse">
                     <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
                     <p className="text-slate-400 text-xs font-bold uppercase tracking-wider font-mono">Generating optimal reference codes...</p>
                   </div>
-                ) : details && (() => {
-                    const optimalCpp = (details.optimal?.code?.cpp || details.referenceSolutions?.cpp || details.referenceSolution || '').trim();
-                const optimalApproach = (details.optimal?.approach || details.approach || '').trim();
-
-                const bruteCpp = (details.bruteForce?.code?.cpp || '').trim();
-                const bruteApproach = (details.bruteForce?.approach || '').trim();
-
-                const betterCpp = (details.better?.code?.cpp || '').trim();
-                const betterApproach = (details.better?.approach || '').trim();
-
-                // A brute force is distinct if it exists and is different from optimal
-                const hasDistinctBrute = details.bruteForce && 
-                  bruteCpp !== '' && 
-                  bruteCpp !== optimalCpp && 
-                  bruteApproach !== optimalApproach;
-
-                // A better solution is distinct if it exists and is different from both optimal and brute force
-                const hasDistinctBetter = details.better && 
-                  betterCpp !== '' && 
-                  betterCpp !== optimalCpp && 
-                  (!hasDistinctBrute || betterCpp !== bruteCpp) &&
-                  betterApproach !== optimalApproach;
-
-                const activeSubTab = (selectedSolutionTab === 'brute' && hasDistinctBrute)
-                  ? 'brute'
-                  : (selectedSolutionTab === 'better' && hasDistinctBetter)
-                  ? 'better'
-                  : 'optimal';
-
-                const currentSol = (activeSubTab === 'brute' ? details.bruteForce : null)
-                  || (activeSubTab === 'better' ? details.better : null)
-                  || details.optimal
-                  || {
-                      approach: details.approach,
-                      timeComplexity: details.optimalTimeComplexity,
-                      spaceComplexity: details.optimalSpaceComplexity,
-                      code: {
-                        cpp: details.referenceSolutions?.cpp || details.referenceSolution || '',
-                        java: details.referenceSolutions?.java || details.referenceSolution || ''
-                      }
-                    };
-
-                return (
-                  <div className="space-y-4 flex flex-col flex-1 overflow-y-auto pr-1">
+                ) : details && (
+                  <div className="space-y-4 flex flex-col flex-1 overflow-y-auto pr-1 animate-fadeIn">
                     <div className="flex items-center justify-between border-b border-slate-900 pb-2">
                       <div className="flex items-center space-x-2">
                         <HelpCircle className="h-4 w-4 text-emerald-400" />
@@ -1943,7 +1937,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                             onClick={() => setSelectedSolutionTab('better')}
                             className={`px-3 py-1.5 text-[11px] font-extrabold transition-smooth border-b-2 uppercase tracking-wider ${
                               activeSubTab === 'better'
-                                ? 'border-amber-500 text-amber-400'
+                                ? 'border-amber-555 text-amber-400'
                                 : 'border-transparent text-slate-400 hover:text-slate-200'
                             }`}
                           >
@@ -1977,7 +1971,47 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
                     {/* Reference code display */}
                     <div className="space-y-2">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">Solution Code:</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">Solution Code:</span>
+                        
+                        <div className="flex items-center space-x-1.5">
+                          {/* Copy Code */}
+                          <button
+                            onClick={() => {
+                              const codeVal = currentSol.code && currentSol.code[solutionLanguage]
+                                ? currentSol.code[solutionLanguage]
+                                : '';
+                              navigator.clipboard.writeText(codeVal);
+                              setCopyingState(true);
+                              setTimeout(() => setCopyingState(false), 2000);
+                            }}
+                            title="Copy Code"
+                            className="p-1.5 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-slate-200 transition-colors duration-150 cursor-pointer relative group"
+                          >
+                            {copyingState ? (
+                              <Check className="h-3.5 w-3.5 text-emerald-400" />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5" />
+                            )}
+                            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-950 text-slate-200 text-[10px] px-2 py-1 rounded border border-slate-800 whitespace-nowrap shadow-md transition-opacity duration-150 z-50">
+                              Copy Code
+                            </span>
+                          </button>
+
+                          {/* Expand Code */}
+                          <button
+                            onClick={() => setIsFullscreenOpen(true)}
+                            title="Expand Fullscreen"
+                            className="p-1.5 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-slate-200 transition-colors duration-150 cursor-pointer relative group"
+                          >
+                            <Maximize2 className="h-3.5 w-3.5" />
+                            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-950 text-slate-200 text-[10px] px-2 py-1 rounded border border-slate-800 whitespace-nowrap shadow-md transition-opacity duration-150 z-50">
+                              Expand Fullscreen
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
                       <div className="h-80 rounded-xl overflow-hidden border border-slate-900 bg-[#1e1e1e]">
                         <MonacoEditor
                           height="100%"
@@ -2014,9 +2048,8 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       )}
                     </div>
                   </div>
-                );
-              })()
-            )}
+                )
+              )}
 
               {/* TAB 4: REFLECTION NOTES (SEPARATE ROOT TAB) */}
               {activeTab === 'reflections' && (
@@ -2098,9 +2131,12 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
         <FullscreenCodeModal
           isOpen={isFullscreenOpen}
           onClose={() => setIsFullscreenOpen(false)}
-          code={details.referenceSolution || ''}
-          language="cpp"
-          title={`Reference Solution: ${problem?.name || ''}`}
+          code={
+            (currentSol.code && currentSol.code[solutionLanguage]) || 
+            details.referenceSolution || ''
+          }
+          language={solutionLanguage === 'cpp' ? 'cpp' : 'java'}
+          title={`Solution (${activeSubTab.toUpperCase()} - ${solutionLanguage.toUpperCase()}): ${problem?.name || ''}`}
           highlightFn={highlightCode}
         />
       )}

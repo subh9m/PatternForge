@@ -37,6 +37,13 @@ const MainApp: React.FC = () => {
     return localStorage.getItem('activeProblemId');
   });
   const [generatingProblemId, setGeneratingProblemId] = useState<string | null>(null);
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [snackbarProblemId, setSnackbarProblemId] = useState<string | null>(null);
+
+  const handleJobCompleted = (job: any) => {
+    setSnackbarMessage(`AI details generated successfully. "${job.problemName}" is ready.`);
+    setSnackbarProblemId(job.problemId);
+  };
 
   const prevUserRef = React.useRef<any>(null);
 
@@ -298,6 +305,8 @@ const MainApp: React.FC = () => {
           localStorage.setItem('activePortal', 'master_dashboard');
           setActivePortal('master_dashboard');
         }}
+        onOpenProblem={navigateToProblem}
+        onJobCompleted={handleJobCompleted}
       />
       
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative">
@@ -349,6 +358,41 @@ const MainApp: React.FC = () => {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Global Snackbar Toast Alert */}
+      {snackbarMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-3 bg-slate-900 border border-slate-800 text-slate-100 px-4 py-3 rounded-2xl shadow-2xl animate-slideIn">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div className="text-xs font-bold leading-tight">{snackbarMessage}</div>
+          <div className="flex items-center space-x-2 pl-3 border-l border-slate-800 shrink-0 select-none">
+            <button
+              onClick={() => {
+                if (snackbarProblemId) {
+                  navigateToProblem(snackbarProblemId);
+                }
+                setSnackbarMessage(null);
+                setSnackbarProblemId(null);
+              }}
+              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-colors shadow-sm"
+            >
+              Open
+            </button>
+            <button
+              onClick={() => {
+                setSnackbarMessage(null);
+                setSnackbarProblemId(null);
+              }}
+              className="px-2 py-1 text-slate-400 hover:text-slate-200 text-[10px] font-extrabold uppercase tracking-wider cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

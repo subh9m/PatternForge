@@ -2,15 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Flame, Terminal, CheckCircle2, Sun, Moon, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import AiActivityCenter from './AiActivityCenter';
 
 interface NavbarProps {
   activeTab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision';
   setActiveTab: (tab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision') => void;
   onSwitchPortal?: () => void;
   onGoToDashboard?: () => void;
+  onOpenProblem?: (id: string) => void;
+  onJobCompleted?: (job: any) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal, onGoToDashboard }) => {
+const Navbar: React.FC<NavbarProps> = ({ 
+  activeTab, 
+  setActiveTab, 
+  onSwitchPortal, 
+  onGoToDashboard,
+  onOpenProblem,
+  onJobCompleted
+}) => {
   const { logout, user } = useAuth();
   const [streak, setStreak] = useState(0);
   const [solved, setSolved] = useState(0);
@@ -181,6 +191,14 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
               >
                 Modules
               </button>
+              <div className="h-5 w-px bg-border"></div>
+            </>
+          )}
+
+          {/* AI Activity Center */}
+          {onOpenProblem && (
+            <>
+              <AiActivityCenter onOpenProblem={onOpenProblem} onJobCompleted={onJobCompleted} />
               <div className="h-5 w-px bg-border"></div>
             </>
           )}

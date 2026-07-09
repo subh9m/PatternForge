@@ -13,4 +13,5 @@ public interface RevisionRepository extends JpaRepository<Revision, UUID> {
     List<Revision> findByUserIdAndStatus(UUID userId, String status);
     List<Revision> findByUserIdAndScheduledDateBeforeAndStatus(UUID userId, LocalDateTime date, String status);
     List<Revision> findByUserIdAndProblemIdAndStatus(UUID userId, UUID problemId, String status);
+    List<Revision> findByProblemId(UUID problemId);
 }

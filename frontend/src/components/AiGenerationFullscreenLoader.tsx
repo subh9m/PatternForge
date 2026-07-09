@@ -27,6 +27,7 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
   const [currentPhrase, setCurrentPhrase] = useState(FRIENDLY_PHRASES[0]);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isAlreadyGenerating, setIsAlreadyGenerating] = useState(false);
 
   const startRef = useRef(false);
 
@@ -56,26 +57,49 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
     setLoading(true);
     setFailed(false);
     
+    let alreadyGenerating = false;
     try {
-      // 1. Fetch current rolling average estimate from backend
+      // 1. Fetch current active jobs to see if this problem is already generating
       try {
-        const est = await api.get<{ averageSeconds: number; displayString: string }>('/problems/generation-estimate');
-        setTimeLeft(est.averageSeconds || 35);
-        setDisplayEstimate(est.displayString || "Usually takes around 35 seconds");
+        const jobs = await api.get<any[]>('/problems/generation-jobs');
+        const existingJob = jobs.find(j => j.problemId === problemId);
+        if (existingJob && (existingJob.status === 'QUEUED' || existingJob.status === 'GENERATING')) {
+          alreadyGenerating = true;
+          setIsAlreadyGenerating(true);
+          // Calculate remaining wait time based on start time
+          if (existingJob.startTime > 0) {
+            const elapsed = Math.round((Date.now() - existingJob.startTime) / 1000);
+            const est = await api.get<{ averageSeconds: number }>('/problems/generation-estimate');
+            const avg = est.averageSeconds || 35;
+            setTimeLeft(Math.max(3, avg - elapsed));
+            setDisplayEstimate(`Usually takes around ${avg} seconds`);
+          }
+        }
       } catch (e) {
-        // Fallback to default
-        setTimeLeft(35);
-        setDisplayEstimate("Usually takes around 35 seconds");
+        // Silently skip check
       }
 
-      // 2. Fetch basic details and solution details in parallel
+      // 2. Fetch current rolling average estimate from backend if not already set
+      if (!alreadyGenerating) {
+        try {
+          const est = await api.get<{ averageSeconds: number; displayString: string }>('/problems/generation-estimate');
+          setTimeLeft(est.averageSeconds || 35);
+          setDisplayEstimate(est.displayString || "Usually takes around 35 seconds");
+        } catch (e) {
+          // Fallback to default
+          setTimeLeft(35);
+          setDisplayEstimate("Usually takes around 35 seconds");
+        }
+      }
+
+      // 3. Fetch basic details and solution details in parallel
       const cacheKey = `pf_details_${problemId}`;
       const [basicData, solData] = await Promise.all([
         api.get<any>(`/problems/${problemId}/basic-details`),
         api.get<any>(`/problems/${problemId}/solution-details`)
       ]);
 
-      // 3. Merge details and save to local storage cache
+      // 4. Merge details and save to local storage cache
       const mergedDetails = { ...basicData, ...solData };
       localStorage.setItem(cacheKey, JSON.stringify(mergedDetails));
 
@@ -110,9 +134,14 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
             </div>
 
             <div className="space-y-1">
-              <h2 className="text-lg font-black text-slate-100 uppercase tracking-wide">Generating AI Details</h2>
+              <h2 className="text-lg font-black text-slate-100 uppercase tracking-wide">
+                {isAlreadyGenerating ? "Already Generating..." : "Generating AI Details"}
+              </h2>
               <p className="text-slate-400 text-xs leading-relaxed max-w-xs mx-auto">
-                PatternForge is analyzing problem structures to cache optimal strategies.
+                {isAlreadyGenerating 
+                  ? "Another explorer page requested this problem. Synced and loading progress..."
+                  : "PatternForge is analyzing problem structures to cache optimal strategies."
+                }
               </p>
             </div>
 
@@ -135,9 +164,9 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
 
             <button
               onClick={onCancel}
-              className="text-slate-500 hover:text-slate-300 text-xs font-bold uppercase tracking-wider font-mono cursor-pointer transition-colors pt-2"
+              className="text-slate-500 hover:text-slate-300 text-xs font-bold uppercase tracking-wider font-mono cursor-pointer transition-colors pt-2 bg-slate-900/60 border border-slate-800 px-4 py-2 rounded-xl hover:border-slate-700"
             >
-              Cancel & Go Back
+              Explore More
             </button>
           </div>
         ) : (

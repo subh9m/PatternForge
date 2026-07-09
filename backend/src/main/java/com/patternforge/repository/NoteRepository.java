@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface NoteRepository extends JpaRepository<Note, UUID> {
     Optional<Note> findByUserIdAndProblemId(UUID userId, UUID problemId);
+    java.util.List<Note> findByProblemId(UUID problemId);
 }

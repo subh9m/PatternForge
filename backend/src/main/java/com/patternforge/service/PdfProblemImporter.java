@@ -16,6 +16,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.patternforge.repository.AttemptRepository;
 import com.patternforge.repository.BookmarkRepository;
+import com.patternforge.repository.TestCaseRepository;
+import com.patternforge.repository.SubmissionRepository;
+import com.patternforge.repository.RevisionRepository;
+import com.patternforge.repository.NoteRepository;
+import com.patternforge.model.*;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -24,6 +29,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class PdfProblemImporter implements CommandLineRunner {
@@ -33,6 +39,10 @@ public class PdfProblemImporter implements CommandLineRunner {
     private final ProblemGenerationService problemGenerationService;
     private final AttemptRepository attemptRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final TestCaseRepository testCaseRepository;
+    private final SubmissionRepository submissionRepository;
+    private final RevisionRepository revisionRepository;
+    private final NoteRepository noteRepository;
 
     @Value("${patternforge.pdf.path}")
     private String configuredPdfPath;
@@ -50,17 +60,28 @@ public class PdfProblemImporter implements CommandLineRunner {
                               ProblemRepository problemRepository, 
                               ProblemGenerationService problemGenerationService,
                               AttemptRepository attemptRepository,
-                              BookmarkRepository bookmarkRepository) {
+                              BookmarkRepository bookmarkRepository,
+                              TestCaseRepository testCaseRepository,
+                              SubmissionRepository submissionRepository,
+                              RevisionRepository revisionRepository,
+                              NoteRepository noteRepository) {
         this.topicRepository = topicRepository;
         this.problemRepository = problemRepository;
         this.problemGenerationService = problemGenerationService;
         this.attemptRepository = attemptRepository;
         this.bookmarkRepository = bookmarkRepository;
+        this.testCaseRepository = testCaseRepository;
+        this.submissionRepository = submissionRepository;
+        this.revisionRepository = revisionRepository;
+        this.noteRepository = noteRepository;
     }
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        // Run database deduplication audit first
+        deduplicateDatabase();
+
         System.out.println("PatternForge Importer: Syncing database problems from JSON on boot...");
         
         // Setup topic maps
@@ -127,9 +148,17 @@ public class PdfProblemImporter implements CommandLineRunner {
                 Topic topic = topicMap.get(topicName);
                 String difficulty = getDifficultyEstimate(topicName, topicNumber);
 
-                Optional<Problem> existingOpt = problemRepository.findByMasterNumber(masterNumber);
+                Optional<Problem> existingOpt = Optional.empty();
+                if (leetcodeNumber > 0) {
+                    existingOpt = problemRepository.findByLeetcodeNumber(leetcodeNumber);
+                }
+                if (existingOpt.isEmpty()) {
+                    existingOpt = problemRepository.findByMasterNumber(masterNumber);
+                }
+                
                 if (existingOpt.isPresent()) {
                     Problem existing = existingOpt.get();
+                    existing.setMasterNumber(masterNumber);
                     existing.setTopicNumber(topicNumber);
                     existing.setLeetcodeNumber(leetcodeNumber);
                     existing.setName(problemName);
@@ -261,9 +290,17 @@ public class PdfProblemImporter implements CommandLineRunner {
                     String difficulty = getDifficultyEstimate(currentTopicName, topicNumber);
 
                     // Check if it already exists
-                    Optional<Problem> existingOpt = problemRepository.findByMasterNumber(masterNumber);
+                    Optional<Problem> existingOpt = Optional.empty();
+                    if (leetcodeNumber > 0) {
+                        existingOpt = problemRepository.findByLeetcodeNumber(leetcodeNumber);
+                    }
+                    if (existingOpt.isEmpty()) {
+                        existingOpt = problemRepository.findByMasterNumber(masterNumber);
+                    }
+
                     if (existingOpt.isPresent()) {
                         Problem existing = existingOpt.get();
+                        existing.setMasterNumber(masterNumber);
                         existing.setTopicNumber(topicNumber);
                         existing.setLeetcodeNumber(leetcodeNumber);
                         existing.setName(problemName);
@@ -404,7 +441,8 @@ public class PdfProblemImporter implements CommandLineRunner {
 
         for (Object[] seed : seedProblems) {
             Topic topic = topicMap.get((String) seed[4]);
-            if (problemRepository.findByMasterNumber((Integer) seed[0]).isPresent()) continue;
+            if (problemRepository.findByLeetcodeNumber((Integer) seed[2]).isPresent() || 
+                problemRepository.findByMasterNumber((Integer) seed[0]).isPresent()) continue;
             Problem p = Problem.builder()
                     .masterNumber((Integer) seed[0])
                     .topicNumber((Integer) seed[1])
@@ -416,5 +454,176 @@ public class PdfProblemImporter implements CommandLineRunner {
             problemRepository.save(p);
         }
         System.out.println("PatternForge Importer: Seeded fallback database with " + problemRepository.count() + " core problems.");
+    }
+
+    @Transactional
+    public void deduplicateDatabase() {
+        System.out.println("PatternForge Importer: Auditing database for duplicate problems...");
+        try {
+            List<Problem> all = problemRepository.findAll();
+            Map<Integer, List<Problem>> grouped = all.stream()
+                    .filter(p -> p.getLeetcodeNumber() != null && p.getLeetcodeNumber() > 0)
+                    .collect(Collectors.groupingBy(Problem::getLeetcodeNumber));
+
+            int duplicatesRemoved = 0;
+
+            for (Map.Entry<Integer, List<Problem>> entry : grouped.entrySet()) {
+                List<Problem> list = entry.getValue();
+                if (list.size() <= 1) {
+                    continue;
+                }
+
+                // Find the survivor (highest richness score)
+                Problem survivor = list.stream()
+                        .max(Comparator.comparingInt(this::getRichnessScore))
+                        .orElse(list.get(0));
+
+                for (Problem dup : list) {
+                    if (dup.getId().equals(survivor.getId())) {
+                        continue;
+                    }
+
+                    System.out.println("PatternForge Importer: Found duplicate problem: " + dup.getName() + " (ID: " + dup.getId() + "). Remapping relations to survivor (ID: " + survivor.getId() + ")...");
+
+                    // Remap relations
+                    remapRelations(dup, survivor);
+
+                    // Delete duplicate
+                    problemRepository.delete(dup);
+                    duplicatesRemoved++;
+                }
+            }
+            
+            if (duplicatesRemoved > 0) {
+                System.out.println("PatternForge Importer: Deduplication complete. Removed " + duplicatesRemoved + " duplicate problems.");
+                problemRepository.flush();
+            } else {
+                System.out.println("PatternForge Importer: No duplicates found. Database is clean.");
+            }
+        } catch (Exception e) {
+            System.err.println("PatternForge Importer: Extremely unexpected critical failure when deduplicating database: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private int getRichnessScore(Problem p) {
+        int score = 0;
+        if (p.getBasicDetailsJson() != null && !LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson())) {
+            score += 10;
+        }
+        if (p.getSolutionDetailsJson() != null && !LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson())) {
+            score += 10;
+        }
+        if (p.getSimplifiedStatement() != null && !LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement())) {
+            score += 5;
+        }
+        return score;
+    }
+
+    private void remapRelations(Problem duplicate, Problem survivor) {
+        UUID dupId = duplicate.getId();
+        UUID survId = survivor.getId();
+
+        // 1. TestCase
+        try {
+            List<TestCase> tcs = testCaseRepository.findByProblemId(dupId);
+            for (TestCase tc : tcs) {
+                tc.setProblem(survivor);
+                testCaseRepository.save(tc);
+            }
+        } catch (Exception e) {
+            System.err.println("Deduplication error (TestCase): " + e.getMessage());
+        }
+
+        // 2. Submission
+        try {
+            List<Submission> subs = submissionRepository.findByProblemId(dupId);
+            for (Submission s : subs) {
+                s.setProblem(survivor);
+                submissionRepository.save(s);
+            }
+        } catch (Exception e) {
+            System.err.println("Deduplication error (Submission): " + e.getMessage());
+        }
+
+        // 3. Revision
+        try {
+            List<Revision> revs = revisionRepository.findByProblemId(dupId);
+            for (Revision r : revs) {
+                r.setProblem(survivor);
+                revisionRepository.save(r);
+            }
+        } catch (Exception e) {
+            System.err.println("Deduplication error (Revision): " + e.getMessage());
+        }
+
+        // 4. Note
+        try {
+            List<Note> notes = noteRepository.findByProblemId(dupId);
+            for (Note n : notes) {
+                Optional<Note> survNote = noteRepository.findByUserIdAndProblemId(n.getUser().getId(), survId);
+                if (survNote.isPresent()) {
+                    Note sn = survNote.get();
+                    if ((sn.getApproach() == null || sn.getApproach().isEmpty()) && n.getApproach() != null) {
+                        sn.setApproach(n.getApproach());
+                        sn.setObservations(n.getObservations());
+                        sn.setBruteForce(n.getBruteForce());
+                        sn.setMistakes(n.getMistakes());
+                        sn.setOptimizedIdea(n.getOptimizedIdea());
+                        sn.setAlternativeSolution(n.getAlternativeSolution());
+                        sn.setFutureReminder(n.getFutureReminder());
+                        noteRepository.save(sn);
+                    }
+                    noteRepository.delete(n);
+                } else {
+                    n.setProblem(survivor);
+                    noteRepository.save(n);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Deduplication error (Note): " + e.getMessage());
+        }
+
+        // 5. Bookmark
+        try {
+            List<Bookmark> bms = bookmarkRepository.findByProblemId(dupId);
+            for (Bookmark b : bms) {
+                Optional<Bookmark> survBm = bookmarkRepository.findByUserIdAndProblemId(b.getUser().getId(), survId);
+                if (survBm.isPresent()) {
+                    bookmarkRepository.delete(b);
+                } else {
+                    b.setProblem(survivor);
+                    bookmarkRepository.save(b);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Deduplication error (Bookmark): " + e.getMessage());
+        }
+
+        // 6. Attempt
+        try {
+            List<Attempt> atts = attemptRepository.findByProblemId(dupId);
+            for (Attempt a : atts) {
+                Optional<Attempt> survAtt = attemptRepository.findByUserIdAndProblemId(a.getUser().getId(), survId);
+                if (survAtt.isPresent()) {
+                    Attempt sa = survAtt.get();
+                    if (!"SOLVED".equals(sa.getStatus()) && "SOLVED".equals(a.getStatus())) {
+                        sa.setStatus("SOLVED");
+                        sa.setRevisionLevel(a.getRevisionLevel());
+                        sa.setConfidenceRating(a.getConfidenceRating());
+                        sa.setTimeTaken(a.getTimeTaken());
+                        sa.setHintsUsed(a.getHintsUsed());
+                        sa.setWrongAttemptsCount(a.getWrongAttemptsCount());
+                        attemptRepository.save(sa);
+                    }
+                    attemptRepository.delete(a);
+                } else {
+                    a.setProblem(survivor);
+                    attemptRepository.save(a);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Deduplication error (Attempt): " + e.getMessage());
+        }
     }
 }

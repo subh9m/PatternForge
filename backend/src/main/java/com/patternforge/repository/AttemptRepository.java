@@ -17,4 +17,5 @@ public interface AttemptRepository extends JpaRepository<Attempt, UUID> {
     
     // For bookmarks or favorites
     List<Attempt> findByUserIdAndIsFavorite(UUID userId, Boolean isFavorite);
+    List<Attempt> findByProblemId(UUID problemId);
 }

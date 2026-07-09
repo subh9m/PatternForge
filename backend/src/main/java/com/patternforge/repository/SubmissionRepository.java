@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface SubmissionRepository extends JpaRepository<Submission, UUID> {
     List<Submission> findByUserIdAndProblemIdOrderByCreatedAtDesc(UUID userId, UUID problemId);
     List<Submission> findByUserIdOrderByCreatedAtDesc(UUID userId);
+    List<Submission> findByProblemId(UUID problemId);
 }

@@ -24,6 +24,52 @@ public class ProblemGenerationService {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProblemGenerationService.class);
 
     private static volatile long lastUserRequestTime = 0;
+    
+    public enum JobStatus {
+        QUEUED,
+        GENERATING,
+        COMPLETED,
+        FAILED
+    }
+
+    public static class JobProgress {
+        private UUID problemId;
+        private String problemName;
+        private JobStatus status;
+        private long startTime;
+        private long endTime;
+
+        public JobProgress(UUID problemId, String problemName, JobStatus status) {
+            this.problemId = problemId;
+            this.problemName = problemName;
+            this.status = status;
+        }
+
+        public UUID getProblemId() { return problemId; }
+        public String getProblemName() { return problemName; }
+        public JobStatus getStatus() { return status; }
+        public void setStatus(JobStatus status) { this.status = status; }
+        public long getStartTime() { return startTime; }
+        public void setStartTime(long startTime) { this.startTime = startTime; }
+        public long getEndTime() { return endTime; }
+        public void setEndTime(long endTime) { this.endTime = endTime; }
+    }
+
+    private static final Map<UUID, JobProgress> activeJobs = new ConcurrentHashMap<>();
+
+    public static List<JobProgress> getActiveJobsList() {
+        cleanRegistry();
+        return new ArrayList<>(activeJobs.values());
+    }
+
+    public static void cleanRegistry() {
+        long now = System.currentTimeMillis();
+        activeJobs.entrySet().removeIf(entry -> {
+            JobProgress p = entry.getValue();
+            return (p.getStatus() == JobStatus.COMPLETED || p.getStatus() == JobStatus.FAILED)
+                    && (now - p.getEndTime() > 300000); // 5 minutes
+        });
+    }
 
     public static void recordUserActivity() {
         lastUserRequestTime = System.currentTimeMillis();
@@ -33,14 +79,17 @@ public class ProblemGenerationService {
         return (System.currentTimeMillis() - lastUserRequestTime) < 60000;
     }
 
-    private Thread workerThread = null;
+    private final List<Thread> workerThreads = new ArrayList<>();
+    private static final int MAX_WORKERS = 3;
 
     private synchronized void ensureWorkerThreadStarted() {
-        if (workerThread == null || !workerThread.isAlive()) {
-            workerThread = new Thread(this::queueProcessorLoop, "dsa-problem-generation-worker");
-            workerThread.setDaemon(true);
-            workerThread.start();
-            log.info("ProblemGenerationService: Background queue processor worker thread started successfully.");
+        workerThreads.removeIf(t -> !t.isAlive());
+        while (workerThreads.size() < MAX_WORKERS) {
+            Thread t = new Thread(this::queueProcessorLoop, "dsa-problem-generation-worker-" + workerThreads.size());
+            t.setDaemon(true);
+            t.start();
+            workerThreads.add(t);
+            log.info("ProblemGenerationService: Background queue processor worker thread dsa-problem-generation-worker-{} started successfully.", workerThreads.size() - 1);
         }
     }
 
@@ -88,6 +137,12 @@ public class ProblemGenerationService {
                     if (job != null) {
                         queuedJobs.remove(job.getProblemId());
                         runningJobs.add(job.getProblemId());
+                        
+                        JobProgress progress = activeJobs.get(job.getProblemId());
+                        if (progress != null) {
+                            progress.setStatus(JobStatus.GENERATING);
+                            progress.setStartTime(System.currentTimeMillis());
+                        }
                     }
                 }
 
@@ -98,9 +153,21 @@ public class ProblemGenerationService {
                             generateMissingDetailsInternal(freshOpt.get());
                         }
                         job.getFuture().complete(null);
+                        
+                        JobProgress progress = activeJobs.get(job.getProblemId());
+                        if (progress != null) {
+                            progress.setStatus(JobStatus.COMPLETED);
+                            progress.setEndTime(System.currentTimeMillis());
+                        }
                     } catch (Exception e) {
                         log.error("ProblemGenerationService: Failed executing job for problem: {}", job.getProblemId(), e);
                         job.getFuture().completeExceptionally(e);
+                        
+                        JobProgress progress = activeJobs.get(job.getProblemId());
+                        if (progress != null) {
+                            progress.setStatus(JobStatus.FAILED);
+                            progress.setEndTime(System.currentTimeMillis());
+                        }
                     } finally {
                         runningJobs.remove(job.getProblemId());
                         // Apply spacing delays
@@ -156,6 +223,11 @@ public class ProblemGenerationService {
                 GenerationJob job = new GenerationJob(problemId, priority);
                 queue.add(job);
                 queuedJobs.add(problemId);
+                
+                // Add to activeJobs registry
+                if (freshOpt.isPresent()) {
+                    activeJobs.put(problemId, new JobProgress(problemId, freshOpt.get().getName(), JobStatus.QUEUED));
+                }
             }
             lock.notifyAll();
         }
@@ -188,6 +260,11 @@ public class ProblemGenerationService {
                 job = new GenerationJob(problemId, priority);
                 queue.add(job);
                 queuedJobs.add(problemId);
+                
+                // Add to activeJobs registry
+                if (freshOpt.isPresent()) {
+                    activeJobs.put(problemId, new JobProgress(problemId, freshOpt.get().getName(), JobStatus.QUEUED));
+                }
             }
             lock.notifyAll();
         }

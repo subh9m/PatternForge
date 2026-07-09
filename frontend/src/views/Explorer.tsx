@@ -57,7 +57,19 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
           api.get<ProblemDto[]>('/problems'),
           api.get<TopicStats[]>('/problems/topics')
         ]);
-        setProblems(problemsData);
+        const uniqueProblemsMap = new Map<number, ProblemDto>();
+        const uniqueProblemsList: ProblemDto[] = [];
+        (problemsData || []).forEach(p => {
+          if (p.leetcodeNumber && p.leetcodeNumber > 0) {
+            if (!uniqueProblemsMap.has(p.leetcodeNumber)) {
+              uniqueProblemsMap.set(p.leetcodeNumber, p);
+              uniqueProblemsList.push(p);
+            }
+          } else {
+            uniqueProblemsList.push(p);
+          }
+        });
+        setProblems(uniqueProblemsList);
         setTopics(topicsData);
       } catch (e) {
         console.error("Failed to load explorer data", e);
