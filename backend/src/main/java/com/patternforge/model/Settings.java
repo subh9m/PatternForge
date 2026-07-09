@@ -45,4 +45,8 @@ public class Settings {
     // Hour of day (0-23) when daily progress resets (default: 2 = 2:00 AM)
     @Builder.Default
     private Integer dailyResetHour = 2;
+
+    // Minute (0-59) of the reset time (default: 0)
+    @Builder.Default
+    private Integer dailyResetMinute = 0;
 }

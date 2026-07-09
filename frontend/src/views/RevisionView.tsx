@@ -381,10 +381,11 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
   useEffect(() => {
     const scheduleMidnightReset = () => {
       const now = new Date();
-      // Read the user's configured reset hour from localStorage (set by Settings page, default 2)
-      const resetHour = parseInt(localStorage.getItem('patternforge_reset_hour') || '2', 10);
+      // Read the user's configured reset time from localStorage ("HH:mm", set by Settings page)
+      const resetTime = localStorage.getItem('patternforge_reset_time') || '02:00';
+      const [resetHour, resetMinute] = resetTime.split(':').map(Number);
       const nextReset = new Date();
-      nextReset.setHours(resetHour, 0, 0, 0);
+      nextReset.setHours(resetHour, resetMinute, 0, 0);
       if (nextReset <= now) {
         nextReset.setDate(nextReset.getDate() + 1);
       }

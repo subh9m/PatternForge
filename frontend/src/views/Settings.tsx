@@ -10,7 +10,8 @@ interface SettingsDto {
   autosaveInterval: number;
   keyboardShortcutsEnabled: boolean;
   dailyGoal: number;
-  dailyResetHour: number; // 0-23
+  dailyResetHour: number;   // 0-23
+  dailyResetMinute: number; // 0-59
 }
 
 const SettingsView: React.FC = () => {
@@ -23,6 +24,7 @@ const SettingsView: React.FC = () => {
     keyboardShortcutsEnabled: true,
     dailyGoal: 3,
     dailyResetHour: 2,
+    dailyResetMinute: 0,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,8 +37,10 @@ const SettingsView: React.FC = () => {
       try {
         const data = await api.get<SettingsDto>('/settings');
         setSettings(data);
-        // Seed localStorage so timer components always have the latest reset hour
-        localStorage.setItem('patternforge_reset_hour', String(data.dailyResetHour ?? 2));
+        // Seed localStorage with "HH:mm" so timer components always have the latest reset time
+        const h = String(data.dailyResetHour ?? 2).padStart(2, '0');
+        const m = String(data.dailyResetMinute ?? 0).padStart(2, '0');
+        localStorage.setItem('patternforge_reset_time', `${h}:${m}`);
       } catch (e) {
         console.error("Failed to load settings", e);
       } finally {
@@ -136,8 +140,10 @@ const SettingsView: React.FC = () => {
     setSuccessMsg('');
     try {
       await api.put('/settings', settings);
-      // Cache the reset hour in localStorage so timer components can read it instantly
-      localStorage.setItem('patternforge_reset_hour', String(settings.dailyResetHour ?? 2));
+      // Cache the full "HH:mm" reset time in localStorage so timer components can read it instantly
+      const h = String(settings.dailyResetHour ?? 2).padStart(2, '0');
+      const m = String(settings.dailyResetMinute ?? 0).padStart(2, '0');
+      localStorage.setItem('patternforge_reset_time', `${h}:${m}`);
       setSuccessMsg('Settings saved successfully!');
       setTimeout(() => setSuccessMsg(''), 3000);
     } catch (e) {
@@ -306,19 +312,30 @@ const SettingsView: React.FC = () => {
                 <span className="text-xs font-bold text-slate-200 block">Daily Progress Reset Time</span>
                 <span className="text-[10px] text-slate-500">Time each night when the revision tab and daily tasks reset for the new day.</span>
               </div>
-              <select
-                value={settings.dailyResetHour ?? 2}
-                onChange={(e) => setSettings({ ...settings, dailyResetHour: Number(e.target.value) })}
-                className="glass-input rounded-lg px-3 py-1.5 text-xs font-semibold w-28 bg-slate-900 border border-slate-800"
-              >
-                {Array.from({ length: 24 }, (_, h) => {
-                  const ampm = h < 12 ? 'AM' : 'PM';
-                  const display = h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
-                  return (
-                    <option key={h} value={h} className="bg-slate-900">{display}</option>
-                  );
-                })}
-              </select>
+              <div className="flex items-center gap-2">
+                <select
+                  value={settings.dailyResetHour ?? 2}
+                  onChange={(e) => setSettings({ ...settings, dailyResetHour: Number(e.target.value), dailyResetMinute: 0 })}
+                  className="glass-input rounded-lg px-3 py-1.5 text-xs font-semibold w-28 bg-slate-900 border border-slate-800"
+                >
+                  {Array.from({ length: 24 }, (_, h) => {
+                    const display = h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
+                    return (
+                      <option key={h} value={h} className="bg-slate-900">{display}</option>
+                    );
+                  })}
+                </select>
+                <input
+                  type="time"
+                  value={`${String(settings.dailyResetHour ?? 2).padStart(2, '0')}:${String(settings.dailyResetMinute ?? 0).padStart(2, '0')}`}
+                  onChange={(e) => {
+                    const [h, m] = (e.target.value || '02:00').split(':').map(Number);
+                    setSettings({ ...settings, dailyResetHour: h, dailyResetMinute: m });
+                  }}
+                  className="glass-input rounded-lg px-3 py-1.5 text-xs font-semibold w-28 bg-slate-900 border border-slate-800 text-slate-200 [color-scheme:dark] cursor-pointer"
+                  title="Enter exact time with minutes"
+                />
+              </div>
             </div>
           </div>
         </div>

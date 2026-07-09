@@ -189,16 +189,17 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     loadDashboardData(stats === null);
   }, [selectedYear]);
 
-  // 2AM IST Nightly Reset: Clear stale caches and re-fetch when the day rolls over
+  // Nightly Reset: Clear stale caches and re-fetch when the day rolls over
   useEffect(() => {
     const scheduleMidnightReset = () => {
       const now = new Date();
-      // Read the user's configured reset hour from localStorage (set by Settings page, default 2)
-      const resetHour = parseInt(localStorage.getItem('patternforge_reset_hour') || '2', 10);
+      // Read the user's configured reset time from localStorage ("HH:mm", set by Settings page)
+      const resetTime = localStorage.getItem('patternforge_reset_time') || '02:00';
+      const [resetHour, resetMinute] = resetTime.split(':').map(Number);
       const nextReset = new Date();
-      nextReset.setHours(resetHour, 0, 0, 0);
+      nextReset.setHours(resetHour, resetMinute, 0, 0);
       if (nextReset <= now) {
-        // Already past the reset hour today, schedule for tomorrow
+        // Already past the reset time today, schedule for tomorrow
         nextReset.setDate(nextReset.getDate() + 1);
       }
       const msUntilReset = nextReset.getTime() - now.getTime();
