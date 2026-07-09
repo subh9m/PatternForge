@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { 
   Flame, BookOpen, Code2, Database, Cpu, 
   GitBranch, Brain, Globe, Coffee, Atom, FolderGit2, 
-  Calendar, Play, AlertTriangle, Plus, Sparkles
+  Calendar, Play, AlertTriangle, Plus, Sparkles, X, Pause
 } from 'lucide-react';
 
 interface HeatmapDay {
@@ -84,6 +84,11 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
   const [heatmapError, setHeatmapError] = useState<string | null>(null);
   const [motivationQuote] = useState(() => MOTIVATION_QUOTES[Math.floor(Math.random() * MOTIVATION_QUOTES.length)]);
 
+  // Reading Task Dropdown Creator State
+  const [showCreator, setShowCreator] = useState(false);
+  const [creatorModule, setCreatorModule] = useState<string>('');
+  const [creatorDuration, setCreatorDuration] = useState<number>(25);
+
   const getGreeting = () => {
     const hr = new Date().getHours();
     if (hr < 12) return "Good Morning";
@@ -143,24 +148,19 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
     loadDashboardData();
   }, [selectedYear]);
 
-  const handleStartReadingTask = async (moduleId: string, duration: number) => {
+  // BUTTON 1: Add Task only (does not launch timer)
+  const handleAddTaskOnly = async () => {
+    if (!creatorModule) return;
+
     const selectedList = dailyTask.selectedModules ? dailyTask.selectedModules.split(',') : [];
-    if (selectedList.includes(moduleId)) {
-      // Resume focus mode
-      let remainingSeconds = undefined;
-      if (dailyTask.remainingDurations) {
-        const match = dailyTask.remainingDurations.split(',').find(item => item.startsWith(`${moduleId}:`));
-        if (match) {
-          remainingSeconds = parseInt(match.split(':')[1]);
-        }
-      }
-      onEnterFocusMode(moduleId as any, duration, remainingSeconds);
+    if (selectedList.includes(creatorModule)) {
+      setShowCreator(false);
       return;
     }
 
-    const nextSelected = [...selectedList, moduleId];
+    const nextSelected = [...selectedList, creatorModule];
     const selectedStr = nextSelected.join(',');
-    
+
     // Parse target durations
     const durationMap = new Map<string, number>();
     if (dailyTask.targetDurations) {
@@ -169,26 +169,79 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
         if (id && dur) durationMap.set(id, parseInt(dur));
       });
     }
-    durationMap.set(moduleId, duration);
+    durationMap.set(creatorModule, creatorDuration);
     const targetDurationsStr = nextSelected.map(id => `${id}:${durationMap.get(id) || 25}`).join(',');
 
-    // Save and launch
-    setDailyTask(prev => ({
-      ...prev,
-      selectedModules: selectedStr,
-      targetDurations: targetDurationsStr
-    }));
-
     try {
-      await api.post<DailyTaskData>(`/daily-tasks/today/select`, {
+      const updated = await api.post<DailyTaskData>(`/daily-tasks/today/select`, {
         selectedModules: selectedStr,
         targetDurations: targetDurationsStr
       });
-      // Start focus timer immediately
-      onEnterFocusMode(moduleId as any, duration);
+      setDailyTask(updated);
+      
+      // Reset creator state
+      setShowCreator(false);
+      setCreatorModule('');
+      setCreatorDuration(25);
+      
+      // Reload stats
+      loadDashboardData();
     } catch (err) {
-      console.error("Failed to save and start focus task", err);
+      console.error("Failed to add task", err);
     }
+  };
+
+  // BUTTON 2: Start Focus Mode (creates task if necessary and immediately starts timer)
+  const handleStartFocusMode = async () => {
+    if (!creatorModule) return;
+
+    const selectedList = dailyTask.selectedModules ? dailyTask.selectedModules.split(',') : [];
+    const nextSelected = selectedList.includes(creatorModule) ? selectedList : [...selectedList, creatorModule];
+    const selectedStr = nextSelected.join(',');
+
+    // Parse target durations
+    const durationMap = new Map<string, number>();
+    if (dailyTask.targetDurations) {
+      dailyTask.targetDurations.split(',').forEach(item => {
+        const [id, dur] = item.split(':');
+        if (id && dur) durationMap.set(id, parseInt(dur));
+      });
+    }
+    durationMap.set(creatorModule, creatorDuration);
+    const targetDurationsStr = nextSelected.map(id => `${id}:${durationMap.get(id) || 25}`).join(',');
+
+    try {
+      const updated = await api.post<DailyTaskData>(`/daily-tasks/today/select`, {
+        selectedModules: selectedStr,
+        targetDurations: targetDurationsStr
+      });
+      setDailyTask(updated);
+      
+      const moduleToLaunch = creatorModule;
+      const durationToLaunch = creatorDuration;
+
+      // Reset creator state
+      setShowCreator(false);
+      setCreatorModule('');
+      setCreatorDuration(25);
+
+      // Launch full screen focus mode
+      onEnterFocusMode(moduleToLaunch as any, durationToLaunch);
+    } catch (err) {
+      console.error("Failed to start focus mode", err);
+    }
+  };
+
+  // Resume Focus for an already scheduled card
+  const handleResumeFocus = (moduleId: string, targetMins: number) => {
+    let remainingSeconds = undefined;
+    if (dailyTask.remainingDurations) {
+      const match = dailyTask.remainingDurations.split(',').find(item => item.startsWith(`${moduleId}:`));
+      if (match) {
+        remainingSeconds = parseInt(match.split(':')[1]);
+      }
+    }
+    onEnterFocusMode(moduleId as any, targetMins, remainingSeconds);
   };
 
   if (loading) {
@@ -254,7 +307,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
       id: 'dsa_goal',
       name: 'Daily DSA Practice',
       progressText: `${stats.todayGoalSolved} / ${stats.todayGoalTarget} Solved`,
-      percent: Math.min(100, (stats.todayGoalSolved / stats.todayGoalTarget) * 100),
+      percent: stats.todayGoalTarget > 0 ? Math.min(100, Math.round((stats.todayGoalSolved / stats.todayGoalTarget) * 100)) : 100,
       isCompleted: stats.todayGoalSolved >= stats.todayGoalTarget,
       warningText: stats.todayGoalSolved < stats.todayGoalTarget ? 'Pending goal completion' : ''
     },
@@ -262,7 +315,6 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
       id: 'revision_goal',
       name: 'Daily Revision Center',
       progressText: `${stats.todayRevisedCount} Revised`,
-      // Total due is pending due + completed revisions today
       percent: (stats.revisionDueTodayCount + stats.todayRevisedCount) > 0 
         ? Math.round((stats.todayRevisedCount / (stats.revisionDueTodayCount + stats.todayRevisedCount)) * 100)
         : 100,
@@ -296,7 +348,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                 Command Center
               </span>
               <h1 className="text-3xl font-black bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent uppercase tracking-tight font-heading">
-                {getGreeting()}, User
+                {getGreeting()}, Developer
               </h1>
               <p className="text-xs text-slate-400 leading-relaxed font-medium italic">
                 "{motivationQuote}"
@@ -317,7 +369,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                 className="px-5 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black tracking-wider uppercase transition-smooth shadow-glow-primary cursor-pointer flex items-center space-x-2"
               >
                 <Code2 className="h-4 w-4" />
-                <span>LAUNCH MODULE PORTALS</span>
+                <span>LAUNCH PORTALS</span>
               </button>
             </div>
           </div>
@@ -371,65 +423,165 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
 
           {/* RIGHT: Reading Tasks Modules Progress cards */}
           <div className="space-y-6 lg:col-span-2">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-blue-400" />
-              <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest font-mono">Reading & Revision Tasks</h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4 text-blue-400" />
+                <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest font-mono">Reading & Revision Tasks</h3>
+              </div>
+              
+              {!showCreator && (
+                <button
+                  onClick={() => setShowCreator(true)}
+                  className="px-3.5 py-1.5 bg-blue-600/10 border border-blue-500/30 hover:bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-wider rounded-xl transition-smooth flex items-center space-x-1 cursor-pointer"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Add Reading Task</span>
+                </button>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {MODULES_CONFIG.map(mod => {
-                const isSelected = selectedList.includes(mod.id);
-                const isCompleted = completedList.includes(mod.id);
-                const status = statusMap.get(mod.id) || "NOT_STARTED";
-                const targetMins = targetMap.get(mod.id) || 25;
-                const elapsedSecs = elapsedMap.get(mod.id) || 0;
-                
-                // Duration configuration local state handler
-                const [localDur, setLocalDur] = useState(targetMins);
+            {/* Reading Task Creator Panel */}
+            {showCreator && (
+              <div className="glass-panel p-6 rounded-2xl border border-blue-500/20 bg-slate-950/40 space-y-4 animate-fade-in relative">
+                <button
+                  onClick={() => {
+                    setShowCreator(false);
+                    setCreatorModule('');
+                  }}
+                  className="absolute top-4 right-4 text-slate-500 hover:text-slate-350 cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
 
-                // Progress Bar percentages
-                const targetSeconds = targetMins * 60;
-                const progressPercent = Math.min(100, (elapsedSecs / targetSeconds) * 100);
+                <div className="space-y-1">
+                  <h4 className="text-xs font-black uppercase text-slate-200">Configure New Reading Task</h4>
+                  <p className="text-[10px] text-slate-500">Select a portal and target time to plan your study session.</p>
+                </div>
 
-                // Render Timer text
-                const renderTimerDisplay = () => {
-                  const formatSecs = (total: number) => {
-                    const m = Math.floor(total / 60);
-                    const s = total % 60;
-                    return `${m}m ${s}s`;
-                  };
-                  if (elapsedSecs >= targetSeconds) {
-                    return `${formatSecs(elapsedSecs)} / ${targetMins}m (+${formatSecs(elapsedSecs - targetSeconds)})`;
-                  } else {
-                    return `${formatSecs(elapsedSecs)} / ${targetMins}m`;
-                  }
-                };
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Module Selector Dropdown */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Choose Module</label>
+                    <select
+                      value={creatorModule}
+                      onChange={(e) => setCreatorModule(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800 text-slate-250 text-xs px-3.5 py-2.5 rounded-xl cursor-pointer focus:outline-none focus:border-blue-500/50"
+                    >
+                      <option value="" disabled>-- Choose Module Portal --</option>
+                      {MODULES_CONFIG.map(mod => {
+                        const isAlreadySelected = selectedList.includes(mod.id);
+                        if (isAlreadySelected) return null;
+                        return (
+                          <option key={mod.id} value={mod.id}>
+                            {mod.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
 
-                return (
-                  <div 
-                    key={mod.id} 
-                    className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between min-h-[175px] ${
-                      isCompleted ? 'bg-emerald-950/5 border-emerald-500/25 shadow-[0_0_15px_rgba(16,185,129,0.08)]' :
-                      isSelected ? 'bg-slate-900/40 border-slate-800' :
-                      'bg-slate-950/15 border-slate-900 hover:border-slate-800'
-                    }`}
-                  >
-                    {/* Header: Icon, Name, and Status Badge */}
-                    <div className="flex items-start justify-between w-full">
-                      <div className="flex items-center space-x-3">
-                        <div className={`h-8.5 w-8.5 rounded-xl flex items-center justify-center ${mod.bg} ${mod.color}`}>
-                          <mod.icon className="h-4.5 w-4.5" />
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black uppercase text-slate-200">{mod.name}</h4>
-                          <span className="text-[9px] text-slate-500 font-mono tracking-wider font-extrabold uppercase">
-                            {mod.id === 'dsa' ? 'Coding Portal' : 'Theory Portal'}
-                          </span>
-                        </div>
+                  {/* Duration Slider */}
+                  {creatorModule && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[10px] font-bold font-mono">
+                        <span className="text-slate-400 uppercase tracking-wider">Set Duration</span>
+                        <span className="text-blue-400">{creatorDuration} Minutes</span>
                       </div>
+                      <input 
+                        type="range"
+                        min="20"
+                        max="45"
+                        step="5"
+                        value={creatorDuration}
+                        onChange={(e) => setCreatorDuration(parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-blue-500 mt-2"
+                      />
+                    </div>
+                  )}
+                </div>
 
-                      {/* Status label */}
-                      {isSelected ? (
+                {creatorModule && (
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={handleAddTaskOnly}
+                      className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-extrabold uppercase text-xs rounded-xl transition-smooth cursor-pointer"
+                    >
+                      Add Task
+                    </button>
+                    <button
+                      onClick={handleStartFocusMode}
+                      className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white border border-transparent font-black uppercase text-xs rounded-xl transition-smooth shadow-glow-primary cursor-pointer"
+                    >
+                      Start Focus Mode
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* List of active reading task cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(() => {
+                const activeModules = MODULES_CONFIG.filter(mod => selectedList.includes(mod.id));
+                
+                if (activeModules.length === 0) {
+                  return (
+                    <div className="col-span-1 md:col-span-2 glass-panel p-8 text-center rounded-2xl border border-slate-900 bg-slate-950/10 space-y-2">
+                      <p className="text-xs text-slate-500 font-medium">
+                        No reading or theory tasks scheduled for today yet.
+                      </p>
+                      <p className="text-[10px] text-blue-500/80 font-bold uppercase tracking-wider font-mono">
+                        Click "+ Add Reading Task" above to plan a task!
+                      </p>
+                    </div>
+                  );
+                }
+
+                return activeModules.map(mod => {
+                  const isCompleted = completedList.includes(mod.id);
+                  const status = statusMap.get(mod.id) || "NOT_STARTED";
+                  const targetMins = targetMap.get(mod.id) || 25;
+                  const elapsedSecs = elapsedMap.get(mod.id) || 0;
+                  
+                  const targetSeconds = targetMins * 60;
+                  const progressPercent = Math.min(100, (elapsedSecs / targetSeconds) * 100);
+
+                  const renderTimerDisplay = () => {
+                    const formatSecs = (total: number) => {
+                      const m = Math.floor(total / 60);
+                      const s = total % 60;
+                      return `${m}m ${s}s`;
+                    };
+                    if (elapsedSecs >= targetSeconds) {
+                      return `${formatSecs(elapsedSecs)} / ${targetMins}m (+${formatSecs(elapsedSecs - targetSeconds)})`;
+                    } else {
+                      return `${formatSecs(elapsedSecs)} / ${targetMins}m`;
+                    }
+                  };
+
+                  return (
+                    <div 
+                      key={mod.id} 
+                      className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between min-h-[175px] ${
+                        isCompleted ? 'bg-emerald-950/5 border-emerald-500/25 shadow-[0_0_15px_rgba(16,185,129,0.08)]' :
+                        'bg-slate-900/40 border-slate-800'
+                      }`}
+                    >
+                      {/* Header */}
+                      <div className="flex items-start justify-between w-full">
+                        <div className="flex items-center space-x-3">
+                          <div className={`h-8.5 w-8.5 rounded-xl flex items-center justify-center ${mod.bg} ${mod.color}`}>
+                            <mod.icon className="h-4.5 w-4.5" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase text-slate-200">{mod.name}</h4>
+                            <span className="text-[9px] text-slate-500 font-mono tracking-wider font-extrabold uppercase">
+                              {mod.id === 'dsa' ? 'Coding Portal' : 'Theory Portal'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Status tag */}
                         <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
                           isCompleted ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
                           status === 'RUNNING' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 animate-pulse' :
@@ -438,13 +590,9 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                         }`}>
                           {isCompleted ? 'Completed' : status.replace('_', ' ')}
                         </span>
-                      ) : (
-                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest font-mono">Not Set</span>
-                      )}
-                    </div>
+                      </div>
 
-                    {/* Content Section */}
-                    {isSelected ? (
+                      {/* Main progress bar section */}
                       <div className="space-y-3 pt-3">
                         <div className="flex items-center justify-between text-[10px] font-bold font-mono">
                           <span className="text-slate-400">{renderTimerDisplay()}</span>
@@ -458,56 +606,39 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                           ></div>
                         </div>
 
-                        {/* Resume / Launch Action */}
                         <div className="flex items-center justify-between pt-1">
                           <span className="text-[9px] font-bold text-slate-500 font-mono tracking-wide">
                             {isCompleted ? 'Focus target achieved' : `${formatTime(Math.max(0, targetSeconds - elapsedSecs))} remaining`}
                           </span>
                           
-                          <button
-                            onClick={() => handleStartReadingTask(mod.id, targetMins)}
-                            className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center space-x-1 transition-smooth cursor-pointer ${
-                              isCompleted 
-                                ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20' 
-                                : 'bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 shadow-glow-primary'
-                            }`}
-                          >
-                            <Play className="h-3 w-3 fill-current" />
-                            <span>{isCompleted ? 'Study More' : 'Resume Focus'}</span>
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      // Module configuration (choose time and select task)
-                      <div className="space-y-4 pt-3">
-                        <div className="flex items-center justify-between text-[10px] font-bold font-mono">
-                          <span className="text-slate-500">Configure focus time:</span>
-                          <span className="text-blue-400">{localDur} Minutes</span>
-                        </div>
+                          <div className="flex gap-2">
+                            {/* Pause button (disabled visual mockup since pause happens in overlay) */}
+                            <button
+                              disabled
+                              className="p-1.5 rounded-lg bg-slate-900 border border-slate-850 text-slate-600 cursor-not-allowed"
+                              title="Timer can only be paused from full-screen overlay"
+                            >
+                              <Pause className="h-3 w-3" />
+                            </button>
 
-                        <div className="flex items-center space-x-3.5">
-                          <input 
-                            type="range"
-                            min="20"
-                            max="45"
-                            step="5"
-                            value={localDur}
-                            onChange={(e) => setLocalDur(parseInt(e.target.value))}
-                            className="flex-1 h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                          />
-                          <button
-                            onClick={() => handleStartReadingTask(mod.id, localDur)}
-                            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white border border-transparent text-[9px] font-black uppercase tracking-wider rounded-xl transition-smooth flex items-center space-x-1 cursor-pointer"
-                          >
-                            <Plus className="h-3 w-3" />
-                            <span>Start Focus</span>
-                          </button>
+                            <button
+                              onClick={() => handleResumeFocus(mod.id, targetMins)}
+                              className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center space-x-1 transition-smooth cursor-pointer ${
+                                isCompleted 
+                                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20' 
+                                  : 'bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 shadow-glow-primary'
+                              }`}
+                            >
+                              <Play className="h-3 w-3 fill-current" />
+                              <span>{isCompleted ? 'Study More' : 'Resume'}</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>
@@ -545,7 +676,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
           )}
 
           {/* Heatmap component */}
-          <div className="w-full overflow-x-auto p-4 bg-slate-950/50 border border-slate-900 custom-scrollbar rounded-xl">
+          <div className="w-full overflow-x-auto p-4 bg-slate-955/50 border border-slate-900 custom-scrollbar rounded-xl">
             <div className="flex gap-2 min-w-[760px] select-none">
               <div className="flex flex-col justify-between text-[9px] text-slate-500 font-mono pt-5 pb-1 pr-1.5 h-[112px]">
                 <span>Mon</span>
@@ -667,7 +798,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
           {selectedDay && (
             <div className="mt-4 p-4 bg-slate-900/60 border border-slate-800 rounded-xl animate-fade-in text-xs font-sans space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-350">Date: {new Date(selectedDay.date).toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
+                <span className="font-bold text-slate-355">Date: {new Date(selectedDay.date).toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
                 {selectedDay.hasDailyTask && (
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedDay.isDailyTaskCompleted ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'}`}>
                     {selectedDay.isDailyTaskCompleted ? 'Focus Goal Completed' : 'Focus Goal Failed'}

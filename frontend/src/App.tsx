@@ -29,12 +29,19 @@ const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision'>('dashboard');
   const [activeProblemId, setActiveProblemId] = useState<string | null>(null);
 
+  const prevUserRef = React.useRef<any>(null);
+
   // Enforce Master Dashboard default landing page on logout/login
   React.useEffect(() => {
     if (!user) {
       localStorage.setItem('activePortal', 'master_dashboard');
       setActivePortal('master_dashboard');
+    } else if (user && !prevUserRef.current) {
+      // User just logged in or session restored on mount
+      localStorage.setItem('activePortal', 'master_dashboard');
+      setActivePortal('master_dashboard');
     }
+    prevUserRef.current = user;
   }, [user]);
 
   // Focus mode session state
@@ -249,6 +256,10 @@ const MainApp: React.FC = () => {
         onSwitchPortal={() => {
           localStorage.setItem('activePortal', 'selection');
           setActivePortal('selection');
+        }}
+        onGoToDashboard={() => {
+          localStorage.setItem('activePortal', 'master_dashboard');
+          setActivePortal('master_dashboard');
         }}
       />
       

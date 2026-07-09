@@ -7,9 +7,10 @@ interface NavbarProps {
   activeTab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision';
   setActiveTab: (tab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision') => void;
   onSwitchPortal?: () => void;
+  onGoToDashboard?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal }) => {
+const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal, onGoToDashboard }) => {
   const { logout, user } = useAuth();
   const [streak, setStreak] = useState(0);
   const [solved, setSolved] = useState(0);
@@ -94,7 +95,13 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
         <div 
-          onClick={() => setActiveTab('dashboard')} 
+          onClick={() => {
+            if (onGoToDashboard) {
+              onGoToDashboard();
+            } else {
+              setActiveTab('dashboard');
+            }
+          }} 
           className="flex items-center space-x-2.5 cursor-pointer group"
         >
           <Terminal className="h-5 w-5 text-text-primary" />
@@ -106,7 +113,13 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
         {/* Tab Links */}
         <nav className="hidden md:flex space-x-1.5 p-1">
           <button
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => {
+              if (onGoToDashboard) {
+                onGoToDashboard();
+              } else {
+                setActiveTab('dashboard');
+              }
+            }}
             className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth ${
               activeTab === 'dashboard'
                 ? 'border border-text-primary text-text-primary bg-surface/40'

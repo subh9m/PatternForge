@@ -81,6 +81,30 @@ public class DailyTaskController {
                 
         task.setSelectedModules(selected);
         task.setTargetDurations(durations);
+
+        // Initialize status as NOT_STARTED for the new module if absent
+        Map<String, String> statusMap = parseStatuses(task.getStatuses());
+        for (String m : selected.split(",")) {
+            m = m.trim();
+            if (!m.isEmpty() && !statusMap.containsKey(m)) {
+                statusMap.put(m, "NOT_STARTED");
+            }
+        }
+        List<String> statusList = new ArrayList<>();
+        statusMap.forEach((k, v) -> statusList.add(k + ":" + v));
+        task.setStatuses(String.join(",", statusList));
+
+        // Initialize elapsed duration as 0 if absent
+        Map<String, Integer> elapsedMap = parseDurations(task.getElapsedDurations());
+        for (String m : selected.split(",")) {
+            m = m.trim();
+            if (!m.isEmpty() && !elapsedMap.containsKey(m)) {
+                elapsedMap.put(m, 0);
+            }
+        }
+        List<String> elapsedList = new ArrayList<>();
+        elapsedMap.forEach((k, v) -> elapsedList.add(k + ":" + v));
+        task.setElapsedDurations(String.join(",", elapsedList));
         
         dailyTaskRepository.save(task);
         return ResponseEntity.ok(task);
