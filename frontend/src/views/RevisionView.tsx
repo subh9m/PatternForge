@@ -96,6 +96,67 @@ const renderMarkdown = (text: string) => {
   });
 };
 
+const highlightCode = (code: string, language: string) => {
+  if (!code) return "";
+  
+  // Escape HTML
+  let html = code
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  
+  const placeholders: string[] = [];
+  const addPlaceholder = (val: string, className: string) => {
+    const id = `___TOKEN_PLACEHOLDER_${placeholders.length}___`;
+    placeholders.push(`<span class="${className}">${val}</span>`);
+    return id;
+  };
+  
+  // Extract comments
+  html = html.replace(/\/\*[\s\S]*?\*\//g, (match) => addPlaceholder(match, "text-[#6a9955] italic"));
+  html = html.replace(/\/\/.*/g, (match) => addPlaceholder(match, "text-[#6a9955] italic"));
+  if (language === 'python') {
+    html = html.replace(/#.*/g, (match) => addPlaceholder(match, "text-[#6a9955] italic"));
+  }
+  
+  // Extract strings
+  html = html.replace(/"(\\.|[^"\\])*"/g, (match) => addPlaceholder(match, "text-[#ce9178]"));
+  html = html.replace(/'(\\.|[^'\\])*'/g, (match) => addPlaceholder(match, "text-[#ce9178]"));
+  
+  // Highlight keywords
+  const keywords = [
+    "class", "public", "private", "protected", "return", "while", "for", "if", "else", 
+    "void", "bool", "boolean", "int", "float", "double", "char", "long", "short",
+    "import", "package", "include", "def", "self", "in", "and", "or", "not", "elif",
+    "const", "static", "final", "new", "this", "super", "try", "catch", "throw", "throws",
+    "using", "namespace", "std", "struct", "template", "typename", "virtual", "override"
+  ];
+  const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'g');
+  html = html.replace(keywordRegex, '<span class="text-[#569cd6] font-bold">$1</span>');
+  
+  // Highlight common types
+  const types = [
+    "vector", "string", "list", "set", "map", "stack", "queue", "deque",
+    "unordered_map", "unordered_set", "priority_queue", "pair", "Solution", "TreeNode",
+    "ListNode", "List", "ArrayList", "HashMap", "HashSet", "Map", "Set"
+  ];
+  const typeRegex = new RegExp(`\\b(${types.join('|')})\\b`, 'g');
+  html = html.replace(typeRegex, '<span class="text-[#4ec9b0]">$1</span>');
+  
+  // Highlight numbers
+  html = html.replace(/\b(\d+)\b/g, '<span class="text-[#b5cea8]">$1</span>');
+  
+  // Highlight functions
+  html = html.replace(/\b([a-zA-Z_]\w*)(?=\s*\()/g, '<span class="text-[#dcdcaa]">$1</span>');
+  
+  // Restore placeholders
+  for (let i = placeholders.length - 1; i >= 0; i--) {
+    html = html.replace(`___TOKEN_PLACEHOLDER_${i}___`, placeholders[i]);
+  }
+  
+  return html;
+};
+
 interface RevisionViewProps {
   navigateToProblem: (id: string) => void;
 }
@@ -740,13 +801,16 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                       </span>
                     </div>
 
-                    <div className="flex-1 w-full relative flex flex-col min-h-0 bg-[#0d0d12]">
+                    <div className="flex-1 w-full relative flex flex-col min-h-0 bg-[#1e1e1e]">
                       {displayedCode ? (
-                        <pre className="flex-1 w-full p-4 overflow-auto text-xs text-emerald-450 dark:text-emerald-400 font-mono bg-black select-text whitespace-pre leading-relaxed custom-scrollbar">
-                          <code>{displayedCode.trim()}</code>
+                        <pre className="flex-1 w-full p-4 overflow-auto text-[12.5px] font-mono bg-[#1e1e1e] select-text whitespace-pre leading-relaxed custom-scrollbar">
+                          <code 
+                            className="text-[#d4d4d4]"
+                            dangerouslySetInnerHTML={{ __html: highlightCode(displayedCode, selectedItem.language || 'cpp') }}
+                          />
                         </pre>
                       ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-xs font-sans p-6 text-center select-none bg-[#0d0d12]">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-xs font-sans p-6 text-center select-none bg-[#1e1e1e]">
                           <Code2 className="h-8 w-8 mb-2 animate-pulse" />
                           <span>No code snippet is configured for this approach category level.</span>
                         </div>
