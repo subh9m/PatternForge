@@ -40,10 +40,29 @@ public class APIKeyManager {
 
         int keysCount = allKeys.size();
         System.out.println("========================================");
+        System.out.println("APIKeyManager STARTUP DIAGNOSTIC");
         System.out.println("Total keys loaded: " + keysCount);
+        System.out.println("--- Per-key details (suffix = last 5 chars) ---");
+        Set<String> seenSuffixes = new java.util.LinkedHashSet<>();
+        Set<String> seenFullKeys = new java.util.LinkedHashSet<>();
         for (int i = 0; i < allKeys.size(); i++) {
             String k = allKeys.get(i);
-            System.out.println("Key Index: " + i + " | Key: " + maskKey(k) + " | State: " + getKeyState(k));
+            String suffix = k.length() >= 5 ? k.substring(k.length() - 5) : k;
+            boolean duplicateSuffix = !seenSuffixes.add(suffix);
+            boolean duplicateKey    = !seenFullKeys.add(k);
+            String dupFlag = duplicateKey ? " *** DUPLICATE FULL KEY ***"
+                           : duplicateSuffix ? " *** DUPLICATE SUFFIX (different key?) ***"
+                           : "";
+            System.out.println("Key" + (i + 1) + " | suffix=..." + suffix
+                    + " | masked=" + maskKey(k)
+                    + " | state=" + getKeyState(k)
+                    + dupFlag);
+        }
+        System.out.println("--- Uniqueness check ---");
+        System.out.println("Unique full keys : " + seenFullKeys.size() + " / " + keysCount);
+        System.out.println("Unique suffixes  : " + seenSuffixes.size() + " / " + keysCount);
+        if (seenFullKeys.size() < keysCount) {
+            System.out.println("WARNING: Duplicate keys detected! Check GEMINI_API_KEYS env var for repeated values.");
         }
         System.out.println("currentIndex: " + currentIndex);
         System.out.println("APIKeyManager Instance Hash Code: " + System.identityHashCode(this));

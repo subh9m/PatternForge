@@ -330,12 +330,15 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [loadingDetails, setLoadingDetails] = useState(true);
   const [loadingSolutions, setLoadingSolutions] = useState(true);
   const [generationFailed, setGenerationFailed] = useState(false);
+  const [isAiPending, setIsAiPending] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [copyingState, setCopyingState] = useState(false);
+  const pollingRef = useRef<any>(null);
 
 
   const handleRetry = () => {
     setGenerationFailed(false);
+    setIsAiPending(false);
     setLoadingDetails(true);
     setLoadingSolutions(true);
     loadData();
@@ -481,63 +484,122 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const notesRef = useRef(notes);
   notesRef.current = notes;
 
-  const loadData = async () => {
-    setGenerationFailed(false);
-    setLoadingDetails(true);
-    setLoadingSolutions(true);
+  const loadData = async (silent = false) => {
+    if (!silent) {
+      setGenerationFailed(false);
+      setIsAiPending(false);
+      setLoadingDetails(true);
+      setLoadingSolutions(true);
+    }
     try {
       const [probData, notesData] = await Promise.all([
         api.get<ProblemDetails>(`/problems/${problemId}`),
         api.get<NoteData>(`/problems/${problemId}/notes`)
       ]);
-      setProblem(probData);
-      setRevisionLevel(probData.revisionLevel);
-      setNotes(notesData);
-      
-      // If they already validated thinking previously, set state to loaded
-      if (notesData.thinkingChecked) {
-        setThinkingStarted(true);
-        setActiveTab('coding');
+      if (!silent) {
+        setProblem(probData);
+        setRevisionLevel(probData.revisionLevel);
+        setNotes(notesData);
+        
+        // If they already validated thinking previously, set state to loaded
+        if (notesData.thinkingChecked) {
+          setThinkingStarted(true);
+          setActiveTab('coding');
+        }
       }
 
-      // Check browser cache for details first
+      // Check browser cache for details first (only use non-boilerplate cached data)
       const cacheKey = `pf_details_${problemId}`;
-      const cachedDetails = localStorage.getItem(cacheKey);
-      if (cachedDetails) {
-        try {
-          const parsed = JSON.parse(cachedDetails);
-          if (!isBoilerplateDetails(parsed)) {
-            setDetails(parsed);
-            setLoadingDetails(false);
-            setLoadingSolutions(false);
-            return;
+      if (!silent) {
+        const cachedDetails = localStorage.getItem(cacheKey);
+        if (cachedDetails) {
+          try {
+            const parsed = JSON.parse(cachedDetails);
+            if (!isBoilerplateDetails(parsed)) {
+              setDetails(parsed);
+              setLoadingDetails(false);
+              setLoadingSolutions(false);
+              setIsAiPending(false);
+              return;
+            } else {
+              // Remove stale boilerplate from cache so we always fetch fresh
+              localStorage.removeItem(cacheKey);
+            }
+          } catch (e) {
+            localStorage.removeItem(cacheKey);
           }
-        } catch (e) {
-          // ignore cache error
         }
       }
 
       // Fetch basic details and solution details in parallel
+      // Backend now returns immediately (non-blocking) with X-Generation-Status header
+      const [basicRes, solRes] = await Promise.all([
+        fetch(`${(import.meta.env.VITE_API_URL || 'http://localhost:8081')}/api/problems/${problemId}/basic-details`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch(`${(import.meta.env.VITE_API_URL || 'http://localhost:8081')}/api/problems/${problemId}/solution-details`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      ]);
+
+      if (!basicRes.ok || !solRes.ok) {
+        throw new Error('Failed to fetch problem details');
+      }
+
+      const basicStatusHeader = basicRes.headers.get('X-Generation-Status');
+      const solStatusHeader = solRes.headers.get('X-Generation-Status');
+      const isPending = basicStatusHeader === 'PENDING' || solStatusHeader === 'PENDING';
+
       const [basicData, solData] = await Promise.all([
-        api.get<ProblemDetailsJson>(`/problems/${problemId}/basic-details`),
-        api.get<ProblemDetailsJson>(`/problems/${problemId}/solution-details`)
+        basicRes.json() as Promise<ProblemDetailsJson>,
+        solRes.json() as Promise<ProblemDetailsJson>
       ]);
 
       const mergedDetails = { ...basicData, ...solData };
-      localStorage.setItem(cacheKey, JSON.stringify(mergedDetails));
+
+      // Only cache if content is real AI-generated (not boilerplate)
+      if (!isBoilerplateDetails(mergedDetails)) {
+        localStorage.setItem(cacheKey, JSON.stringify(mergedDetails));
+        setIsAiPending(false);
+        // Clear polling if content is now ready
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+      } else {
+        // Content is stub/boilerplate - show it but mark as pending
+        setIsAiPending(isPending);
+        // Start background polling if not already running
+        if (isPending && !pollingRef.current) {
+          pollingRef.current = setInterval(() => {
+            loadData(true);
+          }, 30000); // Poll every 30s
+        }
+      }
+
       setDetails(mergedDetails);
       
       // Refetch the fresh problem record from DB to get fresh fields
-      const freshProb = await api.get<ProblemDetails>(`/problems/${problemId}`);
-      setProblem(freshProb);
+      if (!silent) {
+        const freshProb = await api.get<ProblemDetails>(`/problems/${problemId}`);
+        setProblem(freshProb);
+      }
 
       setLoadingDetails(false);
       setLoadingSolutions(false);
     } catch (e) {
       console.error("Failed to load problem workspace data", e);
-      setGenerationFailed(true);
-      setLoadingDetails(false);
-      setLoadingSolutions(false);
+      if (!silent) {
+        setGenerationFailed(true);
+        setLoadingDetails(false);
+        setLoadingSolutions(false);
+      }
     }
   };
 
@@ -556,6 +618,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     return () => {
       clearInterval(saveInterval);
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      // Clean up polling on unmount
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
     };
   }, [problemId]);
 
@@ -963,8 +1030,26 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       </div>
 
       {/* Main Double Column Workspace Layout */}
+      
+      {/* AI Generation Status Banners (non-blocking) */}
+      {generationFailed && (
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-bold text-red-400 mb-2">
+          <div className="flex items-center space-x-2">
+            <span>⚠️</span>
+            <span>Failed to reach Gemini API. Showing fallback content. AI-generated details will load once API keys recover.</span>
+          </div>
+          <button onClick={handleRetry} className="ml-4 px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-all text-[10px] uppercase tracking-wider font-black cursor-pointer">Retry</button>
+        </div>
+      )}
+      {isAiPending && !generationFailed && (
+        <div className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-bold text-amber-400 mb-2 animate-pulse">
+          <div className="h-3 w-3 rounded-full border border-amber-400 border-t-transparent animate-spin" />
+          <span>Generating AI details in the background... Content will refresh automatically when ready.</span>
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
-        {loadingDetails || loadingSolutions || generationFailed ? (
+        {(loadingDetails || loadingSolutions || (generationFailed && !details)) ? (
           <motion.div
             key="loading"
             initial={{ opacity: 0, y: 10 }}

@@ -478,18 +478,28 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
-        
-        // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
-        problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
 
-        // Fetch directly from DB via native query to bypass Hibernate cache completely
-        String basicJson = problemRepository.findBasicDetailsJsonById(p.getId());
-        if (basicJson == null) {
-            basicJson = "{}";
+        // Check if content needs generation
+        boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
+                                   LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
+
+        // Submit job asynchronously (non-blocking) — does not wait for completion
+        if (needsGeneration) {
+            problemGenerationService.submitJob(p.getId(), JobPriority.HIGHEST);
         }
+
+        // Return whatever is in DB right now (may be fallback stub)
+        String basicJson = problemRepository.findBasicDetailsJsonById(p.getId());
+        if (basicJson == null || basicJson.trim().isEmpty() || "{}".equals(basicJson.trim())) {
+            // Return a minimal placeholder if nothing exists at all
+            basicJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+        }
+
+        String generationStatus = needsGeneration ? "PENDING" : "READY";
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/json")
+                .header("X-Generation-Status", generationStatus)
                 .body(basicJson);
     }
 
@@ -502,18 +512,27 @@ public class ProblemController {
         }
 
         Problem p = problemOpt.get();
-        
-        // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
-        problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
 
-        // Fetch directly from DB via native query to bypass Hibernate cache completely
-        String solutionJson = problemRepository.findSolutionDetailsJsonById(p.getId());
-        if (solutionJson == null) {
-            solutionJson = "{}";
+        // Check if content needs generation
+        boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
+                                   LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
+
+        // Submit job asynchronously (non-blocking) — does not wait for completion
+        if (needsGeneration) {
+            problemGenerationService.submitJob(p.getId(), JobPriority.HIGHEST);
         }
+
+        // Return whatever is in DB right now (may be fallback stub)
+        String solutionJson = problemRepository.findSolutionDetailsJsonById(p.getId());
+        if (solutionJson == null || solutionJson.trim().isEmpty() || "{}".equals(solutionJson.trim())) {
+            solutionJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
+        }
+
+        String generationStatus = needsGeneration ? "PENDING" : "READY";
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/json")
+                .header("X-Generation-Status", generationStatus)
                 .body(solutionJson);
     }
 

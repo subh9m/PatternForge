@@ -5,7 +5,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -31,15 +34,24 @@ public class RetryExecutor {
             throw new IllegalStateException("All Gemini API keys in the pool are currently disabled or exhausted.");
         }
 
-        java.util.Set<String> triedKeys = new java.util.HashSet<>();
+        Set<String> triedKeys = new HashSet<>();
 
         for (int i = 0; i < poolSize; i++) {
             String key = apiKeyManager.nextAvailableKey();
+
+            // BUG FIX: previously a `break` here caused the loop to exit on the very
+            // first miss, throwing "exhausted" even with 9 other keys available.
+            // Now we log and continue — the next iteration may find a different key.
             if (key == null) {
-                break;
+                log.warn("RetryExecutor: nextAvailableKey() returned null on iteration {} of {} " +
+                         "(all remaining keys are in cooldown). Skipping iteration.", i + 1, poolSize);
+                continue;
             }
+
+            // Guard against wrap-around (same key returned twice)
             if (triedKeys.contains(key)) {
-                break; // If we wrapped around, break to avoid infinite loop
+                log.debug("RetryExecutor: Key {} already tried this round — skipping.", apiKeyManager.maskKey(key));
+                continue;
             }
             triedKeys.add(key);
 
@@ -86,8 +98,27 @@ public class RetryExecutor {
                         } else if (statusCode == 429) {
                             int delaySec = geminiClient.parseRetryDelay(response.body());
                             System.out.println("↓\n429");
-                            apiKeyManager.markCooldown(key, delaySec * 1000L, "Quota / Rate limit hit on " + model);
+                            apiKeyManager.markCooldown(key, delaySec * 1000L, "Quota / Rate limit hit on " + model + " (cooldown=" + delaySec + "s)");
                             skipKey = true;
+
+                            // --- Diagnostic log after every 429 ---
+                            List<String> availableSuffixes = new ArrayList<>();
+                            List<String> cooldownSuffixes  = new ArrayList<>();
+                            for (String k : apiKeyManager.getAllKeysRaw()) {
+                                APIKeyManager.KeyState state = apiKeyManager.getKeyState(k);
+                                if (state == APIKeyManager.KeyState.AVAILABLE) {
+                                    availableSuffixes.add(apiKeyManager.maskKey(k));
+                                } else if (state == APIKeyManager.KeyState.COOLDOWN) {
+                                    cooldownSuffixes.add(apiKeyManager.maskKey(k));
+                                }
+                            }
+                            log.warn("RetryExecutor 429 DIAGNOSTIC: key={} entered COOLDOWN for {}s | " +
+                                     "available={} {} | cooldown={} {}",
+                                     apiKeyManager.maskKey(key), delaySec,
+                                     availableSuffixes.size(), availableSuffixes,
+                                     cooldownSuffixes.size(), cooldownSuffixes);
+                            // ---------------------------------------
+
                             break; 
                         } else if (statusCode >= 500) {
                             System.out.println("↓\n500 (attempt " + attempt + "/" + maxTransientAttempts + ")");

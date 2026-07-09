@@ -85,25 +85,43 @@ public class GeminiClient {
     }
 
     /**
-     * Extracts retry delay in seconds if 429 occurs. Returns default (e.g. 10) if not found.
+     * Extracts retry delay in seconds if 429 occurs. Returns default (e.g. 60) if not found.
+     *
+     * Two distinct 429 causes:
+     * 1. QuotaFailure  — daily/per-project quota exhausted. Needs a LONG cooldown (~24h).
+     *    Retrying in 30s is wrong; it just hammers the same exhausted key in a tight loop.
+     * 2. RetryInfo     — short per-minute rate-limit. The API supplies the actual retry delay.
      */
     public int parseRetryDelay(String responseBody) {
         try {
             JsonNode root = objectMapper.readTree(responseBody);
             JsonNode errorNode = root.path("error");
             if (!errorNode.isMissingNode()) {
+                // Check HTTP header hint first (Retry-After)
                 JsonNode detailsNode = errorNode.path("details");
                 if (detailsNode.isArray()) {
                     for (JsonNode detail : detailsNode) {
-                        if (detail.path("@type").asText().contains("QuotaFailure")) {
-                            return 30;
-                        }
-                        if (detail.path("@type").asText().contains("RetryInfo")) {
-                            String delayStr = detail.path("retryDelay").asText();
-                            if (delayStr != null && delayStr.endsWith("s")) {
-                                double delaySeconds = Double.parseDouble(delayStr.substring(0, delayStr.length() - 1));
-                                return (int) Math.ceil(delaySeconds);
+                        String type = detail.path("@type").asText("");
+
+                        if (type.contains("RetryInfo")) {
+                            // Short rate-limit (RPM). Use the supplied delay.
+                            String delayStr = detail.path("retryDelay").asText("");
+                            if (!delayStr.isEmpty() && delayStr.endsWith("s")) {
+                                int delaySec = (int) Math.ceil(
+                                        Double.parseDouble(delayStr.substring(0, delayStr.length() - 1)));
+                                log.warn("GeminiClient: 429 RetryInfo detected — RPM rate-limit. Retry after {}s.", delaySec);
+                                return Math.max(delaySec, 10); // at least 10s
                             }
+                            log.warn("GeminiClient: 429 RetryInfo detected but no retryDelay field — defaulting to 60s.");
+                            return 60;
+                        }
+
+                        if (type.contains("QuotaFailure")) {
+                            // Daily / project-level quota exhausted.
+                            // Retrying after 30s is wrong — puts the key on a permanent
+                            // thrash loop. Cooldown for 24 hours so the scheduler ignores it.
+                            log.warn("GeminiClient: 429 QuotaFailure detected — daily quota exhausted. Cooling down for 24h.");
+                            return 86400; // 24 hours
                         }
                     }
                 }
@@ -111,6 +129,8 @@ public class GeminiClient {
         } catch (Exception e) {
             log.warn("GeminiClient: Failed to parse retry delay from error payload.", e);
         }
-        return 10;
+        // Unknown 429 — treat as a short rate-limit, back off 60s
+        log.warn("GeminiClient: 429 received but could not classify — defaulting to 60s cooldown.");
+        return 60;
     }
 }
