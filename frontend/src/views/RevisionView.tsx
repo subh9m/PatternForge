@@ -27,6 +27,26 @@ interface RevisionItem {
   estimatedTimeSeconds?: number;
 }
 
+const isPlatformAvailable = (platform: 'leetcode' | 'gfg' | 'tuf', masterNumber: number, topicName: string) => {
+  if (platform === 'leetcode') return true;
+  if (platform === 'gfg') {
+    return (masterNumber % 7 !== 0);
+  }
+  if (platform === 'tuf') {
+    if (topicName === 'Basics') return false;
+    return (masterNumber % 8 !== 0);
+  }
+  return false;
+};
+
+const getLeetCodeUrl = (name: string) => {
+  const slug = name.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replaceAll(/\s+/g, '-');
+  return `https://leetcode.com/problems/${slug}/`;
+};
+
 const parseInlineMarkdown = (text: string): React.ReactNode[] => {
   if (!text) return [];
   
@@ -475,7 +495,48 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-slate-500 font-mono uppercase">#{item.masterNumber}</span>
+                    <div className="flex items-center space-x-2.5">
+                      <span className="text-[10px] font-bold text-slate-500 font-mono uppercase">#{item.masterNumber}</span>
+                      
+                      {/* Platform Icons/Badges directly on card */}
+                      {!isGen && (
+                        <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
+                          {isPlatformAvailable('leetcode', item.masterNumber, item.topicName) && (
+                            <a
+                              href={getLeetCodeUrl(item.name)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Solve on LeetCode"
+                              className="px-1 py-0.5 rounded bg-[#ffa116]/10 hover:bg-[#ffa116]/20 border border-[#ffa116]/20 hover:border-[#ffa116]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#ffa116]"
+                            >
+                              LC
+                            </a>
+                          )}
+                          {isPlatformAvailable('gfg', item.masterNumber, item.topicName) && (
+                            <a
+                              href={`https://www.geeksforgeeks.org/explore?page=1&search=${encodeURIComponent(item.name)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Solve on GeeksforGeeks"
+                              className="px-1 py-0.5 rounded bg-[#2f8d46]/10 hover:bg-[#2f8d46]/20 border border-[#2f8d46]/20 hover:border-[#2f8d46]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#2f8d46]"
+                            >
+                              GFG
+                            </a>
+                          )}
+                          {isPlatformAvailable('tuf', item.masterNumber, item.topicName) && (
+                            <a
+                              href={`https://takeuforward.org/?s=${encodeURIComponent(item.name)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Solve on TakeUForward"
+                              className="px-1 py-0.5 rounded bg-[#3b82f6]/10 hover:bg-[#3b82f6]/20 border border-[#3b82f6]/20 hover:border-[#3b82f6]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#3b82f6]"
+                            >
+                              TUF
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {isGen ? (
                       <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 animate-pulse border border-blue-500/20 font-mono uppercase tracking-wide">
                         AI Generating
@@ -665,6 +726,65 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                         </span>
                       </div>
                       <h2 className="text-base font-extrabold text-slate-100">{selectedItem.name}</h2>
+                      
+                      {/* Solve on other platforms */}
+                      <div className="flex items-center space-x-2.5 mt-2 flex-wrap gap-y-1 select-none">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Solve on:</span>
+                        
+                        {/* LeetCode Button */}
+                        {isPlatformAvailable('leetcode', selectedItem.masterNumber, selectedItem.topicName) ? (
+                          <a
+                            href={getLeetCodeUrl(selectedItem.name)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-extrabold bg-[#ffa116]/10 text-[#ffa116] border border-[#ffa116]/30 hover:border-[#ffa116] hover:bg-[#ffa116]/20 shadow-[0_0_6px_rgba(255,161,22,0.1)] transition-all hover:scale-105"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#ffa116]" />
+                            <span>LeetCode</span>
+                          </a>
+                        ) : (
+                          <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-800/40 text-slate-500 border border-slate-700/30 cursor-not-allowed select-none">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                            <span>LeetCode</span>
+                          </div>
+                        )}
+
+                        {/* GeeksforGeeks Button */}
+                        {isPlatformAvailable('gfg', selectedItem.masterNumber, selectedItem.topicName) ? (
+                          <a
+                            href={`https://www.geeksforgeeks.org/explore?page=1&search=${encodeURIComponent(selectedItem.name)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-extrabold bg-[#2f8d46]/10 text-[#2f8d46] border border-[#2f8d46]/30 hover:border-[#2f8d46] hover:bg-[#2f8d46]/20 shadow-[0_0_6px_rgba(47,141,70,0.1)] transition-all hover:scale-105"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#2f8d46]" />
+                            <span>GeeksforGeeks</span>
+                          </a>
+                        ) : (
+                          <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-800/40 text-slate-500 border border-slate-700/30 cursor-not-allowed select-none opacity-40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                            <span>GeeksforGeeks</span>
+                          </div>
+                        )}
+
+                        {/* TakeUForward Button */}
+                        {isPlatformAvailable('tuf', selectedItem.masterNumber, selectedItem.topicName) ? (
+                          <a
+                            href={`https://takeuforward.org/?s=${encodeURIComponent(selectedItem.name)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-extrabold bg-[#3b82f6]/10 text-[#3b82f6] border border-[#3b82f6]/30 hover:border-[#3b82f6] hover:bg-[#3b82f6]/20 shadow-[0_0_6px_rgba(59,130,246,0.1)] transition-all hover:scale-105"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
+                            <span>TakeUForward</span>
+                          </a>
+                        ) : (
+                          <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-800/40 text-slate-500 border border-slate-700/30 cursor-not-allowed select-none opacity-40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                            <span>TakeUForward</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
