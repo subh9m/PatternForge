@@ -6,9 +6,35 @@ import {
   Play, Clock, Lock,
   Code, FileText, Brain, HelpCircle, 
   CheckCircle, ChevronDown, ChevronUp, Save,
-  Award
+  Award, Maximize2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import FullscreenCodeModal from '../components/FullscreenCodeModal';
+
+// Syntax highlighter helper
+function highlightCode(code: string, _lang: string): string {
+  if (!code) return '';
+  let esc = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const keywords = [
+    'class', 'public', 'private', 'protected', 'void', 'int', 'double', 'float',
+    'char', 'boolean', 'bool', 'string', 'vector', 'unordered_map', 'unordered_set',
+    'map', 'set', 'queue', 'stack', 'pair', 'struct', 'return', 'if', 'else', 'for',
+    'while', 'do', 'const', 'auto', 'new', 'delete', 'nullptr', 'NULL', 'true', 'false',
+    'using', 'namespace', 'std', 'def', 'import', 'from', 'as', 'None', 'elif'
+  ];
+  esc = esc.replace(/(\/\/.*)/g, '<span class="text-emerald-500 font-light">$1</span>');
+  esc = esc.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="text-emerald-500 font-light">$1</span>');
+  keywords.forEach(kw => {
+    const re = new RegExp(`\\b(${kw})\\b`, 'g');
+    esc = esc.replace(re, '<span class="text-pink-500 font-bold">$1</span>');
+  });
+  esc = esc.replace(/(["'].*?["'])/g, '<span class="text-amber-400 font-medium">$1</span>');
+  esc = esc.replace(/\b(\d+)\b/g, '<span class="text-sky-400 font-normal">$1</span>');
+  return esc;
+}
 
 interface ProblemDetails {
   id: string;
@@ -304,6 +330,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [loadingDetails, setLoadingDetails] = useState(true);
   const [loadingSolutions, setLoadingSolutions] = useState(true);
   const [generationFailed, setGenerationFailed] = useState(false);
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
 
   const handleRetry = () => {
     setGenerationFailed(false);
@@ -452,41 +479,22 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
         }
       }
 
-      // 1. Fetch basic details (fast description render)
-      try {
-        const basicData = await api.get<ProblemDetailsJson>(`/problems/${problemId}/basic-details`);
-        setDetails(prev => {
-          const merged = prev ? { ...prev, ...basicData } : basicData;
-          localStorage.setItem(cacheKey, JSON.stringify(merged));
-          return merged;
-        });
-        setLoadingDetails(false);
-      } catch (err) {
-        console.error("Failed to load basic details", err);
-        setGenerationFailed(true);
-        setLoadingDetails(false);
-        return;
-      }
+      // Fetch basic details and solution details in parallel
+      const [basicData, solData] = await Promise.all([
+        api.get<ProblemDetailsJson>(`/problems/${problemId}/basic-details`),
+        api.get<ProblemDetailsJson>(`/problems/${problemId}/solution-details`)
+      ]);
 
-      // 2. Fetch solution details in background (complexities, approach)
-      try {
-        const solData = await api.get<ProblemDetailsJson>(`/problems/${problemId}/solution-details`);
-        
-        // Invalidate and refetch fresh problem record from DB to get fresh fields
-        const freshProb = await api.get<ProblemDetails>(`/problems/${problemId}`);
-        setProblem(freshProb);
+      const mergedDetails = { ...basicData, ...solData };
+      localStorage.setItem(cacheKey, JSON.stringify(mergedDetails));
+      setDetails(mergedDetails);
+      
+      // Refetch the fresh problem record from DB to get fresh fields
+      const freshProb = await api.get<ProblemDetails>(`/problems/${problemId}`);
+      setProblem(freshProb);
 
-        setDetails(prev => {
-          const merged = prev ? { ...prev, ...solData } : solData;
-          localStorage.setItem(cacheKey, JSON.stringify(merged));
-          return merged;
-        });
-        setLoadingSolutions(false);
-      } catch (err) {
-        console.error("Failed to load solution details", err);
-        setLoadingSolutions(false);
-      }
-
+      setLoadingDetails(false);
+      setLoadingSolutions(false);
     } catch (e) {
       console.error("Failed to load problem workspace data", e);
       setGenerationFailed(true);
@@ -1334,7 +1342,16 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Reference Code (C++):</span>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Reference Code (C++):</span>
+                                  <button
+                                    onClick={() => setIsFullscreenOpen(true)}
+                                    title="Expand Fullscreen"
+                                    className="p-1 hover:bg-slate-900 rounded text-slate-400 hover:text-slate-200 transition-colors duration-150 cursor-pointer animate-pulse"
+                                  >
+                                    <Maximize2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
                                 <div className="h-64 rounded-xl overflow-hidden border border-slate-900 bg-[#1e1e1e]">
                                   <MonacoEditor
                                     height="100%"
@@ -2077,6 +2094,16 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     )}
   </AnimatePresence>
 
+      {details && (
+        <FullscreenCodeModal
+          isOpen={isFullscreenOpen}
+          onClose={() => setIsFullscreenOpen(false)}
+          code={details.referenceSolution || ''}
+          language="cpp"
+          title={`Reference Solution: ${problem?.name || ''}`}
+          highlightFn={highlightCode}
+        />
+      )}
     </div>
   );
 };

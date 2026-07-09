@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Play, Check, Copy, Database, Maximize2, Minimize2 } from 'lucide-react';
+import { Play, Check, Copy, Database } from 'lucide-react';
+import FullscreenCodeModal from '../../components/FullscreenCodeModal';
 import { 
   departmentsData, 
   employeesData, 
@@ -351,64 +352,14 @@ export default function SqlCard({ data }) {
       )}
 
       {/* SQL Script View Modal */}
-      {showFullScriptModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className={`bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 w-full flex flex-col shadow-2xl transition-all duration-300 ${
-            isScriptExpanded ? 'max-w-full h-full rounded-none' : 'max-w-5xl max-h-[85vh] rounded-2xl'
-          }`}>
-            {/* Modal Header */}
-            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/50 flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-black text-gray-900 dark:text-white font-mono uppercase">
-                  Complete Seed Script (DDL & DML)
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-light">
-                  Copy and paste this script directly into any PostgreSQL/SQLite client to set up the practice database.
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                {/* Actions group */}
-                <div className="flex items-center space-x-1 bg-gray-100 dark:bg-neutral-900 p-1 rounded-lg border border-neutral-200 dark:border-neutral-800">
-                  <button
-                    onClick={() => handleCopyCode(fullSqlScript)}
-                    className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer relative group"
-                  >
-                    {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-950 text-slate-200 text-[10px] px-2 py-1 rounded border border-slate-800 whitespace-nowrap shadow-md transition-opacity duration-150 z-50">
-                      Copy Script
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => setIsScriptExpanded(prev => !prev)}
-                    className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer relative group"
-                  >
-                    {isScriptExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-950 text-slate-200 text-[10px] px-2 py-1 rounded border border-slate-800 whitespace-nowrap shadow-md transition-opacity duration-150 z-50">
-                      {isScriptExpanded ? "Collapse" : "Expand"}
-                    </span>
-                  </button>
-                </div>
-
-                <button 
-                  onClick={() => {
-                    setShowFullScriptModal(false);
-                    setIsScriptExpanded(false);
-                  }}
-                  className="px-4 py-2 bg-red-650 hover:bg-red-500 text-white font-mono text-xs font-bold rounded-lg cursor-pointer transition-all duration-200"
-                >
-                  Close Script
-                </button>
-              </div>
-            </div>
-            
-            {/* Script body */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-950 text-gray-300 font-mono text-[11px] select-all leading-relaxed whitespace-pre-wrap">
-              <code>{fullSqlScript}</code>
-            </div>
-          </div>
-        </div>
-      )}
+      <FullscreenCodeModal
+        isOpen={showFullScriptModal}
+        onClose={() => setShowFullScriptModal(false)}
+        code={fullSqlScript}
+        language="sql"
+        title="Complete Seed Script (DDL & DML)"
+        highlightFn={highlightCode}
+      />
     </section>
   );
 }

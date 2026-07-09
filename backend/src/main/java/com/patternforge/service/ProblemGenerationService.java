@@ -253,6 +253,27 @@ public class ProblemGenerationService {
         return runningJobs.size();
     }
 
+    private static final Queue<Long> generationDurations = new ConcurrentLinkedQueue<>();
+    private static final int ROLLING_LIMIT = 20;
+
+    public static void recordGenerationDuration(long seconds) {
+        generationDurations.add(seconds);
+        while (generationDurations.size() > ROLLING_LIMIT) {
+            generationDurations.poll();
+        }
+    }
+
+    public static double getAverageGenerationDuration() {
+        if (generationDurations.isEmpty()) {
+            return 35.0; // Default estimate
+        }
+        long sum = 0;
+        for (long d : generationDurations) {
+            sum += d;
+        }
+        return (double) sum / generationDurations.size();
+    }
+
     public void generateMissingDetailsInternal(Problem p) {
         Problem freshProblem = problemRepository.findById(p.getId()).orElse(p);
 
@@ -266,6 +287,7 @@ public class ProblemGenerationService {
         }
 
         ObjectMapper mapper = new ObjectMapper();
+        long startTime = System.currentTimeMillis();
         try {
             log.info("ProblemGenerationService: Performing single-pass details generation for problem: {} (#{})",
                     freshProblem.getName(), freshProblem.getLeetcodeNumber());
@@ -300,6 +322,10 @@ public class ProblemGenerationService {
             }
 
             problemRepository.save(freshProblem);
+            
+            long endTime = System.currentTimeMillis();
+            recordGenerationDuration((endTime - startTime) / 1000);
+            
             log.info("ProblemGenerationService: Single-pass details successfully generated and saved for problem: {}",
                     freshProblem.getName());
 

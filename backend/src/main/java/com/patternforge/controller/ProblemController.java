@@ -231,7 +231,23 @@ public class ProblemController {
             response.put("wrongAttemptsCount", 0);
         }
 
+        response.put("isAiReady", p.isAiReady());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/generation-estimate")
+    public ResponseEntity<?> getGenerationEstimate() {
+        double avg = com.patternforge.service.ProblemGenerationService.getAverageGenerationDuration();
+        Map<String, Object> res = new HashMap<>();
+        res.put("averageSeconds", Math.round(avg));
+        
+        long min = Math.max(10, Math.round(avg - 5));
+        long max = Math.round(avg + 15);
+        res.put("minSeconds", min);
+        res.put("maxSeconds", max);
+        res.put("displayString", "Usually takes around " + Math.round(avg) + " seconds");
+        
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/{id}/bookmark")

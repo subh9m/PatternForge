@@ -19,6 +19,9 @@ import SpringGuide from './views/spring/SpringGuide';
 import ReactGuide from './views/react/ReactGuide';
 import ProjectsGuide from './views/projects/ProjectsGuide';
 import RevisionView from './views/RevisionView';
+import { motion, AnimatePresence } from 'framer-motion';
+import { api } from './services/api';
+import AiGenerationFullscreenLoader from './components/AiGenerationFullscreenLoader';
 
 const MainApp: React.FC = () => {
   const { user, logout, loading } = useAuth();
@@ -33,6 +36,7 @@ const MainApp: React.FC = () => {
   const [activeProblemId, setActiveProblemId] = useState<string | null>(() => {
     return localStorage.getItem('activeProblemId');
   });
+  const [generatingProblemId, setGeneratingProblemId] = useState<string | null>(null);
 
   const prevUserRef = React.useRef<any>(null);
 
@@ -263,9 +267,21 @@ const MainApp: React.FC = () => {
     );
   }
 
-  const navigateToProblem = (id: string) => {
-    setActiveProblemId(id);
-    setActiveTab('problem');
+  const navigateToProblem = async (id: string) => {
+    try {
+      const data = await api.get<{ isAiReady: boolean }>(`/problems/${id}`);
+      if (data.isAiReady) {
+        setActiveProblemId(id);
+        setActiveTab('problem');
+      } else {
+        setGeneratingProblemId(id);
+      }
+    } catch (err) {
+      console.error("Failed to check problem readiness", err);
+      // Fallback
+      setActiveProblemId(id);
+      setActiveTab('problem');
+    }
   };
 
   return (
@@ -284,22 +300,54 @@ const MainApp: React.FC = () => {
         }}
       />
       
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'dashboard' && (
-          <Dashboard navigateToProblem={navigateToProblem} setActiveTab={setActiveTab} />
-        )}
-        {activeTab === 'explorer' && (
-          <Explorer navigateToProblem={navigateToProblem} />
-        )}
-        {activeTab === 'problem' && activeProblemId && (
-          <ProblemView problemId={activeProblemId} onBack={() => setActiveTab('explorer')} />
-        )}
-        {activeTab === 'settings' && (
-          <Settings />
-        )}
-        {activeTab === 'revision' && (
-          <RevisionView navigateToProblem={navigateToProblem} />
-        )}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative">
+        <AnimatePresence mode="wait">
+          {generatingProblemId ? (
+            <motion.div
+              key="generating"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <AiGenerationFullscreenLoader 
+                problemId={generatingProblemId} 
+                onSuccess={() => {
+                  setActiveProblemId(generatingProblemId);
+                  setGeneratingProblemId(null);
+                  setActiveTab('problem');
+                }}
+                onCancel={() => {
+                  setGeneratingProblemId(null);
+                }}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {activeTab === 'dashboard' && (
+                <Dashboard navigateToProblem={navigateToProblem} setActiveTab={setActiveTab} />
+              )}
+              {activeTab === 'explorer' && (
+                <Explorer navigateToProblem={navigateToProblem} />
+              )}
+              {activeTab === 'problem' && activeProblemId && (
+                <ProblemView problemId={activeProblemId} onBack={() => setActiveTab('explorer')} />
+              )}
+              {activeTab === 'settings' && (
+                <Settings />
+              )}
+              {activeTab === 'revision' && (
+                <RevisionView navigateToProblem={navigateToProblem} />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
