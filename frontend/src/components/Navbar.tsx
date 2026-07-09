@@ -113,13 +113,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onSwitchPortal
         {/* Tab Links */}
         <nav className="hidden md:flex space-x-1.5 p-1">
           <button
-            onClick={() => {
-              if (onGoToDashboard) {
-                onGoToDashboard();
-              } else {
-                setActiveTab('dashboard');
-              }
-            }}
+            onClick={() => setActiveTab('dashboard')}
             className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth ${
               activeTab === 'dashboard'
                 ? 'border border-text-primary text-text-primary bg-surface/40'
