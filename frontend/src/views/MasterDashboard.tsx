@@ -463,12 +463,16 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
             {permanentTasks.map(task => (
               <div 
                 key={task.id} 
-                className="glass-panel p-6 rounded-2xl border border-border bg-surface space-y-4 relative overflow-hidden transition-all duration-300 hover:border-border-hover"
+                className={`glass-panel p-6 rounded-2xl border bg-surface space-y-4 relative overflow-hidden transition-all duration-300 ${
+                  task.isCompleted 
+                    ? 'border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.04)]' 
+                    : 'border-border hover:border-border-hover'
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider">{task.name}</h4>
                   {task.isCompleted ? (
-                    <span className="h-6 w-6 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center text-accent text-xs font-bold shadow-[0_0_10px_rgba(255,59,48,0.15)]">✓</span>
+                    <span className="h-6 w-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_10px_rgba(16,185,129,0.15)]">✓</span>
                   ) : (
                     <span className="text-[9px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse">Pending</span>
                   )}
@@ -477,13 +481,15 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-mono">
                     <span className="text-text-secondary font-bold">{task.progressText}</span>
-                    <span className={`${task.isCompleted ? 'text-accent' : 'text-text-secondary'} font-bold`}>{task.percent}%</span>
+                    <span className={`${task.isCompleted ? 'text-emerald-400 font-bold' : 'text-text-secondary'} font-bold`}>{task.percent}%</span>
                   </div>
 
                   <div className="h-1.5 bg-background border border-border rounded-full overflow-hidden">
                     <div 
-                      className={`h-full transition-all duration-300 bg-accent ${
-                        task.isCompleted ? 'shadow-[0_0_10px_rgba(255,59,48,0.3)]' : ''
+                      className={`h-full transition-all duration-300 ${
+                        task.isCompleted 
+                          ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+                          : 'bg-accent'
                       }`} 
                       style={{ width: `${task.percent}%` }}
                     ></div>
@@ -662,7 +668,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                     <div 
                       key={mod.id} 
                       className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between min-h-[185px] bg-surface group ${
-                        isCompleted ? 'border-accent/40 shadow-[0_0_15px_rgba(255,59,48,0.04)]' :
+                        isCompleted ? 'border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.04)]' :
                         'border-border hover:border-border-hover'
                       }`}
                     >
@@ -682,18 +688,18 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
 
                         {/* Status tag */}
                         <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border flex items-center space-x-1.5 ${
-                          isCompleted ? 'bg-accent/10 border-accent/30 text-accent' :
+                          isCompleted ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
                           status === 'RUNNING' ? 'bg-text-primary/10 border-text-primary/30 text-text-primary animate-pulse' :
                           status === 'PAUSED' ? 'bg-text-secondary/15 border-border text-text-secondary' :
                           'bg-background border-border text-text-secondary'
                         }`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${
-                            isCompleted ? 'bg-accent' :
+                            isCompleted ? 'bg-emerald-400 animate-pulse' :
                             status === 'RUNNING' ? 'bg-text-primary animate-ping' :
                             status === 'PAUSED' ? 'bg-text-secondary' :
                             'bg-border'
                           }`}></span>
-                          <span>{isCompleted ? 'Completed' : status.replace('_', ' ')}</span>
+                          <span>{isCompleted ? '✓ Completed' : status.replace('_', ' ')}</span>
                         </span>
                       </div>
 
@@ -701,14 +707,14 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                       <div className="space-y-3 pt-4">
                         <div className="flex items-center justify-between text-[10px] font-bold font-mono">
                           <span className="text-text-secondary">{renderTimerDisplay()}</span>
-                          <span className={`${isCompleted ? 'text-accent' : 'text-text-primary'}`}>{Math.round(progressPercent)}%</span>
+                          <span className={`${isCompleted ? 'text-emerald-400 font-bold' : 'text-text-primary'}`}>{Math.round(progressPercent)}%</span>
                         </div>
 
                         {/* Custom Nothing Style Bordered Progress bar */}
                         <div className="h-2 bg-background border border-border rounded-full overflow-hidden">
                           <div 
                             className={`h-full transition-all duration-300 ${
-                              isCompleted ? 'bg-accent shadow-[0_0_8px_rgba(255,59,48,0.3)]' :
+                              isCompleted ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' :
                               status === 'RUNNING' ? 'bg-text-primary animate-pulse' : 'bg-text-secondary'
                             }`} 
                             style={{ width: `${progressPercent}%` }}
@@ -734,7 +740,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                               onClick={() => handleResumeFocus(mod.id, targetMins)}
                               className={`px-3.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider flex items-center space-x-1.5 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer ${
                                 isCompleted 
-                                  ? 'bg-accent/10 border border-accent/20 text-accent hover:bg-accent/20' 
+                                  ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' 
                                   : 'bg-text-primary text-background hover:opacity-95'
                               }`}
                             >
