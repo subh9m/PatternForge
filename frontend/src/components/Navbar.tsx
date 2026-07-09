@@ -91,13 +91,20 @@ const Navbar: React.FC<NavbarProps> = ({
       fetchTimeout = window.setTimeout(fetchNavbarStats, 500);
     };
 
+    const handleInstantReset = () => {
+      if (fetchTimeout) clearTimeout(fetchTimeout);
+      fetchNavbarStats();
+    };
+
     fetchNavbarStats();
 
     window.addEventListener('refresh-stats', handleRefresh);
     window.addEventListener('daily-reset', handleRefresh);
+    window.addEventListener('daily-reset-instant', handleInstantReset);
     return () => {
       window.removeEventListener('refresh-stats', handleRefresh);
       window.removeEventListener('daily-reset', handleRefresh);
+      window.removeEventListener('daily-reset-instant', handleInstantReset);
       if (fetchTimeout) clearTimeout(fetchTimeout);
     };
   }, [activeTab]); // Refetch when changing tab to stay up to date

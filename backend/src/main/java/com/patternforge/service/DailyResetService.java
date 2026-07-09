@@ -40,6 +40,41 @@ public class DailyResetService {
         this.dailyBoundaryService = dailyBoundaryService;
     }
 
+    @Transactional
+    public void executeClientReset(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        Settings settings = getOrCreateSettings(userId);
+
+        LocalDate before = settings.getLastProcessedEffectiveDate();
+        if (before == null) {
+            before = dailyBoundaryService.getCurrentEffectiveDate(settings);
+            settings.setLastProcessedEffectiveDate(before);
+            settingsRepository.save(settings);
+        }
+
+        // Sync any server-clock day advances first
+        ensureDailyReset(userId);
+
+        settings = getOrCreateSettings(userId);
+        LocalDate after = settings.getLastProcessedEffectiveDate();
+
+        // Client fired at reset time but server didn't advance yet — force end of study day
+        if (after != null && after.equals(before)) {
+            LocalDate serverEffective = dailyBoundaryService.getCurrentEffectiveDate(settings);
+            if (!after.isBefore(serverEffective)) {
+                archiveDailyTaskForDate(user, after);
+                finishRevisionSessionsForDate(user, after);
+                settings.setLastProcessedEffectiveDate(after.plusDays(1));
+                settingsRepository.save(settings);
+            }
+        }
+    }
+
+    public LocalDate getActiveStudyDate(UUID userId) {
+        Settings settings = getOrCreateSettings(userId);
+        return dailyBoundaryService.getActiveStudyDate(settings);
+    }
+
     /**
      * Ensures all completed study days before the current effective day are archived.
      * Called on API requests and by the scheduled reset job.

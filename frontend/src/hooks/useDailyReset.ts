@@ -3,6 +3,15 @@ import { api } from '../services/api';
 
 const DEFAULT_RESET_TIME = '02:00';
 
+export const EMPTY_DAILY_TASK = {
+  selectedModules: '',
+  completedModules: '',
+  targetDurations: '',
+  remainingDurations: '',
+  elapsedDurations: '',
+  statuses: '',
+};
+
 export function getResetTime(): string {
   return localStorage.getItem('patternforge_reset_time') || DEFAULT_RESET_TIME;
 }
@@ -25,14 +34,20 @@ export function seedResetTimeFromSettings(): void {
     });
 }
 
-/** Runs the server reset and broadcasts a global event so every view refreshes instantly. */
+/** Immediately zero client-side caches and broadcast instant UI reset before the API call. */
+export function applyInstantDailyReset(): void {
+  localStorage.removeItem('patternforge_revisions');
+  window.dispatchEvent(new CustomEvent('daily-reset-instant'));
+}
+
+/** Runs the server reset and broadcasts a global event so every view refreshes from API. */
 export async function executeDailyReset(): Promise<void> {
+  applyInstantDailyReset();
   try {
     await api.post('/daily-reset/execute', {});
   } catch (e) {
     console.error('Daily reset API call failed', e);
   }
-  localStorage.removeItem('patternforge_revisions');
   window.dispatchEvent(new CustomEvent('daily-reset'));
   window.dispatchEvent(new CustomEvent('refresh-stats'));
 }
@@ -86,7 +101,7 @@ export function useDailyResetScheduler(enabled: boolean) {
   }, [enabled]);
 }
 
-/** Subscribe any component to the global daily-reset event. */
+/** Subscribe any component to the global daily-reset event (fires after API). */
 export function useOnDailyReset(onReset: () => void) {
   const callbackRef = useRef(onReset);
   callbackRef.current = onReset;
@@ -95,5 +110,17 @@ export function useOnDailyReset(onReset: () => void) {
     const handler = () => callbackRef.current();
     window.addEventListener('daily-reset', handler);
     return () => window.removeEventListener('daily-reset', handler);
+  }, []);
+}
+
+/** Subscribe for instant UI zeroing the moment reset time hits (before API returns). */
+export function useOnDailyResetInstant(onReset: () => void) {
+  const callbackRef = useRef(onReset);
+  callbackRef.current = onReset;
+
+  useEffect(() => {
+    const handler = () => callbackRef.current();
+    window.addEventListener('daily-reset-instant', handler);
+    return () => window.removeEventListener('daily-reset-instant', handler);
   }, []);
 }

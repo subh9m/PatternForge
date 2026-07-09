@@ -40,9 +40,20 @@ public class DailyBoundaryService {
         return timestamp.toLocalDate();
     }
 
-    public boolean isOnCurrentEffectiveDay(LocalDateTime timestamp, Settings settings) {
+    public LocalDate getActiveStudyDate(Settings settings) {
+        if (settings != null && settings.getLastProcessedEffectiveDate() != null) {
+            return settings.getLastProcessedEffectiveDate();
+        }
+        return getCurrentEffectiveDate(settings);
+    }
+
+    public boolean isOnActiveStudyDay(LocalDateTime timestamp, Settings settings) {
         if (timestamp == null) return false;
         LocalDate effectiveDate = getEffectiveDateForTimestamp(timestamp, settings);
-        return effectiveDate != null && effectiveDate.equals(getCurrentEffectiveDate(settings));
+        return effectiveDate != null && effectiveDate.equals(getActiveStudyDate(settings));
+    }
+
+    public boolean isOnCurrentEffectiveDay(LocalDateTime timestamp, Settings settings) {
+        return isOnActiveStudyDay(timestamp, settings);
     }
 }

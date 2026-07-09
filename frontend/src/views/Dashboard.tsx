@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { useOnDailyReset } from '../hooks/useDailyReset';
+import { useOnDailyReset, useOnDailyResetInstant } from '../hooks/useDailyReset';
 import HeatmapDayDetailModal from '../components/HeatmapDayDetailModal';
 import type { ProblemDto } from './Explorer';
 import { 
@@ -84,6 +84,20 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
     };
     loadStats();
   }, [selectedYear]);
+
+  useOnDailyResetInstant(() => {
+    setStats((prev) => {
+      if (!prev) return prev;
+      const totalRevisionPool = (prev.revisionDueTodayCount ?? 0) + (prev.todayRevisedCount ?? 0);
+      return {
+        ...prev,
+        todayGoalSolved: 0,
+        todayRevisedCount: 0,
+        revisionDueTodayCount: totalRevisionPool > 0 ? totalRevisionPool : (prev.revisionDueTodayCount ?? 0),
+        revisionTimeTodaySecs: 0,
+      };
+    });
+  });
 
   useOnDailyReset(() => {
     api.get<DashboardStats>(`/dashboard/stats?year=${selectedYear}`)

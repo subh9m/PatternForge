@@ -43,10 +43,10 @@ public class DailyTaskController {
 
         dailyResetService.ensureDailyReset(userId);
         Settings settings = dailyResetService.getOrCreateSettings(userId);
-        LocalDate today = dailyBoundaryService.getCurrentEffectiveDate(settings);
+        LocalDate today = dailyBoundaryService.getActiveStudyDate(settings);
 
         Optional<DailyTask> taskOpt = dailyTaskRepository.findByUserIdAndDate(userId, today);
-        if (taskOpt.isEmpty()) {
+        if (taskOpt.isEmpty() || Boolean.TRUE.equals(taskOpt.get().getArchived())) {
             Map<String, Object> empty = new HashMap<>();
             empty.put("selectedModules", "");
             empty.put("completedModules", "");
@@ -71,7 +71,7 @@ public class DailyTaskController {
 
         dailyResetService.ensureDailyReset(userId);
         Settings settings = dailyResetService.getOrCreateSettings(userId);
-        LocalDate today = dailyBoundaryService.getCurrentEffectiveDate(settings);
+        LocalDate today = dailyBoundaryService.getActiveStudyDate(settings);
 
         String selected = body.getOrDefault("selectedModules", "");
         String durations = body.getOrDefault("targetDurations", "");
@@ -125,7 +125,7 @@ public class DailyTaskController {
 
         dailyResetService.ensureDailyReset(userId);
         Settings settings = dailyResetService.getOrCreateSettings(userId);
-        LocalDate today = dailyBoundaryService.getCurrentEffectiveDate(settings);
+        LocalDate today = dailyBoundaryService.getActiveStudyDate(settings);
 
         String module = body.get("module");
         if (module == null || module.trim().isEmpty()) {
@@ -172,7 +172,7 @@ public class DailyTaskController {
 
         dailyResetService.ensureDailyReset(userId);
         Settings settings = dailyResetService.getOrCreateSettings(userId);
-        LocalDate today = dailyBoundaryService.getCurrentEffectiveDate(settings);
+        LocalDate today = dailyBoundaryService.getActiveStudyDate(settings);
 
         String module = (String) body.get("module");
         Integer remainingSeconds = (Integer) body.get("remainingSeconds");
@@ -242,7 +242,7 @@ public class DailyTaskController {
 
         dailyResetService.ensureDailyReset(userId);
         Settings settings = dailyResetService.getOrCreateSettings(userId);
-        LocalDate today = dailyBoundaryService.getCurrentEffectiveDate(settings);
+        LocalDate today = dailyBoundaryService.getActiveStudyDate(settings);
 
         String module = (String) body.get("module");
         Integer elapsedSeconds = (Integer) body.get("elapsedSeconds");

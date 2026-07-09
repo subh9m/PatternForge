@@ -85,7 +85,7 @@ public class RevisionController {
                 timeComplexity = getOptimalTimeComplexity(p);
             }
 
-            boolean isRevisedToday = dailyBoundaryService.isOnCurrentEffectiveDay(a.getLastRevisedAt(), settings);
+            boolean isRevisedToday = dailyBoundaryService.isOnActiveStudyDay(a.getLastRevisedAt(), settings);
 
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
@@ -169,7 +169,7 @@ public class RevisionController {
 
         dailyResetService.ensureDailyReset(userId);
         Settings settings = dailyResetService.getOrCreateSettings(userId);
-        LocalDate effectiveDate = dailyBoundaryService.getCurrentEffectiveDate(settings);
+        LocalDate effectiveDate = dailyBoundaryService.getActiveStudyDate(settings);
         
         Optional<RevisionSession> activeSessionOpt = revisionSessionRepository
             .findByUserIdAndStatusIn(userId, List.of("RUNNING", "PAUSED"))

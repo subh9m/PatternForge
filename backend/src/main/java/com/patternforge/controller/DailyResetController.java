@@ -23,7 +23,7 @@ public class DailyResetController {
     @PostMapping("/execute")
     public ResponseEntity<?> executeReset(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
-        dailyResetService.ensureDailyReset(userId);
+        dailyResetService.executeClientReset(userId);
         return ResponseEntity.ok(Map.of("success", true));
     }
 }

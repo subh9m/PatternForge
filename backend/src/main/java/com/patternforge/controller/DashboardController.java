@@ -70,7 +70,7 @@ public class DashboardController {
 
         dailyResetService.ensureDailyReset(userId);
         Settings userSettings = dailyResetService.getOrCreateSettings(userId);
-        LocalDate todayDate = dailyBoundaryService.getCurrentEffectiveDate(userSettings);
+        LocalDate todayDate = dailyBoundaryService.getActiveStudyDate(userSettings);
 
         List<Problem> problems = problemRepository.findAll();
         List<Topic> topics = topicRepository.findAll();
@@ -81,7 +81,7 @@ public class DashboardController {
         long attemptedCount = attempts.size();
 
         long revisedTodayCount = attempts.stream()
-                .filter(a -> "SOLVED".equals(a.getStatus()) && dailyBoundaryService.isOnCurrentEffectiveDay(a.getLastRevisedAt(), userSettings))
+                .filter(a -> "SOLVED".equals(a.getStatus()) && dailyBoundaryService.isOnActiveStudyDay(a.getLastRevisedAt(), userSettings))
                 .count();
                 
         long revisionDueTodayCount = solvedCount - revisedTodayCount;
@@ -238,7 +238,7 @@ public class DashboardController {
 
         // Calculate solve goal for current effective day
         long todayGoalSolved = attempts.stream()
-                .filter(a -> "SOLVED".equals(a.getStatus()) && dailyBoundaryService.isOnCurrentEffectiveDay(a.getLastAttemptedAt(), userSettings))
+                .filter(a -> "SOLVED".equals(a.getStatus()) && dailyBoundaryService.isOnActiveStudyDay(a.getLastAttemptedAt(), userSettings))
                 .count();
 
         return ResponseEntity.ok(DashboardStats.builder()
@@ -304,7 +304,7 @@ public class DashboardController {
     }
 
     private List<Map<String, Object>> getHeatmapData(UUID userId, List<Attempt> attempts, Integer selectedYear, Settings settings) {
-        LocalDate today = dailyBoundaryService.getCurrentEffectiveDate(settings);
+        LocalDate today = dailyBoundaryService.getActiveStudyDate(settings);
         int activeYear = (selectedYear != null) ? selectedYear : today.getYear();
 
         LocalDate startDate = LocalDate.of(activeYear, 1, 1);
@@ -409,7 +409,7 @@ public class DashboardController {
     }
 
     private List<Map<String, Object>> getWeeklyActivityData(List<Attempt> attempts, Settings settings) {
-        LocalDate today = dailyBoundaryService.getCurrentEffectiveDate(settings);
+        LocalDate today = dailyBoundaryService.getActiveStudyDate(settings);
         Map<LocalDate, Long> dateCounts = attempts.stream()
                 .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastAttemptedAt() != null)
                 .map(a -> dailyBoundaryService.getEffectiveDateForTimestamp(a.getLastAttemptedAt(), settings))

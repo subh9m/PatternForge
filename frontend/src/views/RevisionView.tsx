@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { useOnDailyReset } from '../hooks/useDailyReset';
+import { useOnDailyReset, useOnDailyResetInstant } from '../hooks/useDailyReset';
 
 import { 
   CheckCircle2, Circle, Play, Search, Award, 
@@ -348,15 +348,18 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     };
   }, [selectedItem]);
 
-  const fetchQueue = async () => {
-    // Check local cache first for instant load
-    const cached = localStorage.getItem('patternforge_revisions');
-    if (cached) {
-      try {
-        setItems(JSON.parse(cached));
-        setLoading(false);
-      } catch (e) {
-        // ignore
+  const fetchQueue = async (skipCache = false) => {
+    if (!skipCache) {
+      const cached = localStorage.getItem('patternforge_revisions');
+      if (cached) {
+        try {
+          setItems(JSON.parse(cached));
+          setLoading(false);
+        } catch (e) {
+          // ignore
+        }
+      } else {
+        setLoading(true);
       }
     } else {
       setLoading(true);
@@ -378,7 +381,16 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     fetchQueue();
   }, []);
 
-  useOnDailyReset(() => fetchQueue());
+  useOnDailyResetInstant(() => {
+    setItems((prev) => {
+      const updated = prev.map((item) => ({ ...item, isRevisedToday: false }));
+      localStorage.setItem('patternforge_revisions', JSON.stringify(updated));
+      return updated;
+    });
+    setSelectedItem((prev) => (prev ? { ...prev, isRevisedToday: false } : null));
+  });
+
+  useOnDailyReset(() => fetchQueue(true));
 
   // Poll for generating items
   useEffect(() => {
