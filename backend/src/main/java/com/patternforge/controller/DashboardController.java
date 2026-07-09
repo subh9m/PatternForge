@@ -28,6 +28,7 @@ public class DashboardController {
     private final SettingsRepository settingsRepository;
     private final DailyTaskRepository dailyTaskRepository;
     private final UserRepository userRepository;
+    private final RevisionSessionRepository revisionSessionRepository;
 
     public DashboardController(ProblemRepository problemRepository,
                                TopicRepository topicRepository,
@@ -36,7 +37,8 @@ public class DashboardController {
                                RevisionRepository revisionRepository,
                                SettingsRepository settingsRepository,
                                DailyTaskRepository dailyTaskRepository,
-                               UserRepository userRepository) {
+                               UserRepository userRepository,
+                               RevisionSessionRepository revisionSessionRepository) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -45,6 +47,7 @@ public class DashboardController {
         this.settingsRepository = settingsRepository;
         this.dailyTaskRepository = dailyTaskRepository;
         this.userRepository = userRepository;
+        this.revisionSessionRepository = revisionSessionRepository;
     }
 
     @GetMapping
@@ -99,6 +102,11 @@ public class DashboardController {
             }
             studyMinutes = totalSecs / 60;
         }
+
+        // Calculate revision time today (in seconds)
+        int revisionTimeTodaySecs = revisionSessionRepository.findByUserIdAndDate(userId, todayDate).stream()
+                .mapToInt(RevisionSession::getElapsedTime)
+                .sum();
 
         // Count solved problems per day to see if they met daily goal for streak
         Map<LocalDate, Long> solvedCountByDate = attempts.stream()
@@ -237,6 +245,7 @@ public class DashboardController {
                 .revisionDueTodayCount((int) revisionDueTodayCount)
                 .todayRevisedCount((int) revisedTodayCount)
                 .studyMinutes((int) studyMinutes)
+                .revisionTimeTodaySecs(revisionTimeTodaySecs)
                 .weakestTopic(weakestTopic)
                 .strongestTopic(strongestTopic)
                 .problemsPerTopicSolved(problemsPerTopicSolved)
@@ -308,6 +317,27 @@ public class DashboardController {
                         Collectors.mapping(Attempt::getProblem, Collectors.toList())
                 ));
 
+        // Group attempts revised by date
+        Map<LocalDate, Long> revisedCountByDate = attempts.stream()
+                .filter(a -> "SOLVED".equals(a.getStatus()) && a.getLastRevisedAt() != null)
+                .filter(a -> {
+                    LocalDate date = a.getLastRevisedAt().toLocalDate();
+                    return !date.isBefore(startDate) && !date.isAfter(endDate);
+                })
+                .collect(Collectors.groupingBy(
+                        a -> a.getLastRevisedAt().toLocalDate(),
+                        Collectors.counting()
+                ));
+
+        // Group revision session elapsed time by date
+        List<RevisionSession> revisionSessions = revisionSessionRepository.findByUserId(userId);
+        Map<LocalDate, Integer> revisionTimeByDate = revisionSessions.stream()
+                .filter(s -> !s.getDate().isBefore(startDate) && !s.getDate().isAfter(endDate))
+                .collect(Collectors.groupingBy(
+                        RevisionSession::getDate,
+                        Collectors.summingInt(RevisionSession::getElapsedTime)
+                ));
+
         List<DailyTask> dailyTasks = dailyTaskRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
         if (dailyTasks == null) {
             dailyTasks = new ArrayList<>();
@@ -338,6 +368,8 @@ public class DashboardController {
 
             cell.put("count", problemDetailsList.size());
             cell.put("problems", problemDetailsList);
+            cell.put("revisionCount", revisedCountByDate.getOrDefault(date, 0L));
+            cell.put("revisionTime", revisionTimeByDate.getOrDefault(date, 0));
 
             DailyTask dt = dailyTaskMap.get(date);
             boolean hasDailyTask = false;

@@ -4,7 +4,7 @@ import type { ProblemDto } from './Explorer';
 import { 
   Flame, Award, Brain, 
   Shuffle, ChevronRight,
-  Calendar, AlertCircle
+  Calendar, AlertCircle, Clock
 } from 'lucide-react';
 
 interface HeatmapProblem {
@@ -19,6 +19,8 @@ interface HeatmapDay {
   date: string;
   count: number;
   problems?: HeatmapProblem[];
+  revisionCount?: number;
+  revisionTime?: number;
 }
 
 interface DashboardStats {
@@ -33,6 +35,8 @@ interface DashboardStats {
   recentlySolved: ProblemDto[];
   continueLastSession: ProblemDto | null;
   revisionDueTodayCount: number;
+  todayRevisedCount?: number;
+  revisionTimeTodaySecs?: number;
   weakestTopic: string;
   strongestTopic: string;
   problemsPerTopicSolved: Record<string, number>;
@@ -40,6 +44,17 @@ interface DashboardStats {
   weeklyActivity: { dayName: string; count: number }[];
   monthlyHeatmap: HeatmapDay[];
 }
+
+const formatRevisionTime = (seconds: number): string => {
+  if (!seconds || seconds <= 0) return "0m";
+  const mins = Math.floor(seconds / 60);
+  const hrs = Math.floor(mins / 60);
+  const remainingMins = mins % 60;
+  if (hrs > 0) {
+    return `${hrs}h ${remainingMins.toString().padStart(2, '0')}m`;
+  }
+  return `${mins}m`;
+};
 
 interface DashboardProps {
   navigateToProblem: (id: string) => void;
@@ -157,7 +172,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Streak */}
         <div className="glass-panel glass-panel-hover rounded-2xl p-5 flex items-center space-x-4">
           <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400">
@@ -199,6 +214,17 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
           <div>
             <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Revisions Due</span>
             <span className="text-2xl font-black text-slate-100">{stats.revisionDueTodayCount} Problems</span>
+          </div>
+        </div>
+
+        {/* Revision Time Today */}
+        <div className="glass-panel glass-panel-hover rounded-2xl p-5 flex items-center space-x-4">
+          <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
+            <Clock className="h-6 w-6" />
+          </div>
+          <div>
+            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Revision Time</span>
+            <span className="text-2xl font-black text-slate-100">{formatRevisionTime(stats.revisionTimeTodaySecs || 0)}</span>
           </div>
         </div>
       </div>
@@ -349,7 +375,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
                             }
                           }}
                           className={`h-[11px] w-[11px] rounded-[2px] cursor-pointer transition-smooth flex items-center justify-center ${bgClass}`}
-                          title={`${day.date}: ${count} solved (Daily Goal Target: ${stats.todayGoalTarget})`}
+                          title={`Solved: ${count}\nRevised: ${day.revisionCount || 0}\nRevision Time: ${formatRevisionTime(day.revisionTime || 0)}`}
                         >
                           {count > stats.todayGoalTarget && (
                             <span className="text-[7.5px] text-amber-300 leading-none select-none font-bold">★</span>
@@ -383,9 +409,14 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
               <span className="text-xs font-black font-heading uppercase tracking-widest text-text-primary">
                 Activity on {selectedDay.date}
               </span>
-              <span className="text-[10px] font-bold font-mono text-accent uppercase bg-accent/10 border border-accent/20 px-2 py-0.5">
-                {selectedDay.count} Solved
-              </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-bold font-mono text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+                  {selectedDay.count} Solved
+                </span>
+                <span className="text-[10px] font-bold font-mono text-purple-400 uppercase bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">
+                  {selectedDay.revisionCount || 0} Revised ({formatRevisionTime(selectedDay.revisionTime || 0)})
+                </span>
+              </div>
             </div>
             
             <div className="space-y-2">

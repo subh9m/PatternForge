@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { 
   CheckCircle2, Circle, Play, Search, Award, 
   BookOpen, Code2, X, Info, CheckCircle, Brain,
-  FileText, Copy, Check, Maximize2
+  FileText, Copy, Check, Maximize2, Clock
 } from 'lucide-react';
 import FullscreenCodeModal from '../components/FullscreenCodeModal';
 
@@ -195,6 +195,129 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
   const [isCodeExpanded, setIsCodeExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const [activeSession, setActiveSession] = useState<any>(null);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
+  const [showFinishConfirm, setShowFinishConfirm] = useState<boolean>(false);
+
+  const elapsedRef = React.useRef(elapsedTime);
+  useEffect(() => {
+    elapsedRef.current = elapsedTime;
+  }, [elapsedTime]);
+
+  useEffect(() => {
+    const fetchActiveSession = async () => {
+      try {
+        const session = await api.get<any>('/revisions/session/active');
+        if (session && session.active) {
+          setActiveSession(session);
+          setElapsedTime(session.elapsedTime);
+          setIsTimerRunning(session.status === 'RUNNING');
+        }
+      } catch (e) {
+        console.error("Failed to fetch active revision session", e);
+      }
+    };
+    fetchActiveSession();
+  }, []);
+
+  // Local timer tick
+  useEffect(() => {
+    let tickInterval: any = null;
+    if (isTimerRunning) {
+      tickInterval = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (tickInterval) clearInterval(tickInterval);
+    };
+  }, [isTimerRunning]);
+
+  // Auto-sync progress to database every 5 seconds when timer is running
+  useEffect(() => {
+    let syncInterval: any = null;
+    if (isTimerRunning && activeSession) {
+      syncInterval = setInterval(async () => {
+        try {
+          await api.post('/revisions/session/save', {
+            elapsedTime: elapsedRef.current,
+            status: 'RUNNING'
+          });
+        } catch (e) {
+          console.error("Failed to auto-save revision timer", e);
+        }
+      }, 5000);
+    }
+    return () => {
+      if (syncInterval) clearInterval(syncInterval);
+    };
+  }, [isTimerRunning, activeSession]);
+
+  const handleStartRevision = async () => {
+    try {
+      const session = await api.post<any>('/revisions/session/start', {});
+      setActiveSession(session);
+      setElapsedTime(session.elapsedTime);
+      setIsTimerRunning(true);
+    } catch (e) {
+      console.error("Failed to start revision session", e);
+    }
+  };
+
+  const handlePauseRevision = async () => {
+    try {
+      setIsTimerRunning(false);
+      const session = await api.post<any>('/revisions/session/pause', {
+        elapsedTime: elapsedRef.current
+      });
+      setActiveSession(session);
+    } catch (e) {
+      console.error("Failed to pause revision session", e);
+    }
+  };
+
+  const handleResumeRevision = async () => {
+    try {
+      const session = await api.post<any>('/revisions/session/resume', {});
+      setActiveSession(session);
+      setIsTimerRunning(true);
+    } catch (e) {
+      console.error("Failed to resume revision session", e);
+    }
+  };
+
+  const handleFinishRevisionClick = () => {
+    if (pendingToday > 0) {
+      setShowFinishConfirm(true);
+    } else {
+      handleFinishRevisionActual();
+    }
+  };
+
+  const handleFinishRevisionActual = async () => {
+    try {
+      setIsTimerRunning(false);
+      setShowFinishConfirm(false);
+      await api.post<any>('/revisions/session/finish', {
+        elapsedTime: elapsedRef.current
+      });
+      setActiveSession(null);
+      setElapsedTime(0);
+      fetchQueue();
+      window.dispatchEvent(new CustomEvent('refresh-stats', { detail: { solvedDelta: 0 } }));
+    } catch (e) {
+      console.error("Failed to finish revision session", e);
+    }
+  };
+
+  const formatSecondsToTimer = (totalSeconds: number): string => {
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   // Reset modal tabs when selecting a new problem
   useEffect(() => {
     if (selectedItem) {
@@ -359,19 +482,76 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     <div className="space-y-6">
       
       {/* Top Header Card */}
-      <div className="glass-panel p-6 rounded-2xl flex flex-col md:flex-row items-stretch justify-between gap-6 border border-border">
+      <div className="glass-panel p-6 rounded-2xl flex flex-col lg:flex-row items-stretch justify-between gap-6 border border-border">
         <div className="flex-1 space-y-2">
           <h1 className="text-2xl font-extrabold text-slate-100 flex items-center space-x-2">
             <Award className="h-6 w-6 text-purple-400" />
             <span>Daily Revision Center</span>
           </h1>
-          <p className="text-slate-400 text-xs leading-relaxed max-w-2xl font-medium">
+          <p className="text-slate-400 text-xs leading-relaxed max-w-xl font-medium">
             Cement your logical models by revisiting your solved tasks. Review the simplified brief statements and intuitive approaches, inspect your past code, and mark them as done daily to maintain your consistency streak.
           </p>
         </div>
 
+        {/* Revision Timer Card */}
+        <div className="w-full lg:w-80 bg-slate-950/40 border border-slate-900 rounded-xl p-4 flex flex-col justify-between space-y-3 relative overflow-hidden">
+          {!activeSession ? (
+            <div className="flex flex-col items-center justify-center h-full py-2 space-y-3">
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider font-mono">Revision Tracker</span>
+              <button
+                onClick={handleStartRevision}
+                className="w-full py-2 bg-purple-650 hover:bg-purple-550 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer shadow-glow-primary transition-all duration-200 flex items-center justify-center space-x-2"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" />
+                <span>Start Revision</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col justify-between h-full space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-450 font-bold uppercase tracking-wider font-mono flex items-center space-x-1.5">
+                  <Clock className="h-3.5 w-3.5 text-purple-400" />
+                  <span>Revision Session</span>
+                </span>
+                <span className={`px-2 py-0.5 rounded-full font-mono text-[9px] font-bold uppercase ${
+                  isTimerRunning 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                }`}>
+                  {isTimerRunning ? 'Running' : 'Paused'}
+                </span>
+              </div>
+
+              <div className="text-center py-1 bg-slate-950/20 rounded-lg border border-slate-900/60">
+                <span className="text-3xl font-black text-slate-100 font-mono tracking-wider block">
+                  {formatSecondsToTimer(elapsedTime)}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={isTimerRunning ? handlePauseRevision : handleResumeRevision}
+                  className={`flex-1 py-1.5 border rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                    isTimerRunning
+                      ? 'border-amber-500/20 text-amber-400 bg-amber-500/5 hover:bg-amber-500/10'
+                      : 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10'
+                  }`}
+                >
+                  {isTimerRunning ? 'Pause' : 'Resume'}
+                </button>
+                <button
+                  onClick={handleFinishRevisionClick}
+                  className="flex-1 py-1.5 bg-purple-650 hover:bg-purple-550 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-250 cursor-pointer text-center"
+                >
+                  Finish Revision
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Progress gauge card */}
-        <div className="w-full md:w-80 bg-slate-950/40 border border-slate-900 rounded-xl p-4 flex flex-col justify-between space-y-4">
+        <div className="w-full lg:w-80 bg-slate-950/40 border border-slate-900 rounded-xl p-4 flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-400 font-bold uppercase tracking-wider font-mono">Today's Progress</span>
             <span className="text-emerald-400 font-black font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
@@ -1042,6 +1222,35 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
               </>
             );
           })()}
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Finish Revision */}
+      {showFinishConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="glass-panel border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
+            <div className="space-y-2">
+              <h3 className="text-base font-extrabold text-slate-100 uppercase tracking-wide">Pending Revisions</h3>
+              <p className="text-slate-350 text-xs leading-relaxed font-sans font-medium">
+                You still have <strong className="text-amber-400 font-bold">{pendingToday}</strong> questions pending for today.
+                Do you want to end this revision session anyway?
+              </p>
+            </div>
+            <div className="flex items-center justify-end space-x-3">
+              <button
+                onClick={() => setShowFinishConfirm(false)}
+                className="px-4 py-2 border border-slate-800 text-slate-400 hover:text-slate-200 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer bg-slate-950/40 hover:bg-slate-900 transition-smooth"
+              >
+                Continue Revising
+              </button>
+              <button
+                onClick={handleFinishRevisionActual}
+                className="px-4 py-2 bg-purple-650 hover:bg-purple-550 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer shadow-glow-primary transition-smooth"
+              >
+                Finish Anyway
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

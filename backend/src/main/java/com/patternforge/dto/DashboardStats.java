@@ -30,6 +30,7 @@ public class DashboardStats {
 
     private Integer todayRevisedCount;
     private Integer studyMinutes;
+    private Integer revisionTimeTodaySecs;
 
     private Map<String, Long> problemsPerTopicSolved; // solved per topic
     private Map<String, Long> problemsPerTopicTotal;  // total per topic

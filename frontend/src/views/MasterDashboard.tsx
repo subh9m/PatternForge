@@ -14,6 +14,8 @@ interface HeatmapDay {
   isDailyTaskCompleted?: boolean;
   selectedModules?: string;
   completedModules?: string;
+  revisionCount?: number;
+  revisionTime?: number;
 }
 
 interface DashboardStats {
@@ -25,8 +27,20 @@ interface DashboardStats {
   revisionDueTodayCount: number;
   todayRevisedCount: number;
   studyMinutes: number;
+  revisionTimeTodaySecs?: number;
   monthlyHeatmap: HeatmapDay[];
 }
+
+const formatRevisionTime = (seconds: number): string => {
+  if (!seconds || seconds <= 0) return "0m";
+  const mins = Math.floor(seconds / 60);
+  const hrs = Math.floor(mins / 60);
+  const remainingMins = mins % 60;
+  if (hrs > 0) {
+    return `${hrs}h ${remainingMins.toString().padStart(2, '0')}m`;
+  }
+  return `${mins}m`;
+};
 
 interface DailyTaskData {
   selectedModules: string;
@@ -894,6 +908,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
                                 key={dayIdx}
                                 onClick={() => setSelectedDay(day === selectedDay ? null : day)}
                                 className={`h-[11px] w-[11px] rounded-sm transition-all duration-150 cursor-pointer ${bgClass}`}
+                                title={`Solved: ${count}\nRevised: ${day.revisionCount || 0}\nRevision Time: ${formatRevisionTime(day.revisionTime || 0)}`}
                               />
                             );
                           })}
@@ -925,9 +940,12 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
               {selectedDay.completedModules && (
                 <div className="text-text-secondary font-medium">Completed: <span className="text-accent font-mono font-bold uppercase">{selectedDay.completedModules}</span></div>
               )}
-              {selectedDay.count > 0 && (
-                <div className="text-text-secondary font-medium">DSA Problems Solved: <span className="text-text-primary font-bold">{selectedDay.count}</span></div>
-              )}
+              <div className="text-text-secondary font-medium">
+                Solved: <span className="text-text-primary font-bold">{selectedDay.count} {selectedDay.count === 1 ? 'Question' : 'Questions'}</span>
+              </div>
+              <div className="text-text-secondary font-medium">
+                Revision: <span className="text-accent font-mono font-bold">{selectedDay.revisionCount || 0} {selectedDay.revisionCount === 1 ? 'Question' : 'Questions'}</span> <span className="text-text-primary font-bold font-mono">({formatRevisionTime(selectedDay.revisionTime || 0)})</span>
+              </div>
             </div>
           )}
         </div>
@@ -939,7 +957,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
             <h3 className="text-xs font-bold text-text-secondary uppercase tracking-widest font-mono">Performance Indicators</h3>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <div className="bg-background border border-border p-5 rounded-2xl text-center transition-all duration-300 hover:border-border-hover">
               <span className="text-[10px] text-text-secondary font-bold uppercase tracking-wider block font-mono">Questions Solved</span>
               <span className="text-3xl font-black text-text-primary mt-1 block tracking-tight font-heading">{stats.todayGoalSolved}</span>
@@ -948,6 +966,11 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
             <div className="bg-background border border-border p-5 rounded-2xl text-center transition-all duration-300 hover:border-border-hover">
               <span className="text-[10px] text-text-secondary font-bold uppercase tracking-wider block font-mono">Questions Revised</span>
               <span className="text-3xl font-black text-text-primary mt-1 block tracking-tight font-heading">{stats.todayRevisedCount}</span>
+            </div>
+
+            <div className="bg-background border border-border p-5 rounded-2xl text-center transition-all duration-300 hover:border-border-hover">
+              <span className="text-[10px] text-text-secondary font-bold uppercase tracking-wider block font-mono">Revision Time Today</span>
+              <span className="text-3xl font-black text-text-primary mt-1 block tracking-tight font-heading">{formatRevisionTime(stats.revisionTimeTodaySecs || 0)}</span>
             </div>
 
             <div className="bg-background border border-border p-5 rounded-2xl text-center transition-all duration-300 hover:border-border-hover">

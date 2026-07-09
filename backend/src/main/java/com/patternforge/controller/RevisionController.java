@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,17 +25,23 @@ public class RevisionController {
     private final NoteRepository noteRepository;
     private final ProblemRepository problemRepository;
     private final ProblemGenerationService problemGenerationService;
+    private final RevisionSessionRepository revisionSessionRepository;
+    private final UserRepository userRepository;
 
     public RevisionController(AttemptRepository attemptRepository,
                               SubmissionRepository submissionRepository,
                               NoteRepository noteRepository,
                               ProblemRepository problemRepository,
-                              ProblemGenerationService problemGenerationService) {
+                              ProblemGenerationService problemGenerationService,
+                              RevisionSessionRepository revisionSessionRepository,
+                              UserRepository userRepository) {
         this.attemptRepository = attemptRepository;
         this.submissionRepository = submissionRepository;
         this.noteRepository = noteRepository;
         this.problemRepository = problemRepository;
         this.problemGenerationService = problemGenerationService;
+        this.revisionSessionRepository = revisionSessionRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -114,7 +121,155 @@ public class RevisionController {
         }
         attemptRepository.save(attempt);
 
+        // If there's an active session, increment questionsRevised
+        revisionSessionRepository.findByUserIdAndStatusIn(userId, List.of("RUNNING", "PAUSED"))
+            .forEach(session -> {
+                session.setQuestionsRevised(session.getQuestionsRevised() + 1);
+                revisionSessionRepository.save(session);
+            });
+
         return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    @GetMapping("/session/active")
+    public ResponseEntity<?> getActiveSession(Authentication authentication) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        Optional<RevisionSession> sessionOpt = revisionSessionRepository
+            .findByUserIdAndStatusIn(userId, List.of("RUNNING", "PAUSED"))
+            .stream()
+            .findFirst();
+        if (sessionOpt.isPresent()) {
+            RevisionSession s = sessionOpt.get();
+            Map<String, Object> res = new HashMap<>();
+            res.put("id", s.getId());
+            res.put("startTime", s.getStartTime());
+            res.put("elapsedTime", s.getElapsedTime());
+            res.put("status", s.getStatus());
+            res.put("questionsRevised", s.getQuestionsRevised());
+            res.put("date", s.getDate());
+            res.put("active", true);
+            return ResponseEntity.ok(res);
+        }
+        return ResponseEntity.ok(Map.of("active", false));
+    }
+
+    @PostMapping("/session/start")
+    public ResponseEntity<?> startSession(Authentication authentication) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        User user = userRepository.findById(userId).orElseThrow();
+        
+        Optional<RevisionSession> activeSessionOpt = revisionSessionRepository
+            .findByUserIdAndStatusIn(userId, List.of("RUNNING", "PAUSED"))
+            .stream()
+            .findFirst();
+            
+        if (activeSessionOpt.isPresent()) {
+            RevisionSession s = activeSessionOpt.get();
+            s.setStatus("RUNNING");
+            revisionSessionRepository.save(s);
+            return ResponseEntity.ok(s);
+        }
+        
+        RevisionSession newSession = RevisionSession.builder()
+            .user(user)
+            .date(LocalDate.now())
+            .startTime(LocalDateTime.now())
+            .elapsedTime(0)
+            .status("RUNNING")
+            .questionsRevised(0)
+            .build();
+            
+        revisionSessionRepository.save(newSession);
+        return ResponseEntity.ok(newSession);
+    }
+
+    @PostMapping("/session/pause")
+    public ResponseEntity<?> pauseSession(
+            Authentication authentication,
+            @RequestBody Map<String, Object> payload) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        Optional<RevisionSession> sessionOpt = revisionSessionRepository
+            .findByUserIdAndStatusIn(userId, List.of("RUNNING", "PAUSED"))
+            .stream()
+            .findFirst();
+            
+        if (sessionOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("No active session found");
+        }
+        
+        RevisionSession s = sessionOpt.get();
+        if (payload.containsKey("elapsedTime")) {
+            s.setElapsedTime(((Number) payload.get("elapsedTime")).intValue());
+        }
+        s.setStatus("PAUSED");
+        revisionSessionRepository.save(s);
+        return ResponseEntity.ok(s);
+    }
+
+    @PostMapping("/session/resume")
+    public ResponseEntity<?> resumeSession(Authentication authentication) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        Optional<RevisionSession> sessionOpt = revisionSessionRepository
+            .findByUserIdAndStatusIn(userId, List.of("RUNNING", "PAUSED"))
+            .stream()
+            .findFirst();
+            
+        if (sessionOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("No active session found");
+        }
+        
+        RevisionSession s = sessionOpt.get();
+        s.setStatus("RUNNING");
+        revisionSessionRepository.save(s);
+        return ResponseEntity.ok(s);
+    }
+
+    @PostMapping("/session/save")
+    public ResponseEntity<?> saveSession(
+            Authentication authentication,
+            @RequestBody Map<String, Object> payload) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        Optional<RevisionSession> sessionOpt = revisionSessionRepository
+            .findByUserIdAndStatusIn(userId, List.of("RUNNING", "PAUSED"))
+            .stream()
+            .findFirst();
+            
+        if (sessionOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("No active session found");
+        }
+        
+        RevisionSession s = sessionOpt.get();
+        if (payload.containsKey("elapsedTime")) {
+            s.setElapsedTime(((Number) payload.get("elapsedTime")).intValue());
+        }
+        if (payload.containsKey("status")) {
+            s.setStatus((String) payload.get("status"));
+        }
+        revisionSessionRepository.save(s);
+        return ResponseEntity.ok(s);
+    }
+
+    @PostMapping("/session/finish")
+    public ResponseEntity<?> finishSession(
+            Authentication authentication,
+            @RequestBody Map<String, Object> payload) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        Optional<RevisionSession> sessionOpt = revisionSessionRepository
+            .findByUserIdAndStatusIn(userId, List.of("RUNNING", "PAUSED"))
+            .stream()
+            .findFirst();
+            
+        if (sessionOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("No active session found");
+        }
+        
+        RevisionSession s = sessionOpt.get();
+        if (payload.containsKey("elapsedTime")) {
+            s.setElapsedTime(((Number) payload.get("elapsedTime")).intValue());
+        }
+        s.setStatus("FINISHED");
+        revisionSessionRepository.save(s);
+        return ResponseEntity.ok(s);
     }
 
 
