@@ -452,183 +452,180 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
           </div>
         </div>
 
-        {/* REDESIGNED DAILY TASKS SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
-          {/* LEFT: Permanent Daily Goals */}
-          <div className="space-y-6 lg:col-span-1">
-            <div className="flex items-center space-x-2">
-              <Sparkles className="h-4.5 w-4.5 text-accent" />
-              <h3 className="text-xs font-bold text-text-secondary uppercase tracking-widest font-mono">Permanent Goals</h3>
-            </div>
-
-            <div className="space-y-4">
-              {permanentTasks.map(task => (
-                <div 
-                  key={task.id} 
-                  className="glass-panel p-6 rounded-2xl border border-border bg-surface space-y-4 relative overflow-hidden transition-all duration-300 hover:border-border-hover"
-                >
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider">{task.name}</h4>
-                    {task.isCompleted ? (
-                      <span className="h-6 w-6 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center text-accent text-xs font-bold shadow-[0_0_10px_rgba(255,59,48,0.15)]">✓</span>
-                    ) : (
-                      <span className="text-[9px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse">Pending</span>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-mono">
-                      <span className="text-text-secondary font-bold">{task.progressText}</span>
-                      <span className={`${task.isCompleted ? 'text-accent' : 'text-text-secondary'} font-bold`}>{task.percent}%</span>
-                    </div>
-
-                    <div className="h-1.5 bg-background border border-border rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-300 bg-accent ${
-                          task.isCompleted ? 'shadow-[0_0_10px_rgba(255,59,48,0.3)]' : ''
-                        }`} 
-                        style={{ width: `${task.percent}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {!task.isCompleted && task.warningText && (
-                    <p className="text-[10px] text-accent font-bold font-mono uppercase tracking-wide">
-                      ⚡ {task.warningText}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
+        {/* PERMANENT DAILY GOALS */}
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Sparkles className="h-4.5 w-4.5 text-accent" />
+            <h3 className="text-xs font-bold text-text-secondary uppercase tracking-widest font-mono">Permanent Goals</h3>
           </div>
 
-          {/* RIGHT: Reading Tasks Modules Progress cards */}
-          <div className="space-y-6 lg:col-span-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-4.5 w-4.5 text-text-secondary" />
-                <h3 className="text-xs font-bold text-text-secondary uppercase tracking-widest font-mono">Reading & Theory Tasks</h3>
-              </div>
-              
-              {!showCreator && (
-                <button
-                  onClick={() => setShowCreator(true)}
-                  className="px-4 py-2 bg-text-primary text-background hover:opacity-90 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all duration-300 hover:-translate-y-0.5 cursor-pointer flex items-center space-x-1.5"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Add Reading Task</span>
-                </button>
-              )}
-            </div>
-
-            {/* Reading Task Creator Panel (Improved Nothing OS Grid UI) */}
-            {showCreator && (
-              <div className="glass-panel p-6 rounded-3xl border border-border bg-surface space-y-6 animate-fade-in relative shadow-md">
-                <button
-                  onClick={() => {
-                    setShowCreator(false);
-                    setCreatorModule('');
-                  }}
-                  className="absolute top-5 right-5 text-text-secondary hover:text-text-primary transition-smooth cursor-pointer"
-                >
-                  <X className="h-4.5 w-4.5" />
-                </button>
-
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold uppercase text-text-primary tracking-wide">Select Portal Subject</h4>
-                  <p className="text-[10px] text-text-secondary">Click on any portal subject chip to configure your focus target.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {permanentTasks.map(task => (
+              <div 
+                key={task.id} 
+                className="glass-panel p-6 rounded-2xl border border-border bg-surface space-y-4 relative overflow-hidden transition-all duration-300 hover:border-border-hover"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider">{task.name}</h4>
+                  {task.isCompleted ? (
+                    <span className="h-6 w-6 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center text-accent text-xs font-bold shadow-[0_0_10px_rgba(255,59,48,0.15)]">✓</span>
+                  ) : (
+                    <span className="text-[9px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse">Pending</span>
+                  )}
                 </div>
 
-                {/* Tactical Subject Chips Grid instead of HTML Select */}
                 <div className="space-y-2">
-                  <label className="text-[9px] font-bold text-text-secondary uppercase tracking-widest block font-mono">Available Subjects</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                    {(() => {
-                      const available = MODULES_CONFIG.filter(mod => !selectedList.includes(mod.id));
-                      if (available.length === 0) {
-                        return (
-                          <div className="col-span-full py-4 text-center text-xs text-text-secondary border border-dashed border-border rounded-xl">
-                            All portals have been added to your dashboard for today.
-                          </div>
-                        );
-                      }
-                      return available.map(mod => {
-                        const isSelected = creatorModule === mod.id;
-                        return (
-                          <button
-                            key={mod.id}
-                            type="button"
-                            onClick={() => setCreatorModule(mod.id)}
-                            className={`p-3 border rounded-xl flex flex-col items-center justify-center text-center space-y-2 transition-all duration-300 cursor-pointer ${
-                              isSelected
-                                ? 'border-accent text-accent bg-accent/5 font-bold shadow-[0_0_15px_rgba(255,59,48,0.1)]'
-                                : 'border-border text-text-secondary hover:border-text-primary hover:text-text-primary hover:bg-background/40'
-                            }`}
-                          >
-                            <mod.icon className="h-5 w-5" />
-                            <span className="text-[10px] uppercase font-mono tracking-wider">{mod.name.replace(' Revision', '').replace(' Practice', '')}</span>
-                          </button>
-                        );
-                      });
-                    })()}
+                  <div className="flex items-center justify-between text-[11px] font-mono">
+                    <span className="text-text-secondary font-bold">{task.progressText}</span>
+                    <span className={`${task.isCompleted ? 'text-accent' : 'text-text-secondary'} font-bold`}>{task.percent}%</span>
+                  </div>
+
+                  <div className="h-1.5 bg-background border border-border rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-300 bg-accent ${
+                        task.isCompleted ? 'shadow-[0_0_10px_rgba(255,59,48,0.3)]' : ''
+                      }`} 
+                      style={{ width: `${task.percent}%` }}
+                    ></div>
                   </div>
                 </div>
 
-                {/* Tacticle Target Time Chips instead of basic slider */}
-                {creatorModule && (
-                  <div className="space-y-3.5 pt-2 animate-fade-in">
-                    <div className="flex items-center justify-between text-[9px] font-bold font-mono">
-                      <span className="text-text-secondary uppercase tracking-widest">Select Target Duration</span>
-                      <span className="text-accent bg-accent/10 px-2 py-0.5 border border-accent/20 rounded-md font-bold">{creatorDuration} Minutes</span>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {DURATIONS.map(mins => (
+                {!task.isCompleted && task.warningText && (
+                  <p className="text-[10px] text-accent font-bold font-mono uppercase tracking-wide">
+                    ⚡ {task.warningText}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* READING & REVISION TASKS */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-4.5 w-4.5 text-text-secondary" />
+              <h3 className="text-xs font-bold text-text-secondary uppercase tracking-widest font-mono">Reading & Theory Tasks</h3>
+            </div>
+            
+            {!showCreator && (
+              <button
+                onClick={() => setShowCreator(true)}
+                className="px-4 py-2 bg-text-primary text-background hover:opacity-90 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all duration-300 hover:-translate-y-0.5 cursor-pointer flex items-center space-x-1.5"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Reading Task</span>
+              </button>
+            )}
+          </div>
+
+          {/* Reading Task Creator Panel (Improved Nothing OS Grid UI) */}
+          {showCreator && (
+            <div className="glass-panel p-6 rounded-3xl border border-border bg-surface space-y-6 animate-fade-in relative shadow-md">
+              <button
+                onClick={() => {
+                  setShowCreator(false);
+                  setCreatorModule('');
+                }}
+                className="absolute top-5 right-5 text-text-secondary hover:text-text-primary transition-smooth cursor-pointer"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold uppercase text-text-primary tracking-wide">Select Portal Subject</h4>
+                <p className="text-[10px] text-text-secondary">Click on any portal subject chip to configure your focus target.</p>
+              </div>
+
+              {/* Tactical Subject Chips Grid instead of HTML Select */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-bold text-text-secondary uppercase tracking-widest block font-mono">Available Subjects</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                  {(() => {
+                    const available = MODULES_CONFIG.filter(mod => !selectedList.includes(mod.id));
+                    if (available.length === 0) {
+                      return (
+                        <div className="col-span-full py-4 text-center text-xs text-text-secondary border border-dashed border-border rounded-xl">
+                          All portals have been added to your dashboard for today.
+                        </div>
+                      );
+                    }
+                    return available.map(mod => {
+                      const isSelected = creatorModule === mod.id;
+                      return (
                         <button
-                          key={mins}
+                          key={mod.id}
                           type="button"
-                          onClick={() => setCreatorDuration(mins)}
-                          className={`flex-1 min-w-[70px] py-2 border rounded-xl text-xs font-mono text-center transition-all duration-200 cursor-pointer ${
-                            creatorDuration === mins
-                              ? 'border-accent text-accent bg-accent/5 font-extrabold shadow-[0_0_10px_rgba(255,59,48,0.15)]'
+                          onClick={() => setCreatorModule(mod.id)}
+                          className={`p-3 border rounded-xl flex flex-col items-center justify-center text-center space-y-2 transition-all duration-300 cursor-pointer ${
+                            isSelected
+                              ? 'border-accent text-accent bg-accent/5 font-bold shadow-[0_0_15px_rgba(255,59,48,0.1)]'
                               : 'border-border text-text-secondary hover:border-text-primary hover:text-text-primary hover:bg-background/40'
                           }`}
                         >
-                          {mins} Min
+                          <mod.icon className="h-5 w-5" />
+                          <span className="text-[10px] uppercase font-mono tracking-wider">{mod.name.replace(' Revision', '').replace(' Practice', '')}</span>
                         </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {creatorModule && (
-                  <div className="flex gap-3 pt-3">
-                    <button
-                      onClick={handleAddTaskOnly}
-                      className="flex-1 py-3 bg-background hover:bg-surface border border-border text-text-primary font-bold uppercase text-xs rounded-xl transition-smooth cursor-pointer"
-                    >
-                      Add Task
-                    </button>
-                    <button
-                      onClick={handleStartFocusMode}
-                      className="flex-1 py-3 bg-accent hover:bg-accent-hover text-white border border-transparent font-bold uppercase text-xs rounded-xl transition-smooth shadow-glow-accent cursor-pointer"
-                    >
-                      Start Focus Mode
-                    </button>
-                  </div>
-                )}
+                      );
+                    });
+                  })()}
+                </div>
               </div>
-            )}
+
+              {/* Tacticle Target Time Chips instead of basic slider */}
+              {creatorModule && (
+                <div className="space-y-3.5 pt-2 animate-fade-in">
+                  <div className="flex items-center justify-between text-[9px] font-bold font-mono">
+                    <span className="text-text-secondary uppercase tracking-widest">Select Target Duration</span>
+                    <span className="text-accent bg-accent/10 px-2 py-0.5 border border-accent/20 rounded-md font-bold">{creatorDuration} Minutes</span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {DURATIONS.map(mins => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => setCreatorDuration(mins)}
+                        className={`flex-1 min-w-[70px] py-2 border rounded-xl text-xs font-mono text-center transition-all duration-200 cursor-pointer ${
+                          creatorDuration === mins
+                            ? 'border-accent text-accent bg-accent/5 font-extrabold shadow-[0_0_10px_rgba(255,59,48,0.15)]'
+                            : 'border-border text-text-secondary hover:border-text-primary hover:text-text-primary hover:bg-background/40'
+                        }`}
+                      >
+                        {mins} Min
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {creatorModule && (
+                <div className="flex gap-3 pt-3">
+                  <button
+                    onClick={handleAddTaskOnly}
+                    className="flex-1 py-3 bg-background hover:bg-surface border border-border text-text-primary font-bold uppercase text-xs rounded-xl transition-smooth cursor-pointer"
+                  >
+                    Add Task
+                  </button>
+                  <button
+                    onClick={handleStartFocusMode}
+                    className="flex-1 py-3 bg-accent hover:bg-accent-hover text-white border border-transparent font-bold uppercase text-xs rounded-xl transition-smooth shadow-glow-accent cursor-pointer"
+                  >
+                    Start Focus Mode
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
             {/* List of active reading task cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {(() => {
                 const activeModules = MODULES_CONFIG.filter(mod => selectedList.includes(mod.id));
                 
                 if (activeModules.length === 0) {
                   return (
-                    <div className="col-span-1 md:col-span-2 glass-panel p-8 text-center rounded-2xl border border-border bg-surface space-y-2">
+                    <div className="col-span-1 md:col-span-2 lg:col-span-3 glass-panel p-8 text-center rounded-2xl border border-border bg-surface space-y-2">
                       <p className="text-xs text-text-secondary font-medium">
                         No reading or theory tasks scheduled for today yet.
                       </p>
@@ -753,7 +750,6 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ onEnterFocusMode, onG
               })()}
             </div>
           </div>
-        </div>
 
         {/* Heatmap Section */}
         <div className="glass-panel rounded-3xl p-6 border border-border bg-surface">
