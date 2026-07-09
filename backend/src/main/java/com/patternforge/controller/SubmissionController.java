@@ -177,9 +177,7 @@ public class SubmissionController {
         }
         attemptRepository.save(attempt);
 
-        if ("SOLVED".equals(attempt.getStatus())) {
-            generateAndSaveSimplifiedFields(attempt.getProblem());
-        }
+
 
         // Calculate updated streak and solved count for the user
         List<Submission> userSubmissions = submissionRepository.findByUserIdOrderByCreatedAtDesc(userId);
@@ -251,7 +249,5 @@ public class SubmissionController {
         return ResponseEntity.ok(response);
     }
 
-    public void generateAndSaveSimplifiedFields(Problem problem) {
-        problemGenerationService.queueGeneration(problem.getId(), 1);
-    }
+
 }

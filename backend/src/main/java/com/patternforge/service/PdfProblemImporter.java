@@ -103,29 +103,7 @@ public class PdfProblemImporter implements CommandLineRunner {
             importFallbackSeedData(topicMap);
         }
 
-        // Boot-time auto-generation scan for boilerplate/missing data
-        System.out.println("PatternForge Importer: Initiating background boot-time auto-generation scan for boilerplate/missing data...");
-        new Thread(() -> {
-            try {
-                // Wait 5 seconds for Spring Context boot logs to finalize
-                Thread.sleep(5000);
-                List<Problem> problems = problemRepository.findAll();
-                int queuedCount = 0;
-                for (Problem p : problems) {
-                    boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
-                                               LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()) ||
-                                               LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
-                                               LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
-                    if (needsGeneration) {
-                        problemGenerationService.queueGeneration(p.getId(), 2);
-                        queuedCount++;
-                    }
-                }
-                System.out.println("PatternForge Importer: Queued " + queuedCount + " incomplete problems for auto-generation sequentially.");
-            } catch (Exception e) {
-                System.err.println("PatternForge Importer: Error in boot-time auto-generation scan: " + e.getMessage());
-            }
-        }).start();
+
     }
 
     private boolean importFromJson(Map<String, Topic> topicMap) {

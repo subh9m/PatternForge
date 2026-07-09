@@ -39,11 +39,14 @@ public class APIKeyManager {
         startRecoveryTask();
 
         int keysCount = allKeys.size();
-        int modelsCount = modelSelector.getLoadedModelsCount();
         System.out.println("========================================");
-        System.out.println("Loaded Keys:\n" + keysCount);
-        System.out.println("Loaded Models:\n" + modelsCount);
-        System.out.println("Total combinations:\n" + (keysCount * modelsCount));
+        System.out.println("Total keys loaded: " + keysCount);
+        for (int i = 0; i < allKeys.size(); i++) {
+            String k = allKeys.get(i);
+            System.out.println("Key Index: " + i + " | Key: " + maskKey(k) + " | State: " + getKeyState(k));
+        }
+        System.out.println("currentIndex: " + currentIndex);
+        System.out.println("APIKeyManager Instance Hash Code: " + System.identityHashCode(this));
         System.out.println("========================================");
     }
 
@@ -150,6 +153,78 @@ public class APIKeyManager {
             }
         }
         return available;
+    }
+
+    private int currentIndex = 0;
+
+    public synchronized String nextAvailableKey() {
+        int beforeIndex = currentIndex;
+        evaluateCooldowns();
+        int poolSize = allKeys.size();
+        if (poolSize == 0) {
+            log.warn("APIKeyManager: No keys loaded in the pool.");
+            return null;
+        }
+
+        for (int i = 0; i < poolSize; i++) {
+            int checkIndex = (currentIndex + i) % poolSize;
+            String key = allKeys.get(checkIndex);
+            if (keyStates.get(key) == KeyState.AVAILABLE) {
+                // Update currentIndex to the next element for subsequent calls
+                currentIndex = (checkIndex + 1) % poolSize;
+                int afterIndex = currentIndex;
+
+                // Log the required information
+                List<String> availableKeys = new ArrayList<>();
+                List<String> cooldownKeys = new ArrayList<>();
+                for (String k : allKeys) {
+                    KeyState state = keyStates.get(k);
+                    if (state == KeyState.AVAILABLE) {
+                        availableKeys.add(maskKey(k));
+                    } else if (state == KeyState.COOLDOWN) {
+                        cooldownKeys.add(maskKey(k));
+                    }
+                }
+
+                System.out.println("currentIndex BEFORE nextAvailableKey(): " + beforeIndex);
+                System.out.println("currentIndex AFTER nextAvailableKey(): " + afterIndex);
+                System.out.println("returned key: " + maskKey(key));
+                System.out.println("pool size: " + poolSize);
+                System.out.println("number of AVAILABLE keys: " + availableKeys.size());
+
+                log.info("APIKeyManager: Requesting key. Current index: {}, Returned key: {}, Pool size: {}, Available keys: {}, Cooldown keys: {}",
+                        checkIndex, maskKey(key), poolSize, availableKeys, cooldownKeys);
+
+                return key;
+            }
+        }
+
+        // Log even if no keys are available
+        List<String> availableKeys = new ArrayList<>();
+        List<String> cooldownKeys = new ArrayList<>();
+        for (String k : allKeys) {
+            KeyState state = keyStates.get(k);
+            if (state == KeyState.AVAILABLE) {
+                availableKeys.add(maskKey(k));
+            } else if (state == KeyState.COOLDOWN) {
+                cooldownKeys.add(maskKey(k));
+            }
+        }
+
+        System.out.println("currentIndex BEFORE nextAvailableKey(): " + beforeIndex);
+        System.out.println("currentIndex AFTER nextAvailableKey(): " + currentIndex);
+        System.out.println("returned key: null");
+        System.out.println("pool size: " + poolSize);
+        System.out.println("number of AVAILABLE keys: 0");
+
+        log.warn("APIKeyManager: No available keys. Current index: {}, Returned key: null, Pool size: {}, Available keys: {}, Cooldown keys: {}",
+                currentIndex, poolSize, availableKeys, cooldownKeys);
+
+        return null;
+    }
+
+    public synchronized int getKeyIndex(String key) {
+        return allKeys.indexOf(key);
     }
 
     public synchronized void markCooldown(String key, long cooldownMs, String reason) {

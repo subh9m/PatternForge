@@ -686,9 +686,7 @@ public class ProblemController {
         }
         attemptRepository.save(attempt);
 
-        if ("SOLVED".equals(attempt.getStatus())) {
-            generateAndSaveSimplifiedFields(attempt.getProblem());
-        }
+
 
         // Calculate updated streak and solved count for the user
         List<Submission> userSubmissions = submissionRepository.findByUserIdOrderByCreatedAtDesc(userId);
@@ -714,9 +712,7 @@ public class ProblemController {
         ));
     }
 
-    public void generateAndSaveSimplifiedFields(Problem problem) {
-        problemGenerationService.queueGeneration(problem.getId(), 1);
-    }
+
 
     private int calculateStreak(Set<java.time.LocalDate> activityDates) {
         if (activityDates.isEmpty()) return 0;
@@ -741,31 +737,26 @@ public class ProblemController {
 
 
 
-    @PostMapping("/pre-generate-all")
-    public ResponseEntity<?> preGenerateAllDetails() {
-        new Thread(() -> {
-            try {
-                List<Problem> problems = problemRepository.findAll();
-                System.out.println("PatternForge: Starting pre-generation queueing for " + problems.size() + " problems.");
-                for (Problem p : problems) {
-                    boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
-                                               LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()) ||
-                                               LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
-                                               LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
-                    
-                    if (needsGeneration) {
-                        problemGenerationService.queueGeneration(p.getId(), 2);
-                    }
-                }
-                System.out.println("PatternForge: Completed pre-generation task queueing for all problems.");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
+    @PostMapping("/{id}/regenerate")
+    public ResponseEntity<?> regenerateProblemDetails(@PathVariable UUID id) {
+        Optional<Problem> problemOpt = problemRepository.findById(id);
+        if (problemOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Problem p = problemOpt.get();
+        // Clear cached/boilerplate data to force regeneration
+        p.setBasicDetailsJson(null);
+        p.setSolutionDetailsJson(null);
+        p.setSimplifiedStatement(null);
+        p.setSimplifiedApproach(null);
+        problemRepository.save(p);
+
+        // Submit generation job synchronously
+        problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
 
         return ResponseEntity.ok(Map.of(
             "success", true,
-            "message", "Pre-generation task kicked off successfully in the background for all problems."
+            "message", "Details regenerated successfully."
         ));
     }
 }

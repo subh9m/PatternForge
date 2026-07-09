@@ -19,15 +19,30 @@ public class RetryExecutor {
         this.apiKeyManager = apiKeyManager;
         this.modelSelector = modelSelector;
         this.geminiClient = geminiClient;
+        System.out.println("========================================");
+        System.out.println("RetryExecutor Instance Hash Code: " + System.identityHashCode(this));
+        System.out.println("RetryExecutor's Injected APIKeyManager Hash Code: " + System.identityHashCode(this.apiKeyManager));
+        System.out.println("========================================");
     }
 
     public String executeWithFallback(String textPrompt, String responseMimeType) {
-        List<String> availableKeys = apiKeyManager.getAvailableKeys();
-        if (availableKeys.isEmpty()) {
+        int poolSize = apiKeyManager.getAllKeysRaw().size();
+        if (poolSize == 0) {
             throw new IllegalStateException("All Gemini API keys in the pool are currently disabled or exhausted.");
         }
 
-        for (String key : availableKeys) {
+        java.util.Set<String> triedKeys = new java.util.HashSet<>();
+
+        for (int i = 0; i < poolSize; i++) {
+            String key = apiKeyManager.nextAvailableKey();
+            if (key == null) {
+                break;
+            }
+            if (triedKeys.contains(key)) {
+                break; // If we wrapped around, break to avoid infinite loop
+            }
+            triedKeys.add(key);
+
             boolean skipKey = false;
             
             // Retrieve preferred models list dynamically inside the loop in case models are blacklisted in real-time
@@ -37,6 +52,11 @@ public class RetryExecutor {
                 if (skipKey) {
                     break;
                 }
+
+                // Trace print required before every request
+                System.out.println("Current key index: " + apiKeyManager.getKeyIndex(key));
+                System.out.println("Current key id: " + apiKeyManager.maskKey(key));
+                System.out.println("Total keys: " + poolSize);
 
                 System.out.println("Trying Key " + apiKeyManager.maskKey(key));
                 System.out.println("Model " + model);

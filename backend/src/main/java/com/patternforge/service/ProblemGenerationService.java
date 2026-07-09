@@ -33,6 +33,17 @@ public class ProblemGenerationService {
         return (System.currentTimeMillis() - lastUserRequestTime) < 60000;
     }
 
+    private Thread workerThread = null;
+
+    private synchronized void ensureWorkerThreadStarted() {
+        if (workerThread == null || !workerThread.isAlive()) {
+            workerThread = new Thread(this::queueProcessorLoop, "dsa-problem-generation-worker");
+            workerThread.setDaemon(true);
+            workerThread.start();
+            log.info("ProblemGenerationService: Background queue processor worker thread started successfully.");
+        }
+    }
+
     public ProblemGenerationService(ProblemRepository problemRepository,
                                     GeminiService geminiService,
                                     APIKeyManager apiKeyManager,
@@ -41,14 +52,6 @@ public class ProblemGenerationService {
         this.geminiService = geminiService;
         this.apiKeyManager = apiKeyManager;
         this.modelSelector = modelSelector;
-        startWorkerThread();
-    }
-
-    private void startWorkerThread() {
-        Thread worker = new Thread(this::queueProcessorLoop, "dsa-problem-generation-worker");
-        worker.setDaemon(true);
-        worker.start();
-        log.info("ProblemGenerationService: Background queue processor worker thread started successfully.");
     }
 
     private void queueProcessorLoop() {
@@ -124,6 +127,7 @@ public class ProblemGenerationService {
     }
 
     public void submitJob(UUID problemId, JobPriority priority) {
+        ensureWorkerThreadStarted();
         Optional<Problem> freshOpt = problemRepository.findById(problemId);
         if (freshOpt.isPresent()) {
             Problem p = freshOpt.get();
@@ -158,6 +162,7 @@ public class ProblemGenerationService {
     }
 
     public void submitJobAndWait(UUID problemId, JobPriority priority) {
+        ensureWorkerThreadStarted();
         Optional<Problem> freshOpt = problemRepository.findById(problemId);
         if (freshOpt.isPresent()) {
             Problem p = freshOpt.get();

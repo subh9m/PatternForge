@@ -52,17 +52,7 @@ public class RevisionController {
         for (Attempt a : solvedAttempts) {
             Problem p = a.getProblem();
             
-            // Check if details are missing or contain boilerplate, and need generation
-            boolean isGenerating = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
-                                    LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
-                                    LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()) ||
-                                    LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
-
-            if (isGenerating) {
-                problemGenerationService.queueGeneration(p.getId(), 1);
-            }
-
-            boolean activeGenerating = isGenerating || problemGenerationService.isGenerating(p.getId());
+            boolean activeGenerating = problemGenerationService.isGenerating(p.getId());
             int estimatedTimeSeconds = problemGenerationService.getEstimatedTimeSeconds(p.getId());
 
             // Get user's latest code submission
