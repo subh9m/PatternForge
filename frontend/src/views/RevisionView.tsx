@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { 
   CheckCircle2, Circle, Play, Search, Award, 
   BookOpen, Code2, X, Info, CheckCircle, Brain,
-  FileText
+  FileText, Copy, Check, Maximize2, Minimize2
 } from 'lucide-react';
 
 interface RevisionItem {
@@ -171,13 +171,25 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
   const [activeApproach, setActiveApproach] = useState<'bruteForce' | 'better' | 'optimal'>('optimal');
   const [codeView, setCodeView] = useState<'reference' | 'user'>('reference');
 
+  const [isCodeExpanded, setIsCodeExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   // Reset modal tabs when selecting a new problem
   useEffect(() => {
     if (selectedItem) {
       setActiveApproach('optimal');
       setCodeView('reference');
+      setIsCodeExpanded(false);
+      setCopied(false);
     }
   }, [selectedItem]);
+
+  const handleCopyCode = (codeText: string) => {
+    if (!codeText) return;
+    navigator.clipboard.writeText(codeText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // Lock body scroll when revision modal is open
   useEffect(() => {
@@ -715,7 +727,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                 <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
                   
                   {/* Left Column - Simplified Brief Details */}
-                  <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar">
+                  <div className={`space-y-6 overflow-y-auto pr-2 custom-scrollbar ${isCodeExpanded ? 'hidden' : ''}`}>
                     
                     {/* Simplified Statement */}
                     <div className="space-y-2">
@@ -770,7 +782,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                   </div>
 
                   {/* Right Column - Code Editor View */}
-                  <div className="flex flex-col h-full border border-slate-900 rounded-2xl overflow-hidden bg-[#1e1e1e] min-h-[300px]">
+                  <div className={`flex flex-col h-full border border-slate-900 rounded-2xl overflow-hidden bg-[#1e1e1e] min-h-[300px] transition-all duration-300 ${isCodeExpanded ? 'lg:col-span-2' : ''}`}>
                     <div className="px-4 py-2 border-b border-slate-900 bg-slate-950/50 flex items-center justify-between text-xs shrink-0">
                       <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-900 select-none">
                         <button
@@ -796,9 +808,46 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                           </button>
                         )}
                       </div>
-                      <span className="px-2 py-0.5 bg-slate-900 rounded text-[9px] font-bold text-slate-400 uppercase font-mono">
-                        {selectedItem.language || 'cpp'}
-                      </span>
+                      <div className="flex items-center space-x-3">
+                        <span className="px-2 py-0.5 bg-slate-900 rounded text-[9px] font-bold text-slate-400 uppercase font-mono">
+                          {selectedItem.language || 'cpp'}
+                        </span>
+                        
+                        {/* Action buttons (Copy, Expand) */}
+                        <div className="flex items-center space-x-1 border-l border-slate-900 pl-3">
+                          {/* Copy Button */}
+                          <button
+                            onClick={() => handleCopyCode(displayedCode)}
+                            title="Copy Code"
+                            className="p-1.5 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-slate-200 transition-colors duration-150 cursor-pointer relative group"
+                          >
+                            {copied ? (
+                              <Check className="h-4 w-4 text-emerald-400" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-950 text-slate-200 text-[10px] px-2 py-1 rounded border border-slate-800 whitespace-nowrap shadow-md transition-opacity duration-150 z-50">
+                              Copy code
+                            </span>
+                          </button>
+
+                          {/* Expand Button */}
+                          <button
+                            onClick={() => setIsCodeExpanded(prev => !prev)}
+                            title={isCodeExpanded ? "Collapse View" : "Expand View"}
+                            className="p-1.5 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-slate-200 transition-colors duration-150 cursor-pointer relative group"
+                          >
+                            {isCodeExpanded ? (
+                              <Minimize2 className="h-4 w-4" />
+                            ) : (
+                              <Maximize2 className="h-4 w-4" />
+                            )}
+                            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-950 text-slate-200 text-[10px] px-2 py-1 rounded border border-slate-800 whitespace-nowrap shadow-md transition-opacity duration-150 z-50">
+                              {isCodeExpanded ? "Collapse" : "Expand"}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="flex-1 w-full relative flex flex-col min-h-0 bg-[#1e1e1e]">
