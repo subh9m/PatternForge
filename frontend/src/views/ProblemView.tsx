@@ -471,6 +471,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       // 2. Fetch solution details in background (complexities, approach)
       try {
         const solData = await api.get<ProblemDetailsJson>(`/problems/${problemId}/solution-details`);
+        
+        // Invalidate and refetch fresh problem record from DB to get fresh fields
+        const freshProb = await api.get<ProblemDetails>(`/problems/${problemId}`);
+        setProblem(freshProb);
+
         setDetails(prev => {
           const merged = prev ? { ...prev, ...solData } : solData;
           localStorage.setItem(cacheKey, JSON.stringify(merged));

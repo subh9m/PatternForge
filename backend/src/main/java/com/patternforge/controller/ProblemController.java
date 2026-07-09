@@ -460,12 +460,16 @@ public class ProblemController {
         
         // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
         problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
-        entityManager.clear(); // Clear L1 cache completely to ensure next query hits the DB
-        Problem fresh = problemRepository.findById(p.getId()).orElse(p);
+
+        // Fetch directly from DB via native query to bypass Hibernate cache completely
+        String basicJson = problemRepository.findBasicDetailsJsonById(p.getId());
+        if (basicJson == null) {
+            basicJson = "{}";
+        }
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/json")
-                .body(fresh.getBasicDetailsJson() != null ? fresh.getBasicDetailsJson() : "{}");
+                .body(basicJson);
     }
 
     @GetMapping("/{id}/solution-details")
@@ -480,12 +484,16 @@ public class ProblemController {
         
         // Synchronously ensure all missing/boilerplate fields (basic, solution, simplified) are fetched/populated
         problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
-        entityManager.clear(); // Clear L1 cache completely to ensure next query hits the DB
-        Problem fresh = problemRepository.findById(p.getId()).orElse(p);
+
+        // Fetch directly from DB via native query to bypass Hibernate cache completely
+        String solutionJson = problemRepository.findSolutionDetailsJsonById(p.getId());
+        if (solutionJson == null) {
+            solutionJson = "{}";
+        }
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/json")
-                .body(fresh.getSolutionDetailsJson() != null ? fresh.getSolutionDetailsJson() : "{}");
+                .body(solutionJson);
     }
 
     @PostMapping("/{id}/check-thinking")

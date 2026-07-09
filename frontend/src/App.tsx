@@ -51,6 +51,8 @@ const MainApp: React.FC = () => {
 
   // Enforce Master Dashboard default landing page on logout/login
   React.useEffect(() => {
+    if (loading) return; // Wait for initial token check to finish
+    
     if (!user) {
       localStorage.setItem('activePortal', 'master_dashboard');
       setActivePortal('master_dashboard');
@@ -61,7 +63,7 @@ const MainApp: React.FC = () => {
       setActivePortal('master_dashboard');
     }
     prevUserRef.current = user;
-  }, [user]);
+  }, [user, loading]);
 
   // Focus mode session state
   const [focusSession, setFocusSession] = useState<{ 

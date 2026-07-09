@@ -21,4 +21,10 @@ public interface ProblemRepository extends JpaRepository<Problem, UUID> {
 
     @Query(value = "SELECT * FROM problems ORDER BY RANDOM() LIMIT 1", nativeQuery = true)
     Optional<Problem> findRandomProblem();
+
+    @Query(value = "SELECT basic_details_json FROM problems WHERE id = :id", nativeQuery = true)
+    String findBasicDetailsJsonById(@Param("id") UUID id);
+
+    @Query(value = "SELECT solution_details_json FROM problems WHERE id = :id", nativeQuery = true)
+    String findSolutionDetailsJsonById(@Param("id") UUID id);
 }
