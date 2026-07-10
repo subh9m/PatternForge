@@ -439,7 +439,7 @@ export const _mockRouter = async (method: 'GET' | 'POST' | 'PUT', url: string, b
   }
 
   if (path === '/api/problems/import-status' && method === 'GET') {
-    return { totalProblems: 626, importedProblems: 626, status: 'SYNCED' };
+    return { totalProblems: 841, importedProblems: 841, status: 'SYNCED' };
   }
 
   // Helper to generate brute force, better, and optimal reference solutions
@@ -956,7 +956,7 @@ export const _mockRouter = async (method: 'GET' | 'POST' | 'PUT', url: string, b
     ).length;
 
     return {
-      totalProblems: 626,
+      totalProblems: 841,
       problemsSolved,
       problemsAttempted,
       currentStreak: calculateUserStreak(userId),

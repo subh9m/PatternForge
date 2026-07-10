@@ -92,7 +92,7 @@ const ImportVerificationView: React.FC = () => {
     );
   }
 
-  const isVerified = status && status.finalDbCount === 626;
+  const isVerified = status && status.finalDbCount === 841;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -102,7 +102,7 @@ const ImportVerificationView: React.FC = () => {
           Import Verification
         </h1>
         <p className="text-slate-400 mt-2">
-          Verify data completeness and import progress directly from Striver's 626 DSA Sheet PDF source of truth.
+          Verify data completeness and import progress directly from Striver's 841 DSA Sheet PDF source of truth.
         </p>
       </div>
 
@@ -123,8 +123,8 @@ const ImportVerificationView: React.FC = () => {
             </h3>
             <p className="text-sm opacity-90 mt-1">
               {isVerified 
-                ? `100% data completeness reached! All 626 curated problems are indexed in the repository.`
-                : `Currently have ${status.finalDbCount} / 626 problems. Please upload the master PDF to import missing problems.`
+                ? `100% data completeness reached! All 841 curated problems are indexed in the repository.`
+                : `Currently have ${status.finalDbCount} / 841 problems. Please upload the master PDF to import missing problems.`
               }
             </p>
           </div>
@@ -136,7 +136,7 @@ const ImportVerificationView: React.FC = () => {
         <div className="glass-panel p-5 rounded-xl flex flex-col justify-between">
           <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Expected in PDF</span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-extrabold text-slate-100">626</span>
+            <span className="text-3xl font-extrabold text-slate-100">841</span>
           </div>
           <p className="text-[10px] text-slate-400 mt-1">Master Problems Count</p>
         </div>
@@ -185,7 +185,7 @@ const ImportVerificationView: React.FC = () => {
               Upload Master PDF
             </h2>
             <p className="text-sm text-slate-400">
-              Drag and drop your `Striver_A2Z_Master_DSA_Database.pdf` to parse and build the 626 problem registry.
+              Drag and drop your `Striver_A2Z_Master_DSA_Database.pdf` to parse and build the 841 problem registry.
             </p>
 
             <div 
@@ -230,7 +230,7 @@ const ImportVerificationView: React.FC = () => {
             <ul className="space-y-2 text-xs text-slate-400">
               <li className="flex items-start gap-2">
                 <span className="text-primary font-bold">•</span>
-                <span>Matches 626 LeetCode problems structured topic-wise.</span>
+                <span>Matches 841 LeetCode problems structured topic-wise.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary font-bold">•</span>

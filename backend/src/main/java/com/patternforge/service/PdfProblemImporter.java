@@ -90,7 +90,7 @@ public class PdfProblemImporter implements CommandLineRunner {
         // 1. Try seeding/syncing from problems_seed.json
         boolean success = importFromJson(topicMap);
 
-        if (!success && problemRepository.count() < 626) {
+        if (!success && problemRepository.count() < 841) {
             System.out.println("PatternForge Importer: JSON seeding unsuccessful/missing. Seeding database from PDF on boot...");
             // Fallback candidate paths for local development
             List<String> candidatePaths = Arrays.asList(
@@ -107,7 +107,7 @@ public class PdfProblemImporter implements CommandLineRunner {
                     System.out.println("PatternForge Importer: Found candidate PDF at " + file.getAbsolutePath());
                     try {
                         ImportResultDto result = importPdfFile(file, topicMap);
-                        if (result.getSuccessfullyImported() >= 626) {
+                        if (result.getSuccessfullyImported() >= 841) {
                             System.out.println("PatternForge Importer: Boot seeding completed. Count = " + result.getSuccessfullyImported());
                             success = true;
                             break;
@@ -119,8 +119,8 @@ public class PdfProblemImporter implements CommandLineRunner {
             }
         }
 
-        if (!success && problemRepository.count() < 626) {
-            System.err.println("PatternForge Importer: Could not seed full 626 problems from PDF/JSON. Falling back to representative seed...");
+        if (!success && problemRepository.count() < 841) {
+            System.err.println("PatternForge Importer: Could not seed full 841 problems from PDF/JSON. Falling back to representative seed...");
             importFallbackSeedData(topicMap);
         }
 
@@ -179,7 +179,7 @@ public class PdfProblemImporter implements CommandLineRunner {
                 successfullyImported++;
             }
             System.out.println("PatternForge Importer: Successfully seeded " + successfullyImported + " problems from JSON.");
-            return successfullyImported >= 626;
+            return successfullyImported >= 841;
         } catch (Exception e) {
             System.err.println("PatternForge Importer: Failed to seed from JSON: " + e.getMessage());
             return false;
@@ -338,7 +338,7 @@ public class PdfProblemImporter implements CommandLineRunner {
         }
 
         long finalDbCount = problemRepository.count();
-        String status = (finalDbCount >= 626) ? "✅ Import Verified Successfully" : "❌ Import Failed (Mismatch)";
+        String status = (finalDbCount >= 841) ? "✅ Import Verified Successfully" : "❌ Import Failed (Mismatch)";
 
         return ImportResultDto.builder()
                 .totalFound(totalFound)

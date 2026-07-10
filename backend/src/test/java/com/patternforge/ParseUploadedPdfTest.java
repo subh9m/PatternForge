@@ -105,9 +105,9 @@ public class ParseUploadedPdfTest {
                 }
             }
             
-            // Check missing Master numbers from 1 to 626
+            // Check missing Master numbers from 1 to 841
             List<Integer> missingMaster = new ArrayList<>();
-            for (int i = 1; i <= 626; i++) {
+            for (int i = 1; i <= 841; i++) {
                 if (!masterIds.contains(i)) {
                     missingMaster.add(i);
                 }
