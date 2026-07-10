@@ -5,7 +5,9 @@ import { useOnDailyReset, useOnDailyResetInstant } from '../hooks/useDailyReset'
 import { 
   CheckCircle2, Circle, Play, Search, Award, 
   BookOpen, Code2, X, Info, CheckCircle, Brain,
-  FileText, Copy, Check, Maximize2, Clock
+  FileText, Copy, Check, Maximize2, Clock,
+  LayoutGrid, List as ListIcon, Layers, Rows,
+  Columns2, Columns3, ChevronDown, ChevronRight
 } from 'lucide-react';
 import FullscreenCodeModal from '../components/FullscreenCodeModal';
 
@@ -192,6 +194,32 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [activeApproach, setActiveApproach] = useState<'bruteForce' | 'better' | 'optimal'>('optimal');
   const [codeView, setCodeView] = useState<'reference' | 'user'>('reference');
+
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'topics'>(() => {
+    const saved = localStorage.getItem('patternforge_revision_viewmode');
+    return (saved === 'grid' || saved === 'list' || saved === 'topics') ? saved : 'grid';
+  });
+  const [layoutColumns, setLayoutColumns] = useState<1 | 2 | 3>(() => {
+    const saved = localStorage.getItem('patternforge_revision_columns');
+    const parsed = saved ? parseInt(saved) : 3;
+    return (parsed === 1 || parsed === 2 || parsed === 3) ? parsed : 3;
+  });
+  const [collapsedTopics, setCollapsedTopics] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    localStorage.setItem('patternforge_revision_viewmode', viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    localStorage.setItem('patternforge_revision_columns', String(layoutColumns));
+  }, [layoutColumns]);
+
+  const toggleTopicCollapse = (topicName: string) => {
+    setCollapsedTopics(prev => ({
+      ...prev,
+      [topicName]: !prev[topicName]
+    }));
+  };
 
   const [isCodeExpanded, setIsCodeExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -475,6 +503,274 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     }
   };
 
+  const renderCard = (item: RevisionItem) => {
+    const isGen = !!item.isGenerating;
+    let optimalBrief = "";
+    if (item.simplifiedApproach && !isGen) {
+      try {
+        const parsed = JSON.parse(item.simplifiedApproach);
+        optimalBrief = (parsed && parsed.optimal) ? parsed.optimal : item.simplifiedApproach;
+      } catch (e) {
+        optimalBrief = item.simplifiedApproach;
+      }
+    }
+
+    return (
+      <div 
+        key={item.id}
+        onClick={() => {
+          if (!isGen) setSelectedItem(item);
+        }}
+        className={`glass-panel border p-5 rounded-2xl hover:border-slate-750 transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group ${
+          isGen 
+            ? 'border-slate-900/60 bg-slate-955/10 cursor-wait select-none'
+            : 'cursor-pointer ' + (item.isRevisedToday ? 'bg-emerald-950/5 border-emerald-500/20' : 'bg-slate-900/20 border-slate-900')
+        }`}
+      >
+        {!isGen && item.isRevisedToday && (
+          <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
+        )}
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2.5">
+              <span className="text-[10px] font-bold text-slate-500 font-mono uppercase">#{item.masterNumber}</span>
+              {!isGen && (
+                <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
+                  {isPlatformAvailable('leetcode', item.masterNumber, item.topicName) && (
+                    <a
+                      href={getLeetCodeUrl(item.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Solve on LeetCode"
+                      className="px-1 py-0.5 rounded bg-[#ffa116]/10 hover:bg-[#ffa116]/20 border border-[#ffa116]/20 hover:border-[#ffa116]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#ffa116]"
+                    >
+                      LC
+                    </a>
+                  )}
+                  {isPlatformAvailable('gfg', item.masterNumber, item.topicName) && (
+                    <a
+                      href={`https://www.geeksforgeeks.org/explore?page=1&search=${encodeURIComponent(item.name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Solve on GeeksforGeeks"
+                      className="px-1 py-0.5 rounded bg-[#2f8d46]/10 hover:bg-[#2f8d46]/20 border border-[#2f8d46]/20 hover:border-[#2f8d46]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#2f8d46]"
+                    >
+                      GFG
+                    </a>
+                  )}
+                  {isPlatformAvailable('tuf', item.masterNumber, item.topicName) && (
+                    <a
+                      href={`https://takeuforward.org/?s=${encodeURIComponent(item.name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Solve on TakeUForward"
+                      className="px-1 py-0.5 rounded bg-[#3b82f6]/10 hover:bg-[#3b82f6]/20 border border-[#3b82f6]/20 hover:border-[#3b82f6]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#3b82f6]"
+                    >
+                      TUF
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+            {isGen ? (
+              <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 animate-pulse border border-blue-500/20 font-mono uppercase tracking-wide">
+                AI Generating
+              </span>
+            ) : (
+              <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                item.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400' :
+                item.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
+                'bg-red-500/10 text-red-400'
+              }`}>
+                {item.difficulty}
+              </span>
+            )}
+          </div>
+          
+          <h3 className="text-sm font-extrabold text-slate-200 group-hover:text-slate-100 transition-colors">
+            {item.name}
+          </h3>
+
+          {isGen ? (
+            <div className="space-y-2 py-1 animate-pulse">
+              <div className="h-2.5 bg-slate-800/60 rounded w-full"></div>
+              <div className="h-2.5 bg-slate-800/60 rounded w-11/12"></div>
+              <div className="h-2.5 bg-slate-800/60 rounded w-3/4"></div>
+            </div>
+          ) : (
+            <>
+              {item.simplifiedStatement && (
+                <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
+                  <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Problem Brief</strong>
+                  {item.simplifiedStatement}
+                </p>
+              )}
+
+              {optimalBrief && (
+                <p className="text-slate-450 text-xs leading-relaxed line-clamp-2">
+                  <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Simplified Approach</strong>
+                  {optimalBrief}
+                </p>
+              )}
+            </>
+          )}
+          
+          <div className="flex items-center justify-between pt-1.5 border-t border-slate-900/50">
+            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-slate-950 px-2.5 py-1 rounded border border-slate-900 font-mono">
+              {item.topicName}
+            </span>
+            {isGen ? (
+              <div className="h-3 bg-slate-800/60 rounded w-20 animate-pulse"></div>
+            ) : (
+              <div className="flex items-center space-x-2.5 text-[10px] font-bold font-mono text-slate-500">
+                <span>T: <strong className="text-blue-400">{item.timeComplexity || 'O(N)'}</strong></span>
+                <span>S: <strong className="text-purple-400">{item.spaceComplexity || 'O(1)'}</strong></span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-slate-900/60 pt-3">
+          {isGen ? (
+            <span className="text-[10px] font-semibold text-blue-400 flex items-center space-x-1.5 animate-pulse font-mono uppercase tracking-wider">
+              <span className="flex h-1.5 w-1.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
+              </span>
+              <span>
+                Compiling models...
+                {item.estimatedTimeSeconds && item.estimatedTimeSeconds > 0 
+                  ? ` (Est. ${item.estimatedTimeSeconds}s)` 
+                  : ' (Almost ready)'}
+              </span>
+            </span>
+          ) : (
+            <>
+              <span className="text-[10px] font-semibold text-slate-500 flex items-center space-x-1">
+                <BookOpen className="h-3 w-3" />
+                <span>Click to review details</span>
+              </span>
+
+              {item.isRevisedToday ? (
+                <span className="flex items-center space-x-1 text-emerald-400 text-[10px] font-black uppercase font-mono">
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  <span>Revised</span>
+                </span>
+              ) : (
+                <span className="flex items-center space-x-1 text-amber-400 text-[10px] font-black uppercase font-mono">
+                  <Circle className="h-3.5 w-3.5" />
+                  <span>Pending</span>
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderListRow = (item: RevisionItem) => {
+    const isGen = !!item.isGenerating;
+    return (
+      <div 
+        key={item.id}
+        onClick={() => {
+          if (!isGen) setSelectedItem(item);
+        }}
+        className={`glass-panel border px-4 py-3 rounded-xl hover:border-slate-750 transition-all duration-300 flex items-center justify-between gap-4 relative overflow-hidden group ${
+          isGen 
+            ? 'border-slate-900/60 bg-slate-955/10 cursor-wait select-none'
+            : 'cursor-pointer ' + (item.isRevisedToday ? 'bg-emerald-950/5 border-emerald-500/20' : 'bg-slate-900/20 border-slate-900')
+        }`}
+      >
+        {!isGen && item.isRevisedToday && (
+          <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
+        )}
+
+        <div className="flex items-center space-x-3 min-w-0 flex-1">
+          <span className="text-[10px] font-bold text-slate-500 font-mono uppercase shrink-0">#{item.masterNumber}</span>
+          {isGen ? (
+            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 animate-pulse border border-blue-500/20 font-mono uppercase tracking-wide shrink-0">
+              Generating
+            </span>
+          ) : (
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${
+              item.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400' :
+              item.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
+              'bg-red-500/10 text-red-400'
+            }`}>
+              {item.difficulty}
+            </span>
+          )}
+          
+          <h3 className="text-xs font-bold text-slate-200 group-hover:text-primary transition-colors truncate">
+            {item.name}
+          </h3>
+          
+          {!isGen && (
+            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-900/60 font-mono shrink-0">
+              {item.topicName}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center space-x-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {!isGen && (
+            <div className="flex items-center space-x-1">
+              {isPlatformAvailable('leetcode', item.masterNumber, item.topicName) && (
+                <a
+                  href={getLeetCodeUrl(item.name)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-1 py-0.5 rounded bg-[#ffa116]/10 hover:bg-[#ffa116]/20 border border-[#ffa116]/20 hover:border-[#ffa116]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#ffa116]"
+                >
+                  LC
+                </a>
+              )}
+              {isPlatformAvailable('gfg', item.masterNumber, item.topicName) && (
+                <a
+                  href={`https://www.geeksforgeeks.org/explore?page=1&search=${encodeURIComponent(item.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-1 py-0.5 rounded bg-[#2f8d46]/10 hover:bg-[#2f8d46]/20 border border-[#2f8d46]/20 hover:border-[#2f8d46]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#2f8d46]"
+                >
+                  GFG
+                </a>
+              )}
+              {isPlatformAvailable('tuf', item.masterNumber, item.topicName) && (
+                <a
+                  href={`https://takeuforward.org/?s=${encodeURIComponent(item.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-1 py-0.5 rounded bg-[#3b82f6]/10 hover:bg-[#3b82f6]/20 border border-[#3b82f6]/20 hover:border-[#3b82f6]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#3b82f6]"
+                >
+                  TUF
+                </a>
+              )}
+            </div>
+          )}
+
+          {isGen ? (
+            <span className="text-[10px] font-semibold text-blue-400 animate-pulse font-mono uppercase tracking-wider">
+              Compiling...
+            </span>
+          ) : item.isRevisedToday ? (
+            <span className="flex items-center space-x-1 text-emerald-400 text-[10px] font-black uppercase font-mono">
+              <CheckCircle className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Revised</span>
+            </span>
+          ) : (
+            <span className="flex items-center space-x-1 text-amber-400 text-[10px] font-black uppercase font-mono">
+              <Circle className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Pending</span>
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const totalSolved = items.length;
   const completedToday = items.filter(i => i.isRevisedToday).length;
   const pendingToday = totalSolved - completedToday;
@@ -599,7 +895,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
       </div>
 
       {/* Filter and Search Bar Row */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/10 p-3 rounded-2xl border border-slate-900">
+      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 bg-slate-900/10 p-3 rounded-2xl border border-slate-900">
         
         {/* Tabs Filter */}
         <div className="flex bg-slate-950/60 p-1 rounded-xl border border-slate-900 self-start">
@@ -635,8 +931,77 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
           </button>
         </div>
 
+        {/* View Layout Toggles */}
+        <div className="flex items-center space-x-3 bg-slate-950/60 p-1.5 rounded-xl border border-slate-900/80 shrink-0 self-start xl:self-auto">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono px-1">View</span>
+          
+          <div className="flex bg-slate-900/40 p-0.5 rounded-lg border border-slate-800/40">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
+                viewMode === 'grid' ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+              }`}
+              title="Cards Grid View"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
+                viewMode === 'list' ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+              }`}
+              title="Compact List View"
+            >
+              <ListIcon className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('topics')}
+              className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
+                viewMode === 'topics' ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+              }`}
+              title="Group by Topic List View"
+            >
+              <Layers className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-slate-900"></div>
+
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Columns</span>
+          
+          <div className="flex bg-slate-900/40 p-0.5 rounded-lg border border-slate-800/40">
+            <button
+              onClick={() => setLayoutColumns(1)}
+              className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
+                layoutColumns === 1 ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+              }`}
+              title="1 Column"
+            >
+              <Rows className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setLayoutColumns(2)}
+              className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
+                layoutColumns === 2 ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+              }`}
+              title="2 Columns"
+            >
+              <Columns2 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setLayoutColumns(3)}
+              className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
+                layoutColumns === 3 ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+              }`}
+              title="3 Columns"
+            >
+              <Columns3 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+
         {/* Search Input */}
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 max-w-sm w-full">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
           <input
             type="text"
@@ -648,7 +1013,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
         </div>
       </div>
 
-      {/* Main Grid View */}
+      {/* Main Render Area */}
       {filteredItems.length === 0 ? (
         <div className="glass-panel text-center py-16 border border-slate-900 rounded-2xl flex flex-col items-center justify-center space-y-4">
           <CheckCircle2 className="h-12 w-12 text-slate-650" />
@@ -661,184 +1026,68 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
             </p>
           </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map(item => {
-            const isGen = !!item.isGenerating;
-
-            // Extract optimal approach description defensively
-            let optimalBrief = "";
-            if (item.simplifiedApproach && !isGen) {
-              try {
-                const parsed = JSON.parse(item.simplifiedApproach);
-                optimalBrief = (parsed && parsed.optimal) ? parsed.optimal : item.simplifiedApproach;
-              } catch (e) {
-                optimalBrief = item.simplifiedApproach;
-              }
+      ) : viewMode === 'topics' ? (
+        (() => {
+          const groupedByTopic: Record<string, RevisionItem[]> = {};
+          filteredItems.forEach(item => {
+            if (!groupedByTopic[item.topicName]) {
+              groupedByTopic[item.topicName] = [];
             }
+            groupedByTopic[item.topicName].push(item);
+          });
 
-            return (
-              <div 
-                key={item.id}
-                onClick={() => {
-                  if (!isGen) {
-                    setSelectedItem(item);
-                  }
-                }}
-                className={`glass-panel border p-5 rounded-2xl hover:border-slate-750 transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group ${
-                  isGen 
-                    ? 'border-slate-900/60 bg-slate-955/10 cursor-wait select-none'
-                    : 'cursor-pointer ' + (item.isRevisedToday ? 'bg-emerald-950/5 border-emerald-500/20' : 'bg-slate-900/20 border-slate-900')
-                }`}
-              >
-                
-                {/* Corner completion glow */}
-                {!isGen && item.isRevisedToday && (
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
-                )}
+          const colClass = 
+            layoutColumns === 1 ? 'grid-cols-1' :
+            layoutColumns === 2 ? 'grid-cols-1 md:grid-cols-2' :
+            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2.5">
-                      <span className="text-[10px] font-bold text-slate-500 font-mono uppercase">#{item.masterNumber}</span>
+          return (
+            <div className="space-y-6">
+              {Object.entries(groupedByTopic).map(([topicName, topicItems]) => {
+                const isCollapsed = !!collapsedTopics[topicName];
+                const solvedInTopic = topicItems.filter(i => i.isRevisedToday).length;
+                const totalInTopic = topicItems.length;
+
+                return (
+                  <div key={topicName} className="space-y-3">
+                    <div 
+                      onClick={() => toggleTopicCollapse(topicName)}
+                      className="bg-slate-955/40 hover:bg-slate-950/60 border border-slate-900 px-4 py-2.5 rounded-xl flex items-center justify-between cursor-pointer select-none transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        {isCollapsed ? <ChevronRight className="h-4 w-4 text-purple-400 shrink-0" /> : <ChevronDown className="h-4 w-4 text-purple-400 shrink-0" />}
+                        <span className="text-xs font-black text-slate-200 uppercase tracking-widest truncate">{topicName}</span>
+                        <span className="bg-slate-900 text-slate-450 border border-slate-800/40 px-2.5 py-0.5 rounded-md text-[9px] font-mono shrink-0">
+                          {solvedInTopic}/{totalInTopic} Revised
+                        </span>
+                      </div>
                       
-                      {/* Platform Icons/Badges directly on card */}
-                      {!isGen && (
-                        <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
-                          {isPlatformAvailable('leetcode', item.masterNumber, item.topicName) && (
-                            <a
-                              href={getLeetCodeUrl(item.name)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Solve on LeetCode"
-                              className="px-1 py-0.5 rounded bg-[#ffa116]/10 hover:bg-[#ffa116]/20 border border-[#ffa116]/20 hover:border-[#ffa116]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#ffa116]"
-                            >
-                              LC
-                            </a>
-                          )}
-                          {isPlatformAvailable('gfg', item.masterNumber, item.topicName) && (
-                            <a
-                              href={`https://www.geeksforgeeks.org/explore?page=1&search=${encodeURIComponent(item.name)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Solve on GeeksforGeeks"
-                              className="px-1 py-0.5 rounded bg-[#2f8d46]/10 hover:bg-[#2f8d46]/20 border border-[#2f8d46]/20 hover:border-[#2f8d46]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#2f8d46]"
-                            >
-                              GFG
-                            </a>
-                          )}
-                          {isPlatformAvailable('tuf', item.masterNumber, item.topicName) && (
-                            <a
-                              href={`https://takeuforward.org/?s=${encodeURIComponent(item.name)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Solve on TakeUForward"
-                              className="px-1 py-0.5 rounded bg-[#3b82f6]/10 hover:bg-[#3b82f6]/20 border border-[#3b82f6]/20 hover:border-[#3b82f6]/40 flex items-center justify-center transition-all duration-150 font-mono text-[8px] font-black text-[#3b82f6]"
-                            >
-                              TUF
-                            </a>
-                          )}
-                        </div>
-                      )}
+                      <div className="h-1.5 w-24 bg-slate-900 rounded-full overflow-hidden hidden sm:block shrink-0">
+                        <div 
+                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+                          style={{ width: `${(solvedInTopic / totalInTopic) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    {isGen ? (
-                      <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 animate-pulse border border-blue-500/20 font-mono uppercase tracking-wide">
-                        AI Generating
-                      </span>
-                    ) : (
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
-                        item.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400' :
-                        item.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
-                        'bg-red-500/10 text-red-400'
-                      }`}>
-                        {item.difficulty}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <h3 className="text-sm font-extrabold text-slate-200 group-hover:text-slate-100 transition-colors">
-                    {item.name}
-                  </h3>
 
-                  {isGen ? (
-                    <div className="space-y-2 py-1 animate-pulse">
-                      <div className="h-2.5 bg-slate-800/60 rounded w-full"></div>
-                      <div className="h-2.5 bg-slate-800/60 rounded w-11/12"></div>
-                      <div className="h-2.5 bg-slate-800/60 rounded w-3/4"></div>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Brief Problem Description */}
-                      {item.simplifiedStatement && (
-                        <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
-                          <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Problem Brief</strong>
-                          {item.simplifiedStatement}
-                        </p>
-                      )}
-
-                      {/* Simplified Optimal Approach */}
-                      {optimalBrief && (
-                        <p className="text-slate-450 text-xs leading-relaxed line-clamp-2">
-                          <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Simplified Approach</strong>
-                          {optimalBrief}
-                        </p>
-                      )}
-                    </>
-                  )}
-                  
-                  <div className="flex items-center justify-between pt-1.5 border-t border-slate-900/50">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-slate-950 px-2.5 py-1 rounded border border-slate-900 font-mono">
-                      {item.topicName}
-                    </span>
-                    {isGen ? (
-                      <div className="h-3 bg-slate-800/60 rounded w-20 animate-pulse"></div>
-                    ) : (
-                      <div className="flex items-center space-x-2.5 text-[10px] font-bold font-mono text-slate-500">
-                        <span>T: <strong className="text-blue-400">{item.timeComplexity || 'O(N)'}</strong></span>
-                        <span>S: <strong className="text-purple-400">{item.spaceComplexity || 'O(1)'}</strong></span>
+                    {!isCollapsed && (
+                      <div className={`grid ${colClass} gap-3`}>
+                        {topicItems.map(item => renderListRow(item))}
                       </div>
                     )}
                   </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-slate-900/60 pt-3">
-                  {isGen ? (
-                    <span className="text-[10px] font-semibold text-blue-400 flex items-center space-x-1.5 animate-pulse font-mono uppercase tracking-wider">
-                      <span className="flex h-1.5 w-1.5 relative">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
-                      </span>
-                      <span>
-                        Compiling models...
-                        {item.estimatedTimeSeconds && item.estimatedTimeSeconds > 0 
-                          ? ` (Est. ${item.estimatedTimeSeconds}s)` 
-                          : ' (Almost ready)'}
-                      </span>
-                    </span>
-                  ) : (
-                    <>
-                      <span className="text-[10px] font-semibold text-slate-500 flex items-center space-x-1">
-                        <BookOpen className="h-3 w-3" />
-                        <span>Click to review details</span>
-                      </span>
-
-                      {item.isRevisedToday ? (
-                        <span className="flex items-center space-x-1 text-emerald-400 text-[10px] font-black uppercase font-mono">
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          <span>Revised</span>
-                        </span>
-                      ) : (
-                        <span className="flex items-center space-x-1 text-amber-400 text-[10px] font-black uppercase font-mono">
-                          <Circle className="h-3.5 w-3.5" />
-                          <span>Pending</span>
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          );
+        })()
+      ) : (
+        <div className={`grid ${
+          layoutColumns === 1 ? 'grid-cols-1' :
+          layoutColumns === 2 ? 'grid-cols-1 md:grid-cols-2' :
+          'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        } gap-4`}>
+          {filteredItems.map(item => viewMode === 'list' ? renderListRow(item) : renderCard(item))}
         </div>
       )}
 

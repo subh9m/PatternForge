@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { 
   Search, CheckCircle2, Bookmark, BookmarkCheck,
-  AlertCircle, ArrowUpDown, XCircle, Grid, Sparkles
+  AlertCircle, ArrowUpDown, XCircle, Grid, Sparkles,
+  TableProperties, LayoutGrid, List as ListIcon
 } from 'lucide-react';
 
 export interface ProblemDto {
@@ -49,6 +50,15 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
   const [onlyBookmarked, setOnlyBookmarked] = useState(false);
   const [onlyNeedRevision, setOnlyNeedRevision] = useState(false);
   const [sortBy, setSortBy] = useState<string>('masterNumber');
+
+  const [viewMode, setViewMode] = useState<'table' | 'cards' | 'list'>(() => {
+    const saved = localStorage.getItem('patternforge_explorer_viewmode');
+    return (saved === 'table' || saved === 'cards' || saved === 'list') ? saved : 'table';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('patternforge_explorer_viewmode', viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -304,34 +314,64 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
             >
               Needs Revision
             </button>
+
+            {/* Layout Mode Toggles */}
+            <div className="flex items-center space-x-1.5 bg-slate-900/60 p-1 rounded-xl border border-slate-800/80 ml-auto self-end sm:self-auto">
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider font-mono px-1">Layout</span>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`p-1.5 rounded-lg transition-smooth cursor-pointer ${
+                  viewMode === 'table' ? 'bg-slate-800 text-blue-400 border border-slate-700/60' : 'text-slate-505 hover:text-slate-350'
+                }`}
+                title="Table List View"
+              >
+                <TableProperties className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`p-1.5 rounded-lg transition-smooth cursor-pointer ${
+                  viewMode === 'cards' ? 'bg-slate-800 text-blue-400 border border-slate-700/60' : 'text-slate-505 hover:text-slate-350'
+                }`}
+                title="2-Column Cards Grid View"
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-lg transition-smooth cursor-pointer ${
+                  viewMode === 'list' ? 'bg-slate-800 text-blue-400 border border-slate-700/60' : 'text-slate-505 hover:text-slate-350'
+                }`}
+                title="2-Column Compact List View"
+              >
+                <ListIcon className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Problems catalog table */}
-        <div className="glass-panel glass-panel-hover rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-800 bg-slate-900/20 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="py-4 px-5 w-16">{selectedTopicSlug ? 'Topic #' : 'Master #'}</th>
-                  <th className="py-4 px-2 w-16">Leet</th>
-                  <th className="py-4 px-4">Problem Name</th>
-                  <th className="py-4 px-4 w-28">Topic</th>
-                  <th className="py-4 px-4 w-20">Difficulty</th>
-                  <th className="py-4 px-4 w-16 text-center">Status</th>
-                  <th className="py-4 px-2 w-12 text-center"></th>
-                  <th className="py-4 px-5 w-12 text-center"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProblems.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-500 font-medium">
-                      No problems match the current filter selection.
-                    </td>
+        {/* Problems catalog view */}
+        {filteredProblems.length === 0 ? (
+          <div className="glass-panel text-center py-12 border border-slate-900 rounded-2xl text-slate-500 font-medium">
+            No problems match the current filter selection.
+          </div>
+        ) : viewMode === 'table' ? (
+          <div className="glass-panel glass-panel-hover rounded-2xl overflow-hidden animate-fade-in">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-slate-800 bg-slate-900/20 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                    <th className="py-4 px-5 w-16">{selectedTopicSlug ? 'Topic #' : 'Master #'}</th>
+                    <th className="py-4 px-2 w-16">Leet</th>
+                    <th className="py-4 px-4">Problem Name</th>
+                    <th className="py-4 px-4 w-28">Topic</th>
+                    <th className="py-4 px-4 w-20">Difficulty</th>
+                    <th className="py-4 px-4 w-16 text-center">Status</th>
+                    <th className="py-4 px-2 w-12 text-center"></th>
+                    <th className="py-4 px-5 w-12 text-center"></th>
                   </tr>
-                ) : (
-                  filteredProblems.map((p) => (
+                </thead>
+                <tbody>
+                  {filteredProblems.map((p) => (
                     <tr
                       key={p.id}
                       onClick={() => navigateToProblem(p.id)}
@@ -401,7 +441,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                             <span 
                               onClick={(e) => handleAiClick(p.id, e, false)}
                               title="AI details not generated. Open the problem or click this icon to generate and permanently cache the AI data."
-                              className="inline-flex items-center justify-center p-1 text-slate-500 hover:text-slate-300 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] cursor-pointer transition-all duration-300"
+                              className="inline-flex items-center justify-center p-1 text-slate-500 hover:text-slate-350 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] cursor-pointer transition-all duration-300"
                             >
                               <Sparkles className="h-[16px] w-[16px]" />
                             </span>
@@ -411,7 +451,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                       <td className="py-3.5 px-5 text-center">
                         <button
                           onClick={(e) => toggleBookmark(p.id, e)}
-                          className="text-slate-600 hover:text-amber-400 transition-smooth p-1"
+                          className="text-slate-650 hover:text-amber-400 transition-smooth p-1"
                         >
                           {p.isFavorite ? (
                             <BookmarkCheck className="h-4 w-4 text-amber-400 fill-amber-500/20" />
@@ -421,12 +461,125 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                         </button>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        ) : viewMode === 'cards' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+            {filteredProblems.map((p) => (
+              <div 
+                key={p.id}
+                onClick={() => navigateToProblem(p.id)}
+                className={`glass-panel border p-4 rounded-xl hover:border-slate-750 transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer relative overflow-hidden group ${
+                  p.status === 'SOLVED' ? 'bg-emerald-950/5 border-emerald-500/10' : 'bg-slate-900/20 border-slate-900'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-505 font-mono">
+                    #{selectedTopicSlug ? p.topicNumber : p.masterNumber} {p.leetcodeNumber > 0 && `(LC ${p.leetcodeNumber})`}
+                  </span>
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                    p.difficulty === 'EASY' ? 'text-emerald-400 bg-emerald-500/10' :
+                    p.difficulty === 'MEDIUM' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'
+                  }`}>
+                    {p.difficulty}
+                  </span>
+                </div>
+                
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold text-slate-200 group-hover:text-primary transition-smooth flex items-center gap-1.5">
+                    <span className="truncate">{p.name}</span>
+                    {p.needRevision && (
+                      <span className="bg-red-500/10 text-red-400 text-[8px] font-extrabold px-1 py-0.5 rounded border border-red-500/10 uppercase tracking-wider flex-shrink-0">
+                        Revise
+                      </span>
+                    )}
+                  </h4>
+                  <p className="text-[10px] text-slate-550 font-mono">{p.topicName}</p>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-900/40">
+                  <div className="flex items-center space-x-1.5">
+                    {p.status === 'SOLVED' && <span className="text-[9px] font-bold text-emerald-400 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Solved</span>}
+                    {p.status === 'WRONG' && <span className="text-[9px] font-bold text-red-400 flex items-center gap-1"><XCircle className="h-3 w-3" /> Wrong</span>}
+                    {p.status === 'ATTEMPTED' && <span className="text-[9px] font-bold text-amber-400 flex items-center gap-1"><div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></div> Attempted</span>}
+                    {p.status === 'UNSOLVED' && <span className="text-[9px] font-bold text-slate-500">Unsolved</span>}
+                  </div>
+
+                  <div className="flex items-center space-x-2" onClick={e => e.stopPropagation()}>
+                    {generatingIds[p.id] ? (
+                      <Sparkles className="h-3.5 w-3.5 text-blue-400 animate-spin" />
+                    ) : p.isAiReady ? (
+                      <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                    ) : (
+                      <Sparkles 
+                        onClick={(e) => handleAiClick(p.id, e, false)}
+                        className="h-3.5 w-3.5 text-slate-500 hover:text-slate-350 cursor-pointer transition-colors" 
+                      />
+                    )}
+
+                    <button onClick={(e) => toggleBookmark(p.id, e)} className="text-slate-650 hover:text-amber-400 p-0.5 animate-pulse-none">
+                      {p.isFavorite ? (
+                        <BookmarkCheck className="h-3.5 w-3.5 text-amber-400 fill-amber-500/10" />
+                      ) : (
+                        <Bookmark className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade-in">
+            {filteredProblems.map((p) => (
+              <div 
+                key={p.id}
+                onClick={() => navigateToProblem(p.id)}
+                className={`glass-panel border px-4 py-2.5 rounded-xl hover:border-slate-750 transition-all duration-300 flex items-center justify-between gap-3 cursor-pointer relative overflow-hidden group ${
+                  p.status === 'SOLVED' ? 'bg-emerald-950/5 border-emerald-500/10' : 'bg-slate-900/20 border-slate-900'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                  {p.status === 'SOLVED' && <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />}
+                  {p.status === 'WRONG' && <XCircle className="h-4 w-4 text-red-400 shrink-0" />}
+                  {p.status === 'ATTEMPTED' && <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0"></div>}
+                  {p.status === 'UNSOLVED' && <div className="h-2.5 w-2.5 rounded-full border border-slate-700 bg-transparent shrink-0"></div>}
+                  
+                  <span className="text-[10px] font-bold text-slate-505 font-mono shrink-0">#{selectedTopicSlug ? p.topicNumber : p.masterNumber}</span>
+                  
+                  <h4 className="text-xs font-bold text-slate-200 group-hover:text-primary transition-smooth truncate">
+                    {p.name}
+                  </h4>
+                </div>
+
+                <div className="flex items-center space-x-3 shrink-0">
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                    p.difficulty === 'EASY' ? 'text-emerald-400 bg-emerald-500/10' :
+                    p.difficulty === 'MEDIUM' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'
+                  }`}>
+                    {p.difficulty}
+                  </span>
+                  
+                  <div className="flex items-center space-x-1.5" onClick={e => e.stopPropagation()}>
+                    {generatingIds[p.id] ? (
+                      <Sparkles className="h-3.5 w-3.5 text-blue-400 animate-spin" />
+                    ) : p.isAiReady ? (
+                      <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                    ) : (
+                      <Sparkles onClick={(e) => handleAiClick(p.id, e, false)} className="h-3.5 w-3.5 text-slate-500 hover:text-slate-350 cursor-pointer" />
+                    )}
+                    <button onClick={(e) => toggleBookmark(p.id, e)} className="text-slate-650 hover:text-amber-400 p-0.5">
+                      {p.isFavorite ? <BookmarkCheck className="h-3.5 w-3.5 text-amber-400 fill-amber-500/10" /> : <Bookmark className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
