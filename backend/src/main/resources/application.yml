@@ -22,7 +22,7 @@ spring:
 patternforge:
   jwt:
     secret: ${JWT_SECRET:405040148695mu2q9380cg4lt4t94c0f16n7ftab9p0osupersecretkeyforpatternforgeapplication}
-    expiration-ms: 86400000 # 24 Hours
+    expiration-ms: 604800000 # 7 Days (extended to prevent session expiry during normal use)
   pdf:
     path: ${PDF_PATH:C:\Users\rajsh\Downloads\Striver_A2Z_Master_DSA_Database.pdf}
   code:

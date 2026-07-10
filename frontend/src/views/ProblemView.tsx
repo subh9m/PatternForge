@@ -548,6 +548,25 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
         })
       ]);
 
+      // If the backend returns 401/403, fall back to cached data gracefully
+      // Do NOT throw/show error screen — just use whatever cache we have
+      if (basicRes.status === 401 || basicRes.status === 403 ||
+          solRes.status === 401 || solRes.status === 403) {
+        const cachedDetails = localStorage.getItem(cacheKey);
+        if (cachedDetails) {
+          try {
+            const parsed = JSON.parse(cachedDetails);
+            setDetails(parsed);
+          } catch (_) { /* ignore */ }
+        }
+        if (!silent) {
+          setLoadingDetails(false);
+          setLoadingSolutions(false);
+        }
+        // Don't set generationFailed — silently degrade to cached content
+        return;
+      }
+
       if (!basicRes.ok || !solRes.ok) {
         throw new Error('Failed to fetch problem details');
       }
@@ -596,6 +615,20 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     } catch (e) {
       console.error("Failed to load problem workspace data", e);
       if (!silent) {
+        // Before showing the failure screen, check if we have valid cached data to fall back on
+        const cacheKey = `pf_details_${problemId}`;
+        const cachedDetails = localStorage.getItem(cacheKey);
+        if (cachedDetails) {
+          try {
+            const parsed = JSON.parse(cachedDetails);
+            if (!isBoilerplateDetails(parsed)) {
+              setDetails(parsed);
+              setLoadingDetails(false);
+              setLoadingSolutions(false);
+              return; // Use cache, no error screen needed
+            }
+          } catch (_) { /* ignore parse error */ }
+        }
         setGenerationFailed(true);
         setLoadingDetails(false);
         setLoadingSolutions(false);
@@ -606,10 +639,10 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   useEffect(() => {
     loadData();
 
-    // Autosave notes interval every 15s
+    // Autosave notes interval every 15s — use silentPost so 401 doesn't trigger logout
     const saveInterval = setInterval(async () => {
       try {
-        await api.post(`/problems/${problemId}/notes`, notesRef.current);
+        await api.silentPost(`/problems/${problemId}/notes`, notesRef.current);
       } catch (err) {
         // Silently skip
       }

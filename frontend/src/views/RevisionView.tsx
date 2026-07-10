@@ -209,14 +209,15 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
   useEffect(() => {
     const fetchActiveSession = async () => {
       try {
-        const session = await api.get<any>('/revisions/session/active');
+        // Use silentGet so 401s don't trigger a global logout
+        const session = await api.silentGet<any>('/revisions/session/active');
         if (session && session.active) {
           setActiveSession(session);
           setElapsedTime(session.elapsedTime);
           setIsTimerRunning(session.status === 'RUNNING');
         }
       } catch (e) {
-        console.error("Failed to fetch active revision session", e);
+        // Silently ignore — session fetch failures should not affect the rest of the UI
       }
     };
     fetchActiveSession();
@@ -241,12 +242,13 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     if (isTimerRunning && activeSession) {
       syncInterval = setInterval(async () => {
         try {
-          await api.post('/revisions/session/save', {
+          // Use silentPost so background 401s don't trigger a global logout
+          await api.silentPost('/revisions/session/save', {
             elapsedTime: elapsedRef.current,
             status: 'RUNNING'
           });
         } catch (e) {
-          console.error("Failed to auto-save revision timer", e);
+          // Silently skip — timer autosave is non-critical
         }
       }, 5000);
     }
@@ -257,9 +259,16 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
 
   const handleStartRevision = async () => {
     try {
-      const session = await api.post<any>('/revisions/session/start', {});
-      setActiveSession(session);
-      setElapsedTime(session.elapsedTime);
+      const session = await api.silentPost<any>('/revisions/session/start', {});
+      if (session) {
+        setActiveSession(session);
+        setElapsedTime(session.elapsedTime ?? 0);
+      } else {
+        // Backend unavailable — start a local session
+        const localSession = { active: true, status: 'RUNNING', elapsedTime: 0, startedAt: new Date().toISOString() };
+        setActiveSession(localSession);
+        setElapsedTime(0);
+      }
       setIsTimerRunning(true);
     } catch (e) {
       console.error("Failed to start revision session", e);
@@ -269,10 +278,10 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
   const handlePauseRevision = async () => {
     try {
       setIsTimerRunning(false);
-      const session = await api.post<any>('/revisions/session/pause', {
+      const session = await api.silentPost<any>('/revisions/session/pause', {
         elapsedTime: elapsedRef.current
       });
-      setActiveSession(session);
+      if (session) setActiveSession(session);
     } catch (e) {
       console.error("Failed to pause revision session", e);
     }
@@ -280,8 +289,8 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
 
   const handleResumeRevision = async () => {
     try {
-      const session = await api.post<any>('/revisions/session/resume', {});
-      setActiveSession(session);
+      const session = await api.silentPost<any>('/revisions/session/resume', {});
+      if (session) setActiveSession(session);
       setIsTimerRunning(true);
     } catch (e) {
       console.error("Failed to resume revision session", e);
@@ -300,7 +309,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
     try {
       setIsTimerRunning(false);
       setShowFinishConfirm(false);
-      await api.post<any>('/revisions/session/finish', {
+      await api.silentPost<any>('/revisions/session/finish', {
         elapsedTime: elapsedRef.current
       });
       setActiveSession(null);

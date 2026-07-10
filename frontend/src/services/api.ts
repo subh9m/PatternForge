@@ -1,6 +1,16 @@
 import problemsSeed from '../problems_seed.json';
 
 let unauthorizedListener: (() => void) | null = null;
+// Debounce guard: only fire logout once per 10 seconds to prevent cascading logouts
+let _lastUnauthorizedFire = 0;
+
+function fireUnauthorized() {
+  const now = Date.now();
+  if (now - _lastUnauthorizedFire > 10000) {
+    _lastUnauthorizedFire = now;
+    if (unauthorizedListener) unauthorizedListener();
+  }
+}
 
 export const setUnauthorizedListener = (listener: () => void) => {
   unauthorizedListener = listener;
@@ -751,6 +761,58 @@ export const _mockRouter = async (method: 'GET' | 'POST' | 'PUT', url: string, b
     }
   }
 
+  // ------------------ REVISION SESSION ENDPOINTS ------------------
+  // In-memory revision session storage (localStorage backed)
+  const SESSION_KEY = `pf_rev_session_${userId}`;
+  function getRevSession() {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+  function saveRevSession(session: any) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  }
+
+  if (path === '/api/revisions/session/active' && method === 'GET') {
+    const session = getRevSession();
+    if (session && session.active) return session;
+    return { active: false };
+  }
+
+  if (path === '/api/revisions/session/start' && method === 'POST') {
+    const session = { active: true, status: 'RUNNING', elapsedTime: 0, startedAt: new Date().toISOString() };
+    saveRevSession(session);
+    return session;
+  }
+
+  if (path === '/api/revisions/session/pause' && method === 'POST') {
+    const session = getRevSession() || { active: true, status: 'RUNNING', elapsedTime: 0 };
+    session.status = 'PAUSED';
+    session.elapsedTime = body?.elapsedTime ?? session.elapsedTime;
+    saveRevSession(session);
+    return session;
+  }
+
+  if (path === '/api/revisions/session/resume' && method === 'POST') {
+    const session = getRevSession() || { active: true, status: 'RUNNING', elapsedTime: 0 };
+    session.status = 'RUNNING';
+    saveRevSession(session);
+    return session;
+  }
+
+  if (path === '/api/revisions/session/save' && method === 'POST') {
+    const session = getRevSession() || { active: true, status: 'RUNNING', elapsedTime: 0 };
+    session.elapsedTime = body?.elapsedTime ?? session.elapsedTime;
+    if (body?.status) session.status = body.status;
+    saveRevSession(session);
+    return session;
+  }
+
+  if (path === '/api/revisions/session/finish' && method === 'POST') {
+    localStorage.removeItem(SESSION_KEY);
+    return { success: true };
+  }
+
   // ------------------ DASHBOARD STATS AGGREGATOR ------------------
   if (path === '/api/dashboard/stats' && method === 'GET') {
     const attempts = getLocalItem<Attempt[]>('pf_attempts', []).filter(a => a.userId === userId);
@@ -1026,7 +1088,7 @@ export const api = {
     });
     if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('token');
-      if (unauthorizedListener) unauthorizedListener();
+      fireUnauthorized();
       throw new Error('Session expired or unauthorized');
     }
     if (!response.ok) {
@@ -1055,7 +1117,7 @@ export const api = {
     });
     if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('token');
-      if (unauthorizedListener) unauthorizedListener();
+      fireUnauthorized();
       throw new Error('Session expired or unauthorized');
     }
     if (!response.ok) {
@@ -1085,7 +1147,7 @@ export const api = {
     });
     if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('token');
-      if (unauthorizedListener) unauthorizedListener();
+      fireUnauthorized();
       throw new Error('Session expired or unauthorized');
     }
     if (!response.ok) {
@@ -1115,7 +1177,7 @@ export const api = {
     });
     if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('token');
-      if (unauthorizedListener) unauthorizedListener();
+      fireUnauthorized();
       throw new Error('Session expired or unauthorized');
     }
     if (!response.ok) {
@@ -1127,6 +1189,65 @@ export const api = {
       return response.json() as Promise<T>;
     } else {
       return response.text() as unknown as Promise<T>;
+    }
+  },
+
+  // Silent GET: for background polling calls — swallows 401 without triggering logout
+  silentGet: async <T>(endpoint: string): Promise<T | null> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    try {
+      const response = await fetch(`${BASE_URL}/api${endpoint}`, {
+        method: 'GET',
+        headers,
+      });
+      // On 401/403 during background polling, do NOT logout — just return null silently
+      if (response.status === 401 || response.status === 403) {
+        return null;
+      }
+      if (!response.ok) return null;
+      const contentType = response.headers.get('Content-Type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json() as Promise<T>;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  // Silent POST: for background polling/autosave — swallows 401 without triggering logout
+  silentPost: async <T>(endpoint: string, body: any): Promise<T | null> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    try {
+      const response = await fetch(`${BASE_URL}/api${endpoint}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+      // On 401/403 during background polling, do NOT logout — just return null silently
+      if (response.status === 401 || response.status === 403) {
+        return null;
+      }
+      if (!response.ok) return null;
+      const contentType = response.headers.get('Content-Type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json() as Promise<T>;
+      }
+      return null;
+    } catch {
+      return null;
     }
   },
 
