@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Copy, Check } from 'lucide-react';
+import MonacoEditor from '@monaco-editor/react';
 
 interface FullscreenCodeModalProps {
   isOpen: boolean;
@@ -7,7 +8,8 @@ interface FullscreenCodeModalProps {
   code: string;
   language: string;
   title: string;
-  highlightFn: (code: string, language: string) => string;
+  /** Kept for API compatibility – no longer used internally */
+  highlightFn?: (code: string, language: string) => string;
 }
 
 const FullscreenCodeModal: React.FC<FullscreenCodeModalProps> = ({
@@ -16,8 +18,16 @@ const FullscreenCodeModal: React.FC<FullscreenCodeModalProps> = ({
   code,
   language,
   title,
-  highlightFn
 }) => {
+  // Normalise language identifier for Monaco
+  const monacoLanguage =
+    language === 'cpp' ? 'cpp' :
+    language === 'java' ? 'java' :
+    language === 'python' || language === 'py' ? 'python' :
+    language === 'sql' ? 'sql' :
+    language === 'js' || language === 'javascript' ? 'javascript' :
+    language === 'ts' || language === 'typescript' ? 'typescript' :
+    'cpp';
   const [copied, setCopied] = useState(false);
 
   // Esc key closure
@@ -41,9 +51,7 @@ const FullscreenCodeModal: React.FC<FullscreenCodeModalProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const lines = (code || '').split('\n');
-  const lineNumbers = lines.map((_, i) => i + 1).join('\n');
-  const highlightedHtml = highlightFn(code || '', language);
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/85 backdrop-blur-md transition-opacity duration-300">
@@ -93,18 +101,32 @@ const FullscreenCodeModal: React.FC<FullscreenCodeModalProps> = ({
           </div>
         </div>
 
-        {/* Modal Code Body */}
-        <div className="flex-1 w-full overflow-y-auto bg-[#1e1e1e] flex select-text min-h-0 relative">
-          <div className="flex-1 flex items-stretch font-mono text-[12.5px] leading-relaxed w-full">
-            {/* Gutter / Line Numbers */}
-            <pre className="select-none text-right pr-4 text-slate-600 bg-slate-950/20 border-r border-slate-900 py-5 pl-4 shrink-0 font-mono text-right min-w-[3.5rem] leading-relaxed">
-              {lineNumbers}
-            </pre>
-            {/* Highlighted Code block */}
-            <pre className="flex-1 p-5 overflow-auto text-[#d4d4d4] whitespace-pre select-text font-mono leading-relaxed custom-scrollbar">
-              <code dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
-            </pre>
-          </div>
+        {/* Monaco Editor Body */}
+        <div className="flex-1 min-h-0 w-full">
+          <MonacoEditor
+            height="100%"
+            language={monacoLanguage}
+            value={code || ''}
+            theme="vs-dark"
+            options={{
+              readOnly: true,
+              minimap: { enabled: true },
+              fontSize: 13,
+              lineNumbers: 'on',
+              scrollBeyondLastLine: false,
+              wordWrap: 'off',
+              automaticLayout: true,
+              renderLineHighlight: 'line',
+              smoothScrolling: true,
+              cursorBlinking: 'phase',
+              folding: true,
+              contextmenu: false,
+              scrollbar: {
+                verticalScrollbarSize: 8,
+                horizontalScrollbarSize: 8,
+              },
+            }}
+          />
         </div>
       </div>
     </div>
