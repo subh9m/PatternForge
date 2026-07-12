@@ -97,9 +97,9 @@ public class GeminiClient {
             JsonNode root = objectMapper.readTree(responseBody);
             JsonNode errorNode = root.path("error");
             if (!errorNode.isMissingNode()) {
-                // Check HTTP header hint first (Retry-After)
                 JsonNode detailsNode = errorNode.path("details");
                 if (detailsNode.isArray()) {
+                    // First pass: look for RetryInfo
                     for (JsonNode detail : detailsNode) {
                         String type = detail.path("@type").asText("");
 
@@ -115,13 +115,44 @@ public class GeminiClient {
                             log.warn("GeminiClient: 429 RetryInfo detected but no retryDelay field — defaulting to 60s.");
                             return 60;
                         }
+                    }
+
+                    // Second pass: look for QuotaFailure
+                    for (JsonNode detail : detailsNode) {
+                        String type = detail.path("@type").asText("");
 
                         if (type.contains("QuotaFailure")) {
-                            // Daily / project-level quota exhausted.
-                            // Retrying after 30s is wrong — puts the key on a permanent
-                            // thrash loop. Cooldown for 24 hours so the scheduler ignores it.
-                            log.warn("GeminiClient: 429 QuotaFailure detected — daily quota exhausted. Cooling down for 24h.");
-                            return 86400; // 24 hours
+                            boolean isDaily = false;
+                            JsonNode violations = detail.path("violations");
+                            if (violations.isArray()) {
+                                for (JsonNode violation : violations) {
+                                    String desc = violation.path("description").asText("").toLowerCase();
+                                    String subject = violation.path("subject").asText("").toLowerCase();
+                                    if (desc.contains("daily") || desc.contains("day") || desc.contains("per_day") ||
+                                        subject.contains("daily") || subject.contains("day") || subject.contains("per_day")) {
+                                        // Guard against it being a minute limit that happens to contain "day" or similar incorrectly
+                                        if (!desc.contains("minute") && !subject.contains("minute") &&
+                                            !desc.contains("rpm") && !subject.contains("rpm")) {
+                                            isDaily = true;
+                                        }
+                                    }
+                                }
+                            }
+                            // Also check top-level error message
+                            String topMsg = errorNode.path("message").asText("").toLowerCase();
+                            if (topMsg.contains("daily") || topMsg.contains("day") || topMsg.contains("per_day")) {
+                                if (!topMsg.contains("minute") && !topMsg.contains("rpm")) {
+                                    isDaily = true;
+                                }
+                            }
+
+                            if (isDaily) {
+                                log.warn("GeminiClient: 429 QuotaFailure detected — daily/long-term quota exhausted. Cooling down for 24h.");
+                                return 86400; // 24 hours
+                            } else {
+                                log.warn("GeminiClient: 429 QuotaFailure detected but classified as transient/minute rate limit. Cooling down for 60s.");
+                                return 60; // 60 seconds
+                            }
                         }
                     }
                 }

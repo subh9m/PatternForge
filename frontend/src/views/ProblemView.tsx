@@ -336,11 +336,16 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const pollingRef = useRef<any>(null);
 
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setGenerationFailed(false);
     setIsAiPending(false);
     setLoadingDetails(true);
     setLoadingSolutions(true);
+    try {
+      await api.post(`/problems/${problemId}/regenerate`, {});
+    } catch (err) {
+      console.error("Retry generation trigger failed", err);
+    }
     loadData();
   };
   
@@ -574,6 +579,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       const basicStatusHeader = basicRes.headers.get('X-Generation-Status');
       const solStatusHeader = solRes.headers.get('X-Generation-Status');
       const isPending = basicStatusHeader === 'PENDING' || solStatusHeader === 'PENDING';
+      const isFailed = basicStatusHeader === 'FAILED' || solStatusHeader === 'FAILED';
+
+      if (!silent && isFailed) {
+        setGenerationFailed(true);
+      }
 
       const [basicData, solData] = await Promise.all([
         basicRes.json() as Promise<ProblemDetailsJson>,
@@ -583,7 +593,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       const mergedDetails = { ...basicData, ...solData };
 
       // Only cache if content is real AI-generated (not boilerplate)
-      if (!isBoilerplateDetails(mergedDetails)) {
+      if (!isBoilerplateDetails(mergedDetails) && !isFailed) {
         localStorage.setItem(cacheKey, JSON.stringify(mergedDetails));
         setIsAiPending(false);
         // Clear polling if content is now ready
@@ -593,12 +603,17 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
         }
       } else {
         // Content is stub/boilerplate - show it but mark as pending
-        setIsAiPending(isPending);
+        setIsAiPending(isPending && !isFailed);
         // Start background polling if not already running
-        if (isPending && !pollingRef.current) {
+        if (isPending && !isFailed && !pollingRef.current) {
           pollingRef.current = setInterval(() => {
             loadData(true);
           }, 30000); // Poll every 30s
+        }
+        // Clear polling if it has failed
+        if (isFailed && pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
         }
       }
 

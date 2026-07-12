@@ -11,6 +11,7 @@ interface NavbarProps {
   onGoToDashboard?: () => void;
   onOpenProblem?: (id: string) => void;
   onJobCompleted?: (job: any) => void;
+  onJobFailed?: (job: any) => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ 
@@ -19,7 +20,8 @@ const Navbar: React.FC<NavbarProps> = ({
   onSwitchPortal, 
   onGoToDashboard,
   onOpenProblem,
-  onJobCompleted
+  onJobCompleted,
+  onJobFailed
 }) => {
   const { logout, user } = useAuth();
   const [streak, setStreak] = useState(0);
@@ -207,7 +209,7 @@ const Navbar: React.FC<NavbarProps> = ({
           {/* AI Activity Center */}
           {onOpenProblem && (
             <>
-              <AiActivityCenter onOpenProblem={onOpenProblem} onJobCompleted={onJobCompleted} />
+              <AiActivityCenter onOpenProblem={onOpenProblem} onJobCompleted={onJobCompleted} onJobFailed={onJobFailed} />
               <div className="h-5 w-px bg-border"></div>
             </>
           )}

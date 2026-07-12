@@ -233,7 +233,7 @@ public class ProblemGenerationService {
         }
     }
 
-    public void submitJobAndWait(UUID problemId, JobPriority priority) {
+    public boolean submitJobAndWait(UUID problemId, JobPriority priority) {
         ensureWorkerThreadStarted();
         Optional<Problem> freshOpt = problemRepository.findById(problemId);
         if (freshOpt.isPresent()) {
@@ -243,7 +243,7 @@ public class ProblemGenerationService {
                                        LocalFallbackGenerator.isBoilerplateSimplifiedStatement(p.getSimplifiedStatement()) ||
                                        LocalFallbackGenerator.isBoilerplateSimplifiedApproach(p.getSimplifiedApproach()));
             if (!needsGeneration) {
-                return; // Cached data exists
+                return true; // Cached data exists
             }
         }
 
@@ -271,9 +271,20 @@ public class ProblemGenerationService {
 
         try {
             job.getFuture().get(60, TimeUnit.SECONDS);
+            return true;
         } catch (Exception e) {
             log.warn("ProblemGenerationService: Wait timeout or failure occurred for problem {}: {}", problemId, e.getMessage());
+            return false;
         }
+    }
+
+    public JobStatus getJobStatus(UUID problemId) {
+        JobProgress progress = activeJobs.get(problemId);
+        return progress != null ? progress.getStatus() : null;
+    }
+
+    public void clearJobStatus(UUID problemId) {
+        activeJobs.remove(problemId);
     }
 
     public void queueGeneration(UUID problemId, int priority) {
@@ -437,6 +448,9 @@ public class ProblemGenerationService {
             } catch (Exception ex) {
                 log.error("ProblemGenerationService: Extremely unexpected critical failure when writing offline stubs", ex);
             }
+            throw new RuntimeException("Failed to generate unified problem details: " + e.getMessage(), e);
         }
+
+
     }
 }

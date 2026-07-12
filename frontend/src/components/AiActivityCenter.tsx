@@ -13,27 +13,34 @@ export interface JobProgress {
 interface AiActivityCenterProps {
   onOpenProblem: (id: string) => void;
   onJobCompleted?: (job: JobProgress) => void;
+  onJobFailed?: (job: JobProgress) => void;
 }
 
-const AiActivityCenter: React.FC<AiActivityCenterProps> = ({ onOpenProblem, onJobCompleted }) => {
+const AiActivityCenter: React.FC<AiActivityCenterProps> = ({ onOpenProblem, onJobCompleted, onJobFailed }) => {
   const [jobs, setJobs] = useState<JobProgress[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  // Track previously seen completed jobs to avoid duplicate snackbars
+  // Track previously seen completed/failed jobs to avoid duplicate snackbars
   const seenCompletedRef = useRef<Set<string>>(new Set());
+  const seenFailedRef = useRef<Set<string>>(new Set());
 
   const fetchJobs = async () => {
     try {
       const data = await api.get<JobProgress[]>('/problems/generation-jobs');
       setJobs(data || []);
       
-      // Check for newly completed jobs to notify parent
+      // Check for newly completed or failed jobs to notify parent
       data.forEach(job => {
         if (job.status === 'COMPLETED' && !seenCompletedRef.current.has(job.problemId)) {
           seenCompletedRef.current.add(job.problemId);
           if (onJobCompleted) {
             onJobCompleted(job);
+          }
+        } else if (job.status === 'FAILED' && !seenFailedRef.current.has(job.problemId)) {
+          seenFailedRef.current.add(job.problemId);
+          if (onJobFailed) {
+            onJobFailed(job);
           }
         }
       });

@@ -483,9 +483,12 @@ public class ProblemController {
         boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
                                    LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
 
+        ProblemGenerationService.JobStatus jobStatus = problemGenerationService.getJobStatus(p.getId());
+
         // Submit job asynchronously (non-blocking) — does not wait for completion
-        if (needsGeneration) {
+        if (needsGeneration && jobStatus != ProblemGenerationService.JobStatus.FAILED) {
             problemGenerationService.submitJob(p.getId(), JobPriority.HIGHEST);
+            jobStatus = problemGenerationService.getJobStatus(p.getId());
         }
 
         // Return whatever is in DB right now (may be fallback stub)
@@ -495,7 +498,14 @@ public class ProblemController {
             basicJson = LocalFallbackGenerator.getBasicDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
         }
 
-        String generationStatus = needsGeneration ? "PENDING" : "READY";
+        String generationStatus;
+        if (jobStatus == ProblemGenerationService.JobStatus.FAILED) {
+            generationStatus = "FAILED";
+        } else if (needsGeneration) {
+            generationStatus = "PENDING";
+        } else {
+            generationStatus = "READY";
+        }
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/json")
@@ -517,9 +527,12 @@ public class ProblemController {
         boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
                                    LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
 
+        ProblemGenerationService.JobStatus jobStatus = problemGenerationService.getJobStatus(p.getId());
+
         // Submit job asynchronously (non-blocking) — does not wait for completion
-        if (needsGeneration) {
+        if (needsGeneration && jobStatus != ProblemGenerationService.JobStatus.FAILED) {
             problemGenerationService.submitJob(p.getId(), JobPriority.HIGHEST);
+            jobStatus = problemGenerationService.getJobStatus(p.getId());
         }
 
         // Return whatever is in DB right now (may be fallback stub)
@@ -528,7 +541,14 @@ public class ProblemController {
             solutionJson = LocalFallbackGenerator.getSolutionDetailsFallbackJson(p.getName(), p.getLeetcodeNumber(), p.getTopic().getName());
         }
 
-        String generationStatus = needsGeneration ? "PENDING" : "READY";
+        String generationStatus;
+        if (jobStatus == ProblemGenerationService.JobStatus.FAILED) {
+            generationStatus = "FAILED";
+        } else if (needsGeneration) {
+            generationStatus = "PENDING";
+        } else {
+            generationStatus = "READY";
+        }
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/json")
@@ -808,8 +828,18 @@ public class ProblemController {
         p.setSimplifiedApproach(null);
         problemRepository.save(p);
 
+        // Remove from activeJobs to reset any FAILED/COMPLETED status
+        problemGenerationService.clearJobStatus(p.getId());
+
         // Submit generation job synchronously
-        problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
+        boolean success = problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
+
+        if (!success) {
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "AI details generation failed. Local offline stubs applied."
+            ));
+        }
 
         return ResponseEntity.ok(Map.of(
             "success", true,

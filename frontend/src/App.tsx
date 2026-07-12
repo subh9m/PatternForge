@@ -40,10 +40,18 @@ const MainApp: React.FC = () => {
   const [generatingProblemId, setGeneratingProblemId] = useState<string | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [snackbarProblemId, setSnackbarProblemId] = useState<string | null>(null);
+  const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
 
   const handleJobCompleted = (job: any) => {
     setSnackbarMessage(`AI details generated successfully. "${job.problemName}" is ready.`);
     setSnackbarProblemId(job.problemId);
+    setSnackbarType('success');
+  };
+
+  const handleJobFailed = (job: any) => {
+    setSnackbarMessage(`AI details generation failed for "${job.problemName}". Local offline stubs applied.`);
+    setSnackbarProblemId(job.problemId);
+    setSnackbarType('error');
   };
 
   const prevUserRef = React.useRef<any>(null);
@@ -315,6 +323,7 @@ const MainApp: React.FC = () => {
         }}
         onOpenProblem={navigateToProblem}
         onJobCompleted={handleJobCompleted}
+        onJobFailed={handleJobFailed}
       />
       
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative">
@@ -369,12 +378,20 @@ const MainApp: React.FC = () => {
 
       {/* Global Snackbar Toast Alert */}
       {snackbarMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-3 bg-slate-900 border border-slate-800 text-slate-100 px-4 py-3 rounded-2xl shadow-2xl animate-slideIn">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center space-x-3 bg-slate-900 border ${snackbarType === 'error' ? 'border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]' : 'border-slate-800'} text-slate-100 px-4 py-3 rounded-2xl shadow-2xl animate-slideIn`}>
+          {snackbarType === 'error' ? (
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          ) : (
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          )}
           <div className="text-xs font-bold leading-tight">{snackbarMessage}</div>
           <div className="flex items-center space-x-2 pl-3 border-l border-slate-800 shrink-0 select-none">
             <button
@@ -385,7 +402,7 @@ const MainApp: React.FC = () => {
                 setSnackbarMessage(null);
                 setSnackbarProblemId(null);
               }}
-              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-colors shadow-sm"
+              className={`px-2.5 py-1 ${snackbarType === 'error' ? 'bg-red-600 hover:bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'bg-emerald-600 hover:bg-emerald-500'} text-white rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-colors shadow-sm`}
             >
               Open
             </button>
