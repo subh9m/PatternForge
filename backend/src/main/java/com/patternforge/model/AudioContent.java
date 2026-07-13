@@ -20,7 +20,6 @@ public class AudioContent {
     @Column(nullable = false, unique = true)
     private UUID guideId;
 
-    @Lob
     @Column(nullable = false, columnDefinition = "bytea")
     private byte[] data;
 }
