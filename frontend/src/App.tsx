@@ -60,15 +60,29 @@ const MainApp: React.FC = () => {
   const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
 
   const handleJobCompleted = (job: any) => {
-    setSnackbarMessage(`AI details generated successfully. "${job.problemName}" is ready.`);
-    setSnackbarProblemId(job.problemId);
-    setSnackbarType('success');
+    if (job.jobType === 'AUDIO_HI' || job.jobType === 'AUDIO_EN') {
+      const langLabel = job.jobType === 'AUDIO_HI' ? 'Hindi' : 'English';
+      setSnackbarMessage(`🎧 Audio guide ready. "${job.problemName} — ${langLabel}" is loaded.`);
+      setSnackbarProblemId(job.problemId);
+      setSnackbarType('success');
+    } else {
+      setSnackbarMessage(`AI details generated successfully. "${job.problemName}" is ready.`);
+      setSnackbarProblemId(job.problemId);
+      setSnackbarType('success');
+    }
   };
 
   const handleJobFailed = (job: any) => {
-    setSnackbarMessage(`AI details generation failed for "${job.problemName}". Local offline stubs applied.`);
-    setSnackbarProblemId(job.problemId);
-    setSnackbarType('error');
+    if (job.jobType === 'AUDIO_HI' || job.jobType === 'AUDIO_EN') {
+      const langLabel = job.jobType === 'AUDIO_HI' ? 'Hindi' : 'English';
+      setSnackbarMessage(`🎧 Audio guide generation failed for "${job.problemName} — ${langLabel}".`);
+      setSnackbarProblemId(null);
+      setSnackbarType('error');
+    } else {
+      setSnackbarMessage(`AI details generation failed for "${job.problemName}". Local offline stubs applied.`);
+      setSnackbarProblemId(job.problemId);
+      setSnackbarType('error');
+    }
   };
 
   const prevUserRef = React.useRef<any>(null);

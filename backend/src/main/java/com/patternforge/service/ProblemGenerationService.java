@@ -53,6 +53,7 @@ public class ProblemGenerationService {
         public void setStartTime(long startTime) { this.startTime = startTime; }
         public long getEndTime() { return endTime; }
         public void setEndTime(long endTime) { this.endTime = endTime; }
+        public String getJobType() { return "PROBLEM_GEN"; }
     }
 
     private static final Map<UUID, JobProgress> activeJobs = new ConcurrentHashMap<>();

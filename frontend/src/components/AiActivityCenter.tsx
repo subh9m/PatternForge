@@ -8,6 +8,7 @@ export interface JobProgress {
   status: 'QUEUED' | 'GENERATING' | 'COMPLETED' | 'FAILED';
   startTime: number;
   endTime: number;
+  jobType?: 'PROBLEM_GEN' | 'AUDIO_HI' | 'AUDIO_EN';
 }
 
 interface AiActivityCenterProps {
@@ -21,7 +22,6 @@ const AiActivityCenter: React.FC<AiActivityCenterProps> = ({ onOpenProblem, onJo
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  // Track previously seen completed/failed jobs to avoid duplicate snackbars
   const seenCompletedRef = useRef<Set<string>>(new Set());
   const seenFailedRef = useRef<Set<string>>(new Set());
 
@@ -30,15 +30,16 @@ const AiActivityCenter: React.FC<AiActivityCenterProps> = ({ onOpenProblem, onJo
       const data = await api.get<JobProgress[]>('/problems/generation-jobs');
       setJobs(data || []);
       
-      // Check for newly completed or failed jobs to notify parent
       data.forEach(job => {
-        if (job.status === 'COMPLETED' && !seenCompletedRef.current.has(job.problemId)) {
-          seenCompletedRef.current.add(job.problemId);
+        const jobKey = job.jobType ? `${job.problemId}_${job.jobType}` : job.problemId;
+        
+        if (job.status === 'COMPLETED' && !seenCompletedRef.current.has(jobKey)) {
+          seenCompletedRef.current.add(jobKey);
           if (onJobCompleted) {
             onJobCompleted(job);
           }
-        } else if (job.status === 'FAILED' && !seenFailedRef.current.has(job.problemId)) {
-          seenFailedRef.current.add(job.problemId);
+        } else if (job.status === 'FAILED' && !seenFailedRef.current.has(jobKey)) {
+          seenFailedRef.current.add(jobKey);
           if (onJobFailed) {
             onJobFailed(job);
           }
@@ -50,10 +51,7 @@ const AiActivityCenter: React.FC<AiActivityCenterProps> = ({ onOpenProblem, onJo
   };
 
   useEffect(() => {
-    // Initial fetch
     fetchJobs();
-    
-    // Polling interval
     const interval = setInterval(fetchJobs, 3000);
     return () => clearInterval(interval);
   }, []);

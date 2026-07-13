@@ -6,7 +6,8 @@ import {
   Play, Clock, Lock,
   Code, FileText, Brain, HelpCircle, 
   CheckCircle, ChevronDown, ChevronUp, Save,
-  Award, Maximize2, Copy, Check
+  Award, Maximize2, Copy, Check,
+  Pause, Headphones, RotateCcw, RotateCw, Volume2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FullscreenCodeModal from '../components/FullscreenCodeModal';
@@ -334,6 +335,164 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [copyingState, setCopyingState] = useState(false);
   const pollingRef = useRef<any>(null);
+
+  const [isAudioPanelOpen, setIsAudioPanelOpen] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [activeAudioSource, setActiveAudioSource] = useState<string | null>(null);
+  const [activeAudioLang, setActiveAudioLang] = useState<'HI' | 'EN'>('HI');
+  const [audioPlaybackState, setAudioPlaybackState] = useState({
+    isPlaying: false,
+    currentTime: 0,
+    duration: 0,
+    playbackRate: 1
+  });
+
+  const [guideStatus, setGuideStatus] = useState<'NOT_GENERATED' | 'GENERATING' | 'READY' | 'FAILED'>('NOT_GENERATED');
+  const [generationTime, setGenerationTime] = useState(0);
+  const audioPollingRef = useRef<any>(null);
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+  const fetchGuideStatus = async (lang: 'HI' | 'EN') => {
+    try {
+      const res = await api.get<any>(`/problems/${problemId}/audio-guides/${lang}/status`);
+      if (res.generationStatus) {
+        setGuideStatus(res.generationStatus);
+        if (res.generationStatus === 'READY' && res.audioUrl) {
+          const fullAudioUrl = `${API_URL}${res.audioUrl}`;
+          if (activeAudioSource !== fullAudioUrl) {
+            setActiveAudioSource(fullAudioUrl);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch audio guide status", e);
+    }
+  };
+
+  const handleAudioLanguageChange = (lang: 'HI' | 'EN') => {
+    setActiveAudioLang(lang);
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    setAudioPlaybackState(prev => ({ ...prev, isPlaying: false, currentTime: 0 }));
+    fetchGuideStatus(lang);
+  };
+
+  const triggerAudioGeneration = async () => {
+    try {
+      setGuideStatus('GENERATING');
+      setGenerationTime(0);
+      await api.post(`/problems/${problemId}/audio-guides/generate`, { language: activeAudioLang });
+      if (audioPollingRef.current) clearInterval(audioPollingRef.current);
+      audioPollingRef.current = setInterval(() => {
+        pollAudioStatus();
+      }, 3000);
+    } catch (e) {
+      console.error("Failed to start audio generation", e);
+      setGuideStatus('FAILED');
+    }
+  };
+
+  const pollAudioStatus = async () => {
+    try {
+      const res = await api.get<any>(`/problems/${problemId}/audio-guides/${activeAudioLang}/status`);
+      if (res.generationStatus) {
+        setGuideStatus(res.generationStatus);
+        if (res.generationStatus === 'READY') {
+          if (audioPollingRef.current) {
+            clearInterval(audioPollingRef.current);
+            audioPollingRef.current = null;
+          }
+          if (res.audioUrl) {
+            const fullAudioUrl = `${API_URL}${res.audioUrl}`;
+            setActiveAudioSource(fullAudioUrl);
+          }
+        } else if (res.generationStatus === 'FAILED') {
+          if (audioPollingRef.current) {
+            clearInterval(audioPollingRef.current);
+            audioPollingRef.current = null;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error polling audio status", e);
+    }
+  };
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+    }
+    setActiveAudioSource(null);
+    setIsAudioPanelOpen(false);
+    setGuideStatus('NOT_GENERATED');
+    setAudioPlaybackState({
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+      playbackRate: 1
+    });
+    if (audioPollingRef.current) {
+      clearInterval(audioPollingRef.current);
+      audioPollingRef.current = null;
+    }
+  }, [problemId]);
+
+  useEffect(() => {
+    if (isAudioPanelOpen) {
+      fetchGuideStatus(activeAudioLang);
+    }
+  }, [isAudioPanelOpen, activeAudioLang]);
+
+  useEffect(() => {
+    return () => {
+      if (audioPollingRef.current) clearInterval(audioPollingRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    let interval: any = null;
+    if (guideStatus === 'GENERATING') {
+      interval = setInterval(() => {
+        setGenerationTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      setGenerationTime(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [guideStatus]);
+
+  const handleAudioPlayPause = () => {
+    if (!audioRef.current) return;
+    if (audioPlaybackState.isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(e => console.error("Audio playback error", e));
+    }
+  };
+
+  const handleAudioSeek = (newTime: number) => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = newTime;
+    setAudioPlaybackState(prev => ({ ...prev, currentTime: newTime }));
+  };
+
+  const handleAudioChangeSpeed = (rate: number) => {
+    if (!audioRef.current) return;
+    audioRef.current.playbackRate = rate;
+    setAudioPlaybackState(prev => ({ ...prev, playbackRate: rate }));
+  };
+
+  const handleAudioSkip = (seconds: number) => {
+    if (!audioRef.current) return;
+    const target = Math.max(0, Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + seconds));
+    audioRef.current.currentTime = target;
+    setAudioPlaybackState(prev => ({ ...prev, currentTime: target }));
+  };
 
 
   const handleRetry = async () => {
@@ -1085,6 +1244,19 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
             <span>{problem.status === 'SOLVED' ? 'Completed ✓' : 'Mark Completed'}</span>
           </button>
 
+          {/* Explain to Me Button */}
+          <button
+            onClick={() => setIsAudioPanelOpen(!isAudioPanelOpen)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-smooth flex items-center space-x-1.5 ${
+              isAudioPanelOpen
+                ? 'bg-blue-600 text-white border-blue-500 hover:bg-blue-500'
+                : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-blue-400 hover:border-blue-500/40'
+            }`}
+          >
+            <Headphones className="h-4 w-4" />
+            <span>Explain to Me</span>
+          </button>
+
           {/* Bookmark Button */}
           <button
             onClick={toggleBookmark}
@@ -1101,6 +1273,226 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
       {/* Main Double Column Workspace Layout */}
       
+      {/* Audio Learning Guide Panel */}
+      {isAudioPanelOpen && (
+        <div className="bg-slate-950/85 border border-slate-800/80 rounded-2xl p-5 mb-4 backdrop-blur-md relative overflow-hidden shadow-2xl">
+          {/* Decorative background glow */}
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-500/10 rounded-full blur-xl pointer-events-none" />
+          
+          <div className="flex items-center justify-between pb-3 border-b border-slate-900 mb-4">
+            <div className="flex items-center space-x-2">
+              <Headphones className="h-4.5 w-4.5 text-blue-400" />
+              <span className="text-xs font-black uppercase text-slate-350 tracking-wider">Audio Learning Guide</span>
+            </div>
+            
+            {/* Hindi / English Toggle Buttons */}
+            <div className="flex bg-slate-900/90 p-0.5 rounded-xl border border-slate-800">
+              <button
+                onClick={() => handleAudioLanguageChange('HI')}
+                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
+                  activeAudioLang === 'HI'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Hindi
+              </button>
+              <button
+                onClick={() => handleAudioLanguageChange('EN')}
+                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
+                  activeAudioLang === 'EN'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                English
+              </button>
+            </div>
+          </div>
+
+          {/* State A: NOT_GENERATED */}
+          {guideStatus === 'NOT_GENERATED' && (
+            <div className="text-center py-4 space-y-3">
+              <p className="text-xs text-slate-400 font-medium">
+                Listen to a casual, mentor-style explanation of this problem in {activeAudioLang === 'HI' ? 'Hinglish' : 'English'}.
+              </p>
+              <button
+                onClick={triggerAudioGeneration}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs tracking-wide transition-all shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 cursor-pointer"
+              >
+                🎧 Generate Audio Guide
+              </button>
+            </div>
+          )}
+
+          {/* State B: GENERATING */}
+          {guideStatus === 'GENERATING' && (
+            <div className="py-2 space-y-4">
+              <div className="flex items-center space-x-2 text-xs font-bold text-blue-400 animate-pulse">
+                <span className="h-2 w-2 bg-blue-500 rounded-full animate-ping" />
+                <span>🎧 Preparing your explanation...</span>
+              </div>
+              
+              <div className="space-y-3 pl-4 border-l border-slate-905">
+                {/* Step 1 */}
+                <div className="flex items-center space-x-2 text-xs">
+                  <span className={generationTime > 5 ? "text-emerald-400 font-bold" : "text-slate-600"}>
+                    {generationTime > 5 ? "✓" : "○"}
+                  </span>
+                  <span className={generationTime <= 5 ? "text-blue-400 font-black animate-pulse" : "text-slate-400 font-medium"}>
+                    Understanding the problem
+                  </span>
+                </div>
+                {/* Step 2 */}
+                <div className="flex items-center space-x-2 text-xs">
+                  <span className={generationTime > 12 ? "text-emerald-400 font-bold" : "text-slate-600"}>
+                    {generationTime > 12 ? "✓" : "○"}
+                  </span>
+                  <span className={generationTime > 5 && generationTime <= 12 ? "text-blue-400 font-black animate-pulse" : generationTime > 12 ? "text-slate-400 font-medium" : "text-slate-500"}>
+                    Building the intuition
+                  </span>
+                </div>
+                {/* Step 3 */}
+                <div className="flex items-center space-x-2 text-xs">
+                  <span className={generationTime > 18 ? "text-emerald-400 font-bold" : "text-slate-600"}>
+                    {generationTime > 18 ? "✓" : "○"}
+                  </span>
+                  <span className={generationTime > 12 && generationTime <= 18 ? "text-blue-400 font-black animate-pulse" : generationTime > 18 ? "text-slate-400 font-medium" : "text-slate-500"}>
+                    Simplifying the approach
+                  </span>
+                </div>
+                {/* Step 4 */}
+                <div className="flex items-center space-x-2 text-xs">
+                  <span className="text-slate-600">○</span>
+                  <span className={generationTime > 18 ? "text-blue-400 font-black animate-pulse" : "text-slate-500"}>
+                    Creating natural audio
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* State C: FAILED */}
+          {guideStatus === 'FAILED' && (
+            <div className="text-center py-4 space-y-3">
+              <p className="text-xs text-red-400 font-bold">
+                Failed to generate the audio guide. Let's try again.
+              </p>
+              <button
+                onClick={triggerAudioGeneration}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs tracking-wide transition-all shadow-lg active:scale-95 cursor-pointer"
+              >
+                Retry Generation
+              </button>
+            </div>
+          )}
+
+          {/* State D: READY */}
+          {guideStatus === 'READY' && (
+            <div className="space-y-4">
+              <div className="text-xs text-slate-400 font-semibold truncate">
+                Playing: <span className="text-slate-200 font-black">{problem.name}</span> ({activeAudioLang === 'HI' ? 'Hindi' : 'English'})
+              </div>
+
+              {/* Timeline Scrubber */}
+              <div className="space-y-1.5">
+                <div className="flex items-center space-x-3">
+                  <span className="text-[10px] font-mono text-slate-500 font-bold w-9 shrink-0 text-right">
+                    {formatTime(Math.round(audioPlaybackState.currentTime))}
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max={audioPlaybackState.duration || 100}
+                    value={audioPlaybackState.currentTime}
+                    onChange={(e) => handleAudioSeek(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-850 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                  <span className="text-[10px] font-mono text-slate-500 font-bold w-9 shrink-0">
+                    {formatTime(Math.round(audioPlaybackState.duration))}
+                  </span>
+                </div>
+              </div>
+
+              {/* Controls Bar */}
+              <div className="flex items-center justify-between">
+                {/* Speed Selector */}
+                <div className="flex items-center space-x-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-850">
+                  <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Speed:</span>
+                  <select
+                    value={audioPlaybackState.playbackRate}
+                    onChange={(e) => handleAudioChangeSpeed(Number(e.target.value))}
+                    className="bg-transparent text-blue-400 text-[10px] font-mono font-bold border-none outline-none cursor-pointer"
+                  >
+                    <option value="0.75" className="bg-slate-950 text-slate-350">0.75x</option>
+                    <option value="1" className="bg-slate-950 text-slate-350">1.0x</option>
+                    <option value="1.25" className="bg-slate-950 text-slate-350">1.25x</option>
+                    <option value="1.5" className="bg-slate-950 text-slate-350">1.5x</option>
+                    <option value="2" className="bg-slate-950 text-slate-350">2.0x</option>
+                  </select>
+                </div>
+
+                {/* Playback controls */}
+                <div className="flex items-center space-x-4">
+                  {/* Skip backward 10s */}
+                  <button
+                    onClick={() => handleAudioSkip(-10)}
+                    title="Seek Backward 10s"
+                    className="p-2 rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800 text-slate-400 hover:text-slate-200 transition-all active:scale-90 cursor-pointer"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </button>
+
+                  {/* Play / Pause */}
+                  <button
+                    onClick={handleAudioPlayPause}
+                    className="p-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-105 active:scale-95 cursor-pointer"
+                  >
+                    {audioPlaybackState.isPlaying ? (
+                      <Pause className="h-5 w-5 fill-white" />
+                    ) : (
+                      <Play className="h-5 w-5 fill-white ml-0.5" />
+                    )}
+                  </button>
+
+                  {/* Skip forward 10s */}
+                  <button
+                    onClick={() => handleAudioSkip(10)}
+                    title="Seek Forward 10s"
+                    className="p-2 rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800 text-slate-400 hover:text-slate-200 transition-all active:scale-90 cursor-pointer"
+                  >
+                    <RotateCw className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Volume Icon indicator */}
+                <div className="p-2 text-slate-650">
+                  <Volume2 className="h-4.5 w-4.5" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <audio
+        ref={audioRef}
+        src={activeAudioSource || undefined}
+        onTimeUpdate={() => {
+          if (audioRef.current) {
+            setAudioPlaybackState(prev => ({ ...prev, currentTime: audioRef.current!.currentTime }));
+          }
+        }}
+        onLoadedMetadata={() => {
+          if (audioRef.current) {
+            audioRef.current.playbackRate = audioPlaybackState.playbackRate;
+            setAudioPlaybackState(prev => ({ ...prev, duration: audioRef.current!.duration }));
+          }
+        }}
+        onPlay={() => setAudioPlaybackState(prev => ({ ...prev, isPlaying: true }))}
+        onPause={() => setAudioPlaybackState(prev => ({ ...prev, isPlaying: false }))}
+      />
+
       {/* AI Generation Status Banners (non-blocking) */}
       {generationFailed && (
         <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-bold text-red-400 mb-2">

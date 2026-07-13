@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.patternforge.service.ProblemGenerationService;
 import com.patternforge.service.JobPriority;
+import com.patternforge.service.AudioLearningGuideService;
 
 @RestController
 @RequestMapping("/api/problems")
@@ -40,6 +41,7 @@ public class ProblemController {
     private final ProblemGenerationService problemGenerationService;
     private final EntityManager entityManager;
     private final UserLeetCodeSyncRepository userLeetCodeSyncRepository;
+    private final AudioLearningGuideService audioLearningGuideService;
 
     public ProblemController(ProblemRepository problemRepository,
                              TopicRepository topicRepository,
@@ -53,7 +55,8 @@ public class ProblemController {
                              SubmissionRepository submissionRepository,
                              ProblemGenerationService problemGenerationService,
                              EntityManager entityManager,
-                             UserLeetCodeSyncRepository userLeetCodeSyncRepository) {
+                             UserLeetCodeSyncRepository userLeetCodeSyncRepository,
+                             AudioLearningGuideService audioLearningGuideService) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -67,6 +70,7 @@ public class ProblemController {
         this.problemGenerationService = problemGenerationService;
         this.entityManager = entityManager;
         this.userLeetCodeSyncRepository = userLeetCodeSyncRepository;
+        this.audioLearningGuideService = audioLearningGuideService;
     }
 
     @GetMapping
@@ -270,7 +274,10 @@ public class ProblemController {
 
     @GetMapping("/generation-jobs")
     public ResponseEntity<?> getGenerationJobs() {
-        return ResponseEntity.ok(com.patternforge.service.ProblemGenerationService.getActiveJobsList());
+        List<Object> allJobs = new ArrayList<>();
+        allJobs.addAll(com.patternforge.service.ProblemGenerationService.getActiveJobsList());
+        allJobs.addAll(audioLearningGuideService.getActiveJobsList());
+        return ResponseEntity.ok(allJobs);
     }
 
     @PostMapping("/{id}/bookmark")
