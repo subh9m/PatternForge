@@ -185,47 +185,87 @@
     }
 
     async function fetchSolvedFromLeetCode() {
-        const graphqlQuery = {
-            query: `
-                query problemsetQuestionList($limit: Int, $filters: QuestionListFilterInput) {
-                    problemsetQuestionList: questionList(limit: $limit, filters: $filters) {
-                        questions: data {
-                            frontendQuestionId: questionFrontendId
-                        }
+        const categorySlug = "all-code-essentials";
+        const limit = 100;
+        let skip = 0;
+        let hasMore = true;
+        const allSolvedIds = new Set();
+
+        const queryStr = `
+            query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
+                problemsetQuestionList: questionList(
+                    categorySlug: $categorySlug
+                    limit: $limit
+                    skip: $skip
+                    filters: $filters
+                ) {
+                    totalNum
+                    questions: data {
+                        frontendQuestionId: questionFrontendId
                     }
                 }
-            `,
-            variables: {
-                limit: 5000, // Covers future expansion
-                filters: { status: "AC" }
             }
-        };
+        `;
 
-        const response = await fetch("https://leetcode.com/graphql", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(graphqlQuery)
-        });
+        console.log("Starting solved problems sync...");
 
-        if (!response.ok) {
-            throw new Error(`LeetCode GraphQL returned HTTP ${response.status}`);
+        while (hasMore) {
+            console.log(`[PF Diagnostic] GraphQL Query - Name: problemsetQuestionList, categorySlug: ${categorySlug}, skip: ${skip}, limit: ${limit}`);
+            
+            const graphqlQuery = {
+                query: queryStr,
+                variables: {
+                    categorySlug: categorySlug,
+                    limit: limit,
+                    skip: skip,
+                    filters: { status: "AC" }
+                }
+            };
+
+            const response = await fetch("https://leetcode.com/graphql", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(graphqlQuery)
+            });
+
+            if (!response.ok) {
+                throw new Error(`LeetCode GraphQL returned HTTP ${response.status}`);
+            }
+
+            const resBody = await response.json();
+            if (resBody.errors && resBody.errors.length > 0) {
+                const errMsg = resBody.errors[0].message;
+                console.error("[PF Sync Error] GraphQL Error:", errMsg, resBody.errors);
+                throw new Error(`GraphQL Error: ${errMsg}`);
+            }
+
+            const problemset = resBody.data?.problemsetQuestionList;
+            if (!problemset) {
+                throw new Error("No data returned from LeetCode. Are you logged in?");
+            }
+
+            const questions = problemset.questions || [];
+            const totalNum = problemset.totalNum || 0;
+            const currentHasMore = (questions.length === limit) && (skip + questions.length < totalNum);
+
+            console.log(`[PF Diagnostic] Skip: ${skip}, Limit: ${limit}, Returned: ${questions.length}, hasMore: ${currentHasMore}`);
+
+            for (const q of questions) {
+                const id = parseInt(q.frontendQuestionId);
+                if (!isNaN(id) && id > 0) {
+                    allSolvedIds.add(id);
+                }
+            }
+
+            hasMore = currentHasMore;
+            skip += limit;
         }
 
-        const resBody = await response.json();
-        if (resBody.errors && resBody.errors.length > 0) {
-            throw new Error(`GraphQL Error: ${resBody.errors[0].message}`);
-        }
-
-        const questions = resBody.data?.problemsetQuestionList?.questions;
-        if (!questions) {
-            throw new Error("No data returned from LeetCode. Are you logged in?");
-        }
-
-        return questions
-            .map(q => parseInt(q.frontendQuestionId))
-            .filter(id => !isNaN(id) && id > 0);
+        const finalSolvedList = Array.from(allSolvedIds);
+        console.log(`[PF Diagnostic] Sync finished. Total fetched unique solved IDs: ${finalSolvedList.length}`);
+        return finalSolvedList;
     }
 
     async function postToPatternForge(server, token, solvedIds) {
