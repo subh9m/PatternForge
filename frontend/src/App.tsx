@@ -26,17 +26,34 @@ import AiGenerationFullscreenLoader from './components/AiGenerationFullscreenLoa
 
 const MainApp: React.FC = () => {
   const { user, logout, loading } = useAuth();
+  
   const [activePortal, setActivePortal] = useState<'selection' | 'master_dashboard' | 'dsa' | 'stl' | 'sql' | 'os' | 'git' | 'aiml' | 'cn' | 'spring' | 'react' | 'projects'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam === 'dashboard' || tabParam === 'explorer' || tabParam === 'problem' || tabParam === 'settings' || tabParam === 'revision') {
+      return 'dsa';
+    }
     const saved = localStorage.getItem('activePortal');
     return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml' || saved === 'cn' || saved === 'spring' || saved === 'react' || saved === 'projects' || saved === 'selection' || saved === 'master_dashboard') ? saved : 'master_dashboard';
   });
+
   const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam === 'dashboard' || tabParam === 'explorer' || tabParam === 'problem' || tabParam === 'settings' || tabParam === 'revision') {
+      return tabParam;
+    }
     const saved = localStorage.getItem('activeTab');
     return (saved === 'dashboard' || saved === 'explorer' || saved === 'problem' || saved === 'settings' || saved === 'revision') ? saved : 'dashboard';
   });
+
   const [activeProblemId, setActiveProblemId] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const probParam = params.get('problemId');
+    if (probParam) return probParam;
     return localStorage.getItem('activeProblemId');
   });
+
   const [generatingProblemId, setGeneratingProblemId] = useState<string | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [snackbarProblemId, setSnackbarProblemId] = useState<string | null>(null);
@@ -56,21 +73,14 @@ const MainApp: React.FC = () => {
 
   const prevUserRef = React.useRef<any>(null);
 
-  // Sync tab & problemId to localStorage
+  // Sync portal, tab & problemId to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('activePortal', activePortal);
+  }, [activePortal]);
+
   React.useEffect(() => {
     localStorage.setItem('activeTab', activeTab);
   }, [activeTab]);
-
-  React.useEffect(() => {
-    const handleSwitchTab = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail) {
-        setActiveTab(customEvent.detail);
-      }
-    };
-    window.addEventListener('switch-tab', handleSwitchTab);
-    return () => window.removeEventListener('switch-tab', handleSwitchTab);
-  }, []);
 
   React.useEffect(() => {
     if (activeProblemId) {
@@ -79,6 +89,66 @@ const MainApp: React.FC = () => {
       localStorage.removeItem('activeProblemId');
     }
   }, [activeProblemId]);
+
+  // Navigate function that synchronizes with browser history
+  const navigateToTab = (tab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision', problemId: string | null = null) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('tab', tab);
+    if (problemId) {
+      params.set('problemId', problemId);
+    } else {
+      params.delete('problemId');
+    }
+    const newSearch = params.toString();
+    const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+    window.history.pushState(null, '', newUrl);
+    
+    setActiveTab(tab);
+    setActiveProblemId(problemId);
+  };
+
+  // Sync initial render URL
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('tab')) {
+      params.set('tab', activeTab);
+      if (activeTab === 'problem' && activeProblemId) {
+        params.set('problemId', activeProblemId);
+      }
+      window.history.replaceState(null, '', '?' + params.toString());
+    }
+  }, []);
+
+  // Handle popstate event (browser Back/Forward buttons)
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      const probParam = params.get('problemId');
+      
+      if (tabParam === 'dashboard' || tabParam === 'explorer' || tabParam === 'problem' || tabParam === 'settings' || tabParam === 'revision') {
+        setActiveTab(tabParam);
+        if (tabParam === 'problem' && probParam) {
+          setActiveProblemId(probParam);
+        } else {
+          setActiveProblemId(null);
+        }
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  React.useEffect(() => {
+    const handleSwitchTab = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        navigateToTab(customEvent.detail);
+      }
+    };
+    window.addEventListener('switch-tab', handleSwitchTab);
+    return () => window.removeEventListener('switch-tab', handleSwitchTab);
+  }, []);
 
   // Enforce Master Dashboard default landing page on logout/login
   React.useEffect(() => {
@@ -305,16 +375,14 @@ const MainApp: React.FC = () => {
     try {
       const data = await api.get<{ isAiReady: boolean }>(`/problems/${id}`);
       if (data.isAiReady) {
-        setActiveProblemId(id);
-        setActiveTab('problem');
+        navigateToTab('problem', id);
       } else {
         setGeneratingProblemId(id);
       }
     } catch (err) {
       console.error("Failed to check problem readiness", err);
       // Fallback
-      setActiveProblemId(id);
-      setActiveTab('problem');
+      navigateToTab('problem', id);
     }
   };
 
@@ -323,7 +391,7 @@ const MainApp: React.FC = () => {
       {renderFocusTimer()}
       <Navbar 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={(tab) => navigateToTab(tab)} 
         onSwitchPortal={() => {
           localStorage.setItem('activePortal', 'selection');
           setActivePortal('selection');
@@ -350,9 +418,8 @@ const MainApp: React.FC = () => {
               <AiGenerationFullscreenLoader 
                 problemId={generatingProblemId} 
                 onSuccess={() => {
-                  setActiveProblemId(generatingProblemId);
+                  navigateToTab('problem', generatingProblemId);
                   setGeneratingProblemId(null);
-                  setActiveTab('problem');
                 }}
                 onCancel={() => {
                   setGeneratingProblemId(null);
@@ -368,13 +435,13 @@ const MainApp: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               {activeTab === 'dashboard' && (
-                <Dashboard navigateToProblem={navigateToProblem} setActiveTab={setActiveTab} />
+                <Dashboard navigateToProblem={navigateToProblem} setActiveTab={(tab) => navigateToTab(tab)} />
               )}
               {activeTab === 'explorer' && (
                 <Explorer navigateToProblem={navigateToProblem} />
               )}
               {activeTab === 'problem' && activeProblemId && (
-                <ProblemView problemId={activeProblemId} onBack={() => setActiveTab('explorer')} />
+                <ProblemView problemId={activeProblemId} onBack={() => navigateToTab('explorer')} />
               )}
               {activeTab === 'settings' && (
                 <Settings />

@@ -289,4 +289,173 @@
 
         return await response.json();
     }
+
+    // Auto-Sync Features
+    let lastSyncKey = null;
+    let lastSyncTime = 0;
+    let checkTimeout = null;
+
+    // Start MutationObserver to watch for submission results
+    const observer = new MutationObserver(() => {
+        if (checkTimeout) return;
+        checkTimeout = setTimeout(() => {
+            checkTimeout = null;
+            checkSubmissionStatus();
+        }, 300); // Throttled checking every 300ms
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    async function checkSubmissionStatus() {
+        const resultEl = document.querySelector('[data-e2e-locator="submission-result"]');
+        if (!resultEl) return;
+
+        const statusText = (resultEl.textContent || '').trim();
+        if (statusText === 'Accepted') {
+            await triggerAutoSync();
+        }
+    }
+
+    async function triggerAutoSync() {
+        const syncKey = await getSyncKey();
+        if (!syncKey) return;
+
+        // Deduplicate: ignore if same key was processed in last 15 seconds
+        if (syncKey === lastSyncKey && (Date.now() - lastSyncTime < 15000)) {
+            return;
+        }
+
+        lastSyncKey = syncKey;
+        lastSyncTime = Date.now();
+
+        console.log(`[PF AutoSync] Triggered sync for key: ${syncKey}`);
+        await performAutoSync();
+    }
+
+    async function getSyncKey() {
+        // Try to locate submission link inside the result container or parent
+        const resultEl = document.querySelector('[data-e2e-locator="submission-result"]');
+        if (resultEl) {
+            const container = resultEl.closest('div') || document.body;
+            const linkEl = container.querySelector('a[href*="/submissions/detail/"]');
+            if (linkEl) {
+                const href = linkEl.getAttribute('href') || '';
+                const match = href.match(/\/submissions\/detail\/(\d+)/);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+        }
+
+        // Fallback: problem slug + time-bucket (15s intervals)
+        const matchSlug = window.location.pathname.match(/\/problems\/([^/]+)/);
+        const problemSlug = matchSlug ? matchSlug[1] : 'unknown';
+        const timeBucket = Math.floor(Date.now() / 15000);
+        return `${problemSlug}_Accepted_${timeBucket}`;
+    }
+
+    async function getFrontendQuestionId(titleSlug) {
+        const query = `
+            query questionTitle($titleSlug: String!) {
+                question(titleSlug: $titleSlug) {
+                    questionFrontendId
+                }
+            }
+        `;
+        const response = await fetch("https://leetcode.com/graphql", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                query: query,
+                variables: { titleSlug: titleSlug }
+            })
+        });
+        const res = await response.json();
+        return res.data?.question?.questionFrontendId;
+    }
+
+    async function getCurrentProblemId() {
+        // Attempt 1: Parse from document title (e.g. "1. Two Sum - LeetCode")
+        const titleMatch = document.title.match(/^(\d+)\./);
+        if (titleMatch) {
+            return parseInt(titleMatch[1], 10);
+        }
+
+        // Attempt 2: Parse from DOM element data-cy="question-title"
+        const titleEl = document.querySelector('div[data-cy="question-title"]');
+        if (titleEl) {
+            const textMatch = titleEl.innerText.match(/^(\d+)\./);
+            if (textMatch) {
+                return parseInt(textMatch[1], 10);
+            }
+        }
+
+        // Attempt 3: Query GraphQL using titleSlug from URL
+        const matchSlug = window.location.pathname.match(/\/problems\/([^/]+)/);
+        if (matchSlug && matchSlug[1]) {
+            try {
+                const idStr = await getFrontendQuestionId(matchSlug[1]);
+                if (idStr) {
+                    return parseInt(idStr, 10);
+                }
+            } catch (e) {
+                console.error("[PF AutoSync] GraphQL question ID query failed:", e);
+            }
+        }
+
+        return null;
+    }
+
+    async function performAutoSync() {
+        const token = GM_getValue("pf_sync_token", "");
+        const server = GM_getValue("pf_server_url", "http://localhost:8081");
+
+        if (!token) {
+            console.error("[PF AutoSync] Sync token not configured.");
+            showStatus("Error: Sync Token not configured! Click ⚙ to setup.", 5000, "#f38ba8");
+            return;
+        }
+
+        syncBtn.disabled = true;
+        showStatus("Accepted ✓<br/>Auto-syncing PatternForge...", 0, "#f9e2af");
+
+        try {
+            // Wait 3 seconds propagation delay
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            const currentProblemId = await getCurrentProblemId();
+            console.log(`[PF AutoSync] Current problem ID: ${currentProblemId}`);
+
+            let solvedIds = await fetchSolvedFromLeetCode();
+
+            // Verification & Retry once if missing
+            if (currentProblemId && !solvedIds.includes(currentProblemId)) {
+                console.log(`[PF AutoSync] Current problem ${currentProblemId} missing from solved list. Retrying in 3 seconds...`);
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                solvedIds = await fetchSolvedFromLeetCode();
+            }
+
+            if (currentProblemId && !solvedIds.includes(currentProblemId)) {
+                console.warn(`[PF AutoSync] Current problem ${currentProblemId} is still missing from solved list after retry.`);
+            }
+
+            const result = await postToPatternForge(server, token, solvedIds);
+            if (result.success) {
+                showStatus(
+                    `✓ PatternForge synced`,
+                    6000,
+                    "#a6e3a1"
+                );
+            } else {
+                showStatus("Auto-sync failed<br/>Manual sync available", 6000, "#f38ba8");
+            }
+        } catch (err) {
+            console.error("[PF AutoSync] Sync error:", err);
+            showStatus("Auto-sync failed<br/>Manual sync available", 6000, "#f38ba8");
+        } finally {
+            syncBtn.disabled = false;
+        }
+    }
 })();

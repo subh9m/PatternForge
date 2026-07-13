@@ -44,13 +44,34 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
   const [generatingIds, setGeneratingIds] = useState<Record<string, boolean>>({});
 
   // Filter States
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTopicSlug, setSelectedTopicSlug] = useState<string | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('ALL');
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
-  const [onlyBookmarked, setOnlyBookmarked] = useState(false);
-  const [onlyNeedRevision, setOnlyNeedRevision] = useState(false);
-  const [sortBy, setSortBy] = useState<string>('masterNumber');
+  const [searchTerm, setSearchTerm] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('search') || '';
+  });
+  const [selectedTopicSlug, setSelectedTopicSlug] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('topic') || null;
+  });
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('difficulty') || 'ALL';
+  });
+  const [selectedStatus, setSelectedStatus] = useState<string>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('status') || 'ALL';
+  });
+  const [onlyBookmarked, setOnlyBookmarked] = useState<boolean>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('bookmarked') === 'true';
+  });
+  const [onlyNeedRevision, setOnlyNeedRevision] = useState<boolean>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('revision') === 'true';
+  });
+  const [sortBy, setSortBy] = useState<string>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('sort') || 'masterNumber';
+  });
 
   const [viewMode, setViewMode] = useState<'table' | 'cards' | 'list'>(() => {
     const saved = localStorage.getItem('patternforge_explorer_viewmode');
@@ -58,10 +79,134 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
   });
 
   const [statusSource, setStatusSource] = useState<'patternforge' | 'leetcode'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paramVal = params.get('source');
+    if (paramVal === 'patternforge' || paramVal === 'leetcode') return paramVal;
     return (localStorage.getItem('patternforge_explorer_status_source') as any) || 'patternforge';
   });
 
   const [leetcodeStatus, setLeetcodeStatus] = useState<any>(null);
+
+  // Sync filters to URL search parameters
+  useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(window.location.search);
+    
+    // Always preserve tab
+    params.set('tab', 'explorer');
+    
+    if (selectedTopicSlug) params.set('topic', selectedTopicSlug);
+    else params.delete('topic');
+    
+    if (selectedDifficulty !== 'ALL') params.set('difficulty', selectedDifficulty);
+    else params.delete('difficulty');
+    
+    if (selectedStatus !== 'ALL') params.set('status', selectedStatus);
+    else params.delete('status');
+    
+    if (statusSource !== 'patternforge') params.set('source', statusSource);
+    else params.delete('source');
+    
+    if (onlyBookmarked) params.set('bookmarked', 'true');
+    else params.delete('bookmarked');
+    
+    if (onlyNeedRevision) params.set('revision', 'true');
+    else params.delete('revision');
+    
+    if (searchTerm.trim()) params.set('search', searchTerm);
+    else params.delete('search');
+    
+    if (sortBy !== 'masterNumber') params.set('sort', sortBy);
+    else params.delete('sort');
+    
+    const newSearch = params.toString();
+    const currentSearch = window.location.search.replace(/^\?/, '');
+    if (newSearch !== currentSearch) {
+      const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [
+    selectedTopicSlug,
+    selectedDifficulty,
+    selectedStatus,
+    statusSource,
+    onlyBookmarked,
+    onlyNeedRevision,
+    searchTerm,
+    sortBy,
+    loading
+  ]);
+
+  // Visual layout & scroll position restoration effect
+  useEffect(() => {
+    if (loading) return;
+
+    const savedScrollYStr = sessionStorage.getItem('pf_explorer_scroll_y');
+    const savedLastOpenedId = sessionStorage.getItem('pf_explorer_last_opened_id');
+    const savedRowOffsetStr = sessionStorage.getItem('pf_explorer_row_offset');
+
+    if (!savedScrollYStr) return;
+
+    const savedScrollY = parseFloat(savedScrollYStr);
+    const savedRowOffset = savedRowOffsetStr ? parseFloat(savedRowOffsetStr) : null;
+
+    // Clear saved states so subsequent modifications don't trigger restoration
+    sessionStorage.removeItem('pf_explorer_scroll_y');
+    sessionStorage.removeItem('pf_explorer_last_opened_id');
+    sessionStorage.removeItem('pf_explorer_row_offset');
+
+    let frameId: number;
+    const restoreScroll = () => {
+      let restored = false;
+
+      if (savedLastOpenedId) {
+        const rowEl = document.querySelector(`[data-problem-id="${savedLastOpenedId}"]`);
+        if (rowEl) {
+          if (savedRowOffset !== null) {
+            const rect = rowEl.getBoundingClientRect();
+            const currentTop = rect.top + window.scrollY;
+            const targetScrollY = currentTop - savedRowOffset;
+            window.scrollTo(0, targetScrollY);
+            restored = true;
+          } else {
+            rowEl.scrollIntoView({ block: 'center' });
+            restored = true;
+          }
+        }
+      }
+
+      if (!restored) {
+        const maxScrollY = document.documentElement.scrollHeight - window.innerHeight;
+        const targetScrollY = Math.max(0, Math.min(savedScrollY, maxScrollY));
+        window.scrollTo(0, targetScrollY);
+      }
+    };
+
+    // Wait until browser layout is painted and ready
+    frameId = requestAnimationFrame(() => {
+      frameId = requestAnimationFrame(restoreScroll);
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [loading]);
+
+  const handleProblemClick = (problemId: string) => {
+    const scrollY = window.scrollY;
+    sessionStorage.setItem('pf_explorer_scroll_y', String(scrollY));
+    sessionStorage.setItem('pf_explorer_last_opened_id', problemId);
+
+    const rowEl = document.querySelector(`[data-problem-id="${problemId}"]`);
+    if (rowEl) {
+      const rect = rowEl.getBoundingClientRect();
+      sessionStorage.setItem('pf_explorer_row_offset', String(rect.top));
+    } else {
+      sessionStorage.removeItem('pf_explorer_row_offset');
+    }
+
+    navigateToProblem(problemId);
+  };
 
   useEffect(() => {
     localStorage.setItem('patternforge_explorer_viewmode', viewMode);
@@ -478,7 +623,8 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                   {filteredProblems.map((p) => (
                     <tr
                       key={p.id}
-                      onClick={() => navigateToProblem(p.id)}
+                      data-problem-id={p.id}
+                      onClick={() => handleProblemClick(p.id)}
                       className="border-b border-slate-800 hover:bg-slate-900/30 cursor-pointer transition-smooth group"
                     >
                       <td className="py-3.5 px-5 font-mono text-slate-500 font-semibold">
@@ -586,7 +732,8 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
             {filteredProblems.map((p) => (
               <div 
                 key={p.id}
-                onClick={() => navigateToProblem(p.id)}
+                data-problem-id={p.id}
+                onClick={() => handleProblemClick(p.id)}
                 className={`glass-panel border p-4 rounded-xl hover:border-slate-750 transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer relative overflow-hidden group ${
                   p.status === 'SOLVED' ? 'bg-emerald-950/5 border-emerald-500/10' : 'bg-slate-900/20 border-slate-900'
                 }`}
@@ -668,7 +815,8 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
             {filteredProblems.map((p) => (
               <div 
                 key={p.id}
-                onClick={() => navigateToProblem(p.id)}
+                data-problem-id={p.id}
+                onClick={() => handleProblemClick(p.id)}
                 className={`glass-panel border px-4 py-2.5 rounded-xl hover:border-slate-750 transition-all duration-300 flex items-center justify-between gap-3 cursor-pointer relative overflow-hidden group ${
                   p.status === 'SOLVED' ? 'bg-emerald-950/5 border-emerald-500/10' : 'bg-slate-900/20 border-slate-900'
                 }`}
