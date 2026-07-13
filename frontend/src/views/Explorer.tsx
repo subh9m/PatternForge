@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { 
   Search, CheckCircle2, Bookmark, BookmarkCheck,
   AlertCircle, ArrowUpDown, XCircle, Grid, Sparkles,
-  TableProperties, LayoutGrid, List as ListIcon
+  TableProperties, LayoutGrid, List as ListIcon, Code2
 } from 'lucide-react';
 
 export interface ProblemDto {
@@ -20,6 +20,7 @@ export interface ProblemDto {
   confidenceRating: number;
   approachSaved: boolean;
   isAiReady: boolean;
+  leetcodeSolved?: boolean;
 }
 
 interface TopicStats {
@@ -56,16 +57,27 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
     return (saved === 'table' || saved === 'cards' || saved === 'list') ? saved : 'table';
   });
 
+  const [statusSource, setStatusSource] = useState<'patternforge' | 'leetcode'>(() => {
+    return (localStorage.getItem('patternforge_explorer_status_source') as any) || 'patternforge';
+  });
+
+  const [leetcodeStatus, setLeetcodeStatus] = useState<any>(null);
+
   useEffect(() => {
     localStorage.setItem('patternforge_explorer_viewmode', viewMode);
   }, [viewMode]);
 
   useEffect(() => {
+    localStorage.setItem('patternforge_explorer_status_source', statusSource);
+  }, [statusSource]);
+
+  useEffect(() => {
     const loadData = async () => {
       try {
-        const [problemsData, topicsData] = await Promise.all([
+        const [problemsData, topicsData, lcStatusData] = await Promise.all([
           api.get<ProblemDto[]>('/problems'),
-          api.get<TopicStats[]>('/problems/topics')
+          api.get<TopicStats[]>('/problems/topics'),
+          api.get<any>('/leetcode/status').catch(() => null)
         ]);
         const uniqueProblemsMap = new Map<number, ProblemDto>();
         const uniqueProblemsList: ProblemDto[] = [];
@@ -81,6 +93,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
         });
         setProblems(uniqueProblemsList);
         setTopics(topicsData);
+        setLeetcodeStatus(lcStatusData);
       } catch (e) {
         console.error("Failed to load explorer data", e);
       } finally {
@@ -89,6 +102,47 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
     };
     loadData();
   }, []);
+
+  // Background polling to automatically refresh problem list on sync
+  useEffect(() => {
+    const pollSyncStatus = async () => {
+      try {
+        const currentStatus = await api.silentGet<any>('/leetcode/status');
+        if (currentStatus) {
+          const hasChanged = !leetcodeStatus || 
+            currentStatus.lastSyncedAt !== leetcodeStatus.lastSyncedAt ||
+            currentStatus.totalSolved !== leetcodeStatus.totalSolved;
+
+          if (hasChanged) {
+            const [problemsData, topicsData] = await Promise.all([
+              api.get<ProblemDto[]>('/problems'),
+              api.get<TopicStats[]>('/problems/topics')
+            ]);
+            const uniqueProblemsMap = new Map<number, ProblemDto>();
+            const uniqueProblemsList: ProblemDto[] = [];
+            (problemsData || []).forEach(p => {
+              if (p.leetcodeNumber && p.leetcodeNumber > 0) {
+                if (!uniqueProblemsMap.has(p.leetcodeNumber)) {
+                  uniqueProblemsMap.set(p.leetcodeNumber, p);
+                  uniqueProblemsList.push(p);
+                }
+              } else {
+                uniqueProblemsList.push(p);
+              }
+            });
+            setProblems(uniqueProblemsList);
+            setTopics(topicsData);
+            setLeetcodeStatus(currentStatus);
+          }
+        }
+      } catch (err) {
+        console.error("Poller failed to check sync status", err);
+      }
+    };
+
+    const interval = setInterval(pollSyncStatus, 5000);
+    return () => clearInterval(interval);
+  }, [leetcodeStatus]);
 
   const toggleBookmark = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Stop navigation click
@@ -135,9 +189,16 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
         if (slug !== selectedTopicSlug) return false;
       }
       if (selectedStatus !== 'ALL') {
-        if (selectedStatus === 'SOLVED' && p.status !== 'SOLVED') return false;
-        if (selectedStatus === 'UNSOLVED' && p.status !== 'UNSOLVED') return false;
-        if (selectedStatus === 'ATTEMPTED' && p.status !== 'ATTEMPTED' && p.status !== 'WRONG') return false;
+        const isLeetCode = statusSource === 'leetcode';
+        if (isLeetCode) {
+          if (selectedStatus === 'SOLVED' && !p.leetcodeSolved) return false;
+          if (selectedStatus === 'UNSOLVED' && p.leetcodeSolved) return false;
+          if (selectedStatus === 'ATTEMPTED' && p.leetcodeSolved) return false;
+        } else {
+          if (selectedStatus === 'SOLVED' && p.status !== 'SOLVED') return false;
+          if (selectedStatus === 'UNSOLVED' && p.status !== 'UNSOLVED') return false;
+          if (selectedStatus === 'ATTEMPTED' && p.status !== 'ATTEMPTED' && p.status !== 'WRONG') return false;
+        }
       }
       if (onlyBookmarked && !p.isFavorite) return false;
       if (onlyNeedRevision && !p.needRevision) return false;
@@ -291,6 +352,30 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
               ))}
             </div>
 
+            {/* Status Source Toggle */}
+            <div className="flex bg-slate-900/60 p-1 rounded-xl border border-slate-800 text-[10px] font-bold">
+              <button
+                onClick={() => setStatusSource('patternforge')}
+                className={`px-3 py-1.5 rounded-lg uppercase tracking-wider transition-smooth cursor-pointer ${
+                  statusSource === 'patternforge'
+                    ? 'bg-accent text-white shadow-glow-accent font-black'
+                    : 'text-slate-500 hover:text-slate-300 font-semibold'
+                }`}
+              >
+                PatternForge
+              </button>
+              <button
+                onClick={() => setStatusSource('leetcode')}
+                className={`px-3 py-1.5 rounded-lg uppercase tracking-wider transition-smooth cursor-pointer ${
+                  statusSource === 'leetcode'
+                    ? 'bg-amber-500 text-slate-950 font-black shadow-[0_0_8px_rgba(245,158,11,0.15)]'
+                    : 'text-slate-500 hover:text-slate-300 font-semibold'
+                }`}
+              >
+                LeetCode
+              </button>
+            </div>
+
             {/* Bookmark Filter */}
             <button
               onClick={() => setOnlyBookmarked(!onlyBookmarked)}
@@ -350,7 +435,25 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
         </div>
 
         {/* Problems catalog view */}
-        {filteredProblems.length === 0 ? (
+        {statusSource === 'leetcode' && !leetcodeStatus?.connected ? (
+          <div className="glass-panel text-center py-12 border border-amber-500/10 rounded-2xl space-y-4 max-w-xl mx-auto">
+            <AlertCircle className="h-10 w-10 text-amber-500 mx-auto" />
+            <div className="space-y-1">
+              <h4 className="text-slate-200 font-extrabold text-sm">LeetCode has not been synced yet</h4>
+              <p className="text-slate-500 text-xs px-6">
+                Sync your solved problems to use LeetCode filters and display solved markers in your Problems List.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('switch-tab', { detail: 'settings' }));
+              }}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 shadow-glow-accent text-xs font-black text-slate-950 transition-smooth"
+            >
+              Setup Sync
+            </button>
+          </div>
+        ) : filteredProblems.length === 0 ? (
           <div className="glass-panel text-center py-12 border border-slate-900 rounded-2xl text-slate-500 font-medium">
             No problems match the current filter selection.
           </div>
@@ -365,6 +468,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                     <th className="py-4 px-4">Problem Name</th>
                     <th className="py-4 px-4 w-28">Topic</th>
                     <th className="py-4 px-4 w-20">Difficulty</th>
+                    <th className="py-4 px-4 w-16 text-center">LC</th>
                     <th className="py-4 px-4 w-16 text-center">Status</th>
                     <th className="py-4 px-2 w-12 text-center"></th>
                     <th className="py-4 px-5 w-12 text-center"></th>
@@ -404,6 +508,17 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                         }`}>
                           {p.difficulty}
                         </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-center" title={!leetcodeStatus?.connected ? "LeetCode not synced yet" : p.leetcodeSolved ? "Solved on LeetCode" : "Not solved on LeetCode"}>
+                        <div className="flex justify-center">
+                          {!leetcodeStatus?.connected ? (
+                            <Code2 className="h-4 w-4 text-slate-600/40 cursor-default" />
+                          ) : p.leetcodeSolved ? (
+                            <Code2 className="h-4 w-4 text-emerald-400 cursor-default filter drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]" />
+                          ) : (
+                            <Code2 className="h-4 w-4 text-slate-650 cursor-default" />
+                          )}
+                        </div>
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <div className="flex justify-center">
@@ -477,7 +592,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-505 font-mono">
+                  <span className="text-[10px] font-bold text-slate-550 font-mono">
                     #{selectedTopicSlug ? p.topicNumber : p.masterNumber} {p.leetcodeNumber > 0 && `(LC ${p.leetcodeNumber})`}
                   </span>
                   <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
@@ -506,6 +621,22 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                     {p.status === 'WRONG' && <span className="text-[9px] font-bold text-red-400 flex items-center gap-1"><XCircle className="h-3 w-3" /> Wrong</span>}
                     {p.status === 'ATTEMPTED' && <span className="text-[9px] font-bold text-amber-400 flex items-center gap-1"><div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></div> Attempted</span>}
                     {p.status === 'UNSOLVED' && <span className="text-[9px] font-bold text-slate-500">Unsolved</span>}
+
+                    {leetcodeStatus?.connected && (
+                      <span className="text-[10px] text-slate-800 font-bold px-1">|</span>
+                    )}
+                    {leetcodeStatus?.connected && p.leetcodeSolved && (
+                      <span className="text-[9px] font-bold text-emerald-400 flex items-center gap-1" title="Solved on LeetCode">
+                        <Code2 className="h-3.5 w-3.5 filter drop-shadow-[0_0_4px_rgba(52,211,153,0.3)] text-emerald-400" />
+                        <span>LC Solved</span>
+                      </span>
+                    )}
+                    {leetcodeStatus?.connected && !p.leetcodeSolved && (
+                      <span className="text-[9px] font-bold text-slate-500 flex items-center gap-1" title="Not solved on LeetCode">
+                        <Code2 className="h-3.5 w-3.5 text-slate-700" />
+                        <span>LC Unsolved</span>
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center space-x-2" onClick={e => e.stopPropagation()}>
@@ -522,7 +653,7 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
 
                     <button onClick={(e) => toggleBookmark(p.id, e)} className="text-slate-650 hover:text-amber-400 p-0.5 animate-pulse-none">
                       {p.isFavorite ? (
-                        <BookmarkCheck className="h-3.5 w-3.5 text-amber-400 fill-amber-500/10" />
+                        <BookmarkCheck className="h-3.5 w-3.5 text-amber-400 fill-amber-500/20" />
                       ) : (
                         <Bookmark className="h-3.5 w-3.5" />
                       )}
@@ -548,7 +679,19 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                   {p.status === 'ATTEMPTED' && <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0"></div>}
                   {p.status === 'UNSOLVED' && <div className="h-2.5 w-2.5 rounded-full border border-slate-700 bg-transparent shrink-0"></div>}
                   
-                  <span className="text-[10px] font-bold text-slate-505 font-mono shrink-0">#{selectedTopicSlug ? p.topicNumber : p.masterNumber}</span>
+                  {leetcodeStatus?.connected && (
+                    p.leetcodeSolved ? (
+                      <span className="shrink-0 flex items-center" title="Solved on LeetCode">
+                        <Code2 className="h-4 w-4 text-emerald-400 filter drop-shadow-[0_0_4px_rgba(52,211,153,0.3)] animate-fade-in" />
+                      </span>
+                    ) : (
+                      <span className="shrink-0 flex items-center" title="Not solved on LeetCode">
+                        <Code2 className="h-4 w-4 text-slate-700 animate-fade-in" />
+                      </span>
+                    )
+                  )}
+
+                  <span className="text-[10px] font-bold text-slate-550 font-mono shrink-0">#{selectedTopicSlug ? p.topicNumber : p.masterNumber}</span>
                   
                   <h4 className="text-xs font-bold text-slate-200 group-hover:text-primary transition-smooth truncate">
                     {p.name}

@@ -44,7 +44,8 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/admin/ai/**").permitAll()
-                .anyRequest().authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/leetcode/sync").hasAnyRole("USER", "LEETCODE_SYNC")
+                .anyRequest().hasRole("USER")
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
@@ -66,7 +67,15 @@ public class SecurityConfig {
         configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Generation-Status"));
         configuration.setAllowCredentials(true);
 
+        CorsConfiguration syncCors = new CorsConfiguration();
+        syncCors.setAllowedOrigins(Arrays.asList("https://leetcode.com"));
+        syncCors.setAllowedMethods(Arrays.asList("POST", "OPTIONS"));
+        syncCors.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        syncCors.setExposedHeaders(Arrays.asList("Authorization"));
+        syncCors.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/leetcode/sync", syncCors);
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

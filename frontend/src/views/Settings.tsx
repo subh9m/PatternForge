@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { setResetTime } from '../hooks/useDailyReset';
-import { Settings, Save, Monitor, Terminal } from 'lucide-react';
+import { Settings, Save, Monitor, Terminal, RefreshCw, ShieldCheck, Copy, Check } from 'lucide-react';
 
 interface SettingsDto {
   darkMode: boolean;
@@ -33,6 +33,12 @@ const SettingsView: React.FC = () => {
   const [syncFileName, setSyncFileName] = useState<string | null>(null);
   const [syncPermissionGranted, setSyncPermissionGranted] = useState(false);
 
+  // LeetCode Integration State
+  const [leetcodeStatus, setLeetcodeStatus] = useState<any>(null);
+  const [tokenStatus, setTokenStatus] = useState<any>(null);
+  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -46,6 +52,16 @@ const SettingsView: React.FC = () => {
         setLoading(false);
       }
     };
+    const loadLeetcodeData = async () => {
+      try {
+        const statusData = await api.get<any>('/leetcode/status');
+        setLeetcodeStatus(statusData);
+        const tStatus = await api.get<any>('/leetcode/token/status');
+        setTokenStatus(tStatus);
+      } catch (e) {
+        console.error("Failed to load LeetCode status", e);
+      }
+    };
     const checkSyncFile = async () => {
       if ((api as any).getSyncFileName) {
         const name = await (api as any).getSyncFileName();
@@ -57,8 +73,39 @@ const SettingsView: React.FC = () => {
       }
     };
     loadSettings();
+    loadLeetcodeData();
     checkSyncFile();
   }, []);
+
+  const handleGenerateToken = async () => {
+    try {
+      const res = await api.post<any>('/leetcode/token/generate', {});
+      setGeneratedToken(res.token);
+      setTokenStatus({ exists: true, createdAt: new Date().toISOString() });
+    } catch (e) {
+      alert("Failed to generate sync token");
+    }
+  };
+
+  const handleRevokeToken = async () => {
+    if (!confirm("Are you sure you want to revoke the sync token? This will break any existing userscripts using it.")) return;
+    try {
+      await api.post('/leetcode/token/revoke', {});
+      setGeneratedToken(null);
+      setTokenStatus({ exists: false, createdAt: null });
+      alert("Token revoked successfully.");
+    } catch (e) {
+      alert("Failed to revoke token");
+    }
+  };
+
+  const handleCopyToken = () => {
+    if (generatedToken) {
+      navigator.clipboard.writeText(generatedToken);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
 
   const handleExportData = () => {
     const keysToExport = ['token', 'pf_users', 'pf_attempts', 'pf_submissions', 'pf_settings'];
@@ -408,6 +455,114 @@ const SettingsView: React.FC = () => {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* LeetCode Sync Integration */}
+        <div className="space-y-4 pt-4 border-t border-slate-800/60">
+          <h3 className="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center space-x-2 border-b border-slate-800 pb-2">
+            <RefreshCw className="h-4 w-4 text-amber-500" />
+            <span>LeetCode Sync Integration</span>
+          </h3>
+
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
+            {/* Status Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Sync Status</span>
+                {leetcodeStatus?.connected ? (
+                  <div className="flex items-center space-x-1.5 mt-1 text-emerald-400 font-extrabold text-xs">
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>Connected</span>
+                  </div>
+                ) : (
+                  <span className="text-xs font-bold text-slate-400 mt-1 block">Not Synced</span>
+                )}
+              </div>
+
+              {leetcodeStatus?.connected && (
+                <>
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Total LeetCode Solved</span>
+                    <span className="text-xs font-bold text-slate-200 mt-1 block">{leetcodeStatus.totalSolved} Problems</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Matched PatternForge Problems</span>
+                    <span className="text-xs font-bold text-slate-200 mt-1 block">{leetcodeStatus.matchedProblems} Problems</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Last Synced</span>
+                    <span className="text-xs font-bold text-slate-200 mt-1 block">
+                      {new Date(leetcodeStatus.lastSyncedAt).toLocaleString()}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Token Section */}
+            <div className="border-t border-slate-800/80 pt-3 space-y-3">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">PatternForge LeetCode Sync Token</span>
+              <p className="text-[10px] text-slate-500 leading-relaxed">
+                Use this token to authorize the browser userscript to sync your solved LeetCode problems list. Never share this token.
+              </p>
+
+              {tokenStatus?.exists ? (
+                <div className="flex items-center space-x-2 text-[10px] text-emerald-400 font-bold bg-emerald-500/5 px-3 py-1.5 border border-emerald-500/10 rounded-lg w-max">
+                  <span>✓ Sync Token Active (Created: {new Date(tokenStatus.createdAt).toLocaleDateString()})</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2 text-[10px] text-slate-500 font-bold bg-slate-850 px-3 py-1.5 border border-slate-800 rounded-lg w-max">
+                  <span>No active Sync Token found. Generate one below to start syncing.</span>
+                </div>
+              )}
+
+              {generatedToken && (
+                <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 space-y-2">
+                  <span className="text-[10px] font-bold text-amber-500 block">⚠️ Save this token now! It will not be shown again:</span>
+                  <div className="flex items-center space-x-2 bg-slate-950 p-2 rounded border border-slate-850">
+                    <span className="text-[11px] font-mono font-bold text-slate-200 break-all select-all flex-1">{generatedToken}</span>
+                    <button
+                      onClick={handleCopyToken}
+                      className="p-1 text-slate-400 hover:text-slate-100 transition-smooth"
+                      title="Copy token"
+                    >
+                      {copySuccess ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  onClick={handleGenerateToken}
+                  className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 hover:border-blue-500 text-[10px] font-extrabold text-blue-400 transition-smooth"
+                >
+                  {tokenStatus?.exists ? 'Regenerate Token' : 'Generate Sync Token'}
+                </button>
+                {tokenStatus?.exists && (
+                  <button
+                    onClick={handleRevokeToken}
+                    className="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 hover:border-red-500 text-[10px] font-extrabold text-red-400 transition-smooth"
+                  >
+                    Revoke Token
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Setup Instructions */}
+            <div className="border-t border-slate-800/80 pt-3 space-y-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Instructions: How to Setup Sync</span>
+              <ol className="list-decimal pl-4 text-[10px] text-slate-500 space-y-1.5 leading-relaxed">
+                <li>Install the <a href="https://www.tampermonkey.net/" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">Tampermonkey</a> browser extension.</li>
+                <li>Create a new script in Tampermonkey and paste the code from <code className="text-slate-400 bg-slate-950 px-1 py-0.5 rounded border border-slate-850">tools/patternforge-leetcode-sync.user.js</code>.</li>
+                <li>Click <strong>Generate Sync Token</strong> above and copy the generated token.</li>
+                <li>Go to LeetCode and click the <strong>⚙ (Gear)</strong> icon on the bottom-right PatternForge sync widget.</li>
+                <li>Paste the Sync Token and your PatternForge Backend URL (e.g. <code className="text-slate-400 bg-slate-950 px-1 py-0.5 rounded">http://localhost:8081</code>).</li>
+                <li>Log in to LeetCode, then click the floating orange <strong>PF ↻</strong> button in the bottom-right corner to synchronize!</li>
+              </ol>
+            </div>
           </div>
         </div>
 

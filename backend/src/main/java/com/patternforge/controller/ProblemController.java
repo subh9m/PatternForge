@@ -39,6 +39,7 @@ public class ProblemController {
     private final SubmissionRepository submissionRepository;
     private final ProblemGenerationService problemGenerationService;
     private final EntityManager entityManager;
+    private final UserLeetCodeSyncRepository userLeetCodeSyncRepository;
 
     public ProblemController(ProblemRepository problemRepository,
                              TopicRepository topicRepository,
@@ -51,7 +52,8 @@ public class ProblemController {
                              GeminiService geminiService,
                              SubmissionRepository submissionRepository,
                              ProblemGenerationService problemGenerationService,
-                             EntityManager entityManager) {
+                             EntityManager entityManager,
+                             UserLeetCodeSyncRepository userLeetCodeSyncRepository) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -64,6 +66,7 @@ public class ProblemController {
         this.submissionRepository = submissionRepository;
         this.problemGenerationService = problemGenerationService;
         this.entityManager = entityManager;
+        this.userLeetCodeSyncRepository = userLeetCodeSyncRepository;
     }
 
     @GetMapping
@@ -75,7 +78,8 @@ public class ProblemController {
             @RequestParam(required = false, defaultValue = "false") Boolean bookmarked,
             @RequestParam(required = false, defaultValue = "false") Boolean needRevision,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false, defaultValue = "masterNumber") String sortBy) {
+            @RequestParam(required = false, defaultValue = "masterNumber") String sortBy,
+            @RequestParam(required = false, defaultValue = "patternforge") String statusSource) {
 
         UUID userId = (UUID) authentication.getPrincipal();
 
@@ -89,11 +93,16 @@ public class ProblemController {
                 .map(b -> b.getProblem().getId())
                 .collect(Collectors.toSet());
 
+        Set<Integer> solvedLeetCodeIds = userLeetCodeSyncRepository.findByUserId(userId).stream()
+                .map(UserLeetCodeSync::getLeetcodeNumber)
+                .collect(Collectors.toSet());
+
         // Apply filters
         return ResponseEntity.ok(problems.stream()
                 .map(p -> {
                     Attempt a = attemptMap.get(p.getId());
                     boolean isBookmarked = bookmarkedIds.contains(p.getId());
+                    boolean leetcodeSolved = p.getLeetcodeNumber() != null && solvedLeetCodeIds.contains(p.getLeetcodeNumber());
                     return ProblemDto.builder()
                             .id(p.getId())
                             .masterNumber(p.getMasterNumber())
@@ -108,16 +117,25 @@ public class ProblemController {
                             .confidenceRating(a != null && a.getConfidenceRating() != null ? a.getConfidenceRating() : 0)
                             .approachSaved(a != null && Boolean.TRUE.equals(a.getApproachSaved()))
                             .isAiReady(p.isAiReady())
+                            .leetcodeSolved(leetcodeSolved)
                             .build();
                 })
                 .filter(p -> difficulty == null || p.getDifficulty().equalsIgnoreCase(difficulty))
                 .filter(p -> topicSlug == null || p.getTopicName().toLowerCase().replace(" & ", "-").replace(" ", "-").equals(topicSlug))
                 .filter(p -> {
                     if (status == null) return true;
-                    if (status.equalsIgnoreCase("UNSOLVED")) return p.getStatus().equals("UNSOLVED");
-                    if (status.equalsIgnoreCase("SOLVED")) return p.getStatus().equals("SOLVED");
-                    if (status.equalsIgnoreCase("ATTEMPTED")) return p.getStatus().equals("ATTEMPTED") || p.getStatus().equals("WRONG");
-                    return true;
+                    boolean isLeetCodeSource = "leetcode".equalsIgnoreCase(statusSource);
+                    if (isLeetCodeSource) {
+                        if (status.equalsIgnoreCase("SOLVED")) return Boolean.TRUE.equals(p.getLeetcodeSolved());
+                        if (status.equalsIgnoreCase("UNSOLVED")) return !Boolean.TRUE.equals(p.getLeetcodeSolved());
+                        if (status.equalsIgnoreCase("ATTEMPTED")) return !Boolean.TRUE.equals(p.getLeetcodeSolved());
+                        return true;
+                    } else {
+                        if (status.equalsIgnoreCase("UNSOLVED")) return p.getStatus().equals("UNSOLVED");
+                        if (status.equalsIgnoreCase("SOLVED")) return p.getStatus().equals("SOLVED");
+                        if (status.equalsIgnoreCase("ATTEMPTED")) return p.getStatus().equals("ATTEMPTED") || p.getStatus().equals("WRONG");
+                        return true;
+                    }
                 })
                 .filter(p -> !bookmarked || p.getIsFavorite())
                 .filter(p -> !needRevision || p.getNeedRevision())
@@ -349,6 +367,9 @@ public class ProblemController {
             @RequestParam(required = false) List<UUID> excludeIds) {
 
         UUID userId = (UUID) authentication.getPrincipal();
+        Set<Integer> solvedLeetCodeIds = userLeetCodeSyncRepository.findByUserId(userId).stream()
+                .map(UserLeetCodeSync::getLeetcodeNumber)
+                .collect(Collectors.toSet());
 
         List<Problem> problems = problemRepository.findAll();
         List<Attempt> attempts = attemptRepository.findByUserId(userId);
@@ -422,6 +443,7 @@ public class ProblemController {
         
         Attempt a = attemptMap.get(chosen.getId());
         boolean isBookmarked = bookmarkedIds.contains(chosen.getId());
+        boolean leetcodeSolved = chosen.getLeetcodeNumber() != null && solvedLeetCodeIds.contains(chosen.getLeetcodeNumber());
 
         return ResponseEntity.ok(ProblemDto.builder()
                 .id(chosen.getId())
@@ -437,6 +459,7 @@ public class ProblemController {
                 .confidenceRating(a != null ? a.getConfidenceRating() : 0)
                 .approachSaved(a != null && Boolean.TRUE.equals(a.getApproachSaved()))
                 .isAiReady(chosen.isAiReady())
+                .leetcodeSolved(leetcodeSolved)
                 .build());
     }
 

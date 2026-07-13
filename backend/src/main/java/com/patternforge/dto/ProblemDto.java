@@ -23,4 +23,5 @@ public class ProblemDto {
     private Integer confidenceRating;
     private Boolean approachSaved;
     private Boolean isAiReady;
+    private Boolean leetcodeSolved;
 }

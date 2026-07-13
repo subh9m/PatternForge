@@ -27,4 +27,7 @@ public interface ProblemRepository extends JpaRepository<Problem, UUID> {
 
     @Query(value = "SELECT solution_details_json FROM problems WHERE id = :id", nativeQuery = true)
     String findSolutionDetailsJsonById(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(DISTINCT p.leetcodeNumber) FROM Problem p WHERE p.leetcodeNumber IN :leetcodeNumbers")
+    long countDistinctByLeetcodeNumberIn(@Param("leetcodeNumbers") java.util.Collection<Integer> leetcodeNumbers);
 }

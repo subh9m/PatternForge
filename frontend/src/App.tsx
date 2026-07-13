@@ -62,6 +62,17 @@ const MainApp: React.FC = () => {
   }, [activeTab]);
 
   React.useEffect(() => {
+    const handleSwitchTab = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setActiveTab(customEvent.detail);
+      }
+    };
+    window.addEventListener('switch-tab', handleSwitchTab);
+    return () => window.removeEventListener('switch-tab', handleSwitchTab);
+  }, []);
+
+  React.useEffect(() => {
     if (activeProblemId) {
       localStorage.setItem('activeProblemId', activeProblemId);
     } else {
