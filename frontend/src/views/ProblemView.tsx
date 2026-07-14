@@ -578,12 +578,21 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       utterance.voice = selectedVoice;
     }
 
+    // Update state and start timer synchronously for immediate UI feedback
+    const approxStartTime = Math.round((index / chunks.length) * audioPlaybackState.duration);
+    setAudioPlaybackState(prev => ({
+      ...prev,
+      currentTime: approxStartTime,
+      isPlaying: true
+    }));
+    startProgressTimer();
+
     utterance.onstart = () => {
       if (isSpeechCancelledRef.current) return;
-      const approxStartTime = Math.round((index / chunks.length) * audioPlaybackState.duration);
+      const t = Math.round((index / chunks.length) * audioPlaybackState.duration);
       setAudioPlaybackState(prev => ({
         ...prev,
-        currentTime: approxStartTime,
+        currentTime: t,
         isPlaying: true
       }));
       startProgressTimer();
