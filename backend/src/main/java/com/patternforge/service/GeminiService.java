@@ -220,7 +220,7 @@ public class GeminiService {
         }
     }
 
-    private String extractCandidateText(String responseBody) {
+    public String extractCandidateText(String responseBody) {
         if (responseBody == null) return null;
         try {
             com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(responseBody);

@@ -65,6 +65,10 @@ public class AudioLearningGuideService {
                     guideRepository.save(guide);
                 }
                 log.info("AUDIO_GUIDE_CACHE_HIT: Returning stored script for problem {} ({})", problemId, language.toUpperCase());
+            } else if ("READY".equals(guide.getGenerationStatus())) {
+                log.warn("AUDIO_GUIDE_CORRUPTION: Guide is marked READY but spokenScript is empty. Resetting status to FAILED.");
+                guide.setGenerationStatus("FAILED");
+                guideRepository.save(guide);
             }
             return guide;
         }
@@ -252,7 +256,8 @@ public class AudioLearningGuideService {
         log.info("AUDIO_SCRIPT_GENERATION: Requesting script generation for problem {} ({})", problem.getId(), language);
         RetryExecutor.ExecutionResult execResult = retryExecutor.executeWithFallbackDetailed(prompt, "application/json");
         String rawJson = execResult.responseBody;
-        String cleanJson = GeminiService.cleanJsonString(rawJson);
+        String candidateText = geminiService.extractCandidateText(rawJson);
+        String cleanJson = GeminiService.cleanJsonString(candidateText != null ? candidateText : rawJson);
         
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(cleanJson);
