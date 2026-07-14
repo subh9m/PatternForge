@@ -557,10 +557,16 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       return;
     }
 
-    isSpeechCancelledRef.current = false;
-    window.speechSynthesis.cancel();
-
     let chunkText = chunks[index];
+    if (!chunkText || !chunkText.trim()) {
+      // Skip empty chunk
+      setCurrentChunkIndex(index + 1);
+      speakChunk(index + 1);
+      return;
+    }
+
+    isSpeechCancelledRef.current = false;
+
     if (activeAudioLang === 'HI') {
       chunkText = preprocessHindiPronunciation(chunkText);
     }
@@ -599,6 +605,8 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       }
     };
 
+    // Force resume first to avoid stuck browser speech queue
+    window.speechSynthesis.resume();
     window.speechSynthesis.speak(utterance);
   };
 
@@ -752,12 +760,13 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   }, [guideStatus]);
 
   const handleAudioPlayPause = () => {
+    if (chunks.length === 0) return;
     if (audioPlaybackState.isPlaying) {
       window.speechSynthesis.pause();
       stopProgressTimer();
       setAudioPlaybackState(prev => ({ ...prev, isPlaying: false }));
     } else {
-      if (window.speechSynthesis.paused) {
+      if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
         startProgressTimer();
         setAudioPlaybackState(prev => ({ ...prev, isPlaying: true }));
