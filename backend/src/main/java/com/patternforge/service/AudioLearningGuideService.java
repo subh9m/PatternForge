@@ -69,6 +69,15 @@ public class AudioLearningGuideService {
                 log.warn("AUDIO_GUIDE_CORRUPTION: Guide is marked READY but spokenScript is empty. Resetting status to FAILED.");
                 guide.setGenerationStatus("FAILED");
                 guideRepository.save(guide);
+            } else if ("GENERATING".equals(guide.getGenerationStatus())) {
+                LocalDateTime cutoff = LocalDateTime.now().minusMinutes(2);
+                LocalDateTime timeToCheck = guide.getUpdatedAt() != null ? guide.getUpdatedAt() : guide.getCreatedAt();
+                if (timeToCheck != null && timeToCheck.isBefore(cutoff)) {
+                    log.warn("AUDIO_GUIDE_TIMEOUT: Guide f287eb68 is stuck in GENERATING since {}. Resetting status to FAILED.", timeToCheck);
+                    guide.setGenerationStatus("FAILED");
+                    guide.setErrorMessage("Generation timed out.");
+                    guideRepository.save(guide);
+                }
             }
             return guide;
         }
