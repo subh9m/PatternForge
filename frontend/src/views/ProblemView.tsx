@@ -632,6 +632,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const fetchGuideStatus = async (lang: 'HI' | 'EN') => {
     try {
       const res = await api.get<any>(`/problems/${problemId}/audio-guides/${lang}/status`);
+      console.log("fetchGuideStatus - Response:", res);
       if (res.generationStatus) {
         setGuideStatus(res.generationStatus);
         if (res.generationStatus === 'READY') {
@@ -684,6 +685,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const pollAudioStatus = async () => {
     try {
       const res = await api.get<any>(`/problems/${problemId}/audio-guides/${activeAudioLang}/status`);
+      console.log("pollAudioStatus - Response:", res);
       if (res.generationStatus) {
         setGuideStatus(res.generationStatus);
         if (res.generationStatus === 'READY') {
@@ -769,7 +771,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   }, [guideStatus]);
 
   const handleAudioPlayPause = () => {
-    if (chunks.length === 0) return;
+    console.log("handleAudioPlayPause clicked. chunks:", chunks, "currentChunkIndex:", currentChunkIndex, "audioPlaybackState:", audioPlaybackState);
+    if (chunks.length === 0) {
+      console.warn("handleAudioPlayPause - chunks is empty, aborting play");
+      return;
+    }
     if (audioPlaybackState.isPlaying) {
       window.speechSynthesis.pause();
       stopProgressTimer();
