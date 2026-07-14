@@ -48,4 +48,18 @@ public class AudioLearningGuideController {
         }
         return ResponseEntity.ok(guide);
     }
+
+    @PostMapping("/{problemId}/audio-guides/regenerate")
+    public ResponseEntity<?> regenerateAudioGuide(@PathVariable UUID problemId, @RequestBody Map<String, String> requestBody) {
+        String language = requestBody.get("language");
+        if (language == null || (!"HI".equalsIgnoreCase(language) && !"EN".equalsIgnoreCase(language))) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Language must be either 'HI' or 'EN'"));
+        }
+        try {
+            AudioLearningGuide guide = audioService.regenerateGuide(problemId, language);
+            return ResponseEntity.ok(guide);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
 }

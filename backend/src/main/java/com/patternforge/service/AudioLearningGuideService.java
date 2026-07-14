@@ -147,8 +147,15 @@ public class AudioLearningGuideService {
 
         executor.submit(() -> {
             try {
-                // Script generation
+                // Script generation with validation & retry
                 ScriptGenerationResult result = generateSpokenScript(problem, language);
+                if (!validateGeneratedScript(result.getSpokenScript(), problem.getDifficulty())) {
+                    log.warn("AUDIO_SCRIPT_VALIDATION: First attempt failed validation. Retrying once...");
+                    result = generateSpokenScript(problem, language);
+                    if (!validateGeneratedScript(result.getSpokenScript(), problem.getDifficulty())) {
+                        throw new IllegalStateException("Generated script failed validation checks twice. Aborting.");
+                    }
+                }
                 
                 guide.setSpokenScript(result.getSpokenScript());
                 guide.setEstimatedDurationSeconds(result.getEstimatedDurationSeconds());
@@ -176,6 +183,110 @@ public class AudioLearningGuideService {
         });
     }
 
+    public synchronized AudioLearningGuide regenerateGuide(UUID problemId, String language) {
+        String lang = language.toUpperCase();
+        Problem problem = problemRepository.findById(problemId).orElseThrow(() -> new IllegalArgumentException("Problem not found"));
+        
+        Optional<AudioLearningGuide> existingOpt = guideRepository.findByProblemIdAndLanguage(problemId, lang);
+        AudioLearningGuide guide;
+        if (existingOpt.isPresent()) {
+            guide = existingOpt.get();
+        } else {
+            guide = AudioLearningGuide.builder()
+                    .problemId(problemId)
+                    .language(lang)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+        }
+        
+        // Mark GENERATING but do NOT clear spokenScript immediately
+        guide.setGenerationStatus("GENERATING");
+        guide.setErrorMessage(null);
+        guideRepository.save(guide);
+        
+        triggerBackgroundJobForRegeneration(problemId, lang, guide);
+        return guide;
+    }
+
+    private void triggerBackgroundJobForRegeneration(UUID problemId, String language, AudioLearningGuide guide) {
+        String jobKey = getJobKey(problemId, language);
+        Problem problem = problemRepository.findById(problemId).orElseThrow(() -> new IllegalArgumentException("Problem not found"));
+        
+        final String oldScript = guide.getSpokenScript();
+        final Integer oldDuration = guide.getEstimatedDurationSeconds();
+        
+        AudioJobProgress progress = AudioJobProgress.builder()
+                .problemId(problemId)
+                .problemName(problem.getName())
+                .status("GENERATING")
+                .startTime(System.currentTimeMillis())
+                .jobType("HI".equalsIgnoreCase(language) ? "AUDIO_HI" : "AUDIO_EN")
+                .build();
+        activeAudioJobs.put(jobKey, progress);
+
+        executor.submit(() -> {
+            try {
+                // Generate and validate
+                ScriptGenerationResult result = generateSpokenScript(problem, language);
+                if (!validateGeneratedScript(result.getSpokenScript(), problem.getDifficulty())) {
+                    log.warn("AUDIO_SCRIPT_VALIDATION: First attempt failed. Retrying...");
+                    result = generateSpokenScript(problem, language);
+                    if (!validateGeneratedScript(result.getSpokenScript(), problem.getDifficulty())) {
+                        throw new IllegalStateException("Script failed validation twice.");
+                    }
+                }
+                
+                guide.setSpokenScript(result.getSpokenScript());
+                guide.setEstimatedDurationSeconds(result.getEstimatedDurationSeconds());
+                guide.setGenerationModel(result.getGenerationModel());
+                guide.setGenerationStatus("READY");
+                guide.setErrorMessage(null);
+                guide.setUpdatedAt(LocalDateTime.now());
+                guideRepository.save(guide);
+                
+                log.info("AUDIO_SCRIPT_GENERATION: Script regenerated successfully");
+                progress.setStatus("COMPLETED");
+                progress.setEndTime(System.currentTimeMillis());
+            } catch (Exception e) {
+                log.error("Audio guide script regeneration failed. Rolling back to old script.", e);
+                // Rollback
+                guide.setSpokenScript(oldScript);
+                guide.setEstimatedDurationSeconds(oldDuration);
+                guide.setGenerationStatus(oldScript != null ? "READY" : "FAILED");
+                guide.setErrorMessage(e.getMessage());
+                guide.setUpdatedAt(LocalDateTime.now());
+                guideRepository.save(guide);
+
+                progress.setStatus("FAILED");
+                progress.setEndTime(System.currentTimeMillis());
+            }
+        });
+    }
+
+    private boolean validateGeneratedScript(String spokenScript, String difficulty) {
+        if (spokenScript == null || spokenScript.trim().isEmpty()) {
+            return false;
+        }
+        String trimmed = spokenScript.trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) return false;
+        if (trimmed.contains("```json") || trimmed.contains("```")) return false;
+        
+        // Reject verbatim full reference code copies
+        if (trimmed.contains("class Solution") || trimmed.contains("public static void main") || trimmed.contains("public static")) {
+            return false;
+        }
+        
+        int length = trimmed.length();
+        if ("EASY".equalsIgnoreCase(difficulty)) {
+            if (length < 300) return false;
+        } else if ("MEDIUM".equalsIgnoreCase(difficulty)) {
+            if (length < 600) return false;
+        } else {
+            if (length < 900) return false;
+        }
+        return true;
+    }
+
     @lombok.Getter
     @lombok.AllArgsConstructor
     public static class ScriptGenerationResult {
@@ -193,6 +304,10 @@ public class AudioLearningGuideService {
         String optimalSpace = "N/A";
         String fullExplanation = "";
         String observation = "";
+        String optimalApproach = "";
+        String bruteForceApproach = "";
+        String betterApproach = "";
+        String referenceSolution = "";
         
         if (problem.getSolutionDetailsJson() != null && !problem.getSolutionDetailsJson().trim().isEmpty()) {
             try {
@@ -203,6 +318,34 @@ public class AudioLearningGuideService {
                 optimalSpace = solutionNode.path("optimalSpaceComplexity").asText("N/A");
                 fullExplanation = solutionNode.path("fullExplanation").asText("");
                 observation = solutionNode.path("observation").asText("");
+                optimalApproach = solutionNode.path("approach").asText("");
+                
+                // Extract optimal reference code solution
+                JsonNode refSolNode = solutionNode.path("referenceSolution");
+                if (refSolNode.isTextual() && !refSolNode.asText().isEmpty()) {
+                    referenceSolution = refSolNode.asText();
+                } else {
+                    JsonNode refSolsNode = solutionNode.path("referenceSolutions");
+                    if (refSolsNode.isObject() && !refSolsNode.isEmpty()) {
+                        Iterator<Map.Entry<String, JsonNode>> fields = refSolsNode.fields();
+                        if (fields.hasNext()) {
+                            Map.Entry<String, JsonNode> field = fields.next();
+                            referenceSolution = "Language: " + field.getKey() + "\nCode:\n" + field.getValue().asText();
+                        }
+                    }
+                }
+
+                // Brute force
+                JsonNode bruteNode = solutionNode.path("bruteForce");
+                if (bruteNode.isObject() && !bruteNode.isEmpty()) {
+                    bruteForceApproach = bruteNode.path("approach").asText("");
+                }
+
+                // Better
+                JsonNode betterNode = solutionNode.path("better");
+                if (betterNode.isObject() && !betterNode.isEmpty()) {
+                    betterApproach = betterNode.path("approach").asText("");
+                }
             } catch (Exception e) {
                 log.warn("Failed to parse solutionDetailsJson for problem: {}", problem.getId(), e);
             }
@@ -211,6 +354,11 @@ public class AudioLearningGuideService {
         String simplifiedStatement = problem.getSimplifiedStatement() != null ? problem.getSimplifiedStatement() : "";
         String simplifiedApproach = problem.getSimplifiedApproach() != null ? problem.getSimplifiedApproach() : "";
         
+        // Format reference solution context for Gemini to force mental model matching
+        String codeContext = (referenceSolution != null && !referenceSolution.trim().isEmpty()) 
+                ? "\n- OPTIMAL CODE FOR REFERENCE:\n" + referenceSolution + "\n"
+                : "";
+
         String prompt;
         if ("HI".equalsIgnoreCase(language)) {
             prompt = "You are a friendly, expert software engineer and DSA mentor. Your task is to write a SPOKEN explanation script for the problem '" + problemName + "'.\n"
@@ -222,15 +370,28 @@ public class AudioLearningGuideService {
                     + "- Optimal Space Complexity: " + optimalSpace + "\n"
                     + "- Simplified Statement: " + simplifiedStatement + "\n"
                     + "- Intuition/Observation: " + observation + "\n"
-                    + "- Simplified Approach: " + simplifiedApproach + "\n"
-                    + "- Full Explanation: " + fullExplanation + "\n\n"
-                    + "Language requirement: Casual conversational Hinglish (Hindi + English mix). Use English for all technical programming terminology like 'array', 'pointer', 'binary search', 'index', 'loop', 'left', 'right', 'mid', 'time complexity', etc. Do not translate them into formal Hindi (e.g. do NOT use words like 'suchak' or 'pratham'). Talk like a mentor explaining to a student naturally.\n\n"
-                    + "Structure the script naturally WITHOUT reading section headings (e.g. do not say 'Section A' or 'Approach'). Let the conversation flow organically through:\n"
-                    + "1. What is the problem actually asking (very simple terms).\n"
-                    + "2. The key intuition/observation.\n"
-                    + "3. The optimal algorithm step-by-step.\n"
-                    + "4. How to translate this into code (variables to track, loop conditions).\n\n"
-                    + "Keep it concise (aim for a duration between 2 to 4 minutes). Avoid reading full code or constraints.\n\n"
+                    + "- Optimal Approach: " + optimalApproach + "\n"
+                    + (bruteForceApproach.isEmpty() ? "" : "- Brute Force Approach: " + bruteForceApproach + "\n")
+                    + (betterApproach.isEmpty() ? "" : "- Better Approach: " + betterApproach + "\n")
+                    + "- Full Explanation: " + fullExplanation + "\n"
+                    + codeContext + "\n"
+                    + "CRITICAL REQUIREMENT FOR MATCHING CODE:\n"
+                    + "Your verbal code walkthrough MUST EXACTLY match the implementation steps and variable names used in the 'OPTIMAL CODE FOR REFERENCE' block above. E.g., if the code uses left/right pointers, talk about left/right pointers. If it uses a priority_queue, talk about a priority_queue.\n\n"
+                    + "LANGUAGE REQUIREMENT:\n"
+                    + "- Natural conversational Hinglish as spoken in regular conversation. Do NOT use formal Hindi (avoid words like 'tatva', 'nirikshan', 'shreni').\n"
+                    + "- Use standard English terms for technical jargon: array, string, index, pointer, loop, recursion, stack, queue, heap, hash map, binary search, sliding window, prefix sum, dynamic programming, DFS, BFS, node, edge, time complexity, space complexity.\n"
+                    + "- Keep the script friendly, casual, and high-intuition, like a senior teaching a junior.\n\n"
+                    + "STRUCTURE THE SPOKEN SCRIPT INTO THESE PARTS (Do not write headings, let it flow naturally):\n"
+                    + "1. PROBLEM IN PLAIN LANGUAGE (First 20-30s): Explain what the problem wants in very simple terms. Use a tiny conceptual example if needed.\n"
+                    + "2. CORE OBSERVATION/INTUITION: Explain WHY we choose the optimal pattern (e.g. why binary search or DP appears, not just that we use it).\n"
+                    + "3. APPROACH: Explain the optimal algorithm in execution/iteration order so the listener can mentally simulate it.\n"
+                    + "4. CODE MENTAL MODEL: Explain the code skeleton, critical variables, loops, conditions, and return value so they can start coding immediately.\n"
+                    + "5. COMPLEXITY: Briefly state time and space complexity with a quick reason.\n\n"
+                    + "SCRIPT QUALITY RULES:\n"
+                    + "- NEVER read the entire problem statement, example list, constraints, or code line-by-line.\n"
+                    + "- Do NOT use filler words like 'Let's dive deep', 'Let's explore', 'Certainly', 'Of course', 'In conclusion', or other artificial AI transitions.\n"
+                    + "- Keep sentences short and clear.\n"
+                    + "- Target script length: approximately 1.5-2.5 minutes for EASY problems, 2.5-4 minutes for MEDIUM, and 4-6 minutes for HARD.\n\n"
                     + "Return EXACTLY a JSON object with this format:\n"
                     + "{\n"
                     + "  \"spokenScript\": \"Your conversational Hinglish script here\",\n"
@@ -246,15 +407,27 @@ public class AudioLearningGuideService {
                     + "- Optimal Space Complexity: " + optimalSpace + "\n"
                     + "- Simplified Statement: " + simplifiedStatement + "\n"
                     + "- Intuition/Observation: " + observation + "\n"
-                    + "- Simplified Approach: " + simplifiedApproach + "\n"
-                    + "- Full Explanation: " + fullExplanation + "\n\n"
-                    + "Language requirement: Simple, conversational, friendly English. Avoid academic, overly formal, or dry textbook explanations.\n\n"
-                    + "Structure the script naturally WITHOUT reading section headings. Let the conversation flow organically through:\n"
-                    + "1. What is the problem actually asking (very simple terms).\n"
-                    + "2. The key intuition/observation.\n"
-                    + "3. The optimal algorithm step-by-step.\n"
-                    + "4. How to translate this into code (variables to track, loop conditions).\n\n"
-                    + "Keep it concise (aim for a duration between 2 to 4 minutes). Avoid reading full code or constraints.\n\n"
+                    + "- Optimal Approach: " + optimalApproach + "\n"
+                    + (bruteForceApproach.isEmpty() ? "" : "- Brute Force Approach: " + bruteForceApproach + "\n")
+                    + (betterApproach.isEmpty() ? "" : "- Better Approach: " + betterApproach + "\n")
+                    + "- Full Explanation: " + fullExplanation + "\n"
+                    + codeContext + "\n"
+                    + "CRITICAL REQUIREMENT FOR MATCHING CODE:\n"
+                    + "Your verbal code walkthrough MUST EXACTLY match the implementation steps and variable names used in the 'OPTIMAL CODE FOR REFERENCE' block above. E.g., if the code uses left/right pointers, talk about left/right pointers. If it uses a priority_queue, talk about a priority_queue.\n\n"
+                    + "LANGUAGE REQUIREMENT:\n"
+                    + "- Conversational, friendly English. Keep the script casual and high-intuition, like a senior teaching a junior.\n"
+                    + "- Avoid dry, formal, or overly academic/textbook language.\n\n"
+                    + "STRUCTURE THE SPOKEN SCRIPT INTO THESE PARTS (Do not write headings, let it flow naturally):\n"
+                    + "1. PROBLEM IN PLAIN LANGUAGE (First 20-30s): Explain what the problem wants in very simple terms. Use a tiny conceptual example if needed.\n"
+                    + "2. CORE OBSERVATION/INTUITION: Explain WHY we choose the optimal pattern (e.g. why binary search or DP appears, not just that we use it).\n"
+                    + "3. APPROACH: Explain the optimal algorithm in execution/iteration order so the listener can mentally simulate it.\n"
+                    + "4. CODE MENTAL MODEL: Explain the code skeleton, critical variables, loops, conditions, and return value so they can start coding immediately.\n"
+                    + "5. COMPLEXITY: Briefly state time and space complexity with a quick reason.\n\n"
+                    + "SCRIPT QUALITY RULES:\n"
+                    + "- NEVER read the entire problem statement, example list, constraints, or code line-by-line.\n"
+                    + "- Do NOT use filler words like 'Let's dive deep', 'Let's explore', 'Certainly', 'Of course', 'In conclusion', or other artificial AI transitions.\n"
+                    + "- Keep sentences short and clear.\n"
+                    + "- Target script length: approximately 1.5-2.5 minutes for EASY problems, 2.5-4 minutes for MEDIUM, and 4-6 minutes for HARD.\n\n"
                     + "Return EXACTLY a JSON object with this format:\n"
                     + "{\n"
                     + "  \"spokenScript\": \"Your conversational English script here\",\n"

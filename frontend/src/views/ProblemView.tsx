@@ -7,7 +7,7 @@ import {
   Code, FileText, Brain, HelpCircle, 
   CheckCircle, ChevronDown, ChevronUp, Save,
   Award, Maximize2, Copy, Check,
-  Pause, Headphones, RotateCcw, RotateCw, Volume2
+  Pause, Headphones, RotateCcw, RotateCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FullscreenCodeModal from '../components/FullscreenCodeModal';
@@ -325,6 +325,43 @@ const isBoilerplateDetails = (data: any) => {
          lowerApproach.includes("refer to standard patterns under");
 };
 
+const SpeakingIndicator: React.FC<{ isPlaying: boolean; isPaused: boolean }> = ({ isPlaying, isPaused }) => {
+  return (
+    <div className="flex items-end space-x-0.75 h-3.5 w-6 shrink-0 mb-0.5 select-none pointer-events-none">
+      <style>{`
+        @keyframes soundWave {
+          0% { height: 4px; }
+          100% { height: 14px; }
+        }
+      `}</style>
+      {[1, 2, 3, 4, 5].map((i) => {
+        let heightClass = "h-1";
+        let animStyle = {};
+        
+        if (isPlaying) {
+          animStyle = {
+            animation: `soundWave 0.8s ease-in-out infinite alternate`,
+            animationDelay: `${i * 0.12}s`
+          };
+        } else if (isPaused) {
+          const heights = ["h-1", "h-1.5", "h-1", "h-1.5", "h-1"];
+          heightClass = heights[i - 1];
+        } else {
+          heightClass = "h-1";
+        }
+        
+        return (
+          <span
+            key={i}
+            className={`w-0.75 bg-blue-500 rounded-full transition-all duration-300 ${heightClass}`}
+            style={animStyle}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
 const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [problem, setProblem] = useState<ProblemDetails | null>(null);
   const [details, setDetails] = useState<ProblemDetailsJson | null>(null);
@@ -357,7 +394,23 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
 
   const isSpeechCancelledRef = useRef<boolean>(false);
-  const playbackTimerRef = useRef<any>(null);
+
+  // Smooth visual progress & seek states
+  const baseDurationRef = useRef<number>(0);
+  const requestRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [hoverProgress, setHoverProgress] = useState<number | null>(null);
+  const [hoverPosition, setHoverPosition] = useState<number>(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  // Skip animations
+  const [backAnimate, setBackAnimate] = useState(false);
+  const [forwardAnimate, setForwardAnimate] = useState(false);
+
+  // Preview & Regeneration status
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const splitScriptIntoChunks = (text: string): string[] => {
     if (!text) return [];
@@ -529,26 +582,40 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     }
   };
 
+  const animateProgress = (time: number) => {
+    if (lastTimeRef.current === 0) {
+      lastTimeRef.current = time;
+    }
+    const delta = (time - lastTimeRef.current) / 1000;
+    lastTimeRef.current = time;
+
+    setAudioPlaybackState(prev => {
+      if (!prev.isPlaying) return prev;
+      const nextTime = prev.currentTime + delta * prev.playbackRate;
+      if (nextTime >= prev.duration) {
+        if (requestRef.current) cancelAnimationFrame(requestRef.current);
+        requestRef.current = null;
+        lastTimeRef.current = 0;
+        return { ...prev, currentTime: prev.duration, isPlaying: false };
+      }
+      return { ...prev, currentTime: nextTime };
+    });
+
+    requestRef.current = requestAnimationFrame(animateProgress);
+  };
+
   const startProgressTimer = () => {
-    if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
-    
-    playbackTimerRef.current = setInterval(() => {
-      setAudioPlaybackState(prev => {
-        const nextTime = prev.currentTime + 0.25 * prev.playbackRate;
-        if (nextTime >= prev.duration) {
-          clearInterval(playbackTimerRef.current);
-          return { ...prev, currentTime: prev.duration, isPlaying: false };
-        }
-        return { ...prev, currentTime: nextTime };
-      });
-    }, 250);
+    if (requestRef.current) cancelAnimationFrame(requestRef.current);
+    lastTimeRef.current = 0;
+    requestRef.current = requestAnimationFrame(animateProgress);
   };
 
   const stopProgressTimer = () => {
-    if (playbackTimerRef.current) {
-      clearInterval(playbackTimerRef.current);
-      playbackTimerRef.current = null;
+    if (requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+      requestRef.current = null;
     }
+    lastTimeRef.current = 0;
   };
 
   const speakChunk = (index: number) => {
@@ -579,20 +646,20 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     }
 
     // Update state and start timer synchronously for immediate UI feedback
-    const approxStartTime = Math.round((index / chunks.length) * audioPlaybackState.duration);
+    const approxStartTime = (index / chunks.length) * audioPlaybackState.duration;
     setAudioPlaybackState(prev => ({
       ...prev,
-      currentTime: approxStartTime,
+      currentTime: Math.max(prev.currentTime, approxStartTime),
       isPlaying: true
     }));
     startProgressTimer();
 
     utterance.onstart = () => {
       if (isSpeechCancelledRef.current) return;
-      const t = Math.round((index / chunks.length) * audioPlaybackState.duration);
+      const t = (index / chunks.length) * audioPlaybackState.duration;
       setAudioPlaybackState(prev => ({
         ...prev,
-        currentTime: t,
+        currentTime: Math.max(prev.currentTime, t),
         isPlaying: true
       }));
       startProgressTimer();
@@ -644,9 +711,10 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
           setCurrentChunkIndex(0);
           
           const estimatedDur = durSec > 0 ? durSec : Math.round((scriptText.split(/\s+/).length / 140) * 60);
+          baseDurationRef.current = estimatedDur;
           setAudioPlaybackState(prev => ({
             ...prev,
-            duration: estimatedDur,
+            duration: estimatedDur / prev.playbackRate,
             currentTime: 0,
             isPlaying: false
           }));
@@ -701,9 +769,10 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
           setCurrentChunkIndex(0);
           
           const estimatedDur = durSec > 0 ? durSec : Math.round((scriptText.split(/\s+/).length / 140) * 60);
+          baseDurationRef.current = estimatedDur;
           setAudioPlaybackState(prev => ({
             ...prev,
-            duration: estimatedDur,
+            duration: estimatedDur / prev.playbackRate,
             currentTime: 0,
             isPlaying: false
           }));
@@ -770,12 +839,52 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     };
   }, [guideStatus]);
 
+  const playVoicePreview = () => {
+    // Stop current playback
+    isSpeechCancelledRef.current = true;
+    window.speechSynthesis.cancel();
+    stopProgressTimer();
+    setAudioPlaybackState(prev => ({ ...prev, isPlaying: false }));
+
+    const sampleText = activeAudioLang === 'HI'
+      ? "Chalo, problem ko simple way mein samajhte hain. Pehle intuition dekhenge, phir approach aur code ka flow."
+      : "Let's understand the problem simply. First the intuition, then the approach and the coding flow.";
+
+    const utterance = new SpeechSynthesisUtterance(sampleText);
+    utterance.rate = audioPlaybackState.playbackRate;
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    utterance.onstart = () => {
+      setIsPreviewPlaying(true);
+    };
+
+    utterance.onend = () => {
+      setIsPreviewPlaying(false);
+    };
+
+    utterance.onerror = () => {
+      setIsPreviewPlaying(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const handleAudioPlayPause = () => {
-    console.log("handleAudioPlayPause clicked. chunks:", chunks, "currentChunkIndex:", currentChunkIndex, "audioPlaybackState:", audioPlaybackState);
-    if (chunks.length === 0) {
-      console.warn("handleAudioPlayPause - chunks is empty, aborting play");
+    if (chunks.length === 0) return;
+    
+    // Check if finished -> replay from start
+    const isFinished = audioPlaybackState.currentTime >= audioPlaybackState.duration && audioPlaybackState.duration > 0;
+    if (isFinished) {
+      setCurrentChunkIndex(0);
+      setAudioPlaybackState(prev => ({ ...prev, currentTime: 0, isPlaying: true }));
+      setTimeout(() => {
+        speakChunk(0);
+      }, 100);
       return;
     }
+
     if (audioPlaybackState.isPlaying) {
       window.speechSynthesis.pause();
       stopProgressTimer();
@@ -788,6 +897,62 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       } else {
         speakChunk(currentChunkIndex);
       }
+    }
+  };
+
+  const calculateTimeFromEvent = (clientX: number): number => {
+    if (!trackRef.current) return 0;
+    const rect = trackRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const pct = x / rect.width;
+    return pct * audioPlaybackState.duration;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+    const newTime = calculateTimeFromEvent(e.clientX);
+    handleAudioSeek(newTime);
+    
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const time = calculateTimeFromEvent(moveEvent.clientX);
+      setAudioPlaybackState(prev => ({ ...prev, currentTime: time }));
+      
+      if (trackRef.current) {
+        const rect = trackRef.current.getBoundingClientRect();
+        const x = Math.max(0, Math.min(moveEvent.clientX - rect.left, rect.width));
+        setHoverPosition(x);
+        setHoverProgress((x / rect.width) * audioPlaybackState.duration);
+      }
+    };
+
+    const handlePointerUp = (upEvent: PointerEvent) => {
+      setIsDragging(false);
+      setHoverProgress(null);
+      const finalTime = calculateTimeFromEvent(upEvent.clientX);
+      handleAudioSeek(finalTime);
+
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+  };
+
+  const handlePointerMoveTrack = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) return;
+    if (trackRef.current) {
+      const rect = trackRef.current.getBoundingClientRect();
+      const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      setHoverPosition(x);
+      setHoverProgress((x / rect.width) * audioPlaybackState.duration);
+    }
+  };
+
+  const handlePointerLeaveTrack = () => {
+    if (!isDragging) {
+      setHoverProgress(null);
     }
   };
 
@@ -811,25 +976,66 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
   const handleAudioChangeSpeed = (rate: number) => {
     stopProgressTimer();
-    setAudioPlaybackState(prev => ({ ...prev, playbackRate: rate }));
-
-    if (audioPlaybackState.isPlaying) {
-      isSpeechCancelledRef.current = true;
-      window.speechSynthesis.cancel();
+    
+    setAudioPlaybackState(prev => {
+      const pct = prev.currentTime / (prev.duration || 1);
+      const newDuration = baseDurationRef.current / rate;
+      const newCurrentTime = pct * newDuration;
       
-      setTimeout(() => {
-        setAudioPlaybackState(prev => {
-          const updated = { ...prev, playbackRate: rate };
+      const updated = {
+        ...prev,
+        playbackRate: rate,
+        duration: newDuration,
+        currentTime: newCurrentTime
+      };
+
+      if (prev.isPlaying) {
+        isSpeechCancelledRef.current = true;
+        window.speechSynthesis.cancel();
+        
+        setTimeout(() => {
           speakChunk(currentChunkIndex);
-          return updated;
-        });
-      }, 100);
-    }
+        }, 100);
+      }
+      return updated;
+    });
   };
 
   const handleAudioSkip = (seconds: number) => {
     const newTime = Math.max(0, Math.min(audioPlaybackState.duration, audioPlaybackState.currentTime + seconds));
     handleAudioSeek(newTime);
+  };
+
+  const triggerBackSkip = () => {
+    setBackAnimate(true);
+    handleAudioSkip(-10);
+    setTimeout(() => setBackAnimate(false), 300);
+  };
+
+  const triggerForwardSkip = () => {
+    setForwardAnimate(true);
+    handleAudioSkip(10);
+    setTimeout(() => setForwardAnimate(false), 300);
+  };
+
+  const handleRegenerateScript = async () => {
+    if (isRegenerating) return;
+    try {
+      setIsRegenerating(true);
+      await api.post(`/problems/${problemId}/audio-guides/regenerate`, { language: activeAudioLang });
+      setGuideStatus('GENERATING');
+      setGenerationTime(0);
+      
+      if (audioPollingRef.current) clearInterval(audioPollingRef.current);
+      audioPollingRef.current = setInterval(() => {
+        pollAudioStatus();
+      }, 3000);
+    } catch (e) {
+      console.error("Failed to start script regeneration", e);
+      alert("Failed to start script regeneration.");
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
 
@@ -1613,38 +1819,51 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       
       {/* Audio Learning Guide Panel */}
       {isAudioPanelOpen && (
-        <div className="bg-slate-950/85 border border-slate-800/80 rounded-2xl p-5 mb-4 backdrop-blur-md relative overflow-hidden shadow-2xl">
+        <div className="bg-slate-950/85 border border-slate-800/80 rounded-2xl p-5 mb-4 backdrop-blur-md relative overflow-hidden shadow-2xl transition-all select-none">
           {/* Decorative background glow */}
           <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-500/10 rounded-full blur-xl pointer-events-none" />
           
-          <div className="flex items-center justify-between pb-3 border-b border-slate-900 mb-4">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-900 mb-4 gap-3">
+            <div className="flex items-center space-x-2.5">
               <Headphones className="h-4.5 w-4.5 text-blue-400" />
-              <span className="text-xs font-black uppercase text-slate-350 tracking-wider">Audio Learning Guide</span>
+              <span className="text-xs font-black uppercase text-slate-300 tracking-wider">Audio Learning Guide</span>
+              <SpeakingIndicator isPlaying={audioPlaybackState.isPlaying} isPaused={!audioPlaybackState.isPlaying && audioPlaybackState.currentTime > 0 && !(audioPlaybackState.currentTime >= audioPlaybackState.duration && audioPlaybackState.duration > 0)} />
             </div>
             
-            {/* Hindi / English Toggle Buttons */}
-            <div className="flex bg-slate-900/90 p-0.5 rounded-xl border border-slate-800">
+            <div className="flex items-center space-x-3.5 self-end sm:self-auto">
+              {/* Developer Option: Regenerate Guide */}
               <button
-                onClick={() => handleAudioLanguageChange('HI')}
-                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
-                  activeAudioLang === 'HI'
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10'
-                    : 'text-slate-500 hover:text-slate-300'
-                }`}
+                onClick={handleRegenerateScript}
+                disabled={isRegenerating || guideStatus === 'GENERATING'}
+                className="text-[9px] text-slate-500 hover:text-red-400 disabled:opacity-40 transition-colors uppercase font-black tracking-widest font-mono cursor-pointer"
+                title="Force script regeneration using optimal code context (Dev only)"
               >
-                Hindi
+                {isRegenerating ? "Regenerating..." : "Regenerate (Dev)"}
               </button>
-              <button
-                onClick={() => handleAudioLanguageChange('EN')}
-                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
-                  activeAudioLang === 'EN'
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10'
-                    : 'text-slate-500 hover:text-slate-300'
-                }`}
-              >
-                English
-              </button>
+
+              {/* Hindi / English Toggle Buttons */}
+              <div className="flex bg-slate-900/90 p-0.5 rounded-xl border border-slate-800 shrink-0">
+                <button
+                  onClick={() => handleAudioLanguageChange('HI')}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
+                    activeAudioLang === 'HI'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  Hindi
+                </button>
+                <button
+                  onClick={() => handleAudioLanguageChange('EN')}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
+                    activeAudioLang === 'EN'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  English
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1656,7 +1875,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
               </p>
               <button
                 onClick={triggerAudioGeneration}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs tracking-wide transition-all shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 cursor-pointer"
+                className="px-4.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs tracking-wide transition-all shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 cursor-pointer min-h-[44px] flex items-center justify-center mx-auto"
               >
                 🎧 Generate Audio Guide
               </button>
@@ -1718,7 +1937,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
               </p>
               <button
                 onClick={triggerAudioGeneration}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs tracking-wide transition-all shadow-lg active:scale-95 cursor-pointer"
+                className="px-4.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs tracking-wide transition-all shadow-lg active:scale-95 cursor-pointer min-h-[44px] flex items-center justify-center mx-auto"
               >
                 Retry Generation
               </button>
@@ -1726,130 +1945,218 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
           )}
 
           {/* State D: READY */}
-          {guideStatus === 'READY' && (
-            <div className="space-y-4">
-              <div className="text-xs text-slate-400 font-semibold truncate">
-                Playing: <span className="text-slate-200 font-black">{problem.name}</span> ({activeAudioLang === 'HI' ? 'Hindi' : 'English'})
-              </div>
+          {guideStatus === 'READY' && (() => {
+            const isFinished = audioPlaybackState.currentTime >= audioPlaybackState.duration && audioPlaybackState.duration > 0;
+            const isPaused = !audioPlaybackState.isPlaying && audioPlaybackState.currentTime > 0 && !isFinished;
+            const isPlaying = audioPlaybackState.isPlaying;
 
-              {/* Timeline Scrubber */}
-              <div className="space-y-1.5">
-                <div className="flex items-center space-x-3">
-                  <span className="text-[10px] font-mono text-slate-500 font-bold w-9 shrink-0 text-right">
-                    {formatTime(Math.round(audioPlaybackState.currentTime))}
-                  </span>
-                  <input
-                    type="range"
-                    min="0"
-                    max={audioPlaybackState.duration || 100}
-                    value={audioPlaybackState.currentTime}
-                    onChange={(e) => handleAudioSeek(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-850 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                  />
-                  <span className="text-[10px] font-mono text-slate-500 font-bold w-12 shrink-0">
-                    ~{formatTime(Math.round(audioPlaybackState.duration))}
-                  </span>
-                </div>
-              </div>
+            const stateText = isPlaying ? "Playing" : isPaused ? "Paused" : isFinished ? "Finished" : "Ready";
+            const langLabel = activeAudioLang === 'HI' ? "Hindi" : "English";
 
-              {/* Controls Bar */}
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center space-x-2 flex-wrap gap-1.5">
-                  {/* Speed Selector */}
-                  <div className="flex items-center space-x-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-850">
-                    <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Speed:</span>
-                    <select
-                      value={audioPlaybackState.playbackRate}
-                      onChange={(e) => handleAudioChangeSpeed(Number(e.target.value))}
-                      className="bg-transparent text-blue-400 text-[10px] font-mono font-bold border-none outline-none cursor-pointer"
-                    >
-                      <option value="0.75" className="bg-slate-950 text-slate-350">0.75x</option>
-                      <option value="1" className="bg-slate-950 text-slate-350">1.0x</option>
-                      <option value="1.25" className="bg-slate-950 text-slate-350">1.25x</option>
-                      <option value="1.5" className="bg-slate-950 text-slate-350">1.5x</option>
-                      <option value="2" className="bg-slate-950 text-slate-350">2.0x</option>
-                    </select>
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-xs text-slate-400 font-semibold gap-3">
+                  <div className="truncate flex-1 max-w-[70%] sm:max-w-none">
+                    {stateText} · <span className="text-slate-200 font-bold">{problem.name}</span>
                   </div>
+                  <div className="text-[10px] text-blue-400 font-black uppercase tracking-wider shrink-0 bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 rounded-full select-none">
+                    {stateText} · {langLabel}
+                  </div>
+                </div>
 
-                  {/* Voice Selector */}
-                  <div className="flex items-center space-x-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-850 max-w-[200px]">
-                    <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Voice:</span>
-                    <select
-                      value={selectedVoice?.name || ''}
-                      onChange={(e) => handleVoiceChange(e.target.value)}
-                      className="bg-transparent text-blue-400 text-[10px] font-mono font-bold border-none outline-none cursor-pointer truncate max-w-[120px]"
+                {/* Timeline Scrubber */}
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-3 select-none">
+                    <span className="text-[10px] font-mono text-slate-500 font-bold w-9 shrink-0 text-right">
+                      {formatTime(Math.round(audioPlaybackState.currentTime))}
+                    </span>
+
+                    {/* Custom Scrubber Scroller with Hover Seek Tooltip */}
+                    <div 
+                      ref={trackRef}
+                      onPointerDown={handlePointerDown}
+                      onPointerMove={handlePointerMoveTrack}
+                      onPointerLeave={handlePointerLeaveTrack}
+                      className="relative py-3 flex-1 cursor-pointer group touch-none select-none"
                     >
-                      {voices
-                        .filter(v => {
-                          const vlang = v.lang.toLowerCase();
-                          if (activeAudioLang === 'HI') {
-                            return vlang.startsWith('hi');
-                          } else {
-                            return vlang.startsWith('en');
-                          }
-                        })
-                        .map(v => (
-                          <option key={v.name} value={v.name} className="bg-slate-950 text-slate-350">
-                            {v.name} ({v.lang})
-                          </option>
-                        ))
-                      }
-                      {voices.filter(v => {
-                        const vlang = v.lang.toLowerCase();
-                        if (activeAudioLang === 'HI') {
-                          return vlang.startsWith('hi');
-                        } else {
-                          return vlang.startsWith('en');
-                        }
-                      }).length === 0 && (
-                        <option value="" className="bg-slate-950 text-slate-350">
-                          Default Voice
-                        </option>
+                      {/* Visual Track */}
+                      <div className="h-1 w-full bg-slate-850 rounded-full overflow-hidden relative">
+                        <div 
+                          className="h-full bg-blue-500 rounded-full transition-all duration-75"
+                          style={{ width: `${(audioPlaybackState.currentTime / (audioPlaybackState.duration || 1)) * 105}%` }}
+                        />
+                      </div>
+
+                      {/* Visible Scrubber Thumb */}
+                      <div 
+                        className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-blue-400 shadow shadow-blue-500/50 transition-all duration-150 ${
+                          isDragging ? 'scale-150 shadow-lg shadow-blue-400/50' : 'scale-0 group-hover:scale-100'
+                        }`}
+                        style={{ 
+                          left: `calc(${(audioPlaybackState.currentTime / (audioPlaybackState.duration || 1)) * 100}% - 7px)` 
+                        }}
+                      />
+
+                      {/* Seek Preview Tooltip */}
+                      {hoverProgress !== null && (
+                        <div 
+                          className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono font-bold text-slate-200 shadow-md pointer-events-none select-none z-50 transition-opacity duration-150"
+                          style={{ left: `${hoverPosition}px` }}
+                        >
+                          ~{formatTime(Math.round(hoverProgress))}
+                        </div>
                       )}
-                    </select>
+                    </div>
+
+                    <span className="text-[10px] font-mono text-slate-500 font-bold w-12 shrink-0">
+                      ~{formatTime(Math.round(audioPlaybackState.duration))}
+                    </span>
                   </div>
                 </div>
 
-                {/* Playback controls */}
-                <div className="flex items-center space-x-4">
-                  {/* Skip backward 10s */}
-                  <button
-                    onClick={() => handleAudioSkip(-10)}
-                    title="Seek Backward 10s"
-                    className="p-2 rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800 text-slate-400 hover:text-slate-200 transition-all active:scale-90 cursor-pointer"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </button>
+                {/* Controls Bar */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  
+                  {/* Selector Controls (Speed & Voice) */}
+                  <div className="flex items-center space-x-2.5 flex-wrap gap-y-2 w-full sm:w-auto justify-center sm:justify-start">
+                    
+                    {/* Speed Selector */}
+                    <div className="flex items-center space-x-1 bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-850 h-10 select-none">
+                      <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Speed:</span>
+                      <select
+                        value={audioPlaybackState.playbackRate}
+                        onChange={(e) => handleAudioChangeSpeed(Number(e.target.value))}
+                        className="bg-transparent text-blue-400 text-[10px] font-mono font-bold border-none outline-none cursor-pointer"
+                      >
+                        <option value="0.75" className="bg-slate-950 text-slate-350">0.75x</option>
+                        <option value="1" className="bg-slate-950 text-slate-350">1.0x</option>
+                        <option value="1.25" className="bg-slate-950 text-slate-350">1.25x</option>
+                        <option value="1.5" className="bg-slate-950 text-slate-350">1.5x</option>
+                        <option value="2" className="bg-slate-950 text-slate-350">2.0x</option>
+                      </select>
+                    </div>
 
-                  {/* Play / Pause */}
-                  <button
-                    onClick={handleAudioPlayPause}
-                    className="p-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-105 active:scale-95 cursor-pointer"
-                  >
-                    {audioPlaybackState.isPlaying ? (
-                      <Pause className="h-5 w-5 fill-white" />
-                    ) : (
-                      <Play className="h-5 w-5 fill-white ml-0.5" />
-                    )}
-                  </button>
+                    {/* Voice Selector + Preview Group */}
+                    <div className="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-850 h-10 max-w-[240px]">
+                      <div className="flex items-center space-x-1 px-2 py-1 truncate">
+                        <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Voice:</span>
+                        <select
+                          value={selectedVoice?.name || ''}
+                          onChange={(e) => handleVoiceChange(e.target.value)}
+                          className="bg-transparent text-blue-400 text-[10px] font-mono font-bold border-none outline-none cursor-pointer truncate max-w-[120px]"
+                        >
+                          {voices
+                            .filter(v => {
+                              const vlang = v.lang.toLowerCase();
+                              if (activeAudioLang === 'HI') {
+                                  return vlang.startsWith('hi');
+                              } else {
+                                  return vlang.startsWith('en');
+                              }
+                            })
+                            .map(v => (
+                              <option key={v.name} value={v.name} className="bg-slate-950 text-slate-350">
+                                {v.name} ({v.lang})
+                              </option>
+                            ))
+                          }
+                          {voices.filter(v => {
+                            const vlang = v.lang.toLowerCase();
+                            if (activeAudioLang === 'HI') {
+                              return vlang.startsWith('hi');
+                            } else {
+                              return vlang.startsWith('en');
+                            }
+                          }).length === 0 && (
+                            <option value="" className="bg-slate-950 text-slate-350">
+                              Default Voice
+                            </option>
+                          )}
+                        </select>
+                      </div>
 
-                  {/* Skip forward 10s */}
-                  <button
-                    onClick={() => handleAudioSkip(10)}
-                    title="Seek Forward 10s"
-                    className="p-2 rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800 text-slate-400 hover:text-slate-200 transition-all active:scale-90 cursor-pointer"
-                  >
-                    <RotateCw className="h-4 w-4" />
-                  </button>
-                </div>
+                      {/* Micro Preview Button */}
+                      <button
+                        onClick={playVoicePreview}
+                        disabled={isPreviewPlaying}
+                        className={`h-8 px-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-1 min-w-[55px] cursor-pointer ${
+                          isPreviewPlaying
+                            ? 'bg-emerald-600 text-white shadow shadow-emerald-500/10 animate-pulse'
+                            : 'bg-slate-850 hover:bg-slate-800 text-slate-300'
+                        }`}
+                        title="Play a short voice sample to preview"
+                      >
+                        {isPreviewPlaying ? "Playing" : "Preview"}
+                      </button>
+                    </div>
+                  </div>
 
-                {/* Volume Icon indicator */}
-                <div className="p-2 text-slate-650">
-                  <Volume2 className="h-4.5 w-4.5" />
+                  {/* Playback Buttons Group */}
+                  <div className="flex items-center space-x-4 select-none shrink-0">
+                    {/* Skip backward 10s */}
+                    <button
+                      onClick={triggerBackSkip}
+                      title="Back ~10 seconds"
+                      className="p-3.5 rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800 text-slate-400 hover:text-slate-200 transition-all active:scale-90 cursor-pointer relative group flex items-center justify-center min-w-[44px] min-h-[44px]"
+                    >
+                      <RotateCcw className={`h-4.5 w-4.5 transition-transform duration-300 ${backAnimate ? '-rotate-45' : 'rotate-0'}`} />
+                      <span className="absolute text-[8px] font-black font-mono text-slate-350 mt-0.5">10</span>
+                    </button>
+
+                    {/* Central Play / Pause / Replay Button */}
+                    <button
+                      onClick={handleAudioPlayPause}
+                      className="p-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden h-12 w-12 flex items-center justify-center group min-w-[48px] min-h-[48px]"
+                      style={{
+                        boxShadow: isPlaying ? '0 0 15px 3px rgba(37, 99, 235, 0.4)' : undefined
+                      }}
+                    >
+                      {isPlaying && (
+                        <span className="absolute inset-0 rounded-full bg-blue-400/20 animate-pulse pointer-events-none" />
+                      )}
+                      
+                      <div className="relative h-5 w-5 flex items-center justify-center">
+                        {/* Finished State: Replay icon */}
+                        {isFinished ? (
+                          <RotateCcw className="h-5 w-5 fill-white" />
+                        ) : (
+                          <>
+                            {/* Play Icon */}
+                            <span className={`absolute transition-all duration-200 ${
+                              isPlaying 
+                                ? 'opacity-0 scale-75 rotate-90 pointer-events-none' 
+                                : 'opacity-100 scale-100 rotate-0'
+                            }`}>
+                              <Play className="h-5 w-5 fill-white ml-0.5" />
+                            </span>
+                            {/* Pause Icon */}
+                            <span className={`absolute transition-all duration-200 ${
+                              isPlaying 
+                                ? 'opacity-100 scale-100 rotate-0' 
+                                : 'opacity-0 scale-75 -rotate-90 pointer-events-none'
+                            }`}>
+                              <Pause className="h-5 w-5 fill-white" />
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Skip forward 10s */}
+                    <button
+                      onClick={triggerForwardSkip}
+                      title="Forward ~10 seconds"
+                      className="p-3.5 rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800 text-slate-400 hover:text-slate-200 transition-all active:scale-90 cursor-pointer relative group flex items-center justify-center min-w-[44px] min-h-[44px]"
+                    >
+                      <RotateCw className={`h-4.5 w-4.5 transition-transform duration-300 ${forwardAnimate ? 'rotate-45' : 'rotate-0'}`} />
+                      <span className="absolute text-[8px] font-black font-mono text-slate-350 mt-0.5">10</span>
+                    </button>
+                  </div>
+                  
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 
