@@ -3,24 +3,13 @@ package com.patternforge.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.patternforge.dto.AudioJobProgress;
-import com.patternforge.model.AudioContent;
 import com.patternforge.model.AudioLearningGuide;
 import com.patternforge.model.Problem;
-import com.patternforge.repository.AudioContentRepository;
 import com.patternforge.repository.AudioLearningGuideRepository;
 import com.patternforge.repository.ProblemRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,28 +21,21 @@ import java.util.concurrent.Executors;
 public class AudioLearningGuideService {
 
     private final AudioLearningGuideRepository guideRepository;
-    private final AudioContentRepository contentRepository;
     private final ProblemRepository problemRepository;
     private final GeminiService geminiService;
     private final RetryExecutor retryExecutor;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private static final Map<String, AudioJobProgress> activeAudioJobs = new ConcurrentHashMap<>();
-    private final HttpClient httpClient;
 
     public AudioLearningGuideService(AudioLearningGuideRepository guideRepository,
-                                     AudioContentRepository contentRepository,
                                      ProblemRepository problemRepository,
                                      GeminiService geminiService,
                                      RetryExecutor retryExecutor) {
         this.guideRepository = guideRepository;
-        this.contentRepository = contentRepository;
         this.problemRepository = problemRepository;
         this.geminiService = geminiService;
         this.retryExecutor = retryExecutor;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(15))
-                .build();
     }
 
     public static void cleanRegistry() {
@@ -71,7 +53,22 @@ public class AudioLearningGuideService {
     }
 
     public AudioLearningGuide getGuide(UUID problemId, String language) {
-        return guideRepository.findByProblemIdAndLanguage(problemId, language).orElse(null);
+        Optional<AudioLearningGuide> opt = guideRepository.findByProblemIdAndLanguage(problemId, language.toUpperCase());
+        if (opt.isPresent()) {
+            AudioLearningGuide guide = opt.get();
+            // Migrate/interpret existing guides with script as READY
+            if (guide.getSpokenScript() != null && !guide.getSpokenScript().trim().isEmpty()) {
+                if (!"READY".equals(guide.getGenerationStatus())) {
+                    log.info("AUDIO_GUIDE_MIGRATION: Existing guide has spokenScript but status is {}. Marking READY.", guide.getGenerationStatus());
+                    guide.setGenerationStatus("READY");
+                    guide.setErrorMessage(null);
+                    guideRepository.save(guide);
+                }
+                log.info("AUDIO_GUIDE_CACHE_HIT: Returning stored script for problem {} ({})", problemId, language.toUpperCase());
+            }
+            return guide;
+        }
+        return null;
     }
 
     public AudioJobProgress getJobStatus(UUID problemId, String language) {
@@ -88,18 +85,25 @@ public class AudioLearningGuideService {
         
         if (existingOpt.isPresent()) {
             AudioLearningGuide guide = existingOpt.get();
-            if ("READY".equals(guide.getGenerationStatus()) || "GENERATING".equals(guide.getGenerationStatus())) {
+            if (guide.getSpokenScript() != null && !guide.getSpokenScript().trim().isEmpty()) {
+                if (!"READY".equals(guide.getGenerationStatus())) {
+                    guide.setGenerationStatus("READY");
+                    guide.setErrorMessage(null);
+                    guideRepository.save(guide);
+                }
+                log.info("AUDIO_GUIDE_CACHE_HIT: Returning stored script for problem {} ({})", problemId, lang);
                 return guide;
             }
-            // If failed but script exists, we retry TTS only
-            if ("FAILED".equals(guide.getGenerationStatus())) {
-                guide.setGenerationStatus("GENERATING");
-                guide.setErrorMessage(null);
-                guideRepository.save(guide);
-                
-                triggerBackgroundJob(problemId, lang, guide);
+            if ("GENERATING".equals(guide.getGenerationStatus())) {
                 return guide;
             }
+            
+            guide.setGenerationStatus("GENERATING");
+            guide.setErrorMessage(null);
+            guideRepository.save(guide);
+            
+            triggerBackgroundJob(problemId, lang, guide);
+            return guide;
         }
 
         // Fresh guide creation
@@ -130,44 +134,27 @@ public class AudioLearningGuideService {
 
         executor.submit(() -> {
             try {
-                // Step 1: Script generation if missing
-                if (guide.getScript() == null || guide.getScript().trim().isEmpty()) {
-                    String script = generateSpokenScript(problem, language);
-                    guide.setScript(script);
-                    guideRepository.save(guide);
-                }
-
-                // Step 2: TTS generation
-                log.info("AUDIO_TTS_GENERATION: Starting audio synthesis for guide: {}", guide.getId());
-                byte[] audioBytes = generateSpeech(guide.getScript(), "HI".equalsIgnoreCase(language) ? "hi" : "en");
+                // Script generation
+                ScriptGenerationResult result = generateSpokenScript(problem, language);
                 
-                // Calculate estimated duration
-                int duration = Math.max(30, (int) Math.round(guide.getScript().length() * 0.12)); // fallback heuristic
-                guide.setDurationSeconds(duration);
-
-                // Step 3: Save audio content binary
-                contentRepository.deleteByGuideId(guide.getId()); // clean old failures if any
-                AudioContent content = AudioContent.builder()
-                        .guideId(guide.getId())
-                        .data(audioBytes)
-                        .build();
-                contentRepository.save(content);
-
-                // Step 4: Finalize guide details
-                guide.setAudioUrl("/api/problems/audio-guides/stream/" + guide.getId());
-                guide.setVoiceProvider("Google");
-                guide.setVoiceModel("Translate TTS");
-                guide.setVoiceId(language.toLowerCase() + "-female");
+                guide.setSpokenScript(result.getSpokenScript());
+                guide.setEstimatedDurationSeconds(result.getEstimatedDurationSeconds());
+                guide.setGenerationModel(result.getGenerationModel());
                 guide.setGenerationStatus("READY");
+                guide.setErrorMessage(null);
+                guide.setUpdatedAt(LocalDateTime.now());
                 guideRepository.save(guide);
+                
+                log.info("AUDIO_SCRIPT_GENERATION: Script generated successfully");
+                log.info("AUDIO_SCRIPT_GENERATION: Guide stored and marked READY");
 
                 progress.setStatus("COMPLETED");
                 progress.setEndTime(System.currentTimeMillis());
-                log.info("AUDIO_TTS_GENERATION: Finished successfully for guide: {}", guide.getId());
             } catch (Exception e) {
-                log.error("Audio guide generation failed for problem: {}, lang: {}", problemId, language, e);
+                log.error("Audio guide script generation failed for problem: {}, lang: {}", problemId, language, e);
                 guide.setGenerationStatus("FAILED");
                 guide.setErrorMessage(e.getMessage());
+                guide.setUpdatedAt(LocalDateTime.now());
                 guideRepository.save(guide);
 
                 progress.setStatus("FAILED");
@@ -176,7 +163,15 @@ public class AudioLearningGuideService {
         });
     }
 
-    private String generateSpokenScript(Problem problem, String language) throws Exception {
+    @lombok.Getter
+    @lombok.AllArgsConstructor
+    public static class ScriptGenerationResult {
+        private final String spokenScript;
+        private final int estimatedDurationSeconds;
+        private final String generationModel;
+    }
+
+    private ScriptGenerationResult generateSpokenScript(Problem problem, String language) throws Exception {
         String problemName = problem.getName();
         String topicName = problem.getTopic() != null ? problem.getTopic().getName() : "DSA";
         
@@ -255,102 +250,19 @@ public class AudioLearningGuideService {
         }
         
         log.info("AUDIO_SCRIPT_GENERATION: Requesting script generation for problem {} ({})", problem.getId(), language);
-        String rawJson = retryExecutor.executeWithFallback(prompt, "application/json");
+        RetryExecutor.ExecutionResult execResult = retryExecutor.executeWithFallbackDetailed(prompt, "application/json");
+        String rawJson = execResult.responseBody;
         String cleanJson = GeminiService.cleanJsonString(rawJson);
         
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(cleanJson);
-        return root.path("spokenScript").asText();
-    }
-
-    private byte[] generateSpeech(String text, String lang) throws IOException {
-        List<String> chunks = splitTextIntoChunks(text, 200);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        for (String chunk : chunks) {
-            String encodedChunk = URLEncoder.encode(chunk, StandardCharsets.UTF_8);
-            String url = "https://translate.google.com/translate_tts?ie=UTF-8&tl=" + lang + "&client=tw-ob&q=" + encodedChunk;
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-                    .GET()
-                    .build();
-
-            try {
-                HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-                if (response.statusCode() == 200) {
-                    outputStream.write(response.body());
-                } else {
-                    throw new IOException("Failed to generate speech chunk, HTTP status: " + response.statusCode());
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IOException("Speech generation interrupted", e);
-            }
+        
+        String spokenScript = root.path("spokenScript").asText();
+        int estimatedDurationSeconds = root.path("estimatedDurationSeconds").asInt(0);
+        if (estimatedDurationSeconds <= 0) {
+            estimatedDurationSeconds = Math.max(30, (int) Math.round(spokenScript.length() * 0.12));
         }
-        return outputStream.toByteArray();
-    }
-
-    public static List<String> splitTextIntoChunks(String text, int maxLength) {
-        List<String> chunks = new ArrayList<>();
-        if (text == null || text.trim().isEmpty()) {
-            return chunks;
-        }
-
-        String[] sentences = text.split("(?<=[.!?।])\\s+");
-        StringBuilder currentChunk = new StringBuilder();
-
-        for (String sentence : sentences) {
-            sentence = sentence.trim();
-            if (sentence.isEmpty()) continue;
-
-            if (currentChunk.length() + sentence.length() + 1 <= maxLength) {
-                if (currentChunk.length() > 0) {
-                    currentChunk.append(" ");
-                }
-                currentChunk.append(sentence);
-            } else {
-                if (currentChunk.length() > 0) {
-                    chunks.add(currentChunk.toString());
-                    currentChunk = new StringBuilder();
-                }
-
-                if (sentence.length() > maxLength) {
-                    String[] words = sentence.split("\\s+");
-                    for (String word : words) {
-                        if (currentChunk.length() + word.length() + 1 <= maxLength) {
-                            if (currentChunk.length() > 0) {
-                                currentChunk.append(" ");
-                            }
-                            currentChunk.append(word);
-                        } else {
-                            if (currentChunk.length() > 0) {
-                                chunks.add(currentChunk.toString());
-                                currentChunk = new StringBuilder();
-                            }
-                            if (word.length() > maxLength) {
-                                int index = 0;
-                                while (index < word.length()) {
-                                    int end = Math.min(index + maxLength, word.length());
-                                    chunks.add(word.substring(index, end));
-                                    index = end;
-                                }
-                            } else {
-                                currentChunk.append(word);
-                            }
-                        }
-                    }
-                } else {
-                    currentChunk.append(sentence);
-                }
-            }
-        }
-
-        if (currentChunk.length() > 0) {
-            chunks.add(currentChunk.toString());
-        }
-
-        return chunks;
+        
+        return new ScriptGenerationResult(spokenScript, estimatedDurationSeconds, execResult.modelName);
     }
 }

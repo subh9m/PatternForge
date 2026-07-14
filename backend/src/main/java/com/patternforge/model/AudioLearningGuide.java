@@ -26,25 +26,33 @@ public class AudioLearningGuide {
     @Column(nullable = false, length = 10)
     private String language; // "HI" or "EN"
 
-    @Column(columnDefinition = "TEXT")
-    private String script;
+    @Column(name = "script", columnDefinition = "TEXT")
+    private String spokenScript;
 
-    private String audioUrl;
-
-    private Integer durationSeconds;
-
-    private String voiceProvider;
-
-    private String voiceModel;
-
-    private String voiceId;
+    @Column(name = "duration_seconds")
+    private Integer estimatedDurationSeconds;
 
     @Column(nullable = false)
     private String generationStatus; // "FAILED", "GENERATING", "READY"
+
+    private String generationModel;
 
     @Column(columnDefinition = "TEXT")
     private String errorMessage;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

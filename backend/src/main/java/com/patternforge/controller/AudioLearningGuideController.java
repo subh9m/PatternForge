@@ -2,9 +2,6 @@ package com.patternforge.controller;
 
 import com.patternforge.model.AudioLearningGuide;
 import com.patternforge.service.AudioLearningGuideService;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,12 +12,9 @@ import java.util.*;
 public class AudioLearningGuideController {
 
     private final AudioLearningGuideService audioService;
-    private final com.patternforge.repository.AudioContentRepository contentRepository;
 
-    public AudioLearningGuideController(AudioLearningGuideService audioService,
-                                         com.patternforge.repository.AudioContentRepository contentRepository) {
+    public AudioLearningGuideController(AudioLearningGuideService audioService) {
         this.audioService = audioService;
-        this.contentRepository = contentRepository;
     }
 
     @GetMapping("/{problemId}/audio-guides")
@@ -53,18 +47,5 @@ public class AudioLearningGuideController {
             return ResponseEntity.ok(Map.of("generationStatus", "NOT_GENERATED"));
         }
         return ResponseEntity.ok(guide);
-    }
-
-    @GetMapping("/audio-guides/stream/{guideId}")
-    public ResponseEntity<Resource> streamAudio(@PathVariable UUID guideId) {
-        return contentRepository.findByGuideId(guideId)
-                .map(content -> {
-                    ByteArrayResource resource = new ByteArrayResource(content.getData());
-                    return ResponseEntity.ok()
-                            .contentType(MediaType.parseMediaType("audio/mpeg"))
-                            .contentLength(content.getData().length)
-                            .body((Resource) resource);
-                })
-                .orElse(ResponseEntity.notFound().build());
     }
 }

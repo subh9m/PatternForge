@@ -28,7 +28,21 @@ public class RetryExecutor {
         System.out.println("========================================");
     }
 
+    public static class ExecutionResult {
+        public final String responseBody;
+        public final String modelName;
+
+        public ExecutionResult(String responseBody, String modelName) {
+            this.responseBody = responseBody;
+            this.modelName = modelName;
+        }
+    }
+
     public String executeWithFallback(String textPrompt, String responseMimeType) {
+        return executeWithFallbackDetailed(textPrompt, responseMimeType).responseBody;
+    }
+
+    public ExecutionResult executeWithFallbackDetailed(String textPrompt, String responseMimeType) {
         int poolSize = apiKeyManager.getAllKeysRaw().size();
         if (poolSize == 0) {
             throw new IllegalStateException("All Gemini API keys in the pool are currently disabled or exhausted.");
@@ -84,7 +98,7 @@ public class RetryExecutor {
                         if (statusCode == 200) {
                             apiKeyManager.markSuccess(key);
                             System.out.println("↓\nSuccess");
-                            return response.body();
+                            return new ExecutionResult(response.body(), model);
                         } else if (statusCode == 401 || statusCode == 403) {
                             String reason = "Auth Failure (status " + statusCode + ")";
                             System.out.println("↓\n" + reason);

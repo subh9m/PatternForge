@@ -337,8 +337,6 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const pollingRef = useRef<any>(null);
 
   const [isAudioPanelOpen, setIsAudioPanelOpen] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [activeAudioSource, setActiveAudioSource] = useState<string | null>(null);
   const [activeAudioLang, setActiveAudioLang] = useState<'HI' | 'EN'>('HI');
   const [audioPlaybackState, setAudioPlaybackState] = useState({
     isPlaying: false,
@@ -351,18 +349,289 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   const [generationTime, setGenerationTime] = useState(0);
   const audioPollingRef = useRef<any>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+  // Speech synthesis specific states & refs
+  const [, setSpokenScript] = useState<string>("");
+  const [chunks, setChunks] = useState<string[]>([]);
+  const [currentChunkIndex, setCurrentChunkIndex] = useState<number>(0);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+
+  const isSpeechCancelledRef = useRef<boolean>(false);
+  const playbackTimerRef = useRef<any>(null);
+
+  const splitScriptIntoChunks = (text: string): string[] => {
+    if (!text) return [];
+    const rawSentences = text.split(/(?<=[.!?।\n])\s+/);
+    const chunksList: string[] = [];
+    let currentChunk = "";
+    
+    for (const sentence of rawSentences) {
+      const trimmed = sentence.trim();
+      if (!trimmed) continue;
+      
+      if (currentChunk && (currentChunk.length + trimmed.length > 180)) {
+        chunksList.push(currentChunk.trim());
+        currentChunk = trimmed;
+      } else {
+        currentChunk = currentChunk ? currentChunk + " " + trimmed : trimmed;
+      }
+    }
+    if (currentChunk) {
+      chunksList.push(currentChunk.trim());
+    }
+    return chunksList;
+  };
+
+  const preprocessHindiPronunciation = (text: string): string => {
+    if (!text) return "";
+    let processed = text;
+    
+    const mapping: { [key: string]: string } = {
+      "binary search": "बाइनरी सर्च",
+      "sliding window": "स्लाइडिंग विंडो",
+      "hash map": "हैश मैप",
+      "hashmap": "हैश मैप",
+      "pointer": "पॉइंटर",
+      "array": "एरे",
+      "queue": "क्यू",
+      "stack": "स्टैक",
+      "left": "लेफ्ट",
+      "right": "राइट",
+      "mid": "मिड",
+      "loop": "लूप",
+      "index": "इंडेक्स",
+      "code": "कोड",
+      "function": "फंक्शन",
+      "variable": "वेरिएबल",
+      "time complexity": "टाइम कॉम्प्लेक्सिटी",
+      "space complexity": "स्पेस कॉम्प्लेक्सिटी",
+      "DFS": "डी एफ एस",
+      "BFS": "बी एफ एस",
+      "recursion": "रिकर्शन",
+      "iteration": "इटरेशन",
+      "sorting": "सॉर्टिंग",
+      "matrix": "मैट्रिक्स",
+      "graph": "ग्राफ",
+      "tree": "ट्री",
+      "node": "नोड",
+      "linked list": "लिंक्ड लिस्ट",
+      "DP": "डी पी",
+      "dynamic programming": "डायनेमिक प्रोग्रामिंग",
+      "heap": "हीप"
+    };
+
+    for (const [eng, hin] of Object.entries(mapping)) {
+      const regex = new RegExp(`\\b${eng}\\b`, 'gi');
+      processed = processed.replace(regex, hin);
+    }
+    return processed;
+  };
+
+  const getVoiceRanking = (voice: SpeechSynthesisVoice, lang: 'HI' | 'EN'): number => {
+    const name = voice.name.toLowerCase();
+    const vlang = voice.lang.toLowerCase();
+    
+    if (lang === 'HI') {
+      if (vlang.startsWith('hi-in') || vlang === 'hi') {
+        let score = 100;
+        if (name.includes('google') || name.includes('हिन्दी') || name.includes('hindi') || name.includes('lekha') || name.includes('sangeeta') || name.includes('kalpana') || name.includes('female')) {
+          score += 50;
+        }
+        return score;
+      }
+      return 0;
+    } else {
+      if (vlang.startsWith('en-in')) {
+        let score = 100;
+        if (name.includes('veena') || name.includes('female') || name.includes('google')) score += 50;
+        return score;
+      }
+      if (vlang.startsWith('en-us')) {
+        let score = 80;
+        if (name.includes('samantha') || name.includes('zira') || name.includes('female') || name.includes('google')) score += 40;
+        return score;
+      }
+      if (vlang.startsWith('en-gb')) {
+        let score = 60;
+        if (name.includes('hazel') || name.includes('female') || name.includes('google')) score += 30;
+        return score;
+      }
+      if (vlang.startsWith('en')) {
+        return 40;
+      }
+      return 0;
+    }
+  };
+
+  const loadVoices = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    const allVoices = window.speechSynthesis.getVoices();
+    setVoices(allVoices);
+  };
+
+  useEffect(() => {
+    loadVoices();
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (voices.length === 0) return;
+
+    const relevant = voices.filter(v => {
+      const vlang = v.lang.toLowerCase();
+      if (activeAudioLang === 'HI') {
+        return vlang.startsWith('hi');
+      } else {
+        return vlang.startsWith('en');
+      }
+    });
+
+    const storageKey = `patternforge.audioVoice.${activeAudioLang}`;
+    const savedName = localStorage.getItem(storageKey);
+    let matchedVoice = voices.find(v => v.name === savedName);
+
+    if (!matchedVoice) {
+      const sorted = [...relevant].sort((a, b) => {
+        return getVoiceRanking(b, activeAudioLang) - getVoiceRanking(a, activeAudioLang);
+      });
+      matchedVoice = sorted[0] || voices.find(v => activeAudioLang === 'HI' ? v.lang.toLowerCase().startsWith('hi') : v.lang.toLowerCase().startsWith('en')) || voices[0];
+    }
+
+    if (matchedVoice) {
+      setSelectedVoice(matchedVoice);
+      console.log(`Selected speech voice: ${matchedVoice.name}`);
+      console.log(`Language: ${matchedVoice.lang}`);
+    }
+  }, [voices, activeAudioLang]);
+
+  const handleVoiceChange = (voiceName: string) => {
+    const matched = voices.find(v => v.name === voiceName);
+    if (matched) {
+      setSelectedVoice(matched);
+      const storageKey = `patternforge.audioVoice.${activeAudioLang}`;
+      localStorage.setItem(storageKey, voiceName);
+      
+      if (audioPlaybackState.isPlaying) {
+        isSpeechCancelledRef.current = true;
+        window.speechSynthesis.cancel();
+        stopProgressTimer();
+        setTimeout(() => {
+          speakChunk(currentChunkIndex);
+        }, 100);
+      }
+    }
+  };
+
+  const startProgressTimer = () => {
+    if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+    
+    playbackTimerRef.current = setInterval(() => {
+      setAudioPlaybackState(prev => {
+        const nextTime = prev.currentTime + 0.25 * prev.playbackRate;
+        if (nextTime >= prev.duration) {
+          clearInterval(playbackTimerRef.current);
+          return { ...prev, currentTime: prev.duration, isPlaying: false };
+        }
+        return { ...prev, currentTime: nextTime };
+      });
+    }, 250);
+  };
+
+  const stopProgressTimer = () => {
+    if (playbackTimerRef.current) {
+      clearInterval(playbackTimerRef.current);
+      playbackTimerRef.current = null;
+    }
+  };
+
+  const speakChunk = (index: number) => {
+    if (index < 0 || index >= chunks.length) {
+      handlePlaybackFinished();
+      return;
+    }
+
+    isSpeechCancelledRef.current = false;
+    window.speechSynthesis.cancel();
+
+    let chunkText = chunks[index];
+    if (activeAudioLang === 'HI') {
+      chunkText = preprocessHindiPronunciation(chunkText);
+    }
+
+    const utterance = new SpeechSynthesisUtterance(chunkText);
+    utterance.rate = audioPlaybackState.playbackRate;
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    utterance.onstart = () => {
+      if (isSpeechCancelledRef.current) return;
+      const approxStartTime = Math.round((index / chunks.length) * audioPlaybackState.duration);
+      setAudioPlaybackState(prev => ({
+        ...prev,
+        currentTime: approxStartTime,
+        isPlaying: true
+      }));
+      startProgressTimer();
+    };
+
+    utterance.onend = () => {
+      if (isSpeechCancelledRef.current) return;
+      stopProgressTimer();
+      setCurrentChunkIndex(index + 1);
+      speakChunk(index + 1);
+    };
+
+    utterance.onerror = (e) => {
+      if (isSpeechCancelledRef.current) return;
+      stopProgressTimer();
+      console.error("SpeechSynthesisUtterance error:", e);
+      if (e.error !== 'interrupted') {
+        handlePlaybackFinished();
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handlePlaybackFinished = () => {
+    stopProgressTimer();
+    setCurrentChunkIndex(0);
+    setAudioPlaybackState(prev => ({
+      ...prev,
+      isPlaying: false,
+      currentTime: 0
+    }));
+  };
 
   const fetchGuideStatus = async (lang: 'HI' | 'EN') => {
     try {
       const res = await api.get<any>(`/problems/${problemId}/audio-guides/${lang}/status`);
       if (res.generationStatus) {
         setGuideStatus(res.generationStatus);
-        if (res.generationStatus === 'READY' && res.audioUrl) {
-          const fullAudioUrl = `${API_URL}${res.audioUrl}`;
-          if (activeAudioSource !== fullAudioUrl) {
-            setActiveAudioSource(fullAudioUrl);
-          }
+        if (res.generationStatus === 'READY') {
+          const scriptText = res.spokenScript || res.script || "";
+          const durSec = res.estimatedDurationSeconds || res.durationSeconds || 0;
+          setSpokenScript(scriptText);
+          const chunked = splitScriptIntoChunks(scriptText);
+          setChunks(chunked);
+          setCurrentChunkIndex(0);
+          
+          const estimatedDur = durSec > 0 ? durSec : Math.round((scriptText.split(/\s+/).length / 140) * 60);
+          setAudioPlaybackState(prev => ({
+            ...prev,
+            duration: estimatedDur,
+            currentTime: 0,
+            isPlaying: false
+          }));
         }
       }
     } catch (e) {
@@ -371,10 +640,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   };
 
   const handleAudioLanguageChange = (lang: 'HI' | 'EN') => {
+    isSpeechCancelledRef.current = true;
+    window.speechSynthesis.cancel();
+    stopProgressTimer();
+
     setActiveAudioLang(lang);
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
     setAudioPlaybackState(prev => ({ ...prev, isPlaying: false, currentTime: 0 }));
     fetchGuideStatus(lang);
   };
@@ -404,10 +674,20 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
             clearInterval(audioPollingRef.current);
             audioPollingRef.current = null;
           }
-          if (res.audioUrl) {
-            const fullAudioUrl = `${API_URL}${res.audioUrl}`;
-            setActiveAudioSource(fullAudioUrl);
-          }
+          const scriptText = res.spokenScript || res.script || "";
+          const durSec = res.estimatedDurationSeconds || res.durationSeconds || 0;
+          setSpokenScript(scriptText);
+          const chunked = splitScriptIntoChunks(scriptText);
+          setChunks(chunked);
+          setCurrentChunkIndex(0);
+          
+          const estimatedDur = durSec > 0 ? durSec : Math.round((scriptText.split(/\s+/).length / 140) * 60);
+          setAudioPlaybackState(prev => ({
+            ...prev,
+            duration: estimatedDur,
+            currentTime: 0,
+            isPlaying: false
+          }));
         } else if (res.generationStatus === 'FAILED') {
           if (audioPollingRef.current) {
             clearInterval(audioPollingRef.current);
@@ -421,13 +701,15 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   };
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = '';
-    }
-    setActiveAudioSource(null);
+    isSpeechCancelledRef.current = true;
+    window.speechSynthesis.cancel();
+    stopProgressTimer();
+
     setIsAudioPanelOpen(false);
     setGuideStatus('NOT_GENERATED');
+    setSpokenScript("");
+    setChunks([]);
+    setCurrentChunkIndex(0);
     setAudioPlaybackState({
       isPlaying: false,
       currentTime: 0,
@@ -448,6 +730,9 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
   useEffect(() => {
     return () => {
+      isSpeechCancelledRef.current = true;
+      window.speechSynthesis.cancel();
+      stopProgressTimer();
       if (audioPollingRef.current) clearInterval(audioPollingRef.current);
     };
   }, []);
@@ -467,31 +752,60 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   }, [guideStatus]);
 
   const handleAudioPlayPause = () => {
-    if (!audioRef.current) return;
     if (audioPlaybackState.isPlaying) {
-      audioRef.current.pause();
+      window.speechSynthesis.pause();
+      stopProgressTimer();
+      setAudioPlaybackState(prev => ({ ...prev, isPlaying: false }));
     } else {
-      audioRef.current.play().catch(e => console.error("Audio playback error", e));
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+        startProgressTimer();
+        setAudioPlaybackState(prev => ({ ...prev, isPlaying: true }));
+      } else {
+        speakChunk(currentChunkIndex);
+      }
     }
   };
 
   const handleAudioSeek = (newTime: number) => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = newTime;
+    const dur = audioPlaybackState.duration || 1;
+    const targetChunkIndex = Math.max(0, Math.min(chunks.length - 1, Math.floor((newTime / dur) * chunks.length)));
+    
+    isSpeechCancelledRef.current = true;
+    window.speechSynthesis.cancel();
+    stopProgressTimer();
+    
+    setCurrentChunkIndex(targetChunkIndex);
     setAudioPlaybackState(prev => ({ ...prev, currentTime: newTime }));
+
+    if (audioPlaybackState.isPlaying) {
+      setTimeout(() => {
+        speakChunk(targetChunkIndex);
+      }, 100);
+    }
   };
 
   const handleAudioChangeSpeed = (rate: number) => {
-    if (!audioRef.current) return;
-    audioRef.current.playbackRate = rate;
+    stopProgressTimer();
     setAudioPlaybackState(prev => ({ ...prev, playbackRate: rate }));
+
+    if (audioPlaybackState.isPlaying) {
+      isSpeechCancelledRef.current = true;
+      window.speechSynthesis.cancel();
+      
+      setTimeout(() => {
+        setAudioPlaybackState(prev => {
+          const updated = { ...prev, playbackRate: rate };
+          speakChunk(currentChunkIndex);
+          return updated;
+        });
+      }, 100);
+    }
   };
 
   const handleAudioSkip = (seconds: number) => {
-    if (!audioRef.current) return;
-    const target = Math.max(0, Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + seconds));
-    audioRef.current.currentTime = target;
-    setAudioPlaybackState(prev => ({ ...prev, currentTime: target }));
+    const newTime = Math.max(0, Math.min(audioPlaybackState.duration, audioPlaybackState.currentTime + seconds));
+    handleAudioSeek(newTime);
   };
 
 
@@ -1408,28 +1722,68 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                     onChange={(e) => handleAudioSeek(Number(e.target.value))}
                     className="w-full h-1 bg-slate-850 rounded-lg appearance-none cursor-pointer accent-blue-500"
                   />
-                  <span className="text-[10px] font-mono text-slate-500 font-bold w-9 shrink-0">
-                    {formatTime(Math.round(audioPlaybackState.duration))}
+                  <span className="text-[10px] font-mono text-slate-500 font-bold w-12 shrink-0">
+                    ~{formatTime(Math.round(audioPlaybackState.duration))}
                   </span>
                 </div>
               </div>
 
               {/* Controls Bar */}
-              <div className="flex items-center justify-between">
-                {/* Speed Selector */}
-                <div className="flex items-center space-x-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-850">
-                  <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Speed:</span>
-                  <select
-                    value={audioPlaybackState.playbackRate}
-                    onChange={(e) => handleAudioChangeSpeed(Number(e.target.value))}
-                    className="bg-transparent text-blue-400 text-[10px] font-mono font-bold border-none outline-none cursor-pointer"
-                  >
-                    <option value="0.75" className="bg-slate-950 text-slate-350">0.75x</option>
-                    <option value="1" className="bg-slate-950 text-slate-350">1.0x</option>
-                    <option value="1.25" className="bg-slate-950 text-slate-350">1.25x</option>
-                    <option value="1.5" className="bg-slate-950 text-slate-350">1.5x</option>
-                    <option value="2" className="bg-slate-950 text-slate-350">2.0x</option>
-                  </select>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center space-x-2 flex-wrap gap-1.5">
+                  {/* Speed Selector */}
+                  <div className="flex items-center space-x-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-850">
+                    <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Speed:</span>
+                    <select
+                      value={audioPlaybackState.playbackRate}
+                      onChange={(e) => handleAudioChangeSpeed(Number(e.target.value))}
+                      className="bg-transparent text-blue-400 text-[10px] font-mono font-bold border-none outline-none cursor-pointer"
+                    >
+                      <option value="0.75" className="bg-slate-950 text-slate-350">0.75x</option>
+                      <option value="1" className="bg-slate-950 text-slate-350">1.0x</option>
+                      <option value="1.25" className="bg-slate-950 text-slate-350">1.25x</option>
+                      <option value="1.5" className="bg-slate-950 text-slate-350">1.5x</option>
+                      <option value="2" className="bg-slate-950 text-slate-350">2.0x</option>
+                    </select>
+                  </div>
+
+                  {/* Voice Selector */}
+                  <div className="flex items-center space-x-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-850 max-w-[200px]">
+                    <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Voice:</span>
+                    <select
+                      value={selectedVoice?.name || ''}
+                      onChange={(e) => handleVoiceChange(e.target.value)}
+                      className="bg-transparent text-blue-400 text-[10px] font-mono font-bold border-none outline-none cursor-pointer truncate max-w-[120px]"
+                    >
+                      {voices
+                        .filter(v => {
+                          const vlang = v.lang.toLowerCase();
+                          if (activeAudioLang === 'HI') {
+                            return vlang.startsWith('hi');
+                          } else {
+                            return vlang.startsWith('en');
+                          }
+                        })
+                        .map(v => (
+                          <option key={v.name} value={v.name} className="bg-slate-950 text-slate-350">
+                            {v.name} ({v.lang})
+                          </option>
+                        ))
+                      }
+                      {voices.filter(v => {
+                        const vlang = v.lang.toLowerCase();
+                        if (activeAudioLang === 'HI') {
+                          return vlang.startsWith('hi');
+                        } else {
+                          return vlang.startsWith('en');
+                        }
+                      }).length === 0 && (
+                        <option value="" className="bg-slate-950 text-slate-350">
+                          Default Voice
+                        </option>
+                      )}
+                    </select>
+                  </div>
                 </div>
 
                 {/* Playback controls */}
@@ -1474,24 +1828,6 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
           )}
         </div>
       )}
-
-      <audio
-        ref={audioRef}
-        src={activeAudioSource || undefined}
-        onTimeUpdate={() => {
-          if (audioRef.current) {
-            setAudioPlaybackState(prev => ({ ...prev, currentTime: audioRef.current!.currentTime }));
-          }
-        }}
-        onLoadedMetadata={() => {
-          if (audioRef.current) {
-            audioRef.current.playbackRate = audioPlaybackState.playbackRate;
-            setAudioPlaybackState(prev => ({ ...prev, duration: audioRef.current!.duration }));
-          }
-        }}
-        onPlay={() => setAudioPlaybackState(prev => ({ ...prev, isPlaying: true }))}
-        onPause={() => setAudioPlaybackState(prev => ({ ...prev, isPlaying: false }))}
-      />
 
       {/* AI Generation Status Banners (non-blocking) */}
       {generationFailed && (

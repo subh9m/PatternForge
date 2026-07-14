@@ -43,7 +43,7 @@ public class SecurityConfig {
                 })
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/admin/ai/**", "/api/problems/audio-guides/stream/**").permitAll()
+                .requestMatchers("/api/auth/**", "/admin/ai/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/leetcode/sync").hasAnyRole("USER", "LEETCODE_SYNC")
                 .anyRequest().hasRole("USER")
             )
