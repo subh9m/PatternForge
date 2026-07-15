@@ -16,12 +16,24 @@ public class LocalFallbackGenerator {
         public String timeComplexity;
         public String spaceComplexity;
         public String referenceSolution;
+        public String optimalCpp;
+        public String optimalJava;
+        public String bruteCpp;
+        public String bruteJava;
+        public String betterCpp;
+        public String betterJava;
 
         public FallbackProblemData(String statement, String optimal, String better, String brute, String observation, String timeComplexity, String spaceComplexity) {
             this(statement, optimal, better, brute, observation, timeComplexity, spaceComplexity, "");
         }
 
         public FallbackProblemData(String statement, String optimal, String better, String brute, String observation, String timeComplexity, String spaceComplexity, String referenceSolution) {
+            this(statement, optimal, better, brute, observation, timeComplexity, spaceComplexity, referenceSolution,
+                 referenceSolution, "", "", "", "", "");
+        }
+
+        public FallbackProblemData(String statement, String optimal, String better, String brute, String observation, String timeComplexity, String spaceComplexity, String referenceSolution,
+                                   String optimalCpp, String optimalJava, String bruteCpp, String bruteJava, String betterCpp, String betterJava) {
             this.statement = statement;
             this.optimal = optimal;
             this.better = better;
@@ -30,6 +42,12 @@ public class LocalFallbackGenerator {
             this.timeComplexity = timeComplexity;
             this.spaceComplexity = spaceComplexity;
             this.referenceSolution = referenceSolution;
+            this.optimalCpp = optimalCpp;
+            this.optimalJava = optimalJava;
+            this.bruteCpp = bruteCpp;
+            this.bruteJava = bruteJava;
+            this.betterCpp = betterCpp;
+            this.betterJava = betterJava;
         }
     }
 
@@ -172,6 +190,57 @@ public class LocalFallbackGenerator {
             "O(k)",
             "#include <vector>\n#include <queue>\nusing namespace std;\n\nclass KthLargest {\nprivate:\n    priority_queue<int, vector<int>, greater<int>> minHeap;\n    int kSize;\n\npublic:\n    KthLargest(int k, vector<int>& nums) {\n        kSize = k;\n        for (int num : nums) {\n            add(num);\n        }\n    }\n    \n    int add(int val) {\n        minHeap.push(val);\n        if (minHeap.size() > kSize) {\n            minHeap.pop();\n        }\n        return minHeap.top();\n    }\n};"
         ));
+
+        db.put("LRU Cache", new FallbackProblemData(
+            "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\n" +
+            "Implement the LRUCache class:\n" +
+            "- LRUCache(int capacity) Initialize the LRU cache with positive size capacity.\n" +
+            "- int get(int key) Return the value of the key if the key exists, otherwise return -1.\n" +
+            "- void put(int key, int value) Update the value of the key if the key exists. Otherwise, add the key-value pair to the cache. " +
+            "If the number of keys exceeds the capacity from this operation, evict the least recently used key.\n\n" +
+            "The functions get and put must each run in O(1) average time complexity.",
+            
+            "Use a custom Doubly Linked List (DLL) to track the order of usage (MRU at head, LRU at tail) and a Hash Map mapping keys to DLL node pointers. " +
+            "For get(key), retrieve the node pointer from the hash map, move the node to the head of DLL, and return its value. " +
+            "For put(key, value), if the key exists, update its value and move the node to head. Otherwise, if the cache is full, " +
+            "evict the tail node from both the DLL and hash map, then insert the new node at the head.",
+            
+            "Implement using standard library containers that combine hash maps and lists, such as C++ std::list with std::unordered_map (using splice to move elements in O(1)), " +
+            "or Java's LinkedHashMap with accessOrder=true and removeEldestEntry override.",
+            
+            "Use a simple list or vector of cache entries, where each entry stores the key, value, and a timestamp/counter. " +
+            "For get(key), perform a linear scan to find the key and update its timestamp. " +
+            "For put(key, value), perform a linear scan. If the key exists, update its value/timestamp; otherwise, if capacity is reached, " +
+            "scan the entire collection to locate the entry with the oldest timestamp, remove it, and append the new entry.",
+            
+            "Both key lookups and element reordering must be fast. A Hash Map gives O(1) lookups but has no ordering. " +
+            "A Doubly Linked List gives O(1) insertion and deletion at any point once the node pointer is known, but O(N) lookup. " +
+            "Combining them—storing list node pointers in the Hash Map—gives the best of both worlds: O(1) lookups and O(1) updates/reordering.",
+            
+            "O(1) average per operation",
+            "O(capacity)",
+            
+            // referenceSolution
+            "// C++ Optimal Solution\n#include <unordered_map>\nusing namespace std;\n\nclass LRUCache {\nprivate:\n    struct Node {\n        int key;\n        int val;\n        Node* prev;\n        Node* next;\n        Node(int k, int v) : key(k), val(v), prev(nullptr), next(nullptr) {}\n    };\n\n    int cap;\n    unordered_map<int, Node*> m;\n    Node* head;\n    Node* tail;\n\n    void addNode(Node* node) {\n        node->next = head->next;\n        node->next->prev = node;\n        node->prev = head;\n        head->next = node;\n    }\n\n    void removeNode(Node* node) {\n        Node* prevNode = node->prev;\n        Node* nextNode = node->next;\n        prevNode->next = nextNode;\n        nextNode->prev = prevNode;\n    }\n\n    void moveToHead(Node* node) {\n        removeNode(node);\n        addNode(node);\n    }\n\npublic:\n    LRUCache(int capacity) {\n        cap = capacity;\n        head = new Node(-1, -1);\n        tail = new Node(-1, -1);\n        head->next = tail;\n        tail->prev = head;\n    }\n\n    int get(int key) {\n        if (m.find(key) == m.end()) return -1;\n        Node* node = m[key];\n        moveToHead(node);\n        return node->val;\n    }\n\n    void put(int key, int value) {\n        if (m.find(key) != m.end()) {\n            Node* node = m[key];\n            node->val = value;\n            moveToHead(node);\n        } else {\n            if (m.size() == cap) {\n                Node* lruNode = tail->prev;\n                removeNode(lruNode);\n                m.erase(lruNode->key);\n                delete lruNode;\n            }\n            Node* newNode = new Node(key, value);\n            addNode(newNode);\n            m[key] = newNode;\n        }\n    }\n};",
+            
+            // optimalCpp
+            "// C++ Optimal Solution\n#include <unordered_map>\nusing namespace std;\n\nclass LRUCache {\nprivate:\n    struct Node {\n        int key;\n        int val;\n        Node* prev;\n        Node* next;\n        Node(int k, int v) : key(k), val(v), prev(nullptr), next(nullptr) {}\n    };\n\n    int cap;\n    unordered_map<int, Node*> m;\n    Node* head;\n    Node* tail;\n\n    void addNode(Node* node) {\n        node->next = head->next;\n        node->next->prev = node;\n        node->prev = head;\n        head->next = node;\n    }\n\n    void removeNode(Node* node) {\n        Node* prevNode = node->prev;\n        Node* nextNode = node->next;\n        prevNode->next = nextNode;\n        nextNode->prev = prevNode;\n    }\n\n    void moveToHead(Node* node) {\n        removeNode(node);\n        addNode(node);\n    }\n\npublic:\n    LRUCache(int capacity) {\n        cap = capacity;\n        head = new Node(-1, -1);\n        tail = new Node(-1, -1);\n        head->next = tail;\n        tail->prev = head;\n    }\n\n    int get(int key) {\n        if (m.find(key) == m.end()) return -1;\n        Node* node = m[key];\n        moveToHead(node);\n        return node->val;\n    }\n\n    void put(int key, int value) {\n        if (m.find(key) != m.end()) {\n            Node* node = m[key];\n            node->val = value;\n            moveToHead(node);\n        } else {\n            if (m.size() == cap) {\n                Node* lruNode = tail->prev;\n                removeNode(lruNode);\n                m.erase(lruNode->key);\n                delete lruNode;\n            }\n            Node* newNode = new Node(key, value);\n            addNode(newNode);\n            m[key] = newNode;\n        }\n    }\n};",
+            
+            // optimalJava
+            "// Java Optimal Solution\nimport java.util.HashMap;\nimport java.util.Map;\n\nclass LRUCache {\n    private static class Node {\n        int key;\n        int val;\n        Node prev;\n        Node next;\n        Node(int key, int val) {\n            this.key = key;\n            this.val = val;\n        }\n    }\n\n    private final int capacity;\n    private final Map<Integer, Node> map;\n    private final Node head;\n    private final Node tail;\n\n    public LRUCache(int capacity) {\n        this.capacity = capacity;\n        this.map = new HashMap<>();\n        this.head = new Node(-1, -1);\n        this.tail = new Node(-1, -1);\n        head.next = tail;\n        tail.prev = head;\n    }\n\n    private void addNode(Node node) {\n        node.next = head.next;\n        node.next.prev = node;\n        node.prev = head;\n        head.next = node;\n    }\n\n    private void removeNode(Node node) {\n        Node prevNode = node.prev;\n        Node nextNode = node.next;\n        prevNode.next = nextNode;\n        nextNode.prev = prevNode;\n    }\n\n    private void moveToHead(Node node) {\n        removeNode(node);\n        addNode(node);\n    }\n\n    public int get(int key) {\n        if (!map.containsKey(key)) return -1;\n        Node node = map.get(key);\n        moveToHead(node);\n        return node.val;\n    }\n\n    public void put(int key, int value) {\n        if (map.containsKey(key)) {\n            Node node = map.get(key);\n            node.val = value;\n            moveToHead(node);\n        } else {\n            if (map.size() == capacity) {\n                Node lruNode = tail.prev;\n                removeNode(lruNode);\n                map.remove(lruNode.key);\n            }\n            Node newNode = new Node(key, value);\n            addNode(newNode);\n            map.put(key, newNode);\n        }\n    }\n}",
+            
+            // bruteCpp
+            "// C++ Brute Force Solution\n#include <vector>\nusing namespace std;\n\nclass LRUCache {\nprivate:\n    struct CacheEntry {\n        int key;\n        int value;\n        int lastUsed;\n    };\n    vector<CacheEntry> cache;\n    int cap;\n    int timer;\n\npublic:\n    LRUCache(int capacity) {\n        cap = capacity;\n        timer = 0;\n    }\n\n    int get(int key) {\n        timer++;\n        for (auto& entry : cache) {\n            if (entry.key == key) {\n                entry.lastUsed = timer;\n                return entry.value;\n            }\n        }\n        return -1;\n    }\n\n    void put(int key, int value) {\n        timer++;\n        for (auto& entry : cache) {\n            if (entry.key == key) {\n                entry.value = value;\n                entry.lastUsed = timer;\n                return;\n            }\n        }\n        if (cache.size() >= cap) {\n            int lruIndex = 0;\n            int minTime = cache[0].lastUsed;\n            for (int i = 1; i < cache.size(); i++) {\n                if (cache[i].lastUsed < minTime) {\n                    minTime = cache[i].lastUsed;\n                    lruIndex = i;\n                }\n            }\n            cache.erase(cache.begin() + lruIndex);\n        }\n        cache.push_back({key, value, timer});\n    }\n};",
+            
+            // bruteJava
+            "// Java Brute Force Solution\nimport java.util.ArrayList;\nimport java.util.List;\n\nclass LRUCache {\n    private static class CacheEntry {\n        int key;\n        int value;\n        int lastUsed;\n        CacheEntry(int key, int value, int lastUsed) {\n            this.key = key;\n            this.value = value;\n            this.lastUsed = lastUsed;\n        }\n    }\n\n    private final List<CacheEntry> cache;\n    private final int capacity;\n    private int timer;\n\n    public LRUCache(int capacity) {\n        this.capacity = capacity;\n        this.cache = new ArrayList<>();\n        this.timer = 0;\n    }\n\n    public int get(int key) {\n        timer++;\n        for (CacheEntry entry : cache) {\n            if (entry.key == key) {\n                entry.lastUsed = timer;\n                return entry.value;\n            }\n        }\n        return -1;\n    }\n\n    public void put(int key, int value) {\n        timer++;\n        for (CacheEntry entry : cache) {\n            if (entry.key == key) {\n                entry.value = value;\n                entry.lastUsed = timer;\n                return;\n            }\n        }\n        if (cache.size() >= capacity) {\n            int lruIndex = 0;\n            int minTime = cache.get(0).lastUsed;\n            for (int i = 1; i < cache.size(); i++) {\n                if (cache.get(i).lastUsed < minTime) {\n                    minTime = cache.get(i).lastUsed;\n                    lruIndex = i;\n                }\n            }\n            cache.remove(lruIndex);\n        }\n        cache.add(new CacheEntry(key, value, timer));\n    }\n}",
+            
+            // betterCpp
+            "// C++ Better Solution\n#include <list>\n#include <unordered_map>\n#include <utility>\nusing namespace std;\n\nclass LRUCache {\nprivate:\n    int cap;\n    list<pair<int, int>> cacheList;\n    unordered_map<int, list<pair<int, int>>::iterator> cacheMap;\n\npublic:\n    LRUCache(int capacity) {\n        cap = capacity;\n    }\n\n    int get(int key) {\n        if (cacheMap.find(key) == cacheMap.end()) return -1;\n        cacheList.splice(cacheList.begin(), cacheList, cacheMap[key]);\n        return cacheMap[key]->second;\n    }\n\n    void put(int key, int value) {\n        if (cacheMap.find(key) != cacheMap.end()) {\n            cacheMap[key]->second = value;\n            cacheList.splice(cacheList.begin(), cacheList, cacheMap[key]);\n            return;\n        }\n        if (cacheList.size() >= cap) {\n            int keyToRemove = cacheList.back().first;\n            cacheMap.erase(keyToRemove);\n            cacheList.pop_back();\n        }\n        cacheList.push_front({key, value});\n        cacheMap[key] = cacheList.begin();\n    }\n};",
+            
+            // betterJava
+            "// Java Better Solution\nimport java.util.LinkedHashMap;\nimport java.util.Map;\n\nclass LRUCache extends LinkedHashMap<Integer, Integer> {\n    private final int capacity;\n\n    public LRUCache(int capacity) {\n        super(capacity, 0.75f, true);\n        this.capacity = capacity;\n    }\n\n    public int get(int key) {\n        return super.getOrDefault(key, -1);\n    }\n\n    public void put(int key, int value) {\n        super.put(key, value);\n    }\n\n    @Override\n    protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {\n        return size() > capacity;\n    }\n}"
+        ));
     }
 
     public static FallbackProblemData getFallback(String name, String topicName) {
@@ -218,21 +287,50 @@ public class LocalFallbackGenerator {
             map.put("approach", data.optimal);
             map.put("optimalTimeComplexity", data.timeComplexity);
             map.put("optimalSpaceComplexity", data.spaceComplexity);
-            map.put("fullExplanation", "Refer to standard patterns under " + topicName + ".");
+            map.put("fullExplanation", "Refer to standard patterns under " + topicName + ".\n\n### Brute Force Approach\n" + data.brute + "\n\n### Optimal Approach\n" + data.optimal);
             map.put("referenceSolution", (data.referenceSolution != null && !data.referenceSolution.isEmpty()) ? data.referenceSolution : "# Reference solution not available.");
             
+            // referenceSolutions
+            Map<String, String> refSols = new LinkedHashMap<>();
+            refSols.put("cpp", (data.optimalCpp != null && !data.optimalCpp.isEmpty()) ? data.optimalCpp : data.referenceSolution);
+            refSols.put("java", (data.optimalJava != null && !data.optimalJava.isEmpty()) ? data.optimalJava : "");
+            map.put("referenceSolutions", refSols);
+
+            // bruteForce
             Map<String, Object> bruteMap = new LinkedHashMap<>();
             bruteMap.put("approach", data.brute);
-            bruteMap.put("timeComplexity", data.timeComplexity.equals("O(N)") ? "O(N^2)" : "O(2^N)");
-            bruteMap.put("spaceComplexity", "O(1)");
+            bruteMap.put("timeComplexity", data.timeComplexity.equals("O(N)") ? "O(N^2)" : (data.timeComplexity.contains("O(1) average") ? "O(N)" : "O(2^N)"));
+            bruteMap.put("spaceComplexity", data.timeComplexity.contains("O(1) average") ? "O(N)" : "O(1)");
+            Map<String, String> bruteCode = new LinkedHashMap<>();
+            bruteCode.put("cpp", (data.bruteCpp != null) ? data.bruteCpp : "");
+            bruteCode.put("java", (data.bruteJava != null) ? data.bruteJava : "");
+            bruteMap.put("code", bruteCode);
             map.put("bruteForce", bruteMap);
             
-            map.put("better", null);
+            // better
+            if (data.better != null && !data.better.isEmpty()) {
+                Map<String, Object> betterMap = new LinkedHashMap<>();
+                betterMap.put("approach", data.better);
+                betterMap.put("timeComplexity", data.timeComplexity.contains("O(1) average") ? "O(1)" : "O(N log N)");
+                betterMap.put("spaceComplexity", "O(N)");
+                Map<String, String> betterCode = new LinkedHashMap<>();
+                betterCode.put("cpp", (data.betterCpp != null) ? data.betterCpp : "");
+                betterCode.put("java", (data.betterJava != null) ? data.betterJava : "");
+                betterMap.put("code", betterCode);
+                map.put("better", betterMap);
+            } else {
+                map.put("better", null);
+            }
             
+            // optimal
             Map<String, Object> optimalMap = new LinkedHashMap<>();
             optimalMap.put("approach", data.optimal);
             optimalMap.put("timeComplexity", data.timeComplexity);
             optimalMap.put("spaceComplexity", data.spaceComplexity);
+            Map<String, String> optimalCode = new LinkedHashMap<>();
+            optimalCode.put("cpp", (data.optimalCpp != null && !data.optimalCpp.isEmpty()) ? data.optimalCpp : data.referenceSolution);
+            optimalCode.put("java", (data.optimalJava != null && !data.optimalJava.isEmpty()) ? data.optimalJava : "");
+            optimalMap.put("code", optimalCode);
             map.put("optimal", optimalMap);
             
             return mapper.writeValueAsString(map);

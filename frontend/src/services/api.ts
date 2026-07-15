@@ -465,7 +465,348 @@ export const _mockRouter = async (method: 'GET' | 'POST' | 'PUT', url: string, b
     let optimalCpp = '';
     let optimalJava = '';
 
-    if (topic === 'Basics' || topic === 'Arrays' || topic === 'Sorting') {
+    if (name === 'LRU Cache') {
+      bruteForceApproach = `**Brute Force approach for "LRU Cache"**:\nUse a simple list or vector of cache entries, where each entry stores the key, value, and a timestamp/counter of last access. For both get and put operations, perform a linear scan to find the key, updating timestamps as needed. If the cache is full when putting a new key, scan the entire collection to find and evict the entry with the oldest timestamp.\n\n- Time Complexity: O(N) per get/put operation\n- Space Complexity: O(N) where N is the capacity`;
+      bruteForceTime = 'O(N)';
+      bruteForceSpace = 'O(N)';
+      bruteForceCpp = `// Brute Force C++ Solution (Linear Scan with Timestamps)
+#include <vector>
+using namespace std;
+
+class LRUCache {
+private:
+    struct CacheEntry {
+        int key;
+        int value;
+        int lastUsed;
+    };
+    vector<CacheEntry> cache;
+    int cap;
+    int timer;
+
+public:
+    LRUCache(int capacity) {
+        cap = capacity;
+        timer = 0;
+    }
+
+    int get(int key) {
+        timer++;
+        for (auto& entry : cache) {
+            if (entry.key == key) {
+                entry.lastUsed = timer;
+                return entry.value;
+            }
+        }
+        return -1;
+    }
+
+    void put(int key, int value) {
+        timer++;
+        for (auto& entry : cache) {
+            if (entry.key == key) {
+                entry.value = value;
+                entry.lastUsed = timer;
+                return;
+            }
+        }
+        if (cache.size() >= cap) {
+            int lruIndex = 0;
+            int minTime = cache[0].lastUsed;
+            for (int i = 1; i < cache.size(); i++) {
+                if (cache[i].lastUsed < minTime) {
+                    minTime = cache[i].lastUsed;
+                    lruIndex = i;
+                }
+            }
+            cache.erase(cache.begin() + lruIndex);
+        }
+        cache.push_back({key, value, timer});
+    }
+};`;
+      bruteForceJava = `// Brute Force Java Solution (Linear Scan with Timestamps)
+import java.util.ArrayList;
+import java.util.List;
+
+class LRUCache {
+    private static class CacheEntry {
+        int key;
+        int value;
+        int lastUsed;
+        CacheEntry(int key, int value, int lastUsed) {
+            this.key = key;
+            this.value = value;
+            this.lastUsed = lastUsed;
+        }
+    }
+
+    private final List<CacheEntry> cache;
+    private final int capacity;
+    private int timer;
+
+    public LRUCache(int capacity) {
+        this.capacity = capacity;
+        this.cache = new ArrayList<>();
+        this.timer = 0;
+    }
+
+    public int get(int key) {
+        timer++;
+        for (CacheEntry entry : cache) {
+            if (entry.key == key) {
+                entry.lastUsed = timer;
+                return entry.value;
+            }
+        }
+        return -1;
+    }
+
+    public void put(int key, int value) {
+        timer++;
+        for (CacheEntry entry : cache) {
+            if (entry.key == key) {
+                entry.value = value;
+                entry.lastUsed = timer;
+                return;
+            }
+        }
+        if (cache.size() >= capacity) {
+            int lruIndex = 0;
+            int minTime = cache.get(0).lastUsed;
+            for (int i = 1; i < cache.size(); i++) {
+                if (cache.get(i).lastUsed < minTime) {
+                    minTime = cache.get(i).lastUsed;
+                    lruIndex = i;
+                }
+            }
+            cache.remove(lruIndex);
+        }
+        cache.add(new CacheEntry(key, value, timer));
+    }
+}`;
+
+      betterApproach = `**Better approach for "LRU Cache"**:\nUse built-in library structures that combine hash maps and doubly linked lists. In Java, override LinkedHashMap's removeEldestEntry method. In C++, pair a std::list with a std::unordered_map. This handles reordering and eviction efficiently in O(1) time without requiring manual pointer manipulation.\n\n- Time Complexity: O(1) average per operation\n- Space Complexity: O(N) where N is the capacity`;
+      betterTime = 'O(1)';
+      betterSpace = 'O(N)';
+      betterCpp = `// Better C++ Solution (std::list and std::unordered_map)
+#include <list>
+#include <unordered_map>
+#include <utility>
+using namespace std;
+
+class LRUCache {
+private:
+    int cap;
+    list<pair<int, int>> cacheList; // stores {key, value}
+    unordered_map<int, list<pair<int, int>>::iterator> cacheMap;
+
+public:
+    LRUCache(int capacity) {
+        cap = capacity;
+    }
+
+    int get(int key) {
+        if (cacheMap.find(key) == cacheMap.end()) {
+            return -1;
+        }
+        cacheList.splice(cacheList.begin(), cacheList, cacheMap[key]);
+        return cacheMap[key]->second;
+    }
+
+    void put(int key, int value) {
+        if (cacheMap.find(key) != cacheMap.end()) {
+            cacheMap[key]->second = value;
+            cacheList.splice(cacheList.begin(), cacheList, cacheMap[key]);
+            return;
+        }
+        if (cacheList.size() >= cap) {
+            int keyToRemove = cacheList.back().first;
+            cacheMap.erase(keyToRemove);
+            cacheList.pop_back();
+        }
+        cacheList.push_front({key, value});
+        cacheMap[key] = cacheList.begin();
+    }
+};`;
+      betterJava = `// Better Java Solution (LinkedHashMap subclass)
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+class LRUCache extends LinkedHashMap<Integer, Integer> {
+    private final int capacity;
+
+    public LRUCache(int capacity) {
+        super(capacity, 0.75f, true);
+        this.capacity = capacity;
+    }
+
+    public int get(int key) {
+        return super.getOrDefault(key, -1);
+    }
+
+    public void put(int key, int value) {
+        super.put(key, value);
+    }
+
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {
+        return size() > capacity;
+    }
+}`;
+
+      optimalApproach = `**Optimal approach for "LRU Cache"**:\nDesign a custom Doubly Linked List (DLL) alongside a Hash Map. The DLL holds the cache nodes (with key-value pairs) in usage order, with the head representing the Most Recently Used (MRU) node and the tail representing the Least Recently Used (LRU) node. The Hash Map maps keys directly to DLL node pointers. This achieves true O(1) performance for both get and put operations with manual memory management.\n\n- Time Complexity: O(1) average per operation\n- Space Complexity: O(N) where N is the capacity`;
+      optimalTime = 'O(1)';
+      optimalSpace = 'O(N)';
+      optimalCpp = `// Optimal C++ Solution (Custom Doubly Linked List + Hash Map)
+#include <unordered_map>
+using namespace std;
+
+class LRUCache {
+private:
+    struct Node {
+        int key;
+        int val;
+        Node* prev;
+        Node* next;
+        Node(int k, int v) : key(k), val(v), prev(nullptr), next(nullptr) {}
+    };
+
+    int cap;
+    unordered_map<int, Node*> m;
+    Node* head;
+    Node* tail;
+
+    void addNode(Node* node) {
+        node->next = head->next;
+        node->next->prev = node;
+        node->prev = head;
+        head->next = node;
+    }
+
+    void removeNode(Node* node) {
+        Node* prevNode = node->prev;
+        Node* nextNode = node->next;
+        prevNode->next = nextNode;
+        nextNode->prev = prevNode;
+    }
+
+    void moveToHead(Node* node) {
+        removeNode(node);
+        addNode(node);
+    }
+
+public:
+    LRUCache(int capacity) {
+        cap = capacity;
+        head = new Node(-1, -1);
+        tail = new Node(-1, -1);
+        head->next = tail;
+        tail->prev = head;
+    }
+
+    int get(int key) {
+        if (m.find(key) == m.end()) {
+            return -1;
+        }
+        Node* node = m[key];
+        moveToHead(node);
+        return node->val;
+    }
+
+    void put(int key, int value) {
+        if (m.find(key) != m.end()) {
+            Node* node = m[key];
+            node->val = value;
+            moveToHead(node);
+        } else {
+            if (m.size() == cap) {
+                Node* lruNode = tail->prev;
+                removeNode(lruNode);
+                m.erase(lruNode->key);
+                delete lruNode;
+            }
+            Node* newNode = new Node(key, value);
+            addNode(newNode);
+            m[key] = newNode;
+        }
+    }
+};`;
+      optimalJava = `// Optimal Java Solution (Custom Doubly Linked List + Hash Map)
+import java.util.HashMap;
+import java.util.Map;
+
+class LRUCache {
+    private static class Node {
+        int key;
+        int val;
+        Node prev;
+        Node next;
+        Node(int key, int val) {
+            this.key = key;
+            this.val = val;
+        }
+    }
+
+    private final int capacity;
+    private final Map<Integer, Node> map;
+    private final Node head;
+    private final Node tail;
+
+    public LRUCache(int capacity) {
+        this.capacity = capacity;
+        this.map = new HashMap<>();
+        this.head = new Node(-1, -1);
+        this.tail = new Node(-1, -1);
+        head.next = tail;
+        tail.prev = head;
+    }
+
+    private void addNode(Node node) {
+        node.next = head.next;
+        node.next.prev = node;
+        node.prev = head;
+        head.next = node;
+    }
+
+    private void removeNode(Node node) {
+        Node prevNode = node.prev;
+        Node nextNode = node.next;
+        prevNode.next = nextNode;
+        nextNode.prev = prevNode;
+    }
+
+    private void moveToHead(Node node) {
+        removeNode(node);
+        addNode(node);
+    }
+
+    public int get(int key) {
+        if (!map.containsKey(key)) {
+            return -1;
+        }
+        Node node = map.get(key);
+        moveToHead(node);
+        return node.val;
+    }
+
+    public void put(int key, int value) {
+        if (map.containsKey(key)) {
+            Node node = map.get(key);
+            node.val = value;
+            moveToHead(node);
+        } else {
+            if (map.size() == capacity) {
+                Node lruNode = tail.prev;
+                removeNode(lruNode);
+                map.remove(lruNode.key);
+            }
+            Node newNode = new Node(key, value);
+            addNode(newNode);
+            map.put(key, newNode);
+        }
+    }
+}`;
+    } else if (topic === 'Basics' || topic === 'Arrays' || topic === 'Sorting') {
       bruteForceApproach = `**Brute Force approach for "${name}"**:\nUse nested loops to check all possible pairs or subarrays in the input, resolving the condition directly.\n\n- Time Complexity: O(N²)\n- Space Complexity: O(1)`;
       bruteForceCpp = `// Brute Force C++ Solution\nclass Solution {\npublic:\n    int solve(vector<int>& nums) {\n        int n = nums.size();\n        int result = 0;\n        for (int i = 0; i < n; i++) {\n            for (int j = i + 1; j < n; j++) {\n                // Nested comparison logic\n            }\n        }\n        return result;\n    }\n};`;
       bruteForceJava = `// Brute Force Java Solution\nclass Solution {\n    public int solve(int[] nums) {\n        int n = nums.length;\n        int result = 0;\n        for (int i = 0; i < n; i++) {\n            for (int j = i + 1; j < n; j++) {\n                // Nested comparison logic\n            }\n        }\n        return result;\n    }\n}`;
