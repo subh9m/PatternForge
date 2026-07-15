@@ -51,4 +51,23 @@ public class RequestRevisionsTest {
         System.out.println("REVISIONS ENDPOINT INTEGRATION TEST END");
         System.out.println("==================================================");
     }
+
+    @Autowired
+    private com.patternforge.repository.ProblemRepository problemRepository;
+
+    @Test
+    public void testCheckLRUCacheData() throws Exception {
+        System.out.println("==================================================");
+        System.out.println("DIAGNOSTIC: CHECKING LRU CACHE DATA IN DB");
+        System.out.println("==================================================");
+        com.patternforge.model.Problem p = problemRepository.findByLeetcodeNumber(146).orElse(null);
+        if (p == null) {
+            System.out.println("PROBLEM NOT FOUND IN DATABASE!");
+        } else {
+            System.out.println("LRU CACHE ID: " + p.getId());
+            System.out.println("LRU CACHE basicDetailsJson: " + p.getBasicDetailsJson());
+            System.out.println("LRU CACHE solutionDetailsJson: " + p.getSolutionDetailsJson());
+        }
+        System.out.println("==================================================");
+    }
 }

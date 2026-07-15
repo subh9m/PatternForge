@@ -90,6 +90,31 @@ public class PdfProblemImporter implements CommandLineRunner {
         // 1. Try seeding/syncing from problems_seed.json
         boolean success = importFromJson(topicMap);
 
+        // Force refresh LRU Cache details to use the updated fallback stubs
+        try {
+            Optional<Problem> lruOpt = problemRepository.findByLeetcodeNumber(146);
+            if (lruOpt.isPresent()) {
+                Problem lru = lruOpt.get();
+                System.out.println("PatternForge Importer: Forcing reload of LRU Cache details from updated fallbacks...");
+                lru.setBasicDetailsJson(LocalFallbackGenerator.getBasicDetailsFallbackJson(
+                        lru.getName(), lru.getLeetcodeNumber(), lru.getTopic().getName()));
+                lru.setSolutionDetailsJson(LocalFallbackGenerator.getSolutionDetailsFallbackJson(
+                        lru.getName(), lru.getLeetcodeNumber(), lru.getTopic().getName()));
+                Map<String, String> res = LocalFallbackGenerator.getSimplifiedFallback(lru.getName(), lru.getTopic().getName());
+                lru.setSimplifiedStatement(res.get("simplifiedStatement"));
+                Map<String, String> approachMap = new HashMap<>();
+                approachMap.put("optimal", res.get("simplifiedOptimal"));
+                approachMap.put("better", res.getOrDefault("simplifiedBetter", ""));
+                approachMap.put("bruteForce", res.getOrDefault("simplifiedBrute", ""));
+                ObjectMapper mapper = new ObjectMapper();
+                lru.setSimplifiedApproach(mapper.writeValueAsString(approachMap));
+                problemRepository.save(lru);
+                System.out.println("PatternForge Importer: LRU Cache details updated successfully.");
+            }
+        } catch (Exception e) {
+            System.err.println("PatternForge Importer: Failed to force reload LRU Cache: " + e.getMessage());
+        }
+
         if (!success && problemRepository.count() < 841) {
             System.out.println("PatternForge Importer: JSON seeding unsuccessful/missing. Seeding database from PDF on boot...");
             // Fallback candidate paths for local development
