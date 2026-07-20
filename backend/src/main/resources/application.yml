@@ -33,6 +33,6 @@ patternforge:
 gemini:
   api-keys: ${GEMINI_API_KEYS:}
   models:
-    - gemini-2.5-flash
     - gemini-2.0-flash
     - gemini-1.5-flash
+    - gemini-1.5-pro

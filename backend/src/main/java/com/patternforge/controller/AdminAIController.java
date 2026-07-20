@@ -51,15 +51,11 @@ public class AdminAIController {
             Map<String, String> modelMap = new LinkedHashMap<>();
 
             for (String model : preferredModels) {
-                if (apiKeyManager.getKeyState(key) == APIKeyManager.KeyState.COOLDOWN) {
-                    modelMap.put(model, "cooldown");
-                    continue;
-                }
-                
                 try {
                     HttpResponse<String> response = geminiClient.executeRequest(key, model, "Hello", "text/plain");
                     int code = response.statusCode();
                     if (code == 200) {
+                        apiKeyManager.markSuccess(key);
                         modelMap.put(model, "working");
                     } else if (code == 401 || code == 403) {
                         modelMap.put(model, "invalid key");
@@ -68,7 +64,7 @@ public class AdminAIController {
                     } else if (code == 404) {
                         modelMap.put(model, "model unavailable");
                     } else {
-                        modelMap.put(model, "network failure");
+                        modelMap.put(model, "network failure (" + code + ")");
                     }
                 } catch (Exception e) {
                     modelMap.put(model, "network failure");
@@ -78,5 +74,11 @@ public class AdminAIController {
         }
 
         return ResponseEntity.ok(results);
+    }
+
+    @RequestMapping("/reset-cooldowns")
+    public ResponseEntity<?> resetCooldowns() {
+        apiKeyManager.resetAllCooldowns();
+        return ResponseEntity.ok(Map.of("message", "All API keys in COOLDOWN state have been reset back to AVAILABLE."));
     }
 }

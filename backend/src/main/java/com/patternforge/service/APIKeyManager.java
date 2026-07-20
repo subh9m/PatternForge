@@ -267,6 +267,17 @@ public class APIKeyManager {
         lastErrors.remove(key);
     }
 
+    public synchronized void resetAllCooldowns() {
+        for (String key : allKeys) {
+            if (keyStates.get(key) == KeyState.COOLDOWN) {
+                keyStates.put(key, KeyState.AVAILABLE);
+                cooldowns.remove(key);
+                lastErrors.remove(key);
+            }
+        }
+        log.info("APIKeyManager: All keys in COOLDOWN state have been reset back to AVAILABLE.");
+    }
+
     public List<String> getAllKeysRaw() {
         return new ArrayList<>(allKeys);
     }

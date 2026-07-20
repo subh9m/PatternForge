@@ -42,6 +42,7 @@ public class ProblemController {
     private final EntityManager entityManager;
     private final UserLeetCodeSyncRepository userLeetCodeSyncRepository;
     private final AudioLearningGuideService audioLearningGuideService;
+    private final com.patternforge.service.APIKeyManager apiKeyManager;
 
     public ProblemController(ProblemRepository problemRepository,
                              TopicRepository topicRepository,
@@ -56,7 +57,8 @@ public class ProblemController {
                              ProblemGenerationService problemGenerationService,
                              EntityManager entityManager,
                              UserLeetCodeSyncRepository userLeetCodeSyncRepository,
-                             AudioLearningGuideService audioLearningGuideService) {
+                             AudioLearningGuideService audioLearningGuideService,
+                             com.patternforge.service.APIKeyManager apiKeyManager) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -71,6 +73,7 @@ public class ProblemController {
         this.entityManager = entityManager;
         this.userLeetCodeSyncRepository = userLeetCodeSyncRepository;
         this.audioLearningGuideService = audioLearningGuideService;
+        this.apiKeyManager = apiKeyManager;
     }
 
     @GetMapping
@@ -858,6 +861,11 @@ public class ProblemController {
         p.setSimplifiedApproach(null);
         problemRepository.save(p);
 
+        // If user explicitly requests regeneration and all keys are stuck in cooldown, reset cooldowns to retry
+        if (apiKeyManager.getAvailableKeys().isEmpty()) {
+            apiKeyManager.resetAllCooldowns();
+        }
+
         // Remove from activeJobs to reset any FAILED/COMPLETED status
         problemGenerationService.clearJobStatus(p.getId());
 
@@ -865,8 +873,9 @@ public class ProblemController {
         boolean success = problemGenerationService.submitJobAndWait(p.getId(), JobPriority.HIGHEST);
 
         if (!success) {
-            return ResponseEntity.status(500).body(Map.of(
+            return ResponseEntity.ok(Map.of(
                 "success", false,
+                "fallbackApplied", true,
                 "message", "AI details generation failed. Local offline stubs applied."
             ));
         }

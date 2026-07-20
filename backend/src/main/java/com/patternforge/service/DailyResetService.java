@@ -189,7 +189,15 @@ public class DailyResetService {
 
     public Settings getOrCreateSettings(UUID userId) {
         return settingsRepository.findByUserId(userId).orElseGet(() -> {
-            User user = userRepository.findById(userId).orElseThrow();
+            User user = userRepository.findById(userId).orElseGet(() -> {
+                User newUser = new User();
+                newUser.setId(userId);
+                newUser.setUsername("user_" + userId.toString().substring(0, 8));
+                newUser.setEmail("user_" + userId.toString().substring(0, 8) + "@example.com");
+                newUser.setPassword("password");
+                newUser.setRole("USER");
+                return userRepository.save(newUser);
+            });
             return settingsRepository.save(Settings.builder().user(user).build());
         });
     }

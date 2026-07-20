@@ -99,59 +99,17 @@ public class GeminiClient {
             if (!errorNode.isMissingNode()) {
                 JsonNode detailsNode = errorNode.path("details");
                 if (detailsNode.isArray()) {
-                    // First pass: look for RetryInfo
+                    // Look for RetryInfo first
                     for (JsonNode detail : detailsNode) {
                         String type = detail.path("@type").asText("");
 
                         if (type.contains("RetryInfo")) {
-                            // Short rate-limit (RPM). Use the supplied delay.
                             String delayStr = detail.path("retryDelay").asText("");
                             if (!delayStr.isEmpty() && delayStr.endsWith("s")) {
                                 int delaySec = (int) Math.ceil(
                                         Double.parseDouble(delayStr.substring(0, delayStr.length() - 1)));
                                 log.warn("GeminiClient: 429 RetryInfo detected — RPM rate-limit. Retry after {}s.", delaySec);
-                                return Math.max(delaySec, 10); // at least 10s
-                            }
-                            log.warn("GeminiClient: 429 RetryInfo detected but no retryDelay field — defaulting to 60s.");
-                            return 60;
-                        }
-                    }
-
-                    // Second pass: look for QuotaFailure
-                    for (JsonNode detail : detailsNode) {
-                        String type = detail.path("@type").asText("");
-
-                        if (type.contains("QuotaFailure")) {
-                            boolean isDaily = false;
-                            JsonNode violations = detail.path("violations");
-                            if (violations.isArray()) {
-                                for (JsonNode violation : violations) {
-                                    String desc = violation.path("description").asText("").toLowerCase();
-                                    String subject = violation.path("subject").asText("").toLowerCase();
-                                    if (desc.contains("daily") || desc.contains("day") || desc.contains("per_day") ||
-                                        subject.contains("daily") || subject.contains("day") || subject.contains("per_day")) {
-                                        // Guard against it being a minute limit that happens to contain "day" or similar incorrectly
-                                        if (!desc.contains("minute") && !subject.contains("minute") &&
-                                            !desc.contains("rpm") && !subject.contains("rpm")) {
-                                            isDaily = true;
-                                        }
-                                    }
-                                }
-                            }
-                            // Also check top-level error message
-                            String topMsg = errorNode.path("message").asText("").toLowerCase();
-                            if (topMsg.contains("daily") || topMsg.contains("day") || topMsg.contains("per_day")) {
-                                if (!topMsg.contains("minute") && !topMsg.contains("rpm")) {
-                                    isDaily = true;
-                                }
-                            }
-
-                            if (isDaily) {
-                                log.warn("GeminiClient: 429 QuotaFailure detected — daily/long-term quota exhausted. Cooling down for 24h.");
-                                return 86400; // 24 hours
-                            } else {
-                                log.warn("GeminiClient: 429 QuotaFailure detected but classified as transient/minute rate limit. Cooling down for 60s.");
-                                return 60; // 60 seconds
+                                return Math.min(Math.max(delaySec, 10), 120); // between 10s and 120s
                             }
                         }
                     }
@@ -160,8 +118,8 @@ public class GeminiClient {
         } catch (Exception e) {
             log.warn("GeminiClient: Failed to parse retry delay from error payload.", e);
         }
-        // Unknown 429 — treat as a short rate-limit, back off 60s
-        log.warn("GeminiClient: 429 received but could not classify — defaulting to 60s cooldown.");
+        // For rate limits (429), use a short 60s cooldown to allow keys to recover after the 1-minute window passes
+        log.warn("GeminiClient: 429 Rate Limit received — applying 60s cooldown.");
         return 60;
     }
 }
