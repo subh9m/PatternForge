@@ -48,6 +48,7 @@ public class RetryExecutor {
             throw new IllegalStateException("All Gemini API keys in the pool are currently disabled or exhausted.");
         }
 
+        int consecutive429s = 0;
         int maxRounds = 3;
         for (int round = 0; round < maxRounds; round++) {
             Set<String> triedKeys = new HashSet<>();
@@ -103,16 +104,19 @@ public class RetryExecutor {
                                 System.out.println("↓\n" + reason);
                                 apiKeyManager.markInvalid(key, reason);
                                 skipKey = true;
+                                consecutive429s = 0;
                                 break; 
                             } else if (statusCode == 404) {
                                 System.out.println("↓\n404 (Model Unavailable)");
                                 modelSelector.markUnsupported(model);
+                                consecutive429s = 0;
                                 break; 
                             } else if (statusCode == 429) {
                                 int delaySec = geminiClient.parseRetryDelay(response.body());
                                 System.out.println("↓\n429");
                                 apiKeyManager.markCooldown(key, delaySec * 1000L, "Quota / Rate limit hit on " + model + " (cooldown=" + delaySec + "s)");
                                 skipKey = true;
+                                consecutive429s++;
 
                                 // --- Diagnostic log after every 429 ---
                                 List<String> availableSuffixes = new ArrayList<>();
@@ -132,27 +136,37 @@ public class RetryExecutor {
                                          cooldownSuffixes.size(), cooldownSuffixes);
                                 // ---------------------------------------
 
-                                // Sleep 2 seconds before trying the next key to avoid burst/concurrency limits
+                                long sleepMs = 2000;
+                                if (consecutive429s >= 2) {
+                                    sleepMs = delaySec * 1000L;
+                                    log.warn("RetryExecutor: Detected {} consecutive 429s. Keys likely share rate limits. Waiting {} ms before next attempt.",
+                                             consecutive429s, sleepMs);
+                                    consecutive429s = 0;
+                                }
+
                                 try {
-                                    Thread.sleep(2000);
+                                    Thread.sleep(sleepMs);
                                 } catch (InterruptedException ie) {
                                     Thread.currentThread().interrupt();
-                                    throw new RuntimeException("Execution interrupted during pacing delay", ie);
+                                    throw new RuntimeException("Execution interrupted during pacing/cooldown delay", ie);
                                 }
 
                                 break; 
                             } else if (statusCode >= 500) {
                                 System.out.println("↓\n500 (attempt " + attempt + "/" + maxTransientAttempts + ")");
+                                consecutive429s = 0;
                                 if (attempt < maxTransientAttempts) {
                                     Thread.sleep(transientBackoffMs);
                                     transientBackoffMs *= 2;
                                 }
                             } else {
                                 System.out.println("↓\nNon-retryable error: " + statusCode);
+                                consecutive429s = 0;
                                 break; 
                             }
                         } catch (IOException | InterruptedException e) {
                             System.out.println("↓\nNetwork/IO failure (attempt " + attempt + "/" + maxTransientAttempts + "): " + e.getMessage());
+                            consecutive429s = 0;
                             if (e instanceof InterruptedException) {
                                 Thread.currentThread().interrupt();
                                 throw new RuntimeException("Execution interrupted", e);
