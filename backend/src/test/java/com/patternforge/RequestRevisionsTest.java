@@ -22,12 +22,24 @@ public class RequestRevisionsTest {
     @Autowired
     private JwtUtils jwtUtils;
 
+    @Autowired
+    private com.patternforge.repository.UserRepository userRepository;
+
+    @Autowired
+    private com.patternforge.repository.SettingsRepository settingsRepository;
+
     @Test
     public void testRevisionsEndpoint() throws Exception {
         System.out.println("==================================================");
         System.out.println("RUNNING REVISIONS ENDPOINT INTEGRATION TEST");
         System.out.println("==================================================");
-        
+
+        // Clean up any existing conflicting users
+        userRepository.findByUsername("user_026386b9").ifPresent(user -> {
+            settingsRepository.findByUserId(user.getId()).ifPresent(settingsRepository::delete);
+            userRepository.delete(user);
+        });
+
         // Mock authentication for user 'new' (ID: 026386b9-9461-4b85-8889-1a19aa4394ff)
         UUID userId = UUID.fromString("026386b9-9461-4b85-8889-1a19aa4394ff");
         String token = jwtUtils.generateToken("new", userId);

@@ -90,4 +90,79 @@ public class GeminiRotationTest {
         System.out.println("GEMINI ROTATION & FAILBACK TEST PASSED");
         System.out.println("==================================================");
     }
+
+    @Test
+    public void testAllKeysInCooldown() throws Exception {
+        System.out.println("==================================================");
+        System.out.println("RUNNING ALL KEYS IN COOLDOWN TEST");
+        System.out.println("==================================================");
+
+        List<String> allKeys = apiKeyManager.getAllKeysRaw();
+        
+        // Reset all key states
+        for (String k : allKeys) {
+            apiKeyManager.markSuccess(k);
+        }
+
+        // Mock 429 response for all requests
+        HttpResponse<String> response429 = Mockito.mock(HttpResponse.class);
+        when(response429.statusCode()).thenReturn(429);
+        when(response429.body()).thenReturn("{\"error\": {\"message\": \"Resource exhausted\", \"details\": [{\"@type\": \"type.googleapis.com/google.rpc.QuotaFailure\"}]}}");
+
+        Mockito.reset(geminiClient);
+        when(geminiClient.executeRequest(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(response429);
+        when(geminiClient.parseRetryDelay(anyString())).thenReturn(2); // 2 seconds cooldown to make it fast
+
+        // Call the retry executor and expect it to fail
+        long startTime = System.currentTimeMillis();
+        try {
+            retryExecutor.executeWithFallback("Hello", "text/plain");
+            fail("Expected RuntimeException");
+        } catch (RuntimeException e) {
+            System.out.println("Caught expected exception: " + e.getMessage());
+        }
+        long duration = System.currentTimeMillis() - startTime;
+        System.out.println("Duration: " + duration + " ms");
+        System.out.println("==================================================");
+    }
+
+    @Test
+    public void testOneKeyAvailableOthersInCooldown() throws Exception {
+        System.out.println("==================================================");
+        System.out.println("RUNNING ONE KEY AVAILABLE OTHERS IN COOLDOWN TEST");
+        System.out.println("==================================================");
+
+        List<String> allKeys = apiKeyManager.getAllKeysRaw();
+        assertTrue(allKeys.size() >= 10, "Test requires 10 keys");
+
+        // Set 9 keys to COOLDOWN state with 10 seconds cooldown
+        for (int i = 0; i < 9; i++) {
+            apiKeyManager.markCooldown(allKeys.get(i), 10000L, "Pre-existing cooldown");
+        }
+        // Set the 10th key to AVAILABLE
+        String availableKey = allKeys.get(9);
+        apiKeyManager.markSuccess(availableKey);
+
+        // Mock 429 response for the available key
+        HttpResponse<String> response429 = Mockito.mock(HttpResponse.class);
+        when(response429.statusCode()).thenReturn(429);
+        when(response429.body()).thenReturn("{\"error\": {\"message\": \"Resource exhausted\", \"details\": [{\"@type\": \"type.googleapis.com/google.rpc.QuotaFailure\"}]}}");
+
+        Mockito.reset(geminiClient);
+        when(geminiClient.executeRequest(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(response429);
+        when(geminiClient.parseRetryDelay(anyString())).thenReturn(5); // 5 seconds cooldown
+
+        long startTime = System.currentTimeMillis();
+        try {
+            retryExecutor.executeWithFallback("Hello", "text/plain");
+            fail("Expected RuntimeException");
+        } catch (RuntimeException e) {
+            System.out.println("Caught expected exception: " + e.getMessage());
+        }
+        long duration = System.currentTimeMillis() - startTime;
+        System.out.println("Duration: " + duration + " ms");
+        System.out.println("==================================================");
+    }
 }

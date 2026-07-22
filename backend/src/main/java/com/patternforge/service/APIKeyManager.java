@@ -295,6 +295,7 @@ public class APIKeyManager {
     }
 
     public synchronized Long getEarliestCooldownExpiry() {
+        evaluateCooldowns();
         long earliest = Long.MAX_VALUE;
         for (Map.Entry<String, Long> entry : cooldowns.entrySet()) {
             if (keyStates.get(entry.getKey()) == KeyState.COOLDOWN) {

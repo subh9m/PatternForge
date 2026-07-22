@@ -48,7 +48,8 @@ public class RetryExecutor {
             throw new IllegalStateException("All Gemini API keys in the pool are currently disabled or exhausted.");
         }
 
-        for (int round = 0; round < 2; round++) {
+        int maxRounds = 3;
+        for (int round = 0; round < maxRounds; round++) {
             Set<String> triedKeys = new HashSet<>();
 
             for (int i = 0; i < poolSize; i++) {
@@ -56,11 +57,11 @@ public class RetryExecutor {
 
                 if (key == null) {
                     log.warn("RetryExecutor: nextAvailableKey() returned null on iteration {} of {} " +
-                             "(all remaining keys are in cooldown). Skipping iteration.", i + 1, poolSize);
-                    continue;
+                             "(all remaining keys are in cooldown/disabled). Breaking inner loop for round {}.", i + 1, poolSize, round + 1);
+                    break;
                 }
 
-                // Guard against wrap-around (same key returned twice)
+                // Guard against wrap-around (same key returned twice in same round)
                 if (triedKeys.contains(key)) {
                     log.debug("RetryExecutor: Key {} already tried this round — skipping.", apiKeyManager.maskKey(key));
                     continue;
@@ -162,13 +163,14 @@ public class RetryExecutor {
                 }
             }
 
-            // If round 0 failed because keys are in COOLDOWN, wait for earliest key recovery before giving up
-            if (round == 0) {
+            // If round failed because keys are in COOLDOWN, wait for earliest key recovery before next round
+            if (round < maxRounds - 1) {
                 Long earliestExpiry = apiKeyManager.getEarliestCooldownExpiry();
                 if (earliestExpiry != null) {
                     long waitMs = earliestExpiry - System.currentTimeMillis() + 1000;
-                    if (waitMs > 0 && waitMs <= 60000) {
-                        log.info("RetryExecutor: All keys in pool are currently in COOLDOWN. Waiting {} ms for earliest key to recover...", waitMs);
+                    if (waitMs > 0) {
+                        waitMs = Math.min(waitMs, 65000L);
+                        log.info("RetryExecutor: All available keys in pool are currently in COOLDOWN. Waiting {} ms for earliest key to recover (round {}/{})...", waitMs, round + 1, maxRounds);
                         try {
                             Thread.sleep(waitMs);
                             apiKeyManager.evaluateCooldowns();
