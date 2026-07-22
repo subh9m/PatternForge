@@ -174,8 +174,11 @@ public class RetryExecutor {
             // If round failed because keys are in COOLDOWN, wait for earliest key recovery before next round
             if (round < maxRounds - 1) {
                 Long earliestExpiry = apiKeyManager.getEarliestCooldownExpiry();
+                long now = System.currentTimeMillis();
+                log.info("RetryExecutor Wait Block Diagnostic: round={} earliestExpiry={} now={} diff={}", 
+                        round, earliestExpiry, now, (earliestExpiry != null ? (earliestExpiry - now) : "null"));
                 if (earliestExpiry != null) {
-                    long waitMs = earliestExpiry - System.currentTimeMillis() + 1000;
+                    long waitMs = earliestExpiry - now + 1000;
                     if (waitMs > 0) {
                         waitMs = Math.min(waitMs, 65000L);
                         log.info("RetryExecutor: All available keys in pool are currently in COOLDOWN. Waiting {} ms for earliest key to recover (round {}/{})...", waitMs, round + 1, maxRounds);
