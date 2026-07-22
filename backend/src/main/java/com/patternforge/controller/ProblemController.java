@@ -283,6 +283,23 @@ public class ProblemController {
         return ResponseEntity.ok(allJobs);
     }
 
+    @GetMapping("/generation-status")
+    public ResponseEntity<?> getGenerationStatus() {
+        Long earliestExpiry = apiKeyManager.getEarliestCooldownExpiry();
+        long remainingCooldownSeconds = 0;
+        if (earliestExpiry != null) {
+            remainingCooldownSeconds = Math.max(0, (earliestExpiry - System.currentTimeMillis()) / 1000);
+        }
+        
+        Map<String, Object> res = new HashMap<>();
+        res.put("queueSize", problemGenerationService.getQueueSize());
+        res.put("runningJobs", problemGenerationService.getRunningJobsCount());
+        res.put("remainingCooldownSeconds", remainingCooldownSeconds);
+        res.put("availableKeys", apiKeyManager.getAvailableKeys().size());
+        res.put("totalKeys", apiKeyManager.getAllKeysRaw().size());
+        return ResponseEntity.ok(res);
+    }
+
     @PostMapping("/{id}/bookmark")
     public ResponseEntity<?> toggleBookmark(Authentication authentication, @PathVariable UUID id) {
         Optional<Problem> problemOpt = problemRepository.findById(id);

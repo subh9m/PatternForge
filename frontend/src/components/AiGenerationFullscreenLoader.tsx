@@ -53,6 +53,29 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
     return () => clearInterval(countdown);
   }, [failed, loading]);
 
+  // Dynamic status polling to update remaining cooldown/waiting time
+  useEffect(() => {
+    if (failed || !loading) return;
+
+    const pollStatus = async () => {
+      try {
+        const res = await api.get<{ remainingCooldownSeconds: number; availableKeys: number; totalKeys: number }>('/problems/generation-status');
+        if (res.remainingCooldownSeconds > 0) {
+          setTimeLeft(res.remainingCooldownSeconds);
+          setDisplayEstimate(`Keys cooling down (${res.availableKeys}/${res.totalKeys} available)`);
+        } else if (res.availableKeys === 0) {
+          setDisplayEstimate("All keys in cooldown. Waiting for recovery...");
+        }
+      } catch (e) {
+        // Silently ignore polling errors
+      }
+    };
+
+    pollStatus();
+    const interval = setInterval(pollStatus, 3000);
+    return () => clearInterval(interval);
+  }, [failed, loading]);
+
   const loadDataAndGenerate = async () => {
     setLoading(true);
     setFailed(false);
