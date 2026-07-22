@@ -81,7 +81,7 @@ public class ProblemGenerationService {
     }
 
     private final List<Thread> workerThreads = new ArrayList<>();
-    private static final int MAX_WORKERS = 3;
+    private static final int MAX_WORKERS = 1;
 
     private synchronized void ensureWorkerThreadStarted() {
         workerThreads.removeIf(t -> !t.isAlive());

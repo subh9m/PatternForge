@@ -132,6 +132,14 @@ public class RetryExecutor {
                                          cooldownSuffixes.size(), cooldownSuffixes);
                                 // ---------------------------------------
 
+                                // Sleep 2 seconds before trying the next key to avoid burst/concurrency limits
+                                try {
+                                    Thread.sleep(2000);
+                                } catch (InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                    throw new RuntimeException("Execution interrupted during pacing delay", ie);
+                                }
+
                                 break; 
                             } else if (statusCode >= 500) {
                                 System.out.println("↓\n500 (attempt " + attempt + "/" + maxTransientAttempts + ")");
