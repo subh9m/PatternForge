@@ -271,7 +271,7 @@ public class ProblemGenerationService {
         }
 
         try {
-            job.getFuture().get(60, TimeUnit.SECONDS);
+            job.getFuture().get(120, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {
             log.warn("ProblemGenerationService: Wait timeout or failure occurred for problem {}: {}", problemId, e.getMessage());
