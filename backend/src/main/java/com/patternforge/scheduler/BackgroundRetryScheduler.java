@@ -43,27 +43,39 @@ public class BackgroundRetryScheduler {
             return;
         }
 
-        log.info("BackgroundRetryScheduler: Scanning for failed/boilerplate problems to retry generation in background...");
-        List<Problem> problems = problemRepository.findAll();
+        java.util.Set<java.util.UUID> failedIds = problemGenerationService.getFailedProblems();
+        if (failedIds.isEmpty()) {
+            return;
+        }
+
+        log.info("BackgroundRetryScheduler: Scanning for explicitly requested failed problems to retry...");
         int retriedCount = 0;
 
-        for (Problem p : problems) {
-            boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
-                                       LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
+        for (java.util.UUID problemId : failedIds) {
+            // Skip if already in the running/queued set
+            if (problemGenerationService.isGenerating(problemId)) {
+                continue;
+            }
 
-            if (needsGeneration) {
-                // Skip if already in the running/queued set
-                if (problemGenerationService.isGenerating(p.getId())) {
-                    continue;
-                }
+            int retries = problemGenerationService.getRetryCount(problemId);
+            if (retries >= 3) {
+                log.info("BackgroundRetryScheduler: Problem {} has failed {} times. Skipping automatic retry.", problemId, retries);
+                continue;
+            }
 
-                ProblemGenerationService.JobStatus status = problemGenerationService.getJobStatus(p.getId());
-                // If it is failed or null (cleared from registry), re-submit it!
-                if (status == null || status == ProblemGenerationService.JobStatus.FAILED) {
-                    log.info("BackgroundRetryScheduler: Re-submitting '{}' to generation queue.", p.getName());
-                    problemGenerationService.clearJobStatus(p.getId());
+            java.util.Optional<Problem> pOpt = problemRepository.findById(problemId);
+            if (pOpt.isPresent()) {
+                Problem p = pOpt.get();
+                boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
+                                           LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
+
+                if (needsGeneration) {
+                    log.info("BackgroundRetryScheduler: Re-submitting '{}' (attempt {}) to generation queue.", p.getName(), retries + 1);
+                    problemGenerationService.incrementRetryCount(problemId);
                     problemGenerationService.submitJob(p.getId(), JobPriority.LOWEST);
                     retriedCount++;
+                } else {
+                    problemGenerationService.clearJobStatus(p.getId());
                 }
             }
         }

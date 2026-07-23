@@ -541,7 +541,7 @@ public class ProblemController {
         ProblemGenerationService.JobStatus jobStatus = problemGenerationService.getJobStatus(p.getId());
 
         // Submit job asynchronously (non-blocking) — does not wait for completion
-        if (needsGeneration && jobStatus != ProblemGenerationService.JobStatus.FAILED) {
+        if (needsGeneration && jobStatus != ProblemGenerationService.JobStatus.FAILED && !problemGenerationService.isFailed(p.getId())) {
             problemGenerationService.submitJob(p.getId(), JobPriority.HIGHEST);
             jobStatus = problemGenerationService.getJobStatus(p.getId());
         }
@@ -554,7 +554,7 @@ public class ProblemController {
         }
 
         String generationStatus;
-        if (jobStatus == ProblemGenerationService.JobStatus.FAILED) {
+        if (jobStatus == ProblemGenerationService.JobStatus.FAILED || problemGenerationService.isFailed(p.getId())) {
             generationStatus = "FAILED";
         } else if (needsGeneration) {
             generationStatus = "PENDING";
@@ -585,7 +585,7 @@ public class ProblemController {
         ProblemGenerationService.JobStatus jobStatus = problemGenerationService.getJobStatus(p.getId());
 
         // Submit job asynchronously (non-blocking) — does not wait for completion
-        if (needsGeneration && jobStatus != ProblemGenerationService.JobStatus.FAILED) {
+        if (needsGeneration && jobStatus != ProblemGenerationService.JobStatus.FAILED && !problemGenerationService.isFailed(p.getId())) {
             problemGenerationService.submitJob(p.getId(), JobPriority.HIGHEST);
             jobStatus = problemGenerationService.getJobStatus(p.getId());
         }
@@ -597,7 +597,7 @@ public class ProblemController {
         }
 
         String generationStatus;
-        if (jobStatus == ProblemGenerationService.JobStatus.FAILED) {
+        if (jobStatus == ProblemGenerationService.JobStatus.FAILED || problemGenerationService.isFailed(p.getId())) {
             generationStatus = "FAILED";
         } else if (needsGeneration) {
             generationStatus = "PENDING";

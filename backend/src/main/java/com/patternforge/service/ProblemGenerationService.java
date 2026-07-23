@@ -19,6 +19,8 @@ public class ProblemGenerationService {
     private final PriorityBlockingQueue<GenerationJob> queue = new PriorityBlockingQueue<>();
     private final Set<UUID> runningJobs = ConcurrentHashMap.newKeySet();
     private final Set<UUID> queuedJobs = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> failedProblems = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, Integer> retryCounts = new ConcurrentHashMap<>();
     private final Object lock = new Object();
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProblemGenerationService.class);
 
@@ -140,6 +142,9 @@ public class ProblemGenerationService {
                         }
                         job.getFuture().complete(null);
                         
+                        failedProblems.remove(job.getProblemId());
+                        retryCounts.remove(job.getProblemId());
+                        
                         JobProgress progress = activeJobs.get(job.getProblemId());
                         if (progress != null) {
                             progress.setStatus(JobStatus.COMPLETED);
@@ -148,6 +153,8 @@ public class ProblemGenerationService {
                     } catch (Exception e) {
                         log.error("ProblemGenerationService: Failed executing job for problem: {}", job.getProblemId(), e);
                         job.getFuture().completeExceptionally(e);
+                        
+                        failedProblems.add(job.getProblemId());
                         
                         JobProgress progress = activeJobs.get(job.getProblemId());
                         if (progress != null) {
@@ -271,6 +278,24 @@ public class ProblemGenerationService {
 
     public void clearJobStatus(UUID problemId) {
         activeJobs.remove(problemId);
+        failedProblems.remove(problemId);
+        retryCounts.remove(problemId);
+    }
+
+    public boolean isFailed(UUID problemId) {
+        return failedProblems.contains(problemId);
+    }
+
+    public Set<UUID> getFailedProblems() {
+        return failedProblems;
+    }
+
+    public int getRetryCount(UUID problemId) {
+        return retryCounts.getOrDefault(problemId, 0);
+    }
+
+    public void incrementRetryCount(UUID problemId) {
+        retryCounts.put(problemId, getRetryCount(problemId) + 1);
     }
 
     public void queueGeneration(UUID problemId, int priority) {
