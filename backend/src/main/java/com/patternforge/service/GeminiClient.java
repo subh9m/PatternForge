@@ -20,6 +20,10 @@ public class GeminiClient {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private static final java.util.concurrent.atomic.AtomicInteger activeRequests = new java.util.concurrent.atomic.AtomicInteger(0);
+    private static final java.util.concurrent.atomic.AtomicInteger maxConcurrency = new java.util.concurrent.atomic.AtomicInteger(0);
+    private static final java.util.Queue<Long> requestTimestamps = new java.util.concurrent.ConcurrentLinkedQueue<>();
+
     public GeminiClient() {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(15))
@@ -27,6 +31,20 @@ public class GeminiClient {
     }
 
     public HttpResponse<String> executeRequest(String key, String model, String textPrompt, String responseMimeType) throws IOException, InterruptedException {
+        long now = System.currentTimeMillis();
+        requestTimestamps.add(now);
+
+        while (!requestTimestamps.isEmpty() && requestTimestamps.peek() < now - 60000) {
+            requestTimestamps.poll();
+        }
+        int rollingRpm = requestTimestamps.size();
+
+        int concurrency = activeRequests.incrementAndGet();
+        int max = maxConcurrency.updateAndGet(m -> Math.max(m, concurrency));
+
+        log.info("GeminiClient Request Diagnostic: Concurrency: {} | Max Concurrency: {} | Rolling RPM: {} | Model: {} | Key: ...{}",
+                concurrency, max, rollingRpm, model, key.length() >= 5 ? key.substring(key.length() - 5) : "***");
+
         String escapedPrompt = escapeJsonString(textPrompt);
 
         StringBuilder requestBodyBuilder = new StringBuilder();
@@ -55,7 +73,15 @@ public class GeminiClient {
                 .timeout(Duration.ofSeconds(60))
                 .build();
 
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 429) {
+                log.warn("GeminiClient: 429 RESOURCE_EXHAUSTED detected! Response body: {}", response.body());
+            }
+            return response;
+        } finally {
+            activeRequests.decrementAndGet();
+        }
     }
 
     private String escapeJsonString(String raw) {
@@ -102,6 +128,11 @@ public class GeminiClient {
                     // Look for RetryInfo first
                     for (JsonNode detail : detailsNode) {
                         String type = detail.path("@type").asText("");
+
+                        if (type.contains("QuotaFailure")) {
+                            log.warn("GeminiClient: 429 QuotaFailure detected — daily/project quota exhausted. Applying 24h cooldown.");
+                            return 86400; // 24 hours in seconds
+                        }
 
                         if (type.contains("RetryInfo")) {
                             String delayStr = detail.path("retryDelay").asText("");

@@ -49,6 +49,7 @@ public class RetryExecutor {
         }
 
         int consecutive429s = 0;
+        boolean shareRateLimits = false;
         int maxRounds = 3;
         for (int round = 0; round < maxRounds; round++) {
             Set<String> triedKeys = new HashSet<>();
@@ -136,13 +137,14 @@ public class RetryExecutor {
                                          cooldownSuffixes.size(), cooldownSuffixes);
                                 // ---------------------------------------
 
-                                long sleepMs = 2000;
-                                if (consecutive429s >= 2) {
-                                    sleepMs = delaySec * 1000L;
-                                    log.warn("RetryExecutor: Detected {} consecutive 429s. Keys likely share rate limits. Waiting {} ms before next attempt.",
-                                             consecutive429s, sleepMs);
-                                    consecutive429s = 0;
-                                }
+                                 long sleepMs = 2000;
+                                 if (consecutive429s >= 2 || shareRateLimits) {
+                                     shareRateLimits = true;
+                                     sleepMs = delaySec * 1000L + 2000L; // cooldown + 2s safety buffer
+                                     log.warn("RetryExecutor: Detected sharing rate limits or consecutive 429s. Waiting {} ms before next attempt.", sleepMs);
+                                     consecutive429s = 0;
+                                     apiKeyManager.setGlobalCooldown(sleepMs);
+                                 }
 
                                 try {
                                     Thread.sleep(sleepMs);

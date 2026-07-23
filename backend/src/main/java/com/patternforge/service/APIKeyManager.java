@@ -27,6 +27,18 @@ public class APIKeyManager {
     private final Map<String, Long> cooldowns = new ConcurrentHashMap<>();
     private final Map<String, String> lastErrors = new ConcurrentHashMap<>();
     
+    private long globalCooldownUntil = 0;
+
+    public synchronized void setGlobalCooldown(long durationMs) {
+        this.globalCooldownUntil = System.currentTimeMillis() + durationMs;
+        log.warn("APIKeyManager: Global rate-limit cooldown activated for {} ms.", durationMs);
+        notifyAll();
+    }
+
+    public synchronized boolean isGlobalCooldownActive() {
+        return System.currentTimeMillis() < globalCooldownUntil;
+    }
+    
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r, "api-key-recovery-scheduler");
         t.setDaemon(true);
@@ -57,6 +69,10 @@ public class APIKeyManager {
                     + " | masked=" + maskKey(k)
                     + " | state=" + getKeyState(k)
                     + dupFlag);
+            System.out.println("  Google Account: N/A (Unavailable - API keys are opaque, reverse lookup restricted for security)");
+            System.out.println("  GCP Project ID: N/A (Unavailable - API keys are opaque, reverse lookup restricted for security)");
+            System.out.println("  Project Number: N/A (Unavailable - API keys are opaque, reverse lookup restricted for security)");
+            System.out.println("  Model(s) used:  " + (geminiConfig.getModels() != null ? geminiConfig.getModels() : "N/A"));
         }
         System.out.println("--- Uniqueness check ---");
         System.out.println("Unique full keys : " + seenFullKeys.size() + " / " + keysCount);
@@ -150,6 +166,11 @@ public class APIKeyManager {
 
     public synchronized void evaluateCooldowns() {
         long now = System.currentTimeMillis();
+        if (globalCooldownUntil > 0 && now >= globalCooldownUntil) {
+            globalCooldownUntil = 0;
+            log.info("APIKeyManager: Global cooldown has expired.");
+            notifyAll();
+        }
         for (String key : allKeys) {
             if (keyStates.get(key) == KeyState.COOLDOWN) {
                 Long until = cooldowns.get(key);
@@ -165,6 +186,9 @@ public class APIKeyManager {
 
     public synchronized List<String> getAvailableKeys() {
         evaluateCooldowns();
+        if (isGlobalCooldownActive()) {
+            return new ArrayList<>();
+        }
         List<String> available = new ArrayList<>();
         for (String key : allKeys) {
             if (keyStates.get(key) == KeyState.AVAILABLE) {
@@ -179,6 +203,10 @@ public class APIKeyManager {
     public synchronized String nextAvailableKey() {
         int beforeIndex = currentIndex;
         evaluateCooldowns();
+        if (isGlobalCooldownActive()) {
+            log.warn("APIKeyManager: nextAvailableKey() requested but global cooldown is active. Returning null.");
+            return null;
+        }
         int poolSize = allKeys.size();
         if (poolSize == 0) {
             log.warn("APIKeyManager: No keys loaded in the pool.");
@@ -268,6 +296,7 @@ public class APIKeyManager {
     }
 
     public synchronized void resetAllCooldowns() {
+        globalCooldownUntil = 0;
         for (String key : allKeys) {
             if (keyStates.get(key) == KeyState.COOLDOWN) {
                 keyStates.put(key, KeyState.AVAILABLE);
@@ -297,6 +326,9 @@ public class APIKeyManager {
     public synchronized Long getEarliestCooldownExpiry() {
         evaluateCooldowns();
         long earliest = Long.MAX_VALUE;
+        if (isGlobalCooldownActive()) {
+            earliest = Math.min(earliest, globalCooldownUntil);
+        }
         for (Map.Entry<String, Long> entry : cooldowns.entrySet()) {
             if (keyStates.get(entry.getKey()) == KeyState.COOLDOWN) {
                 earliest = Math.min(earliest, entry.getValue());

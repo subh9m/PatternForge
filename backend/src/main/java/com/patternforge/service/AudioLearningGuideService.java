@@ -25,7 +25,7 @@ public class AudioLearningGuideService {
     private final GeminiService geminiService;
     private final RetryExecutor retryExecutor;
 
-    private final ExecutorService executor = Executors.newFixedThreadPool(2);
+    private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private static final Map<String, AudioJobProgress> activeAudioJobs = new ConcurrentHashMap<>();
 
     public AudioLearningGuideService(AudioLearningGuideRepository guideRepository,
