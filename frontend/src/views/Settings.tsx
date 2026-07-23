@@ -39,6 +39,10 @@ const SettingsView: React.FC = () => {
   const [generatedToken, setGeneratedToken] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
 
+  // AI Gateway Health Check State
+  const [healthStatus, setHealthStatus] = useState<any>(null);
+  const [checkingHealth, setCheckingHealth] = useState(false);
+
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -72,9 +76,18 @@ const SettingsView: React.FC = () => {
         }
       }
     };
+    const loadHealthStatus = async () => {
+      try {
+        const hData = await api.get<any>('/admin/ai/health');
+        setHealthStatus(hData);
+      } catch (e) {
+        console.error("Failed to load initial AI health status", e);
+      }
+    };
     loadSettings();
     loadLeetcodeData();
     checkSyncFile();
+    loadHealthStatus();
   }, []);
 
   const handleGenerateToken = async () => {
@@ -179,6 +192,19 @@ const SettingsView: React.FC = () => {
     if (!(api as any).verifySyncPermission) return;
     const granted = await (api as any).verifySyncPermission();
     setSyncPermissionGranted(granted);
+  };
+
+  const handleRunHealthCheck = async () => {
+    setCheckingHealth(true);
+    try {
+      const data = await api.get<any>('/admin/ai/health');
+      setHealthStatus(data);
+    } catch (e) {
+      console.error("Failed to run diagnostics check", e);
+      alert("Failed to run AI Gateway diagnostics check.");
+    } finally {
+      setCheckingHealth(false);
+    }
   };
 
   const handleSave = async () => {
@@ -563,6 +589,86 @@ const SettingsView: React.FC = () => {
                 <li>Log in to LeetCode, then click the floating orange <strong>PF ↻</strong> button in the bottom-right corner to synchronize!</li>
               </ol>
             </div>
+          </div>
+        </div>
+
+        {/* AI Provider Health Check */}
+        <div className="space-y-4 pt-4 border-t border-slate-800/60">
+          <h3 className="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center space-x-2 border-b border-slate-800 pb-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            <span>AI Gateway Provider Diagnostics</span>
+          </h3>
+
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Diagnostic Status</span>
+                {healthStatus ? (
+                  <div className="flex items-center space-x-1.5 mt-1">
+                    <span className={`w-2 h-2 rounded-full ${healthStatus.healthyCount === healthStatus.totalCount ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-pulse'}`} />
+                    <span className="text-xs font-bold text-slate-200">
+                      {healthStatus.overallStatus}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-xs font-bold text-slate-400 mt-1 block">Not run yet</span>
+                )}
+              </div>
+
+              <button
+                onClick={handleRunHealthCheck}
+                disabled={checkingHealth}
+                className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/40 text-xs font-semibold text-slate-300 hover:text-slate-100 transition-smooth flex items-center space-x-2 disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${checkingHealth ? 'animate-spin text-blue-400' : ''}`} />
+                <span>{checkingHealth ? 'Running Diagnostic...' : 'Run Gateway Diagnostics'}</span>
+              </button>
+            </div>
+
+            {healthStatus?.providers && (
+              <div className="overflow-x-auto rounded-lg border border-slate-850 bg-slate-950/60">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-850 bg-slate-950/80 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                      <th className="px-3 py-2">Provider</th>
+                      <th className="px-3 py-2">Status</th>
+                      <th className="px-3 py-2">Model</th>
+                      <th className="px-3 py-2">Latency</th>
+                      <th className="px-3 py-2">HTTP</th>
+                      <th className="px-3 py-2">Output/Error Details</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850/60">
+                    {healthStatus.providers.map((p: any) => (
+                      <tr key={p.providerName} className="hover:bg-slate-900/40 text-xs">
+                        <td className="px-3 py-2.5 font-bold text-slate-200">{p.providerName}</td>
+                        <td className="px-3 py-2.5">
+                          {p.healthy ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                              Healthy
+                            </span>
+                          ) : !p.configured ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-800 text-slate-400 border border-slate-700/50">
+                              Unconfigured
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-red-500/10 text-red-400 border border-red-500/25 animate-pulse">
+                              Unhealthy
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 font-mono text-[10px] text-slate-400">{p.configuredModel}</td>
+                        <td className="px-3 py-2.5 text-slate-300 font-semibold">{p.healthy ? `${(p.latencyMs / 1000).toFixed(2)}s` : 'N/A'}</td>
+                        <td className="px-3 py-2.5 font-bold text-slate-400">{p.httpStatus !== -1 ? p.httpStatus : 'N/A'}</td>
+                        <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 truncate max-w-[200px]" title={p.responseBody}>
+                          {p.responseBody}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 

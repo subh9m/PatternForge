@@ -16,15 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.*;
 
 @RestController
-@RequestMapping("/admin/ai")
+@RequestMapping("/api/admin/ai")
 public class AdminAIController {
 
     private final AIGateway aiGateway;
     private final ProblemGenerationService problemGenerationService;
+    private final com.patternforge.config.AIGatewayConfig gatewayConfig;
 
-    public AdminAIController(AIGateway aiGateway, ProblemGenerationService problemGenerationService) {
+    public AdminAIController(AIGateway aiGateway, 
+                             ProblemGenerationService problemGenerationService,
+                             com.patternforge.config.AIGatewayConfig gatewayConfig) {
         this.aiGateway = aiGateway;
         this.problemGenerationService = problemGenerationService;
+        this.gatewayConfig = gatewayConfig;
     }
 
     @GetMapping("/status")
@@ -169,5 +173,136 @@ public class AdminAIController {
             pm.setLastFailureTimeInstant(null);
         });
         return ResponseEntity.ok(Map.of("message", "AIGateway metrics and circuit states reset to zero."));
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<?> runHealthCheck() {
+        Map<String, Object> response = new LinkedHashMap<>();
+        List<Map<String, Object>> providerResults = new ArrayList<>();
+        int healthyCount = 0;
+        
+        String testPrompt = "Reply with exactly: PatternForge OK";
+        int estimatedInputTokens = (int) Math.ceil(testPrompt.length() / 4.0);
+
+        for (AIProvider provider : aiGateway.getProviders()) {
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("providerName", provider.providerName());
+            
+            // Config Validation
+            boolean configured = provider.isConfigured();
+            result.put("configured", configured);
+            
+            // Get model configured
+            String model = "";
+            if ("Gemini".equals(provider.providerName())) {
+                model = gatewayConfig.getGeminiModel();
+                if (model == null || model.isEmpty()) model = "gemini-2.5-flash";
+            } else if ("Groq".equals(provider.providerName())) {
+                model = gatewayConfig.getGroqModel();
+                if (model == null || model.isEmpty()) model = "llama-3.3-70b-versatile";
+            } else if ("GitHub".equals(provider.providerName())) {
+                model = gatewayConfig.getGithubModelsModel();
+                if (model == null || model.isEmpty()) model = "gpt-4o-mini";
+            } else if ("OpenRouter".equals(provider.providerName())) {
+                model = gatewayConfig.getOpenrouterModel();
+                if (model == null || model.isEmpty()) model = "google/gemini-2.5-flash";
+            }
+            result.put("configuredModel", model);
+
+            // API key validation
+            result.put("apiKeyExists", configured);
+            result.put("apiKeyNotEmpty", configured);
+            result.put("endpointConfigured", true); // Default built-in endpoints
+            
+            // Max tokens and temperature config
+            int maxTokensLimit = 3000; // configurable limit
+            result.put("maxTokensConfigured", maxTokensLimit);
+            result.put("temperatureConfigured", 0.0); // health check temp 0.0 for deterministic output
+
+            result.put("timestamp", java.time.Instant.now().toString());
+            result.put("estimatedInputTokens", estimatedInputTokens);
+
+            if (!configured) {
+                result.put("healthy", false);
+                result.put("httpStatus", -1);
+                result.put("latencyMs", 0);
+                result.put("responseBody", "Not Configured");
+                result.put("estimatedOutputTokens", 0);
+                result.put("errorReason", "API Key is missing or empty.");
+                providerResults.add(result);
+                continue;
+            }
+
+            long startTime = System.currentTimeMillis();
+            try {
+                AIRequest checkRequest = AIRequest.builder()
+                        .prompt(testPrompt)
+                        .responseMimeType("text/plain")
+                        .temperature(0.0)
+                        .maxTokens(maxTokensLimit)
+                        .problemId("HEALTH_CHECK")
+                        .problemTitle("Health Check Ping")
+                        .generationType("HEALTH_CHECK")
+                        .queueSize(0)
+                        .build();
+
+                AIResponse aiResponse = provider.generate(checkRequest);
+                long latencyMs = System.currentTimeMillis() - startTime;
+                
+                result.put("healthy", true);
+                result.put("httpStatus", 200);
+                result.put("latencyMs", latencyMs);
+                result.put("responseBody", aiResponse.getContent());
+                
+                int outputChars = aiResponse.getContent() != null ? aiResponse.getContent().length() : 0;
+                result.put("estimatedOutputTokens", (int) Math.ceil(outputChars / 4.0));
+                
+                healthyCount++;
+            } catch (Exception e) {
+                long latencyMs = System.currentTimeMillis() - startTime;
+                result.put("healthy", false);
+                result.put("latencyMs", latencyMs);
+                result.put("estimatedOutputTokens", 0);
+                
+                int statusCode = 500;
+                String errorReason = e.getMessage() != null ? e.getMessage() : "Unknown connection failure";
+                
+                if (e instanceof AIProviderException) {
+                    AIProviderException ape = (AIProviderException) e;
+                    statusCode = ape.getStatusCode() > 0 ? ape.getStatusCode() : 500;
+                } else {
+                    String msg = errorReason.toLowerCase();
+                    if (msg.contains("401") || msg.contains("unauthorized")) {
+                        statusCode = 401;
+                        errorReason = "401 Unauthorized: Invalid API key.";
+                    } else if (msg.contains("403") || msg.contains("forbidden")) {
+                        statusCode = 403;
+                        errorReason = "403 Forbidden: Permission missing.";
+                    } else if (msg.contains("404") || msg.contains("not found")) {
+                        statusCode = 404;
+                        errorReason = "404 Not Found: Invalid model name or endpoint URL.";
+                    } else if (msg.contains("429") || msg.contains("rate limit")) {
+                        statusCode = 429;
+                        errorReason = "429 Too Many Requests: Rate limit exceeded.";
+                    } else if (msg.contains("timeout") || msg.contains("connecttimedout")) {
+                        statusCode = 408;
+                        errorReason = "408 Request Timeout: Provider connection timed out.";
+                    }
+                }
+                
+                result.put("httpStatus", statusCode);
+                result.put("responseBody", "Failed: " + errorReason);
+                result.put("errorReason", errorReason);
+            }
+            
+            providerResults.add(result);
+        }
+        
+        response.put("overallStatus", healthyCount + " / " + aiGateway.getProviders().size() + " Healthy");
+        response.put("healthyCount", healthyCount);
+        response.put("totalCount", aiGateway.getProviders().size());
+        response.put("providers", providerResults);
+        
+        return ResponseEntity.ok(response);
     }
 }
