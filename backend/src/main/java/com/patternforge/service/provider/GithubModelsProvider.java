@@ -61,7 +61,11 @@ public class GithubModelsProvider implements AIProvider {
             throw new AIProviderException(providerName(), -1, "GitHub Models API Key is not configured.", false);
         }
 
-        String model = "gpt-4o-mini";
+        String model = gatewayConfig.getGithubModelsModel();
+        if (model == null || model.trim().isEmpty()) {
+            model = "gpt-4o-mini";
+        }
+        
         String url = "https://models.inference.ai.azure.com/chat/completions";
 
         Map<String, Object> message = Map.of("role", "user", "content", request.getPrompt());
@@ -94,7 +98,7 @@ public class GithubModelsProvider implements AIProvider {
 
         int statusCode = httpResponse.statusCode();
         if (statusCode != 200) {
-            boolean retryable = (statusCode == 429 || statusCode == 408 || statusCode >= 500);
+            boolean retryable = (statusCode == 429 || statusCode == 408 || statusCode >= 500) && (statusCode != 404);
             throw new AIProviderException(providerName(), statusCode, "GitHub Models API error. Status: " + statusCode + ", Body: " + httpResponse.body(), retryable);
         }
 

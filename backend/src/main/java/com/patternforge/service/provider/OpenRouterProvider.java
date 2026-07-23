@@ -61,7 +61,11 @@ public class OpenRouterProvider implements AIProvider {
             throw new AIProviderException(providerName(), -1, "OpenRouter API Key is not configured.", false);
         }
 
-        String model = "google/gemini-2.5-flash";
+        String model = gatewayConfig.getOpenrouterModel();
+        if (model == null || model.trim().isEmpty()) {
+            model = "google/gemini-2.5-flash";
+        }
+        
         String url = "https://openrouter.ai/api/v1/chat/completions";
 
         Map<String, Object> message = Map.of("role", "user", "content", request.getPrompt());
@@ -96,7 +100,7 @@ public class OpenRouterProvider implements AIProvider {
 
         int statusCode = httpResponse.statusCode();
         if (statusCode != 200) {
-            boolean retryable = (statusCode == 429 || statusCode == 408 || statusCode >= 500);
+            boolean retryable = (statusCode == 429 || statusCode == 408 || statusCode >= 500) && (statusCode != 404);
             throw new AIProviderException(providerName(), statusCode, "OpenRouter API error. Status: " + statusCode + ", Body: " + httpResponse.body(), retryable);
         }
 

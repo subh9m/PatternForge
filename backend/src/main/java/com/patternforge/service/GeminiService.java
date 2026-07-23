@@ -42,7 +42,7 @@ public class GeminiService {
         return trimmed;
     }
 
-    public String generateAllProblemDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
+    public AIResponse generateAllProblemDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
         String prompt = "Generate comprehensive LeetCode-like problem description details, optimal solution details, and simplified daily revision contents in a single structured JSON object for the problem '" 
                 + problemName + "' (LeetCode #" + leetcodeNumber + ") under topic '" + topicName + "'.\n\n"
                 + "Return EXACTLY a single JSON object with the following properties:\n"
@@ -117,7 +117,8 @@ public class GeminiService {
                     .responseMimeType("application/json")
                     .build();
             AIResponse aiResponse = aiGateway.generate(aiRequest);
-            return cleanJsonString(aiResponse.getContent());
+            aiResponse.setContent(cleanJsonString(aiResponse.getContent()));
+            return aiResponse;
         } catch (Exception e) {
             log.error("Failed to generate unified problem details via AI Gateway", e);
             throw new RuntimeException("Failed to generate unified problem details: " + e.getMessage(), e);

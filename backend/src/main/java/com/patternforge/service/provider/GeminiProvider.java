@@ -61,7 +61,11 @@ public class GeminiProvider implements AIProvider {
             throw new AIProviderException(providerName(), -1, "Gemini API Key is not configured.", false);
         }
 
-        String model = "gemini-2.5-flash";
+        String model = gatewayConfig.getGeminiModel();
+        if (model == null || model.trim().isEmpty()) {
+            model = "gemini-2.5-flash";
+        }
+        
         String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
 
         Map<String, Object> part = Map.of("text", request.getPrompt());
@@ -88,7 +92,7 @@ public class GeminiProvider implements AIProvider {
 
         int statusCode = httpResponse.statusCode();
         if (statusCode != 200) {
-            boolean retryable = (statusCode == 429 || statusCode == 408 || statusCode >= 500);
+            boolean retryable = (statusCode == 429 || statusCode == 408 || statusCode >= 500) && (statusCode != 404);
             throw new AIProviderException(providerName(), statusCode, "Gemini API error. Status: " + statusCode + ", Body: " + httpResponse.body(), retryable);
         }
 

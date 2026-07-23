@@ -61,7 +61,11 @@ public class GroqProvider implements AIProvider {
             throw new AIProviderException(providerName(), -1, "Groq API Key is not configured.", false);
         }
 
-        String model = "llama-3.3-70b-versatile";
+        String model = gatewayConfig.getGroqModel();
+        if (model == null || model.trim().isEmpty()) {
+            model = "llama-3.3-70b-versatile";
+        }
+        
         String url = "https://api.groq.com/openai/v1/chat/completions";
 
         Map<String, Object> message = Map.of("role", "user", "content", request.getPrompt());
@@ -94,7 +98,7 @@ public class GroqProvider implements AIProvider {
 
         int statusCode = httpResponse.statusCode();
         if (statusCode != 200) {
-            boolean retryable = (statusCode == 429 || statusCode == 408 || statusCode >= 500);
+            boolean retryable = (statusCode == 429 || statusCode == 408 || statusCode >= 500) && (statusCode != 404);
             throw new AIProviderException(providerName(), statusCode, "Groq API error. Status: " + statusCode + ", Body: " + httpResponse.body(), retryable);
         }
 

@@ -3,6 +3,7 @@ package com.patternforge.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.patternforge.model.Problem;
+import com.patternforge.dto.AIResponse;
 import com.patternforge.repository.ProblemRepository;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,8 @@ public class ProblemGenerationService {
         private JobStatus status;
         private long startTime;
         private long endTime;
+        private String stage = "Preparing request...";
+        private String activeProvider = "";
 
         public JobProgress(UUID problemId, String problemName, JobStatus status) {
             this.problemId = problemId;
@@ -51,10 +54,18 @@ public class ProblemGenerationService {
         public void setStartTime(long startTime) { this.startTime = startTime; }
         public long getEndTime() { return endTime; }
         public void setEndTime(long endTime) { this.endTime = endTime; }
+        public String getStage() { return stage; }
+        public void setStage(String stage) { this.stage = stage; }
+        public String getActiveProvider() { return activeProvider; }
+        public void setActiveProvider(String activeProvider) { this.activeProvider = activeProvider; }
         public String getJobType() { return "PROBLEM_GEN"; }
     }
 
     private static final Map<UUID, JobProgress> activeJobs = new ConcurrentHashMap<>();
+
+    public static JobProgress getActiveJob(UUID problemId) {
+        return activeJobs.get(problemId);
+    }
 
     public static List<JobProgress> getActiveJobsList() {
         cleanRegistry();
@@ -349,17 +360,49 @@ public class ProblemGenerationService {
             return;
         }
 
+        JobProgress progress = activeJobs.get(p.getId());
+        if (progress != null) {
+            progress.setStage("Preparing request...");
+        }
+
         ObjectMapper mapper = new ObjectMapper();
         long startTime = System.currentTimeMillis();
+        
         try {
             log.info("ProblemGenerationService: Performing single-pass details generation for problem: {} (#{})",
                     freshProblem.getName(), freshProblem.getLeetcodeNumber());
 
-            String unifiedJsonStr = geminiService.generateAllProblemDetailsJson(
+            if (progress != null) {
+                progress.setStage("Contacting AI provider...");
+            }
+
+            long providerStart = System.currentTimeMillis();
+            AIResponse aiResponse = geminiService.generateAllProblemDetailsJson(
                     freshProblem.getName(), freshProblem.getLeetcodeNumber(), freshProblem.getTopic().getName());
+            long providerTimeMs = System.currentTimeMillis() - providerStart;
 
+            String providerName = aiResponse.getProviderName();
+            if (progress != null) {
+                progress.setActiveProvider(providerName);
+                progress.setStage("Generating explanation...");
+            }
+
+            String unifiedJsonStr = aiResponse.getContent();
+
+            if (progress != null) {
+                progress.setStage("Validating response...");
+            }
+
+            long validationStart = System.currentTimeMillis();
             JsonNode root = mapper.readTree(unifiedJsonStr);
+            long validationTimeMs = System.currentTimeMillis() - validationStart;
 
+            if (progress != null) {
+                progress.setStage("Saving to database...");
+            }
+
+            long saveStart = System.currentTimeMillis();
+            
             // 1. Basic Details
             JsonNode basicNode = root.path("basicDetails");
             if (!basicNode.isMissingNode() && !basicNode.isNull()) {
@@ -385,15 +428,25 @@ public class ProblemGenerationService {
             }
 
             problemRepository.save(freshProblem);
-            
-            long endTime = System.currentTimeMillis();
-            recordGenerationDuration((endTime - startTime) / 1000);
-            
-            log.info("ProblemGenerationService: Single-pass details successfully generated and saved for problem: {}",
-                    freshProblem.getName());
+            long saveTimeMs = System.currentTimeMillis() - saveStart;
+
+            long totalTimeMs = System.currentTimeMillis() - startTime;
+            recordGenerationDuration(totalTimeMs / 1000);
+
+            if (progress != null) {
+                progress.setStage("Finalizing...");
+            }
+
+            // Exactly matching the required logs:
+            log.info("Trying {}...\nResponse:\n{} sec\nValidation:\n{} ms\nSave:\n{} ms\nTotal:\n{} sec",
+                    providerName,
+                    String.format("%.2f", providerTimeMs / 1000.0),
+                    validationTimeMs,
+                    saveTimeMs,
+                    String.format("%.2f", totalTimeMs / 1000.0));
 
         } catch (Exception e) {
-            log.warn("ProblemGenerationService: Gemini details generation failed for problem '{}' ({}). Applying local offline stubs.",
+            log.warn("ProblemGenerationService: Unified details generation failed for problem '{}' ({}). Applying local offline stubs.",
                     freshProblem.getName(), e.getMessage());
 
             try {
@@ -425,7 +478,5 @@ public class ProblemGenerationService {
             }
             throw new RuntimeException("Failed to generate unified problem details: " + e.getMessage(), e);
         }
-
-
     }
 }

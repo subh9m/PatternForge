@@ -264,15 +264,22 @@ public class ProblemController {
 
     @GetMapping("/generation-estimate")
     public ResponseEntity<?> getGenerationEstimate() {
-        double avg = com.patternforge.service.ProblemGenerationService.getAverageGenerationDuration();
-        Map<String, Object> res = new HashMap<>();
-        res.put("averageSeconds", Math.round(avg));
+        double providerEst = aiGateway.getEstimatedWaitTimeSeconds();
+        boolean hasMetrics = aiGateway.getProviders().stream()
+                .anyMatch(p -> {
+                    com.patternforge.dto.ProviderMetrics pm = aiGateway.getMetrics().get(p.providerName());
+                    return pm != null && pm.getSuccessfulRequests() > 0;
+                });
         
-        long min = Math.max(10, Math.round(avg - 5));
-        long max = Math.round(avg + 15);
+        Map<String, Object> res = new HashMap<>();
+        res.put("averageSeconds", Math.round(providerEst));
+        
+        long min = Math.max(2, Math.round(providerEst - 1));
+        long max = Math.round(providerEst + 3);
         res.put("minSeconds", min);
         res.put("maxSeconds", max);
-        res.put("displayString", "Usually takes around " + Math.round(avg) + " seconds");
+        res.put("confidence", hasMetrics ? "HIGH" : "LOW");
+        res.put("displayString", hasMetrics ? "Usually takes around " + Math.round(providerEst) + " seconds" : "Estimating...");
         
         return ResponseEntity.ok(res);
     }

@@ -10,7 +10,7 @@ interface AiGenerationFullscreenLoaderProps {
 
 const FRIENDLY_PHRASES = [
   "Structuring algorithm constraints...",
-  "Consulting the Gemini oracle...",
+  "Consulting the AI oracle...",
   "Drafting optimal C++ solutions...",
   "Analyzing spatial & temporal tradeoffs...",
   "Formulating brute-force strategies...",
@@ -22,49 +22,80 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
   onSuccess,
   onCancel
 }) => {
-  const [timeLeft, setTimeLeft] = useState(35);
-  const [displayEstimate, setDisplayEstimate] = useState("Usually takes around 35 seconds");
+  const [timeLeft, setTimeLeft] = useState(6);
+  const [displayEstimate, setDisplayEstimate] = useState("Estimating...");
   const [currentPhrase, setCurrentPhrase] = useState(FRIENDLY_PHRASES[0]);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAlreadyGenerating, setIsAlreadyGenerating] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
 
   const startRef = useRef(false);
 
-  // Rotate friendly phrases
+  // Track elapsed seconds
   useEffect(() => {
     if (failed || !loading) return;
+    const interval = setInterval(() => {
+      setElapsedSeconds(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [failed, loading]);
+
+  // Rotate friendly phrases if no specific stage is reported by backend
+  useEffect(() => {
+    if (failed || !loading || currentPhrase.includes("...")) {
+      // If we have active stage reported from polling, don't auto-rotate
+      return;
+    }
     const phraseInterval = setInterval(() => {
       setCurrentPhrase(prev => {
         const idx = FRIENDLY_PHRASES.indexOf(prev);
+        if (idx === -1) return FRIENDLY_PHRASES[0];
         const nextIdx = (idx + 1) % FRIENDLY_PHRASES.length;
         return FRIENDLY_PHRASES[nextIdx];
       });
     }, 4500);
     return () => clearInterval(phraseInterval);
-  }, [failed, loading]);
+  }, [failed, loading, currentPhrase]);
 
-  // Backward countdown timer
+  // Backward countdown timer (does not count below 1, switches to Almost Done)
   useEffect(() => {
     if (failed || !loading) return;
     const countdown = setInterval(() => {
-      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft(prev => (prev > 1 ? prev - 1 : 1));
     }, 1000);
     return () => clearInterval(countdown);
   }, [failed, loading]);
 
-  // Dynamic status polling to update remaining cooldown/waiting time
+  // Dynamic status polling to update stage, active provider, queue, and ETA
   useEffect(() => {
     if (failed || !loading) return;
 
     const pollStatus = async () => {
       try {
-        const res = await api.get<{ remainingCooldownSeconds: number; availableKeys: number; totalKeys: number }>('/problems/generation-status');
-        if (res.remainingCooldownSeconds > 0) {
-          setTimeLeft(res.remainingCooldownSeconds);
-          setDisplayEstimate(`Keys cooling down (${res.availableKeys}/${res.totalKeys} available)`);
-        } else if (res.availableKeys === 0) {
-          setDisplayEstimate("All keys in cooldown. Waiting for recovery...");
+        const jobs = await api.get<any[]>('/problems/generation-jobs');
+        const existingJob = jobs.find(j => j.problemId === problemId);
+
+        if (existingJob) {
+          if (existingJob.status === 'QUEUED') {
+            const pos = jobs.filter(j => j.status === 'QUEUED' && j.startTime < existingJob.startTime).length + 1;
+            setQueuePosition(pos);
+            setCurrentPhrase("Queued");
+            setDisplayEstimate(`Position: ${pos}`);
+          } else if (existingJob.status === 'GENERATING') {
+            setQueuePosition(null);
+            setIsAlreadyGenerating(true);
+            
+            // Set current stage
+            if (existingJob.stage) {
+              setCurrentPhrase(existingJob.stage);
+            }
+            
+            if (existingJob.activeProvider) {
+              setDisplayEstimate(`Generating using ${existingJob.activeProvider}...`);
+            }
+          }
         }
       } catch (e) {
         // Silently ignore polling errors
@@ -72,47 +103,40 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
     };
 
     pollStatus();
-    const interval = setInterval(pollStatus, 3000);
+    const interval = setInterval(pollStatus, 2000);
     return () => clearInterval(interval);
-  }, [failed, loading]);
+  }, [failed, loading, problemId]);
 
   const loadDataAndGenerate = async () => {
     setLoading(true);
     setFailed(false);
+    setElapsedSeconds(0);
     
     let alreadyGenerating = false;
     try {
-      // 1. Fetch current active jobs to see if this problem is already generating
+      // 1. Fetch current active jobs
       try {
         const jobs = await api.get<any[]>('/problems/generation-jobs');
         const existingJob = jobs.find(j => j.problemId === problemId);
         if (existingJob && (existingJob.status === 'QUEUED' || existingJob.status === 'GENERATING')) {
           alreadyGenerating = true;
           setIsAlreadyGenerating(true);
-          // Calculate remaining wait time based on start time
-          if (existingJob.startTime > 0) {
-            const elapsed = Math.round((Date.now() - existingJob.startTime) / 1000);
-            const est = await api.get<{ averageSeconds: number }>('/problems/generation-estimate');
-            const avg = est.averageSeconds || 35;
-            setTimeLeft(Math.max(3, avg - elapsed));
-            setDisplayEstimate(`Usually takes around ${avg} seconds`);
+          if (existingJob.status === 'GENERATING') {
+            setCurrentPhrase(existingJob.stage || "Contacting AI provider...");
           }
         }
       } catch (e) {
-        // Silently skip check
+        // Silently skip
       }
 
-      // 2. Fetch current rolling average estimate from backend if not already set
-      if (!alreadyGenerating) {
-        try {
-          const est = await api.get<{ averageSeconds: number; displayString: string }>('/problems/generation-estimate');
-          setTimeLeft(est.averageSeconds || 35);
-          setDisplayEstimate(est.displayString || "Usually takes around 35 seconds");
-        } catch (e) {
-          // Fallback to default
-          setTimeLeft(35);
-          setDisplayEstimate("Usually takes around 35 seconds");
-        }
+      // 2. Fetch rolling average estimate from backend
+      try {
+        const est = await api.get<{ averageSeconds: number; displayString: string; confidence: string }>('/problems/generation-estimate');
+        setTimeLeft(est.averageSeconds || 5);
+        setDisplayEstimate(est.displayString || "Estimating...");
+      } catch (e) {
+        setTimeLeft(5);
+        setDisplayEstimate("Estimating...");
       }
 
       // 3. Fetch basic details and solution details in parallel
@@ -122,8 +146,9 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
         api.get<any>(`/problems/${problemId}/solution-details`)
       ]);
 
-      // 4. Merge details and save to local storage cache
       const mergedDetails = { ...basicData, ...solData };
+      
+      // Store in cache only if not failed
       localStorage.setItem(cacheKey, JSON.stringify(mergedDetails));
 
       setLoading(false);
@@ -142,6 +167,23 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
     }
   }, [problemId]);
 
+  // Determine dynamic message to show the user
+  const getSubtextMessage = () => {
+    if (queuePosition !== null) {
+      return `Waiting in line. System is processing other generation jobs.`;
+    }
+    if (elapsedSeconds >= 15) {
+      return "Still working... We're making sure everything is generated correctly.";
+    }
+    if (elapsedSeconds >= 10) {
+      return "This problem is taking a little longer because the AI is generating a detailed explanation.";
+    }
+    if (elapsedSeconds > timeLeft) {
+      return "Taking a little longer than usual...";
+    }
+    return "PatternForge is analyzing problem structures to cache optimal strategies.";
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-6 text-center select-none font-sans">
       <div className="glass-panel border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl bg-slate-950/20 backdrop-blur-sm relative overflow-hidden">
@@ -158,17 +200,14 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
 
             <div className="space-y-1">
               <h2 className="text-lg font-black text-slate-100 uppercase tracking-wide">
-                {isAlreadyGenerating ? "Already Generating..." : "Generating AI Details"}
+                {queuePosition !== null ? "Queued in Background" : (isAlreadyGenerating ? "Generating Explanation..." : "Generating AI Details")}
               </h2>
-              <p className="text-slate-400 text-xs leading-relaxed max-w-xs mx-auto">
-                {isAlreadyGenerating 
-                  ? "Another explorer page requested this problem. Synced and loading progress..."
-                  : "PatternForge is analyzing problem structures to cache optimal strategies."
-                }
+              <p className="text-slate-400 text-xs leading-relaxed max-w-xs mx-auto min-h-[40px]">
+                {getSubtextMessage()}
               </p>
             </div>
 
-            {/* Rotating Phrases */}
+            {/* Stage Progress */}
             <div className="h-6 flex items-center justify-center">
               <p className="text-blue-400 text-xs font-bold font-mono tracking-wide animate-pulse">
                 {currentPhrase}
@@ -181,7 +220,7 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
                 {displayEstimate}
               </span>
               <span className="text-slate-300 text-sm font-black font-mono block">
-                Estimated Time: {timeLeft}s remaining
+                {elapsedSeconds > timeLeft ? "Almost done..." : `Estimated wait: ~${timeLeft - elapsedSeconds}s`}
               </span>
             </div>
 
@@ -201,7 +240,7 @@ const AiGenerationFullscreenLoader: React.FC<AiGenerationFullscreenLoaderProps> 
             <div className="space-y-1">
               <h2 className="text-lg font-black text-slate-100 uppercase tracking-wide">Generation Failed</h2>
               <p className="text-slate-400 text-xs leading-relaxed max-w-xs mx-auto">
-                The Gemini API is currently experiencing traffic congestion. Please try again.
+                All configured AI providers are currently experiencing heavy traffic congestion or auth cooldowns. We will automatically retry in the background.
               </p>
             </div>
 

@@ -1061,14 +1061,65 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
     explanationScore: ''
   });
 
+  const [wantsNotification, setWantsNotification] = useState(false);
+
+  useEffect(() => {
+    const key = `pf_notify_${problemId}`;
+    if (localStorage.getItem(key) === 'true') {
+      setWantsNotification(true);
+    } else {
+      setWantsNotification(false);
+    }
+  }, [problemId]);
+
+  const handleNotifyMe = async () => {
+    if (wantsNotification) {
+      localStorage.removeItem(`pf_notify_${problemId}`);
+      setWantsNotification(false);
+      return;
+    }
+
+    try {
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          localStorage.setItem(`pf_notify_${problemId}`, 'true');
+          setWantsNotification(true);
+        } else {
+          alert("Please enable browser notification permissions to receive updates.");
+        }
+      } else {
+        localStorage.setItem(`pf_notify_${problemId}`, 'true');
+        setWantsNotification(true);
+      }
+    } catch (e) {
+      localStorage.setItem(`pf_notify_${problemId}`, 'true');
+      setWantsNotification(true);
+    }
+  };
+
+  const Skeleton = ({ className }: { className?: string }) => (
+    <div className={`animate-pulse bg-slate-800/60 rounded-md ${className}`} />
+  );
+
+  const CodeSkeleton = () => (
+    <div className="space-y-2.5 font-mono p-4 bg-slate-950/40 rounded-xl border border-slate-900 w-full">
+      <Skeleton className="h-3 w-1/3" />
+      <Skeleton className="h-3 w-2/3" />
+      <Skeleton className="h-3 w-1/2" />
+      <Skeleton className="h-3 w-3/4" />
+      <Skeleton className="h-3 w-1/3" />
+    </div>
+  );
+
   const renderSolutionLoadingPlaceholder = () => (
-    <div className="p-4 border-t border-slate-900 flex flex-col space-y-3 animate-pulse">
-      <div className="h-2 bg-slate-900 rounded w-3/4 animate-pulse"></div>
-      <div className="h-2 bg-slate-900 rounded w-5/6 animate-pulse"></div>
-      <div className="h-2 bg-slate-900 rounded w-2/3 animate-pulse"></div>
-      <div className="flex items-center space-x-2 pt-2">
-        <div className="h-3.5 w-3.5 animate-spin rounded-full border border-emerald-500 border-t-transparent"></div>
-        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono">Loading solutions in background...</span>
+    <div className="p-4 border-t border-slate-900 flex flex-col space-y-3">
+      <Skeleton className="h-3 w-3/4" />
+      <Skeleton className="h-3 w-5/6" />
+      <Skeleton className="h-3 w-2/3" />
+      <div className="flex items-center space-x-2 pt-1">
+        <div className="h-3.5 w-3.5 animate-spin rounded-full border border-blue-500 border-t-transparent"></div>
+        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono">Loading details in background...</span>
       </div>
     </div>
   );
@@ -1298,7 +1349,21 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       // Only cache if content is real AI-generated (not boilerplate)
       if (!isBoilerplateDetails(mergedDetails) && !isFailed) {
         localStorage.setItem(cacheKey, JSON.stringify(mergedDetails));
+        
+        // Trigger browser notification if user opted-in
+        const notifyKey = `pf_notify_${problemId}`;
+        if (localStorage.getItem(notifyKey) === 'true') {
+          localStorage.removeItem(notifyKey);
+          setWantsNotification(false);
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification("PatternForge", {
+              body: `✨ AI explanation for '${problem?.name || 'your problem'}' is now ready.`,
+            });
+          }
+        }
+
         setIsAiPending(false);
+        setGenerationFailed(false); // Clear failed flag
         // Clear polling if content is now ready
         if (pollingRef.current) {
           clearInterval(pollingRef.current);
@@ -1307,11 +1372,11 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
       } else {
         // Content is stub/boilerplate - show it but mark as pending
         setIsAiPending(isPending && !isFailed);
-        // Start background polling if not already running
+        // Start background polling if not already running (every 6 seconds for live update)
         if (isPending && !isFailed && !pollingRef.current) {
           pollingRef.current = setInterval(() => {
             loadData(true);
-          }, 30000); // Poll every 30s
+          }, 6000); // Poll every 6s
         }
         // Clear polling if it has failed
         if (isFailed && pollingRef.current) {
@@ -1706,7 +1771,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
   // 1. Still fetching details from backend (first load, no cache), OR
   // 2. Details are present but are boilerplate (AI hasn't generated real content yet)
   // This prevents users from ever seeing boilerplate content on their first visit.
-  if (loadingDetails || (isAiPending && isBoilerplateDetails(details))) {
+  if (loadingDetails) {
     return (
       <div className="space-y-4">
         {/* Minimal back button so user isn't fully trapped */}
@@ -1719,7 +1784,10 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
           </svg>
           <span>Back to catalog</span>
         </button>
-        <AiGenerationLoadingScreen failed={generationFailed} onRetry={handleRetry} />
+        <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 space-y-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+          <p className="text-slate-400 text-xs font-bold font-mono tracking-wider uppercase">Loading problem workspace...</p>
+        </div>
       </div>
     );
   }
@@ -2162,18 +2230,43 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
 
       {/* AI Generation Status Banners (non-blocking) */}
       {generationFailed && (
-        <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-bold text-red-400 mb-2">
-          <div className="flex items-center space-x-2">
-            <span>⚠️</span>
-            <span>Failed to reach Gemini API. Showing fallback content. AI-generated details will load once API keys recover.</span>
+        <div className="glass-panel border border-red-500/30 rounded-2xl p-5 bg-red-500/5 backdrop-blur-sm shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 relative overflow-hidden">
+          <div className="flex items-start space-x-3.5">
+            <span className="text-2xl mt-0.5">🤖</span>
+            <div className="space-y-1">
+              <h4 className="text-slate-100 text-xs font-black uppercase tracking-wide">AI Explanation is Temporarily Unavailable</h4>
+              <p className="text-slate-400 text-xs font-medium leading-relaxed max-w-xl font-sans">
+                All configured AI providers are currently throttled or experiencing heavy traffic congestion. We will automatically retry generating this explanation in the background. You can still read the problem statement and solve the question.
+              </p>
+            </div>
           </div>
-          <button onClick={handleRetry} className="ml-4 px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-all text-[10px] uppercase tracking-wider font-black cursor-pointer">Retry</button>
+          <div className="flex items-center space-x-2 shrink-0">
+            <button
+              onClick={handleNotifyMe}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wide transition-smooth cursor-pointer ${
+                wantsNotification
+                  ? 'bg-emerald-600 text-white border border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                  : 'bg-slate-900 border border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
+              }`}
+            >
+              {wantsNotification ? "✓ Notifying Active" : "🔔 Notify Me"}
+            </button>
+            <button
+              onClick={() => setGenerationFailed(false)}
+              className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs font-extrabold uppercase tracking-wide transition-smooth cursor-pointer"
+            >
+              Generate Later
+            </button>
+          </div>
         </div>
       )}
       {isAiPending && !generationFailed && (
-        <div className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-bold text-amber-400 mb-2 animate-pulse">
-          <div className="h-3 w-3 rounded-full border border-amber-400 border-t-transparent animate-spin" />
-          <span>Generating AI details in the background... Content will refresh automatically when ready.</span>
+        <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-blue-500/5 border border-blue-500/20 text-xs font-bold text-blue-400 mb-4 animate-pulse relative overflow-hidden">
+          <div className="h-3.5 w-3.5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin shrink-0" />
+          <div className="flex-1">
+            <span className="block text-slate-200 text-[11px] font-black uppercase tracking-wide">Background AI Generation Active</span>
+            <span className="block text-slate-400 text-[10px] font-medium font-sans">We're generating interviewer-quality details, optimal codes, and audio guides. Content will refresh automatically.</span>
+          </div>
         </div>
       )}
 
@@ -2475,7 +2568,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'observation' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'observation' && (
-                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                        (loadingSolutions || (isAiPending && isBoilerplateDetails(details))) ? renderSolutionLoadingPlaceholder() : (
                           <div className="p-4 border-t border-slate-900 text-xs text-slate-355 leading-relaxed font-sans">
                             {renderMarkdown(details.observation)}
                           </div>
@@ -2496,7 +2589,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'pattern' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'pattern' && (
-                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                        (loadingSolutions || (isAiPending && isBoilerplateDetails(details))) ? renderSolutionLoadingPlaceholder() : (
                           <div className="p-4 border-t border-slate-900 text-xs text-slate-200 font-bold font-sans">
                             Optimal Pattern: <span className="text-blue-400">{details.pattern}</span>
                           </div>
@@ -2517,7 +2610,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'approach' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'approach' && (
-                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                        (loadingSolutions || (isAiPending && isBoilerplateDetails(details))) ? renderSolutionLoadingPlaceholder() : (
                           <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
                             {renderMarkdown(details.approach)}
                           </div>
@@ -2538,7 +2631,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'complexity' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'complexity' && (
-                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                        (loadingSolutions || (isAiPending && isBoilerplateDetails(details))) ? renderSolutionLoadingPlaceholder() : (
                           <div className="p-4 border-t border-slate-900 text-xs space-y-2 font-mono">
                             <div className="text-slate-300">Time Complexity: <span className="text-emerald-400 font-bold">{details.optimalTimeComplexity}</span></div>
                             <div className="text-slate-300">Space Complexity: <span className="text-emerald-400 font-bold">{details.optimalSpaceComplexity}</span></div>
@@ -2560,8 +2653,8 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'explanation' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'explanation' && (
-                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
-                          <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
+                        (loadingSolutions || (isAiPending && isBoilerplateDetails(details))) ? renderSolutionLoadingPlaceholder() : (
+                          <div className="p-4 border-t border-slate-900 text-xs text-slate-355 leading-relaxed font-sans">
                             {renderMarkdown(details.fullExplanation)}
                           </div>
                         )
@@ -2581,7 +2674,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'solution' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'solution' && (
-                        loadingSolutions ? renderSolutionLoadingPlaceholder() : (
+                        (loadingSolutions || (isAiPending && isBoilerplateDetails(details))) ? renderSolutionLoadingPlaceholder() : (
                           <div className="p-4 border-t border-slate-900 space-y-4">
                             {!revealSolution ? (
                               <div className="text-center py-2">
@@ -3110,10 +3203,20 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
               )}
                      {/* TAB 3: SOLUTIONS WORKSPACE */}
               {activeTab === 'solutions' && (
-                loadingSolutions ? (
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 animate-pulse">
-                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider font-mono">Generating optimal reference codes...</p>
+                (loadingSolutions || (isAiPending && isBoilerplateDetails(details))) ? (
+                  <div className="space-y-6 flex flex-col flex-1 p-4">
+                    <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+                      <Skeleton className="h-5 w-1/3" />
+                      <Skeleton className="h-8 w-24" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 bg-slate-950/40 p-3 rounded-xl border border-slate-900">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-1/4" />
+                      <CodeSkeleton />
+                    </div>
                   </div>
                 ) : details && (
                   <div className="space-y-4 flex flex-col flex-1 overflow-y-auto pr-1 animate-fadeIn">
