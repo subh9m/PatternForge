@@ -14,8 +14,6 @@ public class ProblemGenerationService {
 
     private final ProblemRepository problemRepository;
     private final GeminiService geminiService;
-    private final APIKeyManager apiKeyManager;
-    private final ModelSelector modelSelector;
 
     private final PriorityBlockingQueue<GenerationJob> queue = new PriorityBlockingQueue<>();
     private final Set<UUID> runningJobs = ConcurrentHashMap.newKeySet();
@@ -95,13 +93,9 @@ public class ProblemGenerationService {
     }
 
     public ProblemGenerationService(ProblemRepository problemRepository,
-                                    GeminiService geminiService,
-                                    APIKeyManager apiKeyManager,
-                                    ModelSelector modelSelector) {
+                                    GeminiService geminiService) {
         this.problemRepository = problemRepository;
         this.geminiService = geminiService;
-        this.apiKeyManager = apiKeyManager;
-        this.modelSelector = modelSelector;
     }
 
     private void queueProcessorLoop() {
@@ -111,26 +105,6 @@ public class ProblemGenerationService {
                 synchronized (lock) {
                     while (queue.isEmpty()) {
                         lock.wait();
-                    }
-
-                    // Peek to check the priority of the next job
-                    GenerationJob peeked = queue.peek();
-                    if (peeked != null && peeked.getPriority() != JobPriority.HIGHEST) {
-                        // Pause queue if no keys are currently AVAILABLE
-                        if (apiKeyManager.getAvailableKeys().isEmpty()) {
-                            Long expiry = apiKeyManager.getEarliestCooldownExpiry();
-                            long sleepMs = 60000; // default 1 min
-                            if (expiry != null) {
-                                sleepMs = expiry - System.currentTimeMillis();
-                            }
-                            if (sleepMs > 0) {
-                                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm:ss");
-                                String pauseTime = sdf.format(new Date(System.currentTimeMillis() + sleepMs));
-                                log.warn("APIKeyManager: No available keys in pool. Queue paused until {}", pauseTime);
-                                lock.wait(sleepMs);
-                                continue; // re-evaluate queue states
-                            }
-                        }
                     }
 
                     // Proceed to pull the job

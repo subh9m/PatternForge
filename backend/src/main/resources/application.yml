@@ -30,9 +30,9 @@ patternforge:
   cors:
     allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}
 
-gemini:
-  api-keys: ${GEMINI_API_KEYS:}
-  models:
-    - gemini-2.0-flash
-    - gemini-1.5-flash
-    - gemini-1.5-pro
+ai:
+  gateway:
+    gemini-api-key: ${GEMINI_API_KEY:}
+    groq-api-key: ${GROQ_API_KEY:}
+    github-models-api-key: ${GITHUB_MODELS_API_KEY:}
+    openrouter-api-key: ${OPENROUTER_API_KEY:}

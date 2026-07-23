@@ -3,6 +3,8 @@ package com.patternforge.service;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.patternforge.dto.AIRequest;
+import com.patternforge.dto.AIResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +14,11 @@ import java.util.Map;
 @Slf4j
 public class GeminiService {
 
-    private final RetryExecutor retryExecutor;
+    private final AIGateway aiGateway;
     private final ObjectMapper objectMapper;
 
-    public GeminiService(RetryExecutor retryExecutor) {
-        this.retryExecutor = retryExecutor;
+    public GeminiService(AIGateway aiGateway) {
+        this.aiGateway = aiGateway;
         this.objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
@@ -110,10 +112,14 @@ public class GeminiService {
                 + "}";
 
         try {
-            String rawJson = retryExecutor.executeWithFallback(prompt, "application/json");
-            return cleanJsonString(extractCandidateText(rawJson));
+            AIRequest aiRequest = AIRequest.builder()
+                    .prompt(prompt)
+                    .responseMimeType("application/json")
+                    .build();
+            AIResponse aiResponse = aiGateway.generate(aiRequest);
+            return cleanJsonString(aiResponse.getContent());
         } catch (Exception e) {
-            log.error("Failed to generate unified problem details via Gemini API", e);
+            log.error("Failed to generate unified problem details via AI Gateway", e);
             throw new RuntimeException("Failed to generate unified problem details: " + e.getMessage(), e);
         }
     }
@@ -156,11 +162,12 @@ public class GeminiService {
                 + "   - DO NOT reveal the final code solution.";
 
         try {
-            String rawText = retryExecutor.executeWithFallback(prompt, "text/plain");
-            String extractedText = extractCandidateText(rawText);
-            if (extractedText == null) {
-                extractedText = rawText;
-            }
+            AIRequest aiRequest = AIRequest.builder()
+                    .prompt(prompt)
+                    .responseMimeType("text/plain")
+                    .build();
+            AIResponse aiResponse = aiGateway.generate(aiRequest);
+            String extractedText = aiResponse.getContent();
 
             String patternsMatch = "Partially Correct";
             String timeComplexityMatch = "Correct";
@@ -209,31 +216,14 @@ public class GeminiService {
                     "feedback", feedback
             );
         } catch (Exception e) {
-            log.error("Failed to check approach evaluation via Gemini API", e);
+            log.error("Failed to check approach evaluation via AI Gateway", e);
             return Map.of(
                     "patternsMatch", "Partially Correct",
                     "timeComplexityMatch", "Correct",
                     "spaceComplexityMatch", "Correct",
                     "explanationScore", "N/A",
-                    "feedback", "Approach received. (Note: Gemini feedback check failed: " + e.getMessage() + ")"
+                    "feedback", "Approach received. (Note: AI Gateway feedback check failed: " + e.getMessage() + ")"
             );
         }
-    }
-
-    public String extractCandidateText(String responseBody) {
-        if (responseBody == null) return null;
-        try {
-            com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(responseBody);
-            com.fasterxml.jackson.databind.JsonNode candidates = root.path("candidates");
-            if (candidates.isArray() && !candidates.isEmpty()) {
-                com.fasterxml.jackson.databind.JsonNode parts = candidates.get(0).path("content").path("parts");
-                if (parts.isArray() && !parts.isEmpty()) {
-                    return parts.get(0).path("text").asText();
-                }
-            }
-        } catch (Exception e) {
-            log.error("Failed to parse Gemini response candidates", e);
-        }
-        return null;
     }
 }

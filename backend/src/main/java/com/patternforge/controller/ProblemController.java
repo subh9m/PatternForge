@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.patternforge.service.ProblemGenerationService;
 import com.patternforge.service.JobPriority;
 import com.patternforge.service.AudioLearningGuideService;
+import com.patternforge.service.AIGateway;
+import com.patternforge.service.AIProvider;
 
 @RestController
 @RequestMapping("/api/problems")
@@ -42,7 +44,7 @@ public class ProblemController {
     private final EntityManager entityManager;
     private final UserLeetCodeSyncRepository userLeetCodeSyncRepository;
     private final AudioLearningGuideService audioLearningGuideService;
-    private final com.patternforge.service.APIKeyManager apiKeyManager;
+    private final AIGateway aiGateway;
 
     public ProblemController(ProblemRepository problemRepository,
                              TopicRepository topicRepository,
@@ -58,7 +60,7 @@ public class ProblemController {
                              EntityManager entityManager,
                              UserLeetCodeSyncRepository userLeetCodeSyncRepository,
                              AudioLearningGuideService audioLearningGuideService,
-                             com.patternforge.service.APIKeyManager apiKeyManager) {
+                             AIGateway aiGateway) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -73,7 +75,7 @@ public class ProblemController {
         this.entityManager = entityManager;
         this.userLeetCodeSyncRepository = userLeetCodeSyncRepository;
         this.audioLearningGuideService = audioLearningGuideService;
-        this.apiKeyManager = apiKeyManager;
+        this.aiGateway = aiGateway;
     }
 
     @GetMapping
@@ -285,18 +287,14 @@ public class ProblemController {
 
     @GetMapping("/generation-status")
     public ResponseEntity<?> getGenerationStatus() {
-        Long earliestExpiry = apiKeyManager.getEarliestCooldownExpiry();
-        long remainingCooldownSeconds = 0;
-        if (earliestExpiry != null) {
-            remainingCooldownSeconds = Math.max(0, (earliestExpiry - System.currentTimeMillis()) / 1000);
-        }
-        
         Map<String, Object> res = new HashMap<>();
         res.put("queueSize", problemGenerationService.getQueueSize());
         res.put("runningJobs", problemGenerationService.getRunningJobsCount());
-        res.put("remainingCooldownSeconds", remainingCooldownSeconds);
-        res.put("availableKeys", apiKeyManager.getAvailableKeys().size());
-        res.put("totalKeys", apiKeyManager.getAllKeysRaw().size());
+        res.put("remainingCooldownSeconds", 0);
+        
+        long configuredProviders = aiGateway.getProviders().stream().filter(AIProvider::isConfigured).count();
+        res.put("availableKeys", (int) configuredProviders);
+        res.put("totalKeys", aiGateway.getProviders().size());
         return ResponseEntity.ok(res);
     }
 
@@ -877,11 +875,6 @@ public class ProblemController {
         p.setSimplifiedStatement(null);
         p.setSimplifiedApproach(null);
         problemRepository.save(p);
-
-        // If user explicitly requests regeneration and all keys are stuck in cooldown, reset cooldowns to retry
-        if (apiKeyManager.getAvailableKeys().isEmpty()) {
-            apiKeyManager.resetAllCooldowns();
-        }
 
         // Remove from activeJobs to reset any FAILED/COMPLETED status
         problemGenerationService.clearJobStatus(p.getId());

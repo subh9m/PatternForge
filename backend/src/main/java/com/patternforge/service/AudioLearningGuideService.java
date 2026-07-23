@@ -2,6 +2,8 @@ package com.patternforge.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.patternforge.dto.AIRequest;
+import com.patternforge.dto.AIResponse;
 import com.patternforge.dto.AudioJobProgress;
 import com.patternforge.model.AudioLearningGuide;
 import com.patternforge.model.Problem;
@@ -22,20 +24,17 @@ public class AudioLearningGuideService {
 
     private final AudioLearningGuideRepository guideRepository;
     private final ProblemRepository problemRepository;
-    private final GeminiService geminiService;
-    private final RetryExecutor retryExecutor;
+    private final AIGateway aiGateway;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private static final Map<String, AudioJobProgress> activeAudioJobs = new ConcurrentHashMap<>();
 
     public AudioLearningGuideService(AudioLearningGuideRepository guideRepository,
                                      ProblemRepository problemRepository,
-                                     GeminiService geminiService,
-                                     RetryExecutor retryExecutor) {
+                                     AIGateway aiGateway) {
         this.guideRepository = guideRepository;
         this.problemRepository = problemRepository;
-        this.geminiService = geminiService;
-        this.retryExecutor = retryExecutor;
+        this.aiGateway = aiGateway;
     }
 
     public static void cleanRegistry() {
@@ -436,10 +435,12 @@ public class AudioLearningGuideService {
         }
         
         log.info("AUDIO_SCRIPT_GENERATION: Requesting script generation for problem {} ({})", problem.getId(), language);
-        RetryExecutor.ExecutionResult execResult = retryExecutor.executeWithFallbackDetailed(prompt, "application/json");
-        String rawJson = execResult.responseBody;
-        String candidateText = geminiService.extractCandidateText(rawJson);
-        String cleanJson = GeminiService.cleanJsonString(candidateText != null ? candidateText : rawJson);
+        AIRequest aiRequest = AIRequest.builder()
+                .prompt(prompt)
+                .responseMimeType("application/json")
+                .build();
+        AIResponse response = aiGateway.generate(aiRequest);
+        String cleanJson = GeminiService.cleanJsonString(response.getContent());
         
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(cleanJson);
@@ -450,6 +451,6 @@ public class AudioLearningGuideService {
             estimatedDurationSeconds = Math.max(30, (int) Math.round(spokenScript.length() * 0.12));
         }
         
-        return new ScriptGenerationResult(spokenScript, estimatedDurationSeconds, execResult.modelName);
+        return new ScriptGenerationResult(spokenScript, estimatedDurationSeconds, response.getModelName());
     }
 }
