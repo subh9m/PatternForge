@@ -13,4 +13,8 @@ public class AIRequest {
     private String expectedJsonSchema;
     private String language;
     private String difficulty;
+    private String problemId;
+    private String problemTitle;
+    private String generationType;
+    private Integer queueSize;
 }

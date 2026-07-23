@@ -73,8 +73,15 @@ public class GeminiProvider implements AIProvider {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("contents", List.of(contentObj));
 
+        Map<String, Object> generationConfig = new HashMap<>();
         if ("application/json".equalsIgnoreCase(request.getResponseMimeType())) {
-            requestBody.put("generationConfig", Map.of("responseMimeType", "application/json"));
+            generationConfig.put("responseMimeType", "application/json");
+        }
+        if (request.getMaxTokens() != null) {
+            generationConfig.put("maxOutputTokens", request.getMaxTokens());
+        }
+        if (!generationConfig.isEmpty()) {
+            requestBody.put("generationConfig", generationConfig);
         }
 
         String jsonBody = objectMapper.writeValueAsString(requestBody);

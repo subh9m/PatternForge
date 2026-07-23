@@ -71,6 +71,21 @@ public class AIGateway {
                 continue;
             }
 
+            int chars = request.getPrompt() != null ? request.getPrompt().length() : 0;
+            int estTokens = (int) Math.ceil(chars / 4.0);
+            System.out.println("=================================================");
+            System.out.println("AI REQUEST AUDIT");
+            System.out.println("=================================================");
+            System.out.println("Problem ID      : " + (request.getProblemId() != null ? request.getProblemId() : "N/A"));
+            System.out.println("Title           : " + (request.getProblemTitle() != null ? request.getProblemTitle() : "N/A"));
+            System.out.println("Provider        : " + provider.providerName());
+            System.out.println("Prompt Size     : " + String.format("%,d", chars) + " characters");
+            System.out.println("Estimated Input : " + String.format("%,d", estTokens) + " tokens");
+            System.out.println("Max Output      : " + (request.getMaxTokens() != null ? String.format("%,d", request.getMaxTokens()) + " tokens" : "N/A"));
+            System.out.println("Queue Size      : " + (request.getQueueSize() != null ? request.getQueueSize() : 0));
+            System.out.println("Generation Type : " + (request.getGenerationType() != null ? request.getGenerationType() : "USER_REQUEST"));
+            System.out.println("=================================================");
+
             log.info("Trying {}...", provider.providerName());
             long providerStartTime = System.currentTimeMillis();
 

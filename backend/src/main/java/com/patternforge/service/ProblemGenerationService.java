@@ -403,7 +403,7 @@ public class ProblemGenerationService {
 
             long providerStart = System.currentTimeMillis();
             AIResponse aiResponse = geminiService.generateAllProblemDetailsJson(
-                    freshProblem.getName(), freshProblem.getLeetcodeNumber(), freshProblem.getTopic().getName());
+                    freshProblem.getId(), freshProblem.getName(), freshProblem.getLeetcodeNumber(), freshProblem.getTopic().getName(), this.getQueueSize());
             long providerTimeMs = System.currentTimeMillis() - providerStart;
 
             String providerName = aiResponse.getProviderName();

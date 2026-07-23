@@ -17,6 +17,12 @@ public class GeminiService {
     private final AIGateway aiGateway;
     private final ObjectMapper objectMapper;
 
+    @org.springframework.beans.factory.annotation.Value("${ai.gateway.max-tokens:3000}")
+    private int maxTokens;
+
+    @org.springframework.beans.factory.annotation.Value("${ai.gateway.max-prompt-size:15000}")
+    private int maxPromptSize;
+
     public GeminiService(AIGateway aiGateway) {
         this.aiGateway = aiGateway;
         this.objectMapper = new ObjectMapper()
@@ -42,7 +48,7 @@ public class GeminiService {
         return trimmed;
     }
 
-    public AIResponse generateAllProblemDetailsJson(String problemName, Integer leetcodeNumber, String topicName) {
+    public AIResponse generateAllProblemDetailsJson(java.util.UUID problemId, String problemName, Integer leetcodeNumber, String topicName, int queueSize) {
         String prompt = "Generate comprehensive LeetCode-like problem description details, optimal solution details, and simplified daily revision contents in a single structured JSON object for the problem '" 
                 + problemName + "' (LeetCode #" + leetcodeNumber + ") under topic '" + topicName + "'.\n\n"
                 + "Return EXACTLY a single JSON object with the following properties:\n"
@@ -111,10 +117,24 @@ public class GeminiService {
                 + "  }\n"
                 + "}";
 
+        // Enforce prompt size safety
+        if (prompt.length() > maxPromptSize) {
+            log.error("Prompt too large. (Size: {} characters, limit: {})", prompt.length(), maxPromptSize);
+            throw new IllegalArgumentException("Prompt too large.");
+        }
+
+        // Enforce assertions
+        validateSingleProblemRequest(problemId, problemName, leetcodeNumber, prompt);
+
         try {
             AIRequest aiRequest = AIRequest.builder()
                     .prompt(prompt)
                     .responseMimeType("application/json")
+                    .maxTokens(maxTokens)
+                    .problemId(String.valueOf(leetcodeNumber))
+                    .problemTitle(problemName)
+                    .generationType("USER_REQUEST")
+                    .queueSize(queueSize)
                     .build();
             AIResponse aiResponse = aiGateway.generate(aiRequest);
             aiResponse.setContent(cleanJsonString(aiResponse.getContent()));
@@ -122,6 +142,38 @@ public class GeminiService {
         } catch (Exception e) {
             log.error("Failed to generate unified problem details via AI Gateway", e);
             throw new RuntimeException("Failed to generate unified problem details: " + e.getMessage(), e);
+        }
+    }
+
+    private void validateSingleProblemRequest(java.util.UUID problemId, String problemName, Integer leetcodeNumber, String prompt) {
+        if (problemId == null) {
+            throw new IllegalStateException("Assertion failed: Exactly one problem ID must be present (got null).");
+        }
+        if (problemName == null || problemName.trim().isEmpty()) {
+            throw new IllegalStateException("Assertion failed: Exactly one problem title must be present (got null/empty).");
+        }
+        if (problemName.contains(",") || problemName.contains(";") || problemName.contains("&") || problemName.toLowerCase().contains(" and ") || problemName.contains("\n")) {
+            throw new IllegalStateException("Assertion failed: Multiple problems detected in title: " + problemName);
+        }
+        if (leetcodeNumber == null || leetcodeNumber <= 0 || leetcodeNumber > 10000) {
+            throw new IllegalStateException("Assertion failed: Exactly one valid LeetCode ID must be present (got " + leetcodeNumber + ").");
+        }
+        if (prompt == null || prompt.trim().isEmpty()) {
+            throw new IllegalStateException("Assertion failed: Exactly one prompt must be present (got null/empty).");
+        }
+
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("#(\\d+)");
+        java.util.regex.Matcher matcher = pattern.matcher(prompt);
+        java.util.Set<Integer> detectedIds = new java.util.HashSet<>();
+        while (matcher.find()) {
+            detectedIds.add(Integer.parseInt(matcher.group(1)));
+        }
+        if (detectedIds.size() > 1) {
+            throw new IllegalStateException("Assertion failed: Multiple LeetCode IDs detected in request prompt: " + detectedIds);
+        }
+
+        if (!prompt.contains("\"problemStatement\"") || !prompt.contains("\"referenceSolution\"")) {
+            throw new IllegalStateException("Assertion failed: Prompt does not request exactly one problem statement and one reference solution.");
         }
     }
 
@@ -166,6 +218,11 @@ public class GeminiService {
             AIRequest aiRequest = AIRequest.builder()
                     .prompt(prompt)
                     .responseMimeType("text/plain")
+                    .maxTokens(maxTokens)
+                    .problemId("N/A")
+                    .problemTitle(problemName)
+                    .generationType("THINKING_EVAL")
+                    .queueSize(0)
                     .build();
             AIResponse aiResponse = aiGateway.generate(aiRequest);
             String extractedText = aiResponse.getContent();
