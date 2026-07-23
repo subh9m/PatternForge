@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.*;
 
@@ -22,13 +24,19 @@ public class AdminAIController {
     private final AIGateway aiGateway;
     private final ProblemGenerationService problemGenerationService;
     private final com.patternforge.config.AIGatewayConfig gatewayConfig;
+    private final com.patternforge.service.AIMonitoringService aiMonitoringService;
+    private final com.patternforge.repository.AIRequestLogRepository aiRequestLogRepository;
 
     public AdminAIController(AIGateway aiGateway, 
                              ProblemGenerationService problemGenerationService,
-                             com.patternforge.config.AIGatewayConfig gatewayConfig) {
+                             com.patternforge.config.AIGatewayConfig gatewayConfig,
+                             com.patternforge.service.AIMonitoringService aiMonitoringService,
+                             com.patternforge.repository.AIRequestLogRepository aiRequestLogRepository) {
         this.aiGateway = aiGateway;
         this.problemGenerationService = problemGenerationService;
         this.gatewayConfig = gatewayConfig;
+        this.aiMonitoringService = aiMonitoringService;
+        this.aiRequestLogRepository = aiRequestLogRepository;
     }
 
     @GetMapping("/status")
@@ -304,5 +312,116 @@ public class AdminAIController {
         response.put("providers", providerResults);
         
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/overview")
+    public ResponseEntity<?> getOverview() {
+        return ResponseEntity.ok(aiMonitoringService.getOverviewStats(aiGateway));
+    }
+
+    @GetMapping("/providers")
+    public ResponseEntity<?> getProviders() {
+        return ResponseEntity.ok(aiMonitoringService.getProvidersStats(aiGateway, gatewayConfig));
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getHistory() {
+        List<?> logs = aiRequestLogRepository.findByOrderByTimestampDesc();
+        if (logs.size() > 200) {
+            logs = logs.subList(0, 200);
+        }
+        return ResponseEntity.ok(logs);
+    }
+
+    @PostMapping("/providers/{name}/toggle")
+    public ResponseEntity<?> toggleProvider(@PathVariable("name") String providerName) {
+        for (Map.Entry<String, ProviderMetrics> entry : aiGateway.getMetrics().entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(providerName)) {
+                ProviderMetrics pm = entry.getValue();
+                pm.setManuallyDisabled(!pm.isManuallyDisabled());
+                return ResponseEntity.ok(Map.of(
+                        "provider", entry.getKey(),
+                        "manuallyDisabled", pm.isManuallyDisabled()
+                ));
+            }
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/providers/{name}/reset-circuit")
+    public ResponseEntity<?> resetCircuit(@PathVariable("name") String providerName) {
+        for (Map.Entry<String, ProviderMetrics> entry : aiGateway.getMetrics().entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(providerName)) {
+                ProviderMetrics pm = entry.getValue();
+                pm.restore();
+                return ResponseEntity.ok(Map.of(
+                        "provider", entry.getKey(),
+                        "circuitState", pm.getCircuitState().toString()
+                ));
+            }
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/providers/{name}/test")
+    public ResponseEntity<?> testProvider(@PathVariable("name") String providerName) {
+        AIProvider targetProvider = null;
+        for (AIProvider p : aiGateway.getProviders()) {
+            if (p.providerName().equalsIgnoreCase(providerName)) {
+                targetProvider = p;
+                break;
+            }
+        }
+
+        if (targetProvider == null) {
+            return ResponseEntity.badRequest().body("Provider " + providerName + " not found.");
+        }
+
+        long startTime = System.currentTimeMillis();
+        try {
+            AIRequest testRequest = AIRequest.builder()
+                    .prompt("Reply exactly: PatternForge OK")
+                    .responseMimeType("text/plain")
+                    .temperature(0.0)
+                    .maxTokens(100)
+                    .problemId("HEALTH_CHECK")
+                    .problemTitle("Health Check Ping")
+                    .generationType("HEALTH_CHECK")
+                    .queueSize(0)
+                    .build();
+
+            AIResponse response = targetProvider.generate(testRequest);
+            long latencyMs = System.currentTimeMillis() - startTime;
+            
+            ProviderMetrics pm = aiGateway.getMetrics().get(targetProvider.providerName());
+            if (pm != null) {
+                pm.recordSuccess(latencyMs);
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "latencyMs", latencyMs,
+                    "httpStatus", 200,
+                    "responseBody", response.getContent()
+            ));
+        } catch (Exception e) {
+            long latencyMs = System.currentTimeMillis() - startTime;
+            int code = 500;
+            if (e instanceof AIProviderException) {
+                code = ((AIProviderException) e).getStatusCode();
+            }
+            
+            ProviderMetrics pm = aiGateway.getMetrics().get(targetProvider.providerName());
+            if (pm != null) {
+                pm.recordFailure(false, code == 429, code == 408, e.getMessage());
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "success", false,
+                    "latencyMs", latencyMs,
+                    "httpStatus", code,
+                    "responseBody", "Failed: " + e.getMessage()
+            ));
+        }
     }
 }

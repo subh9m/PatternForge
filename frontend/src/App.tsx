@@ -19,6 +19,7 @@ import SpringGuide from './views/spring/SpringGuide';
 import ReactGuide from './views/react/ReactGuide';
 import ProjectsGuide from './views/projects/ProjectsGuide';
 import RevisionView from './views/RevisionView';
+import AiDashboard from './views/AiDashboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from './services/api';
 import { seedResetTimeFromSettings, useDailyResetScheduler } from './hooks/useDailyReset';
@@ -37,14 +38,14 @@ const MainApp: React.FC = () => {
     return (saved === 'dsa' || saved === 'stl' || saved === 'sql' || saved === 'os' || saved === 'git' || saved === 'aiml' || saved === 'cn' || saved === 'spring' || saved === 'react' || saved === 'projects' || saved === 'selection' || saved === 'master_dashboard') ? saved : 'master_dashboard';
   });
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision'>(() => {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision' | 'ai_dashboard'>(() => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    if (tabParam === 'dashboard' || tabParam === 'explorer' || tabParam === 'problem' || tabParam === 'settings' || tabParam === 'revision') {
+    if (tabParam === 'dashboard' || tabParam === 'explorer' || tabParam === 'problem' || tabParam === 'settings' || tabParam === 'revision' || tabParam === 'ai_dashboard') {
       return tabParam;
     }
     const saved = localStorage.getItem('activeTab');
-    return (saved === 'dashboard' || saved === 'explorer' || saved === 'problem' || saved === 'settings' || saved === 'revision') ? saved : 'dashboard';
+    return (saved === 'dashboard' || saved === 'explorer' || saved === 'problem' || saved === 'settings' || saved === 'revision' || saved === 'ai_dashboard') ? saved : 'dashboard';
   });
 
   const [activeProblemId, setActiveProblemId] = useState<string | null>(() => {
@@ -459,6 +460,9 @@ const MainApp: React.FC = () => {
               )}
               {activeTab === 'settings' && (
                 <Settings />
+              )}
+              {activeTab === 'ai_dashboard' && (
+                <AiDashboard />
               )}
               {activeTab === 'revision' && (
                 <RevisionView navigateToProblem={navigateToProblem} />

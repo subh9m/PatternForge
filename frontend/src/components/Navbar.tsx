@@ -5,8 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import AiActivityCenter from './AiActivityCenter';
 
 interface NavbarProps {
-  activeTab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision';
-  setActiveTab: (tab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision') => void;
+  activeTab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision' | 'ai_dashboard';
+  setActiveTab: (tab: 'dashboard' | 'explorer' | 'problem' | 'settings' | 'revision' | 'ai_dashboard') => void;
   onSwitchPortal?: () => void;
   onGoToDashboard?: () => void;
   onOpenProblem?: (id: string) => void;
@@ -175,6 +175,16 @@ const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             Settings
+          </button>
+          <button
+            onClick={() => setActiveTab('ai_dashboard')}
+            className={`px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider transition-smooth ${
+              activeTab === 'ai_dashboard'
+                ? 'border border-text-primary text-text-primary bg-surface/40'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            AI Control
           </button>
         </nav>
 

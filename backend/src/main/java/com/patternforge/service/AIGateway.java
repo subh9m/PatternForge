@@ -16,8 +16,10 @@ public class AIGateway {
 
     private final List<AIProvider> providers = new ArrayList<>();
     private final Map<String, ProviderMetrics> metrics = new ConcurrentHashMap<>();
+    private final AIMonitoringService aiMonitoringService;
 
-    public AIGateway(List<AIProvider> providerList) {
+    public AIGateway(List<AIProvider> providerList, AIMonitoringService aiMonitoringService) {
+        this.aiMonitoringService = aiMonitoringService;
         // Pre-initialize metrics for all expected providers
         metrics.put("Gemini", new ProviderMetrics());
         metrics.put("Groq", new ProviderMetrics());
@@ -53,6 +55,7 @@ public class AIGateway {
     public AIResponse generate(AIRequest request) {
         List<String> errors = new ArrayList<>();
         long gatewayStartTime = System.currentTimeMillis();
+        int tryCount = 0;
 
         for (AIProvider provider : providers) {
             ProviderMetrics pm = metrics.get(provider.providerName());
@@ -86,6 +89,9 @@ public class AIGateway {
             System.out.println("Generation Type : " + (request.getGenerationType() != null ? request.getGenerationType() : "USER_REQUEST"));
             System.out.println("=================================================");
 
+            int currentTry = tryCount;
+            tryCount++;
+
             log.info("Trying {}...", provider.providerName());
             long providerStartTime = System.currentTimeMillis();
 
@@ -100,6 +106,10 @@ public class AIGateway {
                 if (pm != null) {
                     pm.recordSuccess(latencyMs);
                 }
+
+                // Log details locally
+                aiMonitoringService.logRequest(request, provider.providerName(), response.getModelName(),
+                        latencyMs, 200, response.getContent(), true, null, currentTry > 0, currentTry);
 
                 return response;
             } catch (Exception e) {
@@ -129,6 +139,10 @@ public class AIGateway {
                     boolean isTimeout = (statusCode == 408) || (e instanceof java.net.http.HttpConnectTimeoutException) || (e instanceof java.util.concurrent.TimeoutException);
                     pm.recordFailure(isPermanent, is429, isTimeout, e.getMessage());
                 }
+
+                // Log failure locally
+                aiMonitoringService.logRequest(request, provider.providerName(), "N/A",
+                        latencyMs, statusCode != -1 ? statusCode : 500, null, false, e.getMessage(), currentTry > 0, currentTry);
 
                 errors.add(provider.providerName() + " failed (" + (statusCode != -1 ? "Status " + statusCode : e.getClass().getSimpleName()) + "): " + e.getMessage());
                 log.info("Failure on {}. Moving to next provider.", provider.providerName());

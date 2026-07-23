@@ -5,6 +5,7 @@ import com.patternforge.dto.AIResponse;
 import com.patternforge.exception.AIProviderException;
 import com.patternforge.service.AIGateway;
 import com.patternforge.service.AIProvider;
+import com.patternforge.service.AIMonitoringService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -21,6 +22,7 @@ public class AIGatewayFallbackTest {
     private AIProvider groqProvider;
     private AIProvider githubProvider;
     private AIProvider openrouterProvider;
+    private AIMonitoringService aiMonitoringService;
 
     private AIGateway aiGateway;
 
@@ -30,6 +32,7 @@ public class AIGatewayFallbackTest {
         groqProvider = mock(AIProvider.class);
         githubProvider = mock(AIProvider.class);
         openrouterProvider = mock(AIProvider.class);
+        aiMonitoringService = mock(AIMonitoringService.class);
 
         when(geminiProvider.providerName()).thenReturn("Gemini");
         when(groqProvider.providerName()).thenReturn("Groq");
@@ -64,7 +67,7 @@ public class AIGatewayFallbackTest {
         });
 
         // Initialize AIGateway with the mocked list
-        aiGateway = new AIGateway(List.of(geminiProvider, groqProvider, githubProvider, openrouterProvider));
+        aiGateway = new AIGateway(List.of(geminiProvider, groqProvider, githubProvider, openrouterProvider), aiMonitoringService);
     }
 
     @Test

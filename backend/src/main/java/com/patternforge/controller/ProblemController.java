@@ -45,7 +45,8 @@ public class ProblemController {
     private final UserLeetCodeSyncRepository userLeetCodeSyncRepository;
     private final AudioLearningGuideService audioLearningGuideService;
     private final AIGateway aiGateway;
-
+    private final com.patternforge.service.AIMonitoringService aiMonitoringService;
+ 
     public ProblemController(ProblemRepository problemRepository,
                              TopicRepository topicRepository,
                              AttemptRepository attemptRepository,
@@ -60,7 +61,8 @@ public class ProblemController {
                              EntityManager entityManager,
                              UserLeetCodeSyncRepository userLeetCodeSyncRepository,
                              AudioLearningGuideService audioLearningGuideService,
-                             AIGateway aiGateway) {
+                             AIGateway aiGateway,
+                             com.patternforge.service.AIMonitoringService aiMonitoringService) {
         this.problemRepository = problemRepository;
         this.topicRepository = topicRepository;
         this.attemptRepository = attemptRepository;
@@ -76,6 +78,7 @@ public class ProblemController {
         this.userLeetCodeSyncRepository = userLeetCodeSyncRepository;
         this.audioLearningGuideService = audioLearningGuideService;
         this.aiGateway = aiGateway;
+        this.aiMonitoringService = aiMonitoringService;
     }
 
     @GetMapping
@@ -538,6 +541,12 @@ public class ProblemController {
         boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
                                    LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
 
+        if (needsGeneration) {
+            aiMonitoringService.recordCacheMiss();
+        } else {
+            aiMonitoringService.recordCacheHit();
+        }
+
         ProblemGenerationService.JobStatus jobStatus = problemGenerationService.getJobStatus(p.getId());
 
         // Submit job asynchronously (non-blocking) — does not wait for completion
@@ -581,6 +590,12 @@ public class ProblemController {
         // Check if content needs generation
         boolean needsGeneration = (LocalFallbackGenerator.isBoilerplateBasicDetails(p.getBasicDetailsJson()) ||
                                    LocalFallbackGenerator.isBoilerplateSolutionDetails(p.getSolutionDetailsJson()));
+
+        if (needsGeneration) {
+            aiMonitoringService.recordCacheMiss();
+        } else {
+            aiMonitoringService.recordCacheHit();
+        }
 
         ProblemGenerationService.JobStatus jobStatus = problemGenerationService.getJobStatus(p.getId());
 
