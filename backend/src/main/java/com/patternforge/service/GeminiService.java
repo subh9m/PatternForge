@@ -152,7 +152,7 @@ public class GeminiService {
         if (problemName == null || problemName.trim().isEmpty()) {
             throw new IllegalStateException("Assertion failed: Exactly one problem title must be present (got null/empty).");
         }
-        if (problemName.contains(",") || problemName.contains(";") || problemName.contains("&") || problemName.toLowerCase().contains(" and ") || problemName.contains("\n")) {
+        if (problemName.contains("\n")) {
             throw new IllegalStateException("Assertion failed: Multiple problems detected in title: " + problemName);
         }
         if (leetcodeNumber == null || leetcodeNumber <= 0 || leetcodeNumber > 10000) {
