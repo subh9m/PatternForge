@@ -92,7 +92,7 @@ const ImportVerificationView: React.FC = () => {
     );
   }
 
-  const isVerified = status && status.finalDbCount === 841;
+  const isVerified = status && status.finalDbCount >= 789;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -123,8 +123,8 @@ const ImportVerificationView: React.FC = () => {
             </h3>
             <p className="text-sm opacity-90 mt-1">
               {isVerified 
-                ? `100% data completeness reached! All 841 curated problems are indexed in the repository.`
-                : `Currently have ${status.finalDbCount} / 841 problems. Please upload the master PDF to import missing problems.`
+                ? `100% data completeness reached! All 789 unique problems are indexed in the repository.`
+                : `Currently have ${status.finalDbCount} / 789 unique problems. Please upload the master PDF to import missing problems.`
               }
             </p>
           </div>

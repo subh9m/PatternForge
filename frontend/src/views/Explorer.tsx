@@ -218,6 +218,26 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
 
   useEffect(() => {
     const loadData = async () => {
+      // 1. Try loading from localStorage cache first for instant SWR loading
+      const cachedProblems = localStorage.getItem('patternforge_cache_problems');
+      const cachedTopics = localStorage.getItem('patternforge_cache_topics');
+      const cachedLcStatus = localStorage.getItem('patternforge_cache_leetcode_status');
+
+      if (cachedProblems && cachedTopics) {
+        try {
+          setProblems(JSON.parse(cachedProblems));
+          setTopics(JSON.parse(cachedTopics));
+          if (cachedLcStatus) {
+            setLeetcodeStatus(JSON.parse(cachedLcStatus));
+          }
+          setLoading(false); // Disable spinner immediately
+        } catch (e) {
+          // ignore parsing error and let network request run
+        }
+      } else {
+        setLoading(true);
+      }
+
       try {
         const [problemsData, topicsData, lcStatusData] = await Promise.all([
           api.get<ProblemDto[]>('/problems'),
@@ -236,9 +256,20 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
             uniqueProblemsList.push(p);
           }
         });
+        
+        // Update state
         setProblems(uniqueProblemsList);
         setTopics(topicsData);
-        setLeetcodeStatus(lcStatusData);
+        if (lcStatusData) {
+          setLeetcodeStatus(lcStatusData);
+        }
+
+        // Cache update
+        localStorage.setItem('patternforge_cache_problems', JSON.stringify(uniqueProblemsList));
+        localStorage.setItem('patternforge_cache_topics', JSON.stringify(topicsData));
+        if (lcStatusData) {
+          localStorage.setItem('patternforge_cache_leetcode_status', JSON.stringify(lcStatusData));
+        }
       } catch (e) {
         console.error("Failed to load explorer data", e);
       } finally {
@@ -275,9 +306,16 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
                 uniqueProblemsList.push(p);
               }
             });
+            
+            // Update state
             setProblems(uniqueProblemsList);
             setTopics(topicsData);
             setLeetcodeStatus(currentStatus);
+
+            // Update cache
+            localStorage.setItem('patternforge_cache_problems', JSON.stringify(uniqueProblemsList));
+            localStorage.setItem('patternforge_cache_topics', JSON.stringify(topicsData));
+            localStorage.setItem('patternforge_cache_leetcode_status', JSON.stringify(currentStatus));
           }
         }
       } catch (err) {
@@ -293,12 +331,17 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
     e.stopPropagation(); // Stop navigation click
     try {
       const res = await api.post<{ bookmarked: boolean }>(`/problems/${id}/bookmark`, {});
-      setProblems(prev => prev.map(p => {
-        if (p.id === id) {
-          return { ...p, isFavorite: res.bookmarked };
-        }
-        return p;
-      }));
+      setProblems(prev => {
+        const updated = prev.map(p => {
+          if (p.id === id) {
+            return { ...p, isFavorite: res.bookmarked };
+          }
+          return p;
+        });
+        // Sync local storage cache
+        localStorage.setItem('patternforge_cache_problems', JSON.stringify(updated));
+        return updated;
+      });
     } catch (err) {
       // Ignored
     }
@@ -312,12 +355,17 @@ const Explorer: React.FC<ExplorerProps> = ({ navigateToProblem }) => {
     setGeneratingIds(prev => ({ ...prev, [id]: true }));
     try {
       await api.post(`/problems/${id}/regenerate`, {});
-      setProblems(prev => prev.map(p => {
-        if (p.id === id) {
-          return { ...p, isAiReady: true };
-        }
-        return p;
-      }));
+      setProblems(prev => {
+        const updated = prev.map(p => {
+          if (p.id === id) {
+            return { ...p, isAiReady: true };
+          }
+          return p;
+        });
+        // Sync local storage cache
+        localStorage.setItem('patternforge_cache_problems', JSON.stringify(updated));
+        return updated;
+      });
     } catch (err) {
       console.error("AI details generation failed", err);
     } finally {

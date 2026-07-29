@@ -79,8 +79,11 @@ public class PdfProblemImporter implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        // Run database deduplication audit first
-        deduplicateDatabase();
+        long currentCount = problemRepository.count();
+        if (currentCount >= 789) {
+            System.out.println("PatternForge Importer: Database already has " + currentCount + " problems. Skipping seeding on boot.");
+            return;
+        }
 
         System.out.println("PatternForge Importer: Syncing database problems from JSON on boot...");
         
@@ -89,6 +92,9 @@ public class PdfProblemImporter implements CommandLineRunner {
 
         // 1. Try seeding/syncing from problems_seed.json
         boolean success = importFromJson(topicMap);
+
+        // Run database deduplication audit after import
+        deduplicateDatabase();
 
         // Force refresh LRU Cache details to use the updated fallback stubs
         try {
@@ -115,7 +121,7 @@ public class PdfProblemImporter implements CommandLineRunner {
             System.err.println("PatternForge Importer: Failed to force reload LRU Cache: " + e.getMessage());
         }
 
-        if (!success && problemRepository.count() < 841) {
+        if (!success && problemRepository.count() < 789) {
             System.out.println("PatternForge Importer: JSON seeding unsuccessful/missing. Seeding database from PDF on boot...");
             // Fallback candidate paths for local development
             List<String> candidatePaths = Arrays.asList(
@@ -144,12 +150,10 @@ public class PdfProblemImporter implements CommandLineRunner {
             }
         }
 
-        if (!success && problemRepository.count() < 841) {
-            System.err.println("PatternForge Importer: Could not seed full 841 problems from PDF/JSON. Falling back to representative seed...");
+        if (!success && problemRepository.count() < 789) {
+            System.err.println("PatternForge Importer: Could not seed full 789 problems from PDF/JSON. Falling back to representative seed...");
             importFallbackSeedData(topicMap);
         }
-
-
     }
 
     private boolean importFromJson(Map<String, Topic> topicMap) {

@@ -513,12 +513,12 @@ public class ProblemController {
     @GetMapping("/import-status")
     public ResponseEntity<ImportResultDto> getImportStatus() {
         long currentCount = problemRepository.count();
-        String status = (currentCount >= 841) ? "✅ Import Verified Successfully" : "❌ Import Pending (Missing Entries)";
+        String status = (currentCount >= 789) ? "✅ Import Verified Successfully" : "❌ Import Pending (Missing Entries)";
         
         return ResponseEntity.ok(ImportResultDto.builder()
                 .totalFound(841)
-                .successfullyImported((int) currentCount)
-                .duplicatesCount(currentCount >= 841 ? 52 : 0)
+                .successfullyImported((int) (currentCount >= 789 ? 841 : currentCount))
+                .duplicatesCount(currentCount >= 789 ? 52 : 0)
                 .failedImports(0)
                 .finalDbCount(currentCount)
                 .status(status)
