@@ -19,22 +19,22 @@ export default function ProjectsCard({ data, activeTab }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2.5">
               <span className="text-[11px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">⚠️ Problem Statement</span>
-              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{data.overview.problem}</p>
+              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 leading-relaxed font-normal">{data.overview.problem}</p>
             </div>
             
             <div className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2.5">
               <span className="text-[11px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">🎯 Real-World Use Case</span>
-              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{data.overview.useCase}</p>
+              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 leading-relaxed font-normal">{data.overview.useCase}</p>
             </div>
 
             <div className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2.5">
               <span className="text-[11px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">💡 Core Motivation</span>
-              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{data.overview.motivation}</p>
+              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 leading-relaxed font-normal">{data.overview.motivation}</p>
             </div>
 
             <div className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2.5">
               <span className="text-[11px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">🏗️ Architecture Blueprint</span>
-              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{data.overview.architecture}</p>
+              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 leading-relaxed font-normal">{data.overview.architecture}</p>
             </div>
           </div>
 
@@ -154,7 +154,7 @@ export default function ProjectsCard({ data, activeTab }) {
                 className="w-full px-5 py-4 flex items-center justify-between hover:bg-white/20 dark:hover:bg-neutral-900/30 dark:hover:bg-neutral-900/30 transition-all font-mono text-left cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
-                  <span className="h-2 w-2 rounded-full bg-emerald-450"></span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
                   <span className="text-xs font-bold text-gray-800 dark:text-neutral-800 dark:text-neutral-200">Spring Data JPA & Hibernate (Database ORM)</span>
                 </div>
                 {expandedTech === 'jpa' ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
@@ -213,7 +213,7 @@ export default function ProjectsCard({ data, activeTab }) {
                     </div>
                     <div className="text-[14px] md:text-[15px] space-y-2 font-normal">
                       <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[11px] uppercase">Where:</span> <code className="bg-neutral-950 px-1.5 py-0.5 rounded text-fuchsia-300 font-mono text-[12px] border border-neutral-900">{pat.where}</code></div>
-                      <div><span className="text-neutral-505 dark:text-neutral-400 font-mono font-bold text-[11px] uppercase">Why:</span> <span className="text-neutral-700 dark:text-neutral-250">{pat.why}</span></div>
+                      <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[11px] uppercase">Why:</span> <span className="text-neutral-700 dark:text-neutral-300">{pat.why}</span></div>
                       <div className="pt-2 border-t border-neutral-900 text-gray-500 dark:text-neutral-400 flex items-center space-x-1.5 italic text-[13px] md:text-[14px]">
                         <span>💡 Analogy:</span>
                         <span>{pat.analogy}</span>
@@ -237,7 +237,7 @@ export default function ProjectsCard({ data, activeTab }) {
                       </div>
                       <div className="text-[14px] md:text-[15px] space-y-2 font-normal">
                         <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[11px] uppercase block mb-1">Where:</span> <code className="bg-neutral-950 px-1.5 py-0.5 rounded text-fuchsia-300 font-mono text-[12px] border border-neutral-900 block overflow-x-auto whitespace-pre-wrap">{oop.where}</code></div>
-                        <p className="text-neutral-700 dark:text-neutral-250 pt-1">{oop.detail}</p>
+                        <p className="text-neutral-700 dark:text-neutral-300 pt-1">{oop.detail}</p>
                       </div>
                     </div>
                     <div className="border-t border-neutral-900 pt-2.5 text-[13px] md:text-[14px] text-gray-500 italic">
@@ -292,18 +292,18 @@ export default function ProjectsCard({ data, activeTab }) {
           <div className="space-y-6">
             {data.deepDives.frontend.map((item, idx) => (
               <div key={idx} className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-4">
-                <div className="flex items-center justify-between border-b border-neutral-850 pb-2">
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
                   <strong className="text-sm font-mono text-gray-800 dark:text-gray-200">{item.file}</strong>
                   <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[9px] font-mono font-black uppercase rounded">React Primitive</span>
                 </div>
-                <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 font-normal"><strong className="font-semibold">Purpose:</strong> {item.purpose}</p>
+                <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 font-normal"><strong className="font-semibold">Purpose:</strong> {item.purpose}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px] md:text-[14px] font-mono pt-1 text-gray-500">
                   <div><strong>Hooks:</strong> {item.hooks}</div>
                   <div><strong>Lifecycle:</strong> {item.lifecycle}</div>
                 </div>
                 <div className="p-4 bg-neutral-100/60 dark:bg-neutral-900/30 border-l-2 border-slate-400 dark:border-neutral-700 rounded-r-lg text-[13px] md:text-[14px] leading-relaxed">
                   <span className="block text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-black mb-1">Performance optimizations</span>
-                  <p className="text-neutral-605 dark:text-neutral-400 italic">{item.perfNotes}</p>
+                  <p className="text-neutral-600 dark:text-neutral-400 italic">{item.perfNotes}</p>
                 </div>
                 
                 {/* Embedded QA Block */}
@@ -311,7 +311,7 @@ export default function ProjectsCard({ data, activeTab }) {
                   <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-1.5">Interview Prep QA</span>
                   <div className="bg-fuchsia-500/[0.02] border border-fuchsia-500/10 rounded-lg p-4 text-[14px] md:text-[15px] space-y-2">
                     <p className="font-bold text-neutral-800 dark:text-neutral-200">Q: {item.qa.q}</p>
-                    <p className="text-neutral-605 dark:text-neutral-350 leading-relaxed font-normal">A: {item.qa.a}</p>
+                    <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed font-normal">A: {item.qa.a}</p>
                   </div>
                 </div>
               </div>
@@ -330,11 +330,11 @@ export default function ProjectsCard({ data, activeTab }) {
           <div className="space-y-6">
             {data.deepDives.backend.map((item, idx) => (
               <div key={idx} className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-4">
-                <div className="flex items-center justify-between border-b border-neutral-850 pb-2">
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
                   <strong className="text-sm font-mono text-gray-800 dark:text-gray-200">{item.file}</strong>
                   <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[9px] font-mono font-black uppercase rounded">Spring Bean</span>
                 </div>
-                <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 font-normal"><strong className="font-semibold">Purpose:</strong> {item.purpose}</p>
+                <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 font-normal"><strong className="font-semibold">Purpose:</strong> {item.purpose}</p>
                 
                 {item.endpoints && (
                   <div className="text-[13px] md:text-[14px] font-mono">
@@ -354,7 +354,7 @@ export default function ProjectsCard({ data, activeTab }) {
                   <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-1.5">Interview Prep QA</span>
                   <div className="bg-fuchsia-500/[0.02] border border-fuchsia-500/10 rounded-lg p-4 text-[14px] md:text-[15px] space-y-2">
                     <p className="font-bold text-neutral-800 dark:text-neutral-200">Q: {item.qa.q}</p>
-                    <p className="text-neutral-605 dark:text-neutral-350 leading-relaxed font-normal">A: {item.qa.a}</p>
+                    <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed font-normal">A: {item.qa.a}</p>
                   </div>
                 </div>
               </div>
@@ -372,8 +372,8 @@ export default function ProjectsCard({ data, activeTab }) {
 
           <div className="space-y-4">
             {data.designTradeoffs.map((item, idx) => (
-              <div key={idx} className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-3">
-                <span className="text-sm font-mono font-bold text-gray-850 dark:text-gray-100 block border-b border-neutral-900 pb-2">{item.title}</span>
+              <div key={idx} className="p-6 border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-3">
+                <span className="text-sm font-mono font-bold text-gray-800 dark:text-gray-100 block border-b border-neutral-200 dark:border-neutral-800 pb-2">{item.title}</span>
                 <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 leading-relaxed font-normal pt-1.5">{item.tradeoff}</p>
               </div>
             ))}
@@ -436,9 +436,9 @@ export default function ProjectsCard({ data, activeTab }) {
                                     </ul>
                                   </div>
                                 )}
-                                <div className="space-y-1.5 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-805 pt-3">
+                                <div className="space-y-1.5 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pt-3">
                                   <span className="block text-[9.5px] font-mono text-fuchsia-500 uppercase tracking-widest font-black">Google L5 Answer</span>
-                                  <p className="text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{item.a}</p>
+                                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed font-normal">{item.a}</p>
                                 </div>
                               </div>
                             )}

@@ -521,7 +521,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
         onClick={() => {
           if (!isGen) setSelectedItem(item);
         }}
-        className={`glass-panel border p-5 rounded-2xl hover:border-slate-750 transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group ${
+        className={`glass-panel border p-5 rounded-2xl hover:border-slate-700 transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group ${
           isGen 
             ? 'border-slate-900/60 bg-slate-955/10 cursor-wait select-none'
             : 'cursor-pointer ' + (item.isRevisedToday ? 'bg-emerald-950/5 border-emerald-500/20' : 'bg-slate-900/20 border-slate-900')
@@ -602,14 +602,14 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
             <>
               {item.simplifiedStatement && (
                 <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
-                  <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Problem Brief</strong>
+                  <strong className="text-slate-300 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Problem Brief</strong>
                   {item.simplifiedStatement}
                 </p>
               )}
 
               {optimalBrief && (
-                <p className="text-slate-450 text-xs leading-relaxed line-clamp-2">
-                  <strong className="text-slate-350 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Simplified Approach</strong>
+                <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
+                  <strong className="text-slate-300 text-[10px] font-bold uppercase tracking-wider block mb-0.5">Simplified Approach</strong>
                   {optimalBrief}
                 </p>
               )}
@@ -678,7 +678,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
         onClick={() => {
           if (!isGen) setSelectedItem(item);
         }}
-        className={`glass-panel border px-4 py-3 rounded-xl hover:border-slate-750 transition-all duration-300 flex items-center justify-between gap-4 relative overflow-hidden group ${
+        className={`glass-panel border px-4 py-3 rounded-xl hover:border-slate-700 transition-all duration-300 flex items-center justify-between gap-4 relative overflow-hidden group ${
           isGen 
             ? 'border-slate-900/60 bg-slate-955/10 cursor-wait select-none'
             : 'cursor-pointer ' + (item.isRevisedToday ? 'bg-emerald-950/5 border-emerald-500/20' : 'bg-slate-900/20 border-slate-900')
@@ -820,7 +820,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
               <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider font-mono">Revision Tracker</span>
               <button
                 onClick={handleStartRevision}
-                className="w-full py-2 bg-purple-650 hover:bg-purple-550 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer shadow-glow-primary transition-all duration-200 flex items-center justify-center space-x-2"
+                className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer shadow-glow-primary transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Play className="h-3.5 w-3.5 fill-current" />
                 <span>Start Revision</span>
@@ -829,7 +829,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
           ) : (
             <div className="flex flex-col justify-between h-full space-y-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-450 font-bold uppercase tracking-wider font-mono flex items-center space-x-1.5">
+                <span className="text-slate-400 font-bold uppercase tracking-wider font-mono flex items-center space-x-1.5">
                   <Clock className="h-3.5 w-3.5 text-purple-400" />
                   <span>Revision Session</span>
                 </span>
@@ -861,7 +861,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                 </button>
                 <button
                   onClick={handleFinishRevisionClick}
-                  className="flex-1 py-1.5 bg-purple-650 hover:bg-purple-550 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-250 cursor-pointer text-center"
+                  className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-250 cursor-pointer text-center"
                 >
                   Finish Revision
                 </button>
@@ -939,7 +939,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
-                viewMode === 'grid' ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+                viewMode === 'grid' ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
               }`}
               title="Cards Grid View"
             >
@@ -948,7 +948,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
-                viewMode === 'list' ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+                viewMode === 'list' ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
               }`}
               title="Compact List View"
             >
@@ -957,7 +957,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
             <button
               onClick={() => setViewMode('topics')}
               className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
-                viewMode === 'topics' ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+                viewMode === 'topics' ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
               }`}
               title="Group by Topic List View"
             >
@@ -973,7 +973,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
             <button
               onClick={() => setLayoutColumns(1)}
               className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
-                layoutColumns === 1 ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+                layoutColumns === 1 ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
               }`}
               title="1 Column"
             >
@@ -982,7 +982,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
             <button
               onClick={() => setLayoutColumns(2)}
               className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
-                layoutColumns === 2 ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+                layoutColumns === 2 ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
               }`}
               title="2 Columns"
             >
@@ -991,7 +991,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
             <button
               onClick={() => setLayoutColumns(3)}
               className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
-                layoutColumns === 3 ? 'bg-slate-850 text-purple-400' : 'text-slate-500 hover:text-slate-350'
+                layoutColumns === 3 ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
               }`}
               title="3 Columns"
             >
@@ -1016,7 +1016,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
       {/* Main Render Area */}
       {filteredItems.length === 0 ? (
         <div className="glass-panel text-center py-16 border border-slate-900 rounded-2xl flex flex-col items-center justify-center space-y-4">
-          <CheckCircle2 className="h-12 w-12 text-slate-650" />
+          <CheckCircle2 className="h-12 w-12 text-slate-600" />
           <div className="space-y-1">
             <h3 className="text-sm font-extrabold text-slate-300">No Revision Problems Found</h3>
             <p className="text-slate-500 text-xs max-w-md mx-auto">
@@ -1057,7 +1057,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                       <div className="flex items-center space-x-2.5 min-w-0">
                         {isCollapsed ? <ChevronRight className="h-4 w-4 text-purple-400 shrink-0" /> : <ChevronDown className="h-4 w-4 text-purple-400 shrink-0" />}
                         <span className="text-xs font-black text-slate-200 uppercase tracking-widest truncate">{topicName}</span>
-                        <span className="bg-slate-900 text-slate-450 border border-slate-800/40 px-2.5 py-0.5 rounded-md text-[9px] font-mono shrink-0">
+                        <span className="bg-slate-900 text-slate-400 border border-slate-800/40 px-2.5 py-0.5 rounded-md text-[9px] font-mono shrink-0">
                           {solvedInTopic}/{totalInTopic} Revised
                         </span>
                       </div>
@@ -1243,7 +1243,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
 
                   <button 
                     onClick={() => setSelectedItem(null)}
-                    className="p-1.5 hover:bg-slate-900 rounded-lg text-slate-500 hover:text-slate-350 cursor-pointer"
+                    className="p-1.5 hover:bg-slate-900 rounded-lg text-slate-500 hover:text-slate-300 cursor-pointer"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -1365,7 +1365,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                           className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all duration-150 ${
                             codeView === 'reference'
                               ? 'bg-slate-900 text-slate-100 shadow-sm'
-                              : 'text-slate-400 hover:text-slate-250'
+                              : 'text-slate-400 hover:text-slate-300'
                           }`}
                         >
                           Reference Solution
@@ -1376,7 +1376,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                             className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all duration-150 ${
                               codeView === 'user'
                                 ? 'bg-slate-900 text-slate-100 shadow-sm'
-                                : 'text-slate-400 hover:text-slate-250'
+                                : 'text-slate-400 hover:text-slate-300'
                             }`}
                           >
                             My Submission
@@ -1455,7 +1455,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
                   <div className="flex items-center space-x-3">
                     <button
                       onClick={() => setSelectedItem(null)}
-                      className="px-4 py-2 text-slate-450 hover:text-slate-350 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                      className="px-4 py-2 text-slate-400 hover:text-slate-300 text-xs font-bold uppercase tracking-wider cursor-pointer"
                     >
                       Close
                     </button>
@@ -1504,7 +1504,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
           <div className="glass-panel border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
             <div className="space-y-2">
               <h3 className="text-base font-extrabold text-slate-100 uppercase tracking-wide">Pending Revisions</h3>
-              <p className="text-slate-350 text-xs leading-relaxed font-sans font-medium">
+              <p className="text-slate-300 text-xs leading-relaxed font-sans font-medium">
                 You still have <strong className="text-amber-400 font-bold">{pendingToday}</strong> questions pending for today.
                 Do you want to end this revision session anyway?
               </p>
@@ -1518,7 +1518,7 @@ const RevisionView: React.FC<RevisionViewProps> = ({ navigateToProblem }) => {
               </button>
               <button
                 onClick={handleFinishRevisionActual}
-                className="px-4 py-2 bg-purple-650 hover:bg-purple-550 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer shadow-glow-primary transition-smooth"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer shadow-glow-primary transition-smooth"
               >
                 Finish Anyway
               </button>

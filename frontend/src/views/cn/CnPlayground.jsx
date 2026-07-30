@@ -129,7 +129,7 @@ export default function CnPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'handshake' 
               ? 'bg-cyan-500/10 text-cyan-500 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-cyan-500/20'}`}
+              : 'bg-transparent text-gray-500 dark:text-gray-400 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-cyan-500/20'}`}
         >
           <Network className="h-4 w-4" />
           <span>TCP Handshake Simulator</span>
@@ -139,7 +139,7 @@ export default function CnPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'subnet' 
               ? 'bg-cyan-500/10 text-cyan-500 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-cyan-500/20'}`}
+              : 'bg-transparent text-gray-500 dark:text-gray-400 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-cyan-500/20'}`}
         >
           <Globe className="h-4 w-4" />
           <span>CIDR & Subnet Calculator</span>
@@ -280,7 +280,7 @@ export default function CnPlayground() {
             
             {/* Input Config Panel */}
             <div className="bg-gray-55/10 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-4 space-y-4">
-              <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5 font-bold">Subnet Inputs</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5 font-bold">Subnet Inputs</span>
               
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5 font-mono">Base Network IP:</label>

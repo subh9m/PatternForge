@@ -1837,7 +1837,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
           {notes.thinkingChecked && (
             <button
               onClick={handleReattempt}
-              className="px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/40 text-xs font-bold text-slate-300 hover:text-slate-100 transition-smooth flex items-center space-x-1"
+              className="px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/40 text-xs font-bold text-slate-300 hover:text-slate-100 transition-smooth flex items-center space-x-1"
             >
               <span>Reattempt</span>
             </button>
@@ -2048,7 +2048,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       className="relative py-3 flex-1 cursor-pointer group touch-none select-none"
                     >
                       {/* Visual Track */}
-                      <div className="h-1 w-full bg-slate-850 rounded-full overflow-hidden relative">
+                      <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden relative">
                         <div 
                           className="h-full bg-blue-500 rounded-full transition-all duration-75"
                           style={{ width: `${(audioPlaybackState.currentTime / (audioPlaybackState.duration || 1)) * 105}%` }}
@@ -2089,23 +2089,23 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                   <div className="flex items-center space-x-2.5 flex-wrap gap-y-2 w-full sm:w-auto justify-center sm:justify-start">
                     
                     {/* Speed Selector */}
-                    <div className="flex items-center space-x-1 bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-850 h-10 select-none">
+                    <div className="flex items-center space-x-1 bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-800 h-10 select-none">
                       <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Speed:</span>
                       <select
                         value={audioPlaybackState.playbackRate}
                         onChange={(e) => handleAudioChangeSpeed(Number(e.target.value))}
                         className="bg-transparent text-blue-400 text-[10px] font-mono font-bold border-none outline-none cursor-pointer"
                       >
-                        <option value="0.75" className="bg-slate-950 text-slate-350">0.75x</option>
-                        <option value="1" className="bg-slate-950 text-slate-350">1.0x</option>
-                        <option value="1.25" className="bg-slate-950 text-slate-350">1.25x</option>
-                        <option value="1.5" className="bg-slate-950 text-slate-350">1.5x</option>
-                        <option value="2" className="bg-slate-950 text-slate-350">2.0x</option>
+                        <option value="0.75" className="bg-slate-950 text-slate-300">0.75x</option>
+                        <option value="1" className="bg-slate-950 text-slate-300">1.0x</option>
+                        <option value="1.25" className="bg-slate-950 text-slate-300">1.25x</option>
+                        <option value="1.5" className="bg-slate-950 text-slate-300">1.5x</option>
+                        <option value="2" className="bg-slate-950 text-slate-300">2.0x</option>
                       </select>
                     </div>
 
                     {/* Voice Selector + Preview Group */}
-                    <div className="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-850 h-10 max-w-[240px]">
+                    <div className="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-800 h-10 max-w-[240px]">
                       <div className="flex items-center space-x-1 px-2 py-1 truncate">
                         <span className="text-[9px] font-mono text-slate-500 font-black uppercase">Voice:</span>
                         <select
@@ -2123,7 +2123,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                               }
                             })
                             .map(v => (
-                              <option key={v.name} value={v.name} className="bg-slate-950 text-slate-350">
+                              <option key={v.name} value={v.name} className="bg-slate-950 text-slate-300">
                                 {v.name} ({v.lang})
                               </option>
                             ))
@@ -2136,7 +2136,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                               return vlang.startsWith('en');
                             }
                           }).length === 0 && (
-                            <option value="" className="bg-slate-950 text-slate-350">
+                            <option value="" className="bg-slate-950 text-slate-300">
                               Default Voice
                             </option>
                           )}
@@ -2150,7 +2150,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         className={`h-8 px-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-1 min-w-[55px] cursor-pointer ${
                           isPreviewPlaying
                             ? 'bg-emerald-600 text-white shadow shadow-emerald-500/10 animate-pulse'
-                            : 'bg-slate-850 hover:bg-slate-800 text-slate-300'
+                            : 'bg-slate-800 hover:bg-slate-800 text-slate-300'
                         }`}
                         title="Play a short voice sample to preview"
                       >
@@ -2168,7 +2168,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       className="p-3.5 rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800 text-slate-400 hover:text-slate-200 transition-all active:scale-90 cursor-pointer relative group flex items-center justify-center min-w-[44px] min-h-[44px]"
                     >
                       <RotateCcw className={`h-4.5 w-4.5 transition-transform duration-300 ${backAnimate ? '-rotate-45' : 'rotate-0'}`} />
-                      <span className="absolute text-[8px] font-black font-mono text-slate-350 mt-0.5">10</span>
+                      <span className="absolute text-[8px] font-black font-mono text-slate-300 mt-0.5">10</span>
                     </button>
 
                     {/* Central Play / Pause / Replay Button */}
@@ -2217,7 +2217,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       className="p-3.5 rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800 text-slate-400 hover:text-slate-200 transition-all active:scale-90 cursor-pointer relative group flex items-center justify-center min-w-[44px] min-h-[44px]"
                     >
                       <RotateCw className={`h-4.5 w-4.5 transition-transform duration-300 ${forwardAnimate ? 'rotate-45' : 'rotate-0'}`} />
-                      <span className="absolute text-[8px] font-black font-mono text-slate-350 mt-0.5">10</span>
+                      <span className="absolute text-[8px] font-black font-mono text-slate-300 mt-0.5">10</span>
                     </button>
                   </div>
                   
@@ -2413,7 +2413,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <div className="text-emerald-300 font-bold"><span className="text-slate-500 font-bold">Output:</span> {ex.output}</div>
                       </div>
                       {ex.explanation && (
-                        <div className="text-slate-350 text-[13px] mt-2 border-t border-slate-900/60 pt-2 font-sans leading-relaxed font-medium">
+                        <div className="text-slate-300 text-[13px] mt-2 border-t border-slate-900/60 pt-2 font-sans leading-relaxed font-medium">
                           <span className="text-slate-400 font-black block text-[9px] uppercase mb-0.5 font-mono">Explanation:</span>
                           {ex.explanation}
                         </div>
@@ -2498,7 +2498,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'hint1' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'hint1' && (
-                        <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
+                        <div className="p-4 border-t border-slate-900 text-xs text-slate-300 leading-relaxed font-sans">
                           {details.hints && details.hints[0]}
                         </div>
                       )}
@@ -2524,7 +2524,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'hint2' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'hint2' && unlockedHintCount >= 2 && (
-                        <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
+                        <div className="p-4 border-t border-slate-900 text-xs text-slate-300 leading-relaxed font-sans">
                           {details.hints && details.hints[1]}
                         </div>
                       )}
@@ -2549,7 +2549,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                         <span>{openAccordion === 'hint3' ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}</span>
                       </button>
                       {openAccordion === 'hint3' && unlockedHintCount >= 3 && (
-                        <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
+                        <div className="p-4 border-t border-slate-900 text-xs text-slate-300 leading-relaxed font-sans">
                           {details.hints && details.hints[2]}
                         </div>
                       )}
@@ -2611,7 +2611,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       </button>
                       {openAccordion === 'approach' && (
                         (loadingSolutions || (isAiPending && isBoilerplateDetails(details))) ? renderSolutionLoadingPlaceholder() : (
-                          <div className="p-4 border-t border-slate-900 text-xs text-slate-350 leading-relaxed font-sans">
+                          <div className="p-4 border-t border-slate-900 text-xs text-slate-300 leading-relaxed font-sans">
                             {renderMarkdown(details.approach)}
                           </div>
                         )
@@ -2767,14 +2767,14 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       <button
                         key={mins}
                         onClick={() => startTimer(mins)}
-                        className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/40 text-xs font-bold text-slate-300 transition-smooth"
+                        className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/40 text-xs font-bold text-slate-300 transition-smooth"
                       >
                         {mins} min
                       </button>
                     ))}
                     <button
                       onClick={() => setShowCustomInput(true)}
-                      className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-bold text-slate-400 transition-smooth"
+                      className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-bold text-slate-400 transition-smooth"
                     >
                       Custom
                     </button>
@@ -2785,7 +2785,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                       setThinkingStarted(true);
                       setNotes({ ...notes, thinkingChecked: true });
                     }}
-                    className="w-full py-2.5 rounded-xl border border-slate-855 text-slate-400 hover:text-slate-205 text-xs font-bold transition-smooth"
+                    className="w-full py-2.5 rounded-xl border border-slate-855 text-slate-400 hover:text-slate-200 text-xs font-bold transition-smooth"
                   >
                     Bypass to Coding Mode
                   </button>
@@ -2941,7 +2941,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                               </span>
                             </div>
                           </div>
-                          <div className="text-xs text-slate-350 border-t border-slate-900/80 pt-3 leading-relaxed max-h-48 overflow-y-auto font-sans pr-1">
+                          <div className="text-xs text-slate-300 border-t border-slate-900/80 pt-3 leading-relaxed max-h-48 overflow-y-auto font-sans pr-1">
                             <span className="text-slate-400 font-bold block text-[9px] uppercase mb-1 font-mono">Gemini Mentor Review:</span>
                             {renderMarkdown(notes.aiFeedback)}
                           </div>
@@ -2965,7 +2965,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                                 } else if (isSelected) {
                                   pillClass = 'bg-orange-500/20 border border-orange-500/35 text-orange-400';
                                 } else {
-                                  pillClass = 'bg-slate-900/60 border border-slate-855 text-slate-650 opacity-40';
+                                  pillClass = 'bg-slate-900/60 border border-slate-855 text-slate-600 opacity-40';
                                 }
                               } else {
                                 pillClass = isSelected
@@ -3255,7 +3255,7 @@ const ProblemView: React.FC<ProblemViewProps> = ({ problemId, onBack }) => {
                             onClick={() => setSelectedSolutionTab('better')}
                             className={`px-3 py-1.5 text-[11px] font-extrabold transition-smooth border-b-2 uppercase tracking-wider ${
                               activeSubTab === 'better'
-                                ? 'border-amber-555 text-amber-400'
+                                ? 'border-amber-500 text-amber-400'
                                 : 'border-transparent text-slate-400 hover:text-slate-200'
                             }`}
                           >

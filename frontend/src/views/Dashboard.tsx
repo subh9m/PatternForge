@@ -306,7 +306,7 @@ const Dashboard: React.FC<DashboardProps> = ({ navigateToProblem, setActiveTab }
           </div>
           
           {/* Year Selector Dropdown */}
-          <div className="flex items-center space-x-2 bg-slate-900/60 border border-slate-850 px-3.5 py-1.5 rounded-xl text-xs">
+          <div className="flex items-center space-x-2 bg-slate-900/60 border border-slate-800 px-3.5 py-1.5 rounded-xl text-xs">
             <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px] font-mono">Select Year:</span>
             <select
               value={selectedYear}

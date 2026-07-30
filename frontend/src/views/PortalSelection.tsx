@@ -242,7 +242,7 @@ const PortalSelection: React.FC<PortalSelectionProps> = ({ onSelectPortal, onBac
             className="p-6 border border-border hover:border-green-500 bg-background/50 hover:bg-background/80 transition-smooth flex flex-col justify-between items-start text-left cursor-pointer group hover:shadow-[0_0_20px_rgba(34,197,94,0.12)]"
           >
             <div className="w-full">
-              <div className="h-10 w-10 bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-455 mb-4 group-hover:shadow-glow-green transition-smooth">
+              <div className="h-10 w-10 bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 mb-4 group-hover:shadow-glow-green transition-smooth">
                 <Coffee className="h-5 w-5" />
               </div>
               <h2 className="text-lg font-black text-text-primary uppercase tracking-wider mb-2">

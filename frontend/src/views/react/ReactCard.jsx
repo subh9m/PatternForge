@@ -6,7 +6,7 @@ const renderDiagram = (conceptId) => {
     case 'react_fundamentals':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Virtual DOM Diffing & Patching Strategy
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
@@ -31,7 +31,7 @@ const renderDiagram = (conceptId) => {
     case 'react_state':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             React Hook Mount & Update Lifecycle Pipeline
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
@@ -63,20 +63,20 @@ const renderDiagram = (conceptId) => {
     case 'react_perf':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             useMemo vs useCallback Selection Matrix
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center font-mono text-[10.5px]">
               <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2">
                 <span className="px-2 py-0.5 bg-sky-500/10 text-sky-500 text-[8.5px] font-bold uppercase rounded inline-block">useMemo</span>
-                <p className="text-[10px] text-gray-550 dark:text-gray-350">Memoizes value outputs (caching computation results).</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-300">Memoizes value outputs (caching computation results).</p>
                 <p className="text-[9.5px] text-gray-400">Usage: Caching filtered lists or complex arithmetic calculations.</p>
               </div>
               <div className="p-4 border border-sky-500/25 bg-sky-500/5 rounded-xl space-y-2 text-sky-500 font-bold">
                 <span className="px-2 py-0.5 bg-sky-500 text-white text-[8.5px] font-bold uppercase rounded inline-block">useCallback</span>
                 <p className="text-[10px] text-neutral-700 dark:text-neutral-300">Memoizes function references (preserving memory addresses).</p>
-                <p className="text-[9.5px] text-gray-450">Usage: Passing stable callback props to React.memo children.</p>
+                <p className="text-[9.5px] text-gray-400">Usage: Passing stable callback props to React.memo children.</p>
               </div>
             </div>
           </div>
@@ -86,7 +86,7 @@ const renderDiagram = (conceptId) => {
     case 'react_routing_state':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             State Management Tool Profiles Comparison
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
@@ -114,7 +114,7 @@ const renderDiagram = (conceptId) => {
     case 'react_testing':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             React Testing Library Query Priority Flow
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
@@ -141,7 +141,7 @@ const renderDiagram = (conceptId) => {
     case 'react_ssr_perf':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             React SSR Page Hydration Pipeline
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
@@ -181,7 +181,7 @@ export default function ReactCard({ data }) {
   return (
     <section 
       id={data.id}
-      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-sky-500/25 relative"
+      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-sky-500/25 relative"
     >
       {/* Section Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
@@ -196,7 +196,7 @@ export default function ReactCard({ data }) {
       </div>
 
       {/* Description */}
-      <p className="text-base text-gray-755 dark:text-neutral-250 font-normal leading-relaxed mb-6">
+      <p className="text-base text-gray-700 dark:text-neutral-300 font-normal leading-relaxed mb-6">
         {data.desc}
       </p>
 
@@ -222,7 +222,7 @@ export default function ReactCard({ data }) {
               >
                 <div className="flex items-center space-x-3">
                   <span className="h-2 w-2 rounded-full bg-sky-500"></span>
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-255">{sub.name}</span>
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-300">{sub.name}</span>
                 </div>
                 {isExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
               </button>
@@ -231,11 +231,11 @@ export default function ReactCard({ data }) {
                 <div className="p-6 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 space-y-7 animate-fadeIn">
                   
                   {/* One-Liner Summary */}
-                  <div className="p-5 bg-sky-500/[0.03] border-l-3 border-sky-500 text-neutral-805 dark:text-neutral-200 rounded-r-lg font-sans text-[14px] md:text-[15px] flex items-center space-x-3.5 leading-relaxed">
+                  <div className="p-5 bg-sky-500/[0.03] border-l-3 border-sky-500 text-neutral-800 dark:text-neutral-200 rounded-r-lg font-sans text-[14px] md:text-[15px] flex items-center space-x-3.5 leading-relaxed">
                     <Sparkles className="h-5 w-5 text-sky-500 flex-shrink-0" />
                     <div>
                       <span className="font-mono text-[10px] font-black text-sky-500 uppercase tracking-widest block mb-1">Interview One-Liner</span>
-                      <blockquote className="italic text-neutral-700 dark:text-neutral-250">"{sub.oneLiner}"</blockquote>
+                      <blockquote className="italic text-neutral-700 dark:text-neutral-300">"{sub.oneLiner}"</blockquote>
                     </div>
                   </div>
 
@@ -243,22 +243,22 @@ export default function ReactCard({ data }) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">🎯 Interview Definition</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.definition}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.definition}</p>
                     </div>
 
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">❓ Why Do We Need It?</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.whyNeed}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.whyNeed}</p>
                     </div>
 
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">🌍 Real World Example</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.example}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.example}</p>
                     </div>
 
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">💻 SDE Perspective</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.devPerspective}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.devPerspective}</p>
                     </div>
                   </div>
 

@@ -246,7 +246,7 @@ export default function ReactCheatSheet() {
                 placeholder="Search hooks or categories..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-xs bg-gray-55/50 dark:bg-black/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-905 rounded-xl font-mono text-gray-805 dark:text-gray-300 focus:outline-none focus:border-sky-500 transition-all"
+                className="w-full pl-9 pr-4 py-2 text-xs bg-gray-55/50 dark:bg-black/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-905 rounded-xl font-mono text-gray-800 dark:text-gray-300 focus:outline-none focus:border-sky-500 transition-all"
               />
             </div>
 
@@ -260,7 +260,7 @@ export default function ReactCheatSheet() {
                   className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg border transition-all cursor-pointer
                     ${category === cat 
                       ? 'bg-sky-500/10 text-sky-500 border-sky-500/30' 
-                      : 'bg-transparent text-gray-555 dark:text-gray-455 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/20'}`}
+                      : 'bg-transparent text-gray-500 dark:text-gray-400 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/20'}`}
                 >
                   {cat}
                 </button>
@@ -287,7 +287,7 @@ export default function ReactCheatSheet() {
                         className="p-1 hover:bg-gray-100 dark:hover:bg-neutral-900 rounded text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all opacity-0 group-hover:opacity-100 absolute right-3 top-3 animate-fadeIn"
                         title="Copy definition"
                       >
-                        {copiedIndex === idx ? <Check className="h-3.5 w-3.5 text-emerald-555" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copiedIndex === idx ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                       </button>
                     </div>
                     <h3 className="text-sm font-black text-neutral-800 dark:text-neutral-200 font-mono">
@@ -296,14 +296,14 @@ export default function ReactCheatSheet() {
                   </div>
 
                   {/* Definition */}
-                  <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">
+                  <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">
                     {item.definition}
                   </p>
 
                   {/* Analogy Box */}
                   <div className="p-4 bg-neutral-100/60 dark:bg-neutral-900/30 border-l-2 border-slate-400 dark:border-neutral-700 rounded-r-lg">
                     <span className="block text-[9.5px] font-mono text-slate-400 dark:text-neutral-500 uppercase tracking-widest font-black mb-1">💡 SDE Analogy</span>
-                    <p className="text-[13px] md:text-[14px] italic text-gray-550 dark:text-gray-405 leading-relaxed font-sans">
+                    <p className="text-[13px] md:text-[14px] italic text-gray-600 dark:text-gray-400 leading-relaxed font-sans">
                       {item.analogy}
                     </p>
                   </div>
@@ -318,7 +318,7 @@ export default function ReactCheatSheet() {
                 </div>
               ))
             ) : (
-              <div className="col-span-2 flex flex-col items-center justify-center py-10 border border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl text-center text-gray-455">
+              <div className="col-span-2 flex flex-col items-center justify-center py-10 border border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl text-center text-gray-400">
                 <span className="text-2xl">🔎</span>
                 <span className="text-xs font-mono mt-2">No matching items found.</span>
               </div>
@@ -343,7 +343,7 @@ export default function ReactCheatSheet() {
                     : 'border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/10 text-neutral-700 dark:text-neutral-300'}`}
               >
                 <strong className="text-[11px] font-black">{snip.name}</strong>
-                <span className="text-[9.5px] text-gray-450 dark:text-gray-500 font-light leading-normal">{snip.desc}</span>
+                <span className="text-[9.5px] text-gray-400 dark:text-gray-500 font-light leading-normal">{snip.desc}</span>
               </button>
             ))}
           </div>
@@ -357,7 +357,7 @@ export default function ReactCheatSheet() {
               >
                 {copiedIndex === activeSnippetIdx ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-emerald-450" />
+                    <Check className="h-3.5 w-3.5 text-emerald-400" />
                     <span>Copied!</span>
                   </>
                 ) : (

@@ -32,7 +32,7 @@ function highlightCode(code) {
     .replace(/>/g, '&gt;');
 
   // Highlight numbers first (before we introduce any span tags containing class numbers like 500, 400, 650)
-  escaped = escaped.replace(/\b(\d+)\b/g, '<span class="text-purple-650 dark:text-violet-400">$1</span>');
+  escaped = escaped.replace(/\b(\d+)\b/g, '<span class="text-purple-600 dark:text-violet-400">$1</span>');
 
   // Highlight keywords
   keywords.forEach(kw => {
@@ -94,7 +94,7 @@ export default function SqlCard({ data }) {
   return (
     <section 
       id={data.id}
-      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-red-500/25 relative"
+      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-red-500/25 relative"
     >
       {/* Concept Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
@@ -111,7 +111,7 @@ export default function SqlCard({ data }) {
         {isPracticeDb && (
           <button
             onClick={() => setShowFullScriptModal(true)}
-            className="px-4 py-2 bg-red-650 hover:bg-red-500 text-white font-mono text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center space-x-2 cursor-pointer shadow-lg hover:shadow-red-500/20 transition-all duration-300"
+            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-mono text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center space-x-2 cursor-pointer shadow-lg hover:shadow-red-500/20 transition-all duration-300"
           >
             <Database className="h-3.5 w-3.5" />
             <span>Get Full Setup SQL Script</span>
@@ -120,13 +120,13 @@ export default function SqlCard({ data }) {
       </div>
 
       {/* Description */}
-      <p className="text-base text-gray-755 dark:text-neutral-250 font-sans font-normal leading-relaxed mb-6">
+      <p className="text-base text-gray-700 dark:text-neutral-300 font-sans font-normal leading-relaxed mb-6">
         {data.desc}
       </p>
 
       {/* SQL DDL / DML Schema Table Preview */}
       {isPracticeDb && data.methods && (
-        <div className="mb-6 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl p-5">
+        <div className="mb-6 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-5">
           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-4 flex items-center space-x-2">
             <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full"></span>
             <span>Relational Schema (Click table name to view all records)</span>
@@ -141,7 +141,7 @@ export default function SqlCard({ data }) {
                 <span className="block text-xs font-mono font-bold text-gray-800 dark:text-gray-200 group-hover:text-red-500 uppercase tracking-wide">
                   {tbl.method}
                 </span>
-                <span className="block text-[10px] font-mono text-gray-450 dark:text-gray-500 mt-1">
+                <span className="block text-[10px] font-mono text-gray-400 dark:text-gray-500 mt-1">
                   {tbl.output}
                 </span>
               </div>
@@ -161,7 +161,7 @@ export default function SqlCard({ data }) {
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
         </div>
-        <pre className="bg-white/50 dark:bg-neutral-900/50 text-neutral-800 dark:text-neutral-300 p-5 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-xl pr-14 leading-relaxed">
+        <pre className="bg-white/50 dark:bg-neutral-900/50 text-neutral-800 dark:text-neutral-300 p-5 font-mono text-xs overflow-x-auto border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl pr-14 leading-relaxed">
           <code dangerouslySetInnerHTML={{ __html: highlightCode(data.declaration) }} />
         </pre>
       </div>
@@ -238,7 +238,7 @@ export default function SqlCard({ data }) {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-250 dark:divide-[#333]">
+                  <tbody className="divide-y divide-gray-200 dark:divide-[#333]">
                     {data.queries[selectedQueryIdx].rows.length === 0 ? (
                       <tr>
                         <td colSpan={data.queries[selectedQueryIdx].columns.length} className="px-4 py-4 text-center text-gray-500 italic">
@@ -253,7 +253,7 @@ export default function SqlCard({ data }) {
                               {cell === null ? (
                                 <span className="text-red-400 bg-red-400/5 px-1 py-0.2 rounded-sm font-bold font-bold">NULL</span>
                               ) : typeof cell === 'number' && data.queries[selectedQueryIdx].columns[cellIdx]?.includes('salary') ? (
-                                <span className="text-emerald-550 dark:text-emerald-450 font-semibold">{cell.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{cell.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                               ) : (
                                 String(cell)
                               )}
@@ -286,7 +286,7 @@ export default function SqlCard({ data }) {
               </div>
               <button 
                 onClick={() => { setActiveFullTable(null); setSearchQuery(""); }}
-                className="px-4 py-2 bg-red-650 hover:bg-red-500 text-white font-mono text-xs font-bold rounded-lg cursor-pointer transition-all duration-200"
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold rounded-lg cursor-pointer transition-all duration-200"
               >
                 Close View
               </button>
@@ -333,7 +333,7 @@ export default function SqlCard({ data }) {
                                 {val === null ? (
                                   <span className="text-red-400 font-bold bg-red-400/5 px-1.5 py-0.5 rounded-sm font-bold">NULL</span>
                                 ) : col === 'amount' || col === 'budget' ? (
-                                  <span className="text-emerald-550 dark:text-emerald-450 font-semibold">{Number(val).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{Number(val).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                                 ) : (
                                   String(val)
                                 )}

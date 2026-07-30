@@ -16,7 +16,7 @@ const NavItem = ({ href, children }) => {
       className={`block px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition-all duration-300 ease-in-out cursor-pointer
         ${isActive 
           ? 'bg-amber-500/10 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.15)] border-l-2 border-amber-500 pl-3.5' 
-          : 'text-gray-750 hover:text-amber-500 dark:text-gray-300 dark:hover:text-amber-500 hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:-translate-y-px pl-4'
+          : 'text-gray-700 hover:text-amber-500 dark:text-gray-300 dark:hover:text-amber-500 hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:-translate-y-px pl-4'
         }`}
     >
       {children}

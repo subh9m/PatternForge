@@ -145,7 +145,7 @@ export default function AimlCheatSheet() {
               className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg border transition-all cursor-pointer
                 ${category === cat 
                   ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30' 
-                  : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-indigo-500/20'}`}
+                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-indigo-500/20'}`}
             >
               {cat}
             </button>
@@ -181,14 +181,14 @@ export default function AimlCheatSheet() {
               </div>
 
               {/* Definition */}
-              <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">
+              <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">
                 {item.definition}
               </p>
 
               {/* Analogy Box */}
               <div className="p-4 bg-neutral-100/60 dark:bg-neutral-900/30 border-l-2 border-slate-400 dark:border-neutral-700 rounded-r-lg">
                 <span className="block text-[9.5px] font-mono text-slate-400 dark:text-neutral-500 uppercase tracking-widest font-black mb-1">💡 SDE Analogy</span>
-                <p className="text-[13px] md:text-[14px] italic text-gray-550 dark:text-gray-405 leading-relaxed font-sans">
+                <p className="text-[13px] md:text-[14px] italic text-gray-600 dark:text-gray-400 leading-relaxed font-sans">
                   {item.analogy}
                 </p>
               </div>
@@ -203,7 +203,7 @@ export default function AimlCheatSheet() {
             </div>
           ))
         ) : (
-          <div className="col-span-2 flex flex-col items-center justify-center py-10 border border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl text-center text-gray-450">
+          <div className="col-span-2 flex flex-col items-center justify-center py-10 border border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl text-center text-gray-400">
             <span className="text-2xl">🔎</span>
             <span className="text-xs font-mono mt-2">No matching glossary items found.</span>
           </div>

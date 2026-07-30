@@ -141,7 +141,7 @@ export default function ReactPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activeTab === 'diff' 
               ? 'bg-sky-500/10 text-sky-500 border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)]' 
-              : 'bg-transparent text-gray-555 dark:text-gray-455 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/20'}`}
+              : 'bg-transparent text-gray-500 dark:text-gray-400 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/20'}`}
         >
           <Cpu className="h-4 w-4" />
           <span>Virtual DOM Diffing</span>
@@ -151,7 +151,7 @@ export default function ReactPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activeTab === 'perf' 
               ? 'bg-sky-500/10 text-sky-500 border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)]' 
-              : 'bg-transparent text-gray-555 dark:text-gray-455 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/20'}`}
+              : 'bg-transparent text-gray-500 dark:text-gray-400 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-sky-500/20'}`}
         >
           <Network className="h-4 w-4" />
           <span>Memo & References</span>
@@ -194,7 +194,7 @@ export default function ReactPlayground() {
             
             {/* Control Sidebar */}
             <div className="lg:col-span-1 bg-white/15 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
-              <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Heuristic Variables</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Heuristic Variables</span>
               
               <div className="space-y-1.5">
                 <label className="text-[10px] text-gray-400 uppercase font-black tracking-wider">Node Type Comparison:</label>
@@ -305,7 +305,7 @@ export default function ReactPlayground() {
             
             {/* Options Toggle Panel */}
             <div className="lg:col-span-1 bg-white/15 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl p-4 space-y-4 font-mono text-xs">
-              <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Optimization Hooks</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block border-b border-neutral-800 pb-1.5 font-bold">Optimization Hooks</span>
               
               <div className="space-y-1.5">
                 <label className="flex items-center space-x-2 cursor-pointer">
@@ -330,7 +330,7 @@ export default function ReactPlayground() {
 
               <button
                 onClick={resetPerf}
-                className="w-full py-1.5 border border-neutral-850 hover:bg-neutral-900 text-gray-400 rounded font-black text-[10px] uppercase cursor-pointer transition-colors"
+                className="w-full py-1.5 border border-neutral-800 hover:bg-neutral-900 text-gray-400 rounded font-black text-[10px] uppercase cursor-pointer transition-colors"
               >
                 Reset Counts
               </button>

@@ -242,7 +242,7 @@ export default function ProjectsPlayground() {
         {logs.map((log, idx) => (
           <div key={idx} className="flex items-start space-x-1">
             <span>$</span>
-            <span className={log.includes('🟢') ? 'text-emerald-450' : 'text-fuchsia-400'}>{log}</span>
+            <span className={log.includes('🟢') ? 'text-emerald-400' : 'text-fuchsia-400'}>{log}</span>
           </div>
         ))}
       </div>

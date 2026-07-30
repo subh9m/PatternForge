@@ -11,7 +11,7 @@ const renderDiagram = (conceptId) => {
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
             <div className="border border-neutral-300 dark:border-neutral-800 p-4 rounded-xl bg-white dark:bg-neutral-950">
-              <span className="px-2 py-0.5 bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-350 text-[8px] font-mono font-black uppercase rounded mb-2 inline-block">AI (Broadest Field)</span>
+              <span className="px-2 py-0.5 bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-300 text-[8px] font-mono font-black uppercase rounded mb-2 inline-block">AI (Broadest Field)</span>
               <p className="text-[11.5px] font-bold text-neutral-700 dark:text-neutral-300 mb-3">Artificial Intelligence: Heuristic and algorithmic cognitive simulation.</p>
               
               <div className="border border-blue-200 dark:border-blue-900 p-4 rounded-xl bg-blue-500/[0.01]">
@@ -22,7 +22,7 @@ const renderDiagram = (conceptId) => {
                   <span className="px-2 py-0.5 bg-purple-500/10 text-purple-500 text-[8px] font-mono font-black uppercase rounded mb-2 inline-block">DL (Sub-subset)</span>
                   <p className="text-[11.5px] font-bold text-neutral-700 dark:text-neutral-300 mb-3">Deep Learning: Deep multi-layered neural network feature representations.</p>
                   
-                  <div className="border border-indigo-250 dark:border-indigo-950 p-4 rounded-xl bg-indigo-500/[0.01]">
+                  <div className="border border-indigo-300 dark:border-indigo-950 p-4 rounded-xl bg-indigo-500/[0.01]">
                     <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-500 text-[8px] font-mono font-black uppercase rounded mb-1 inline-block">GenAI (Core Core)</span>
                     <p className="text-[11.5px] font-bold text-neutral-700 dark:text-neutral-300">Generative AI: Probability distribution modeling to generate original samples.</p>
                   </div>
@@ -403,7 +403,7 @@ export default function AimlCard({ data }) {
   return (
     <section 
       id={data.id}
-      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-indigo-500/25 relative"
+      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-indigo-500/25 relative"
     >
       {/* Section Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
@@ -418,7 +418,7 @@ export default function AimlCard({ data }) {
       </div>
 
       {/* Description */}
-      <p className="text-base text-gray-755 dark:text-neutral-250 font-normal leading-relaxed mb-6">
+      <p className="text-base text-gray-700 dark:text-neutral-300 font-normal leading-relaxed mb-6">
         {data.desc}
       </p>
 
@@ -459,7 +459,7 @@ export default function AimlCard({ data }) {
                     <Sparkles className="h-5 w-5 text-indigo-500 flex-shrink-0" />
                     <div>
                       <span className="font-mono text-[10px] font-black text-indigo-500 uppercase tracking-widest block mb-1">Interview One-Liner</span>
-                      <blockquote className="italic text-neutral-700 dark:text-neutral-250">"{sub.oneLiner}"</blockquote>
+                      <blockquote className="italic text-neutral-700 dark:text-neutral-300">"{sub.oneLiner}"</blockquote>
                     </div>
                   </div>
 
@@ -468,25 +468,25 @@ export default function AimlCard({ data }) {
                     {/* Definition */}
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">🎯 Interview Definition</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.definition}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.definition}</p>
                     </div>
 
                     {/* Why Need */}
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">❓ Why Do We Need It?</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.whyNeed}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.whyNeed}</p>
                     </div>
 
                     {/* Real World Example */}
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">🌍 Real World Example</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.example}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.example}</p>
                     </div>
 
                     {/* Developer Perspective */}
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">💻 SDE Perspective</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.devPerspective}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.devPerspective}</p>
                     </div>
                   </div>
 

@@ -861,7 +861,7 @@ export default function GitPlayground() {
                         <li><strong>Branch Tag:</strong> Movable pointers to specific commits.</li>
                         <li><strong>Red Glow:</strong> HEAD (current active editor checkout commit).</li>
                       </ul>
-                      <p className="text-[9.5px] text-gray-650 italic mt-3">
+                      <p className="text-[9.5px] text-gray-500 italic mt-3">
                         👉 Hover over any Commit node or Branch tag inside the graph to inspect metadata!
                       </p>
                     </motion.div>

@@ -6,7 +6,7 @@ const renderDiagram = (conceptId) => {
     case 'spring_core':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Spring IoC Container Lifecycle Stages
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
@@ -35,7 +35,7 @@ const renderDiagram = (conceptId) => {
     case 'spring_lifecycle':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Spring Bean Initialization Pipeline
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
@@ -67,22 +67,22 @@ const renderDiagram = (conceptId) => {
     case 'spring_mvc':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             DispatcherServlet Routing Flow Pipeline
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-4">
             <div className="flex flex-col space-y-3 font-mono text-[10.5px]">
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-green-500/10 text-green-500 rounded">1. Intercept</span>
-                <span className="text-neutral-600 dark:text-neutral-450">HTTP Request arrives at DispatcherServlet (Front Controller).</span>
+                <span className="text-neutral-600 dark:text-neutral-400">HTTP Request arrives at DispatcherServlet (Front Controller).</span>
               </div>
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-green-500/10 text-green-500 rounded">2. Resolve</span>
-                <span className="text-neutral-600 dark:text-neutral-450">DispatcherServlet queries HandlerMapping to locate the correct controller method.</span>
+                <span className="text-neutral-600 dark:text-neutral-400">DispatcherServlet queries HandlerMapping to locate the correct controller method.</span>
               </div>
               <div className="p-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-green-500/10 text-green-500 rounded">3. Execute</span>
-                <span className="text-neutral-600 dark:text-neutral-450">HandlerAdapter runs the controller method, validating parameters (@Valid).</span>
+                <span className="text-neutral-600 dark:text-neutral-400">HandlerAdapter runs the controller method, validating parameters (@Valid).</span>
               </div>
               <div className="p-3 bg-green-500/5 border border-green-500/25 rounded-xl flex items-start space-x-3">
                 <span className="px-1.5 py-0.2 bg-green-500 text-white rounded font-bold">4. Serialize</span>
@@ -96,7 +96,7 @@ const renderDiagram = (conceptId) => {
     case 'spring_boot':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             @SpringBootApplication Composite Metadata
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
@@ -107,7 +107,7 @@ const renderDiagram = (conceptId) => {
               </div>
               <div className="p-4 border border-green-500/25 bg-green-500/5 rounded-xl space-y-2 text-green-500 font-bold">
                 <span className="px-2 py-0.5 bg-green-500 text-white text-[8px] font-bold uppercase rounded inline-block">@EnableAutoConfiguration</span>
-                <p className="text-[10px] text-gray-700 dark:text-gray-350">Triggers auto-config engine conditionally using conditional properties on classpath.</p>
+                <p className="text-[10px] text-gray-700 dark:text-gray-300">Triggers auto-config engine conditionally using conditional properties on classpath.</p>
               </div>
               <div className="p-4 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl space-y-2">
                 <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[8px] font-bold uppercase rounded inline-block">@ComponentScan</span>
@@ -121,19 +121,19 @@ const renderDiagram = (conceptId) => {
     case 'spring_data':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             JPA Entity Lifecycle State Transitions
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl overflow-x-auto">
             <table className="w-full text-left font-mono text-[10.5px] border-collapse min-w-[500px]">
               <thead>
-                <tr className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-450">
+                <tr className="border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 text-gray-400">
                   <th className="py-2 pr-4 font-black uppercase">JPA Entity State</th>
                   <th className="py-2 px-4 font-black uppercase">EntityManager Binding</th>
                   <th className="py-2 pl-4 font-black uppercase">Database Synchronization</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-250 dark:divide-neutral-900 text-neutral-700 dark:text-neutral-300">
+              <tbody className="divide-y divide-gray-200 dark:divide-neutral-900 text-neutral-700 dark:text-neutral-300">
                 <tr>
                   <td className="py-2 pr-4">Transient</td>
                   <td className="py-2 px-4 text-red-500 font-bold">Unbound</td>
@@ -163,7 +163,7 @@ const renderDiagram = (conceptId) => {
     case 'spring_testing':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Spring Testing Layer Comparison
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
@@ -191,7 +191,7 @@ const renderDiagram = (conceptId) => {
     case 'spring_aop':
       return (
         <div className="space-y-3">
-          <span className="block text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono">
+          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
             Spring AOP Runtime Proxy Flow
           </span>
           <div className="p-5 bg-white/80 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl space-y-3">
@@ -213,7 +213,7 @@ const renderDiagram = (conceptId) => {
               <ArrowRight className="h-4.5 w-4.5 text-green-500 hidden md:block" />
               <div className="p-2.5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-lg w-full md:w-1/4">
                 <strong className="text-gray-800 dark:text-gray-200 block font-bold">4. Target Bean</strong>
-                <span className="text-gray-450">Executes real code</span>
+                <span className="text-gray-400">Executes real code</span>
               </div>
             </div>
             <div className="p-3 bg-amber-500/5 border border-amber-500/25 rounded-lg text-center font-mono text-[9.5px] text-amber-500">
@@ -234,7 +234,7 @@ export default function SpringCard({ data }) {
   return (
     <section 
       id={data.id}
-      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-green-500/25 relative"
+      className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:border-green-500/25 relative"
     >
       {/* Section Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
@@ -249,7 +249,7 @@ export default function SpringCard({ data }) {
       </div>
 
       {/* Description */}
-      <p className="text-base text-gray-755 dark:text-neutral-250 font-normal leading-relaxed mb-6">
+      <p className="text-base text-gray-700 dark:text-neutral-300 font-normal leading-relaxed mb-6">
         {data.desc}
       </p>
 
@@ -286,11 +286,11 @@ export default function SpringCard({ data }) {
                 <div className="p-6 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 space-y-7 animate-fadeIn">
                   
                   {/* Highlighted One-Liner */}
-                  <div className="p-5 bg-green-500/[0.03] border-l-3 border-green-500 text-neutral-805 dark:text-neutral-200 rounded-r-lg font-sans text-[14px] md:text-[15px] flex items-center space-x-3.5 leading-relaxed">
+                  <div className="p-5 bg-green-500/[0.03] border-l-3 border-green-500 text-neutral-800 dark:text-neutral-200 rounded-r-lg font-sans text-[14px] md:text-[15px] flex items-center space-x-3.5 leading-relaxed">
                     <Sparkles className="h-5 w-5 text-green-500 flex-shrink-0" />
                     <div>
                       <span className="font-mono text-[10px] font-black text-green-500 uppercase tracking-widest block mb-1">Interview One-Liner</span>
-                      <blockquote className="italic text-neutral-700 dark:text-neutral-250">"{sub.oneLiner}"</blockquote>
+                      <blockquote className="italic text-neutral-700 dark:text-neutral-300">"{sub.oneLiner}"</blockquote>
                     </div>
                   </div>
 
@@ -299,25 +299,25 @@ export default function SpringCard({ data }) {
                     {/* Definition */}
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">🎯 Interview Definition</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.definition}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.definition}</p>
                     </div>
 
                     {/* Why Need */}
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">❓ Why Do We Need It?</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.whyNeed}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.whyNeed}</p>
                     </div>
 
                     {/* Real World Example */}
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">🌍 Real World Example</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.example}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.example}</p>
                     </div>
 
                     {/* Developer Perspective */}
                     <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
                       <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">💻 SDE Perspective</span>
-                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.devPerspective}</p>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-normal leading-relaxed">{sub.devPerspective}</p>
                     </div>
                   </div>
 

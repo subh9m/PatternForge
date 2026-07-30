@@ -250,7 +250,7 @@ const AiDashboard: React.FC = () => {
           <button
             onClick={() => fetchDashboardData()}
             disabled={refreshing}
-            className="p-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/40 rounded-xl transition-smooth text-slate-300 hover:text-slate-100"
+            className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/40 rounded-xl transition-smooth text-slate-300 hover:text-slate-100"
             title="Force refresh"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-blue-400' : ''}`} />
@@ -297,7 +297,7 @@ const AiDashboard: React.FC = () => {
             </span>
             <div className="space-y-1.5">
               {overview.currentFallbackOrder.map((name, i) => (
-                <div key={name} className="flex items-center justify-between text-xs p-1.5 rounded-lg bg-slate-950/40 border border-slate-850">
+                <div key={name} className="flex items-center justify-between text-xs p-1.5 rounded-lg bg-slate-950/40 border border-slate-800">
                   <span className="font-bold text-slate-300">
                     {i + 1}. {name}
                   </span>
@@ -350,9 +350,9 @@ const AiDashboard: React.FC = () => {
           {providers.map((p) => {
             const hasTestRes = testResult[p.providerName];
             return (
-              <div key={p.providerName} className="glass-panel rounded-2xl p-6 flex flex-col justify-between gap-6 border border-slate-850 hover:border-slate-800 transition-smooth">
+              <div key={p.providerName} className="glass-panel rounded-2xl p-6 flex flex-col justify-between gap-6 border border-slate-800 hover:border-slate-800 transition-smooth">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-850 pb-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                   <div>
                     <h4 className="text-md font-black text-slate-200">{p.providerName}</h4>
                     <span className="text-[9px] font-mono text-slate-500">{p.configuredModel}</span>
@@ -425,11 +425,11 @@ const AiDashboard: React.FC = () => {
                 )}
 
                 {/* Card Control Actions */}
-                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-850 mt-auto">
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800 mt-auto">
                   <button
                     onClick={() => handleTestProvider(p.providerName)}
                     disabled={testingProvider !== null}
-                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-850 hover:border-emerald-500/40 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
+                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
                     title="Execute a tiny generation check"
                   >
                     {testingProvider === p.providerName ? 'Testing...' : 'Run Gen Test'}
@@ -439,7 +439,7 @@ const AiDashboard: React.FC = () => {
                     onClick={() => {
                       alert(p.configured ? `${p.providerName} is correctly configured and reachable.` : `${p.providerName} is not configured.`);
                     }}
-                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-850 hover:border-blue-500/40 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
+                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-blue-500/40 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
                     title="Verify API settings"
                   >
                     Run Health Check
@@ -448,7 +448,7 @@ const AiDashboard: React.FC = () => {
                   <button
                     onClick={() => handleResetCircuit(p.providerName)}
                     disabled={resettingCircuit !== null || p.circuitState === 'CLOSED'}
-                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-850 hover:border-amber-500/45 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 disabled:opacity-30 transition-smooth"
+                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-amber-500/45 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 disabled:opacity-30 transition-smooth"
                     title="Reset circuit breaker state"
                   >
                     Reset Circuit
@@ -468,7 +468,7 @@ const AiDashboard: React.FC = () => {
 
                   <button
                     onClick={() => fetchDashboardData(true)}
-                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-850 hover:border-purple-500/40 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
+                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-purple-500/40 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
                     title="Reload stats"
                   >
                     Refresh Usage
@@ -480,7 +480,7 @@ const AiDashboard: React.FC = () => {
                       const el = document.getElementById("log-history-section");
                       if (el) el.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-850 hover:border-indigo-500/45 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
+                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-indigo-500/45 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
                     title="Filter history table"
                   >
                     View Logs
@@ -495,7 +495,7 @@ const AiDashboard: React.FC = () => {
                         alert("No recent request logs found for this provider.");
                       }
                     }}
-                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-850 hover:border-slate-500 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
+                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-500 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
                   >
                     View Last Request
                   </button>
@@ -509,7 +509,7 @@ const AiDashboard: React.FC = () => {
                         alert("No recent response logs found for this provider.");
                       }
                     }}
-                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-850 hover:border-slate-500 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
+                    className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-500 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-slate-300 hover:text-slate-100 transition-smooth"
                   >
                     View Last Response
                   </button>
@@ -547,7 +547,7 @@ const AiDashboard: React.FC = () => {
             <select
               value={filterProvider}
               onChange={(e) => setFilterProvider(e.target.value)}
-              className="glass-input rounded-xl px-2 py-1.5 text-[11px] bg-slate-900 border border-slate-850"
+              className="glass-input rounded-xl px-2 py-1.5 text-[11px] bg-slate-900 border border-slate-800"
             >
               <option value="ALL">All Providers</option>
               <option value="GEMINI">Gemini</option>
@@ -560,7 +560,7 @@ const AiDashboard: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="glass-input rounded-xl px-2 py-1.5 text-[11px] bg-slate-900 border border-slate-850"
+              className="glass-input rounded-xl px-2 py-1.5 text-[11px] bg-slate-900 border border-slate-800"
             >
               <option value="ALL">All Statuses</option>
               <option value="SUCCESS">Success Only</option>
@@ -570,10 +570,10 @@ const AiDashboard: React.FC = () => {
         </div>
 
         {/* Table View */}
-        <div className="overflow-x-auto rounded-xl border border-slate-850 bg-slate-950/40">
+        <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/40">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-850 bg-slate-950/80 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              <tr className="border-b border-slate-800 bg-slate-950/80 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                 <th className="px-4 py-3">Timestamp</th>
                 <th className="px-4 py-3">Problem Name</th>
                 <th className="px-4 py-3">Provider</th>
@@ -585,7 +585,7 @@ const AiDashboard: React.FC = () => {
                 <th className="px-2 py-3 w-10"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-850/40 text-xs">
+            <tbody className="divide-y divide-slate-800/40 text-xs">
               {filteredHistory.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-4 py-8 text-center text-slate-500 font-bold uppercase tracking-wider">
@@ -691,7 +691,7 @@ const AiDashboard: React.FC = () => {
                 <span className="text-[10px] text-slate-500 font-bold">— Last {isReq ? 'Request' : 'Response'}</span>
               </h4>
 
-              <div className="text-[11px] font-mono leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-850 overflow-x-auto text-slate-300 whitespace-pre-wrap select-all">
+              <div className="text-[11px] font-mono leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800 overflow-x-auto text-slate-300 whitespace-pre-wrap select-all">
                 {isReq ? (
                   <>
                     <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Request Meta & Prompt Estimate</div>

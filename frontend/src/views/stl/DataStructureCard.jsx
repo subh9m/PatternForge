@@ -16,7 +16,7 @@ function highlightCode(code) {
 
   escaped = escaped.replace(combinedRegex, (match, comment, string, number, keyword, type) => {
     if (comment) return `<span class="text-slate-500 italic">${match}</span>`;
-    if (string) return `<span class="text-amber-600 dark:text-emerald-450 font-medium">${match}</span>`;
+    if (string) return `<span class="text-amber-600 dark:text-emerald-400 font-medium">${match}</span>`;
     if (number) return `<span class="text-purple-600 dark:text-violet-400">${match}</span>`;
     if (keyword) return `<span class="text-blue-600 dark:text-sky-400 font-bold">${match}</span>`;
     if (type) return `<span class="text-cyan-600 dark:text-teal-400 font-semibold">${match}</span>`;
@@ -48,7 +48,7 @@ export default function DataStructureCard({ data }) {
             <span className="font-heading tracking-wide">{data.title}</span>
           </h2>
         </div>
-        <p className="mt-2.5 text-gray-750 dark:text-neutral-250 font-normal text-base max-w-4xl leading-relaxed">
+        <p className="mt-2.5 text-gray-700 dark:text-neutral-300 font-normal text-base max-w-4xl leading-relaxed">
           {data.desc}
         </p>
       </div>
@@ -416,7 +416,7 @@ export default function DataStructureCard({ data }) {
                       data.queries[selectedQueryIdx].rows.map((row, i) => (
                         <tr key={i} className="border-b border-gray-100/50 dark:border-neutral-900/50 last:border-0 hover:bg-emerald-500/5">
                           {row.map((cell, j) => (
-                            <td key={j} className="py-1.5 pr-4 text-gray-850 dark:text-gray-250">
+                            <td key={j} className="py-1.5 pr-4 text-gray-800 dark:text-gray-300">
                               {cell === null ? (
                                 <span className="text-red-400 font-bold text-[10px] bg-red-400/5 px-1 py-0.5 rounded-sm">NULL</span>
                               ) : (
@@ -472,7 +472,7 @@ export default function DataStructureCard({ data }) {
                     <code>{row.output}</code>
                   </td>
                   {/* Complexity */}
-                  <td className="px-6 py-4 font-mono text-neutral-750 dark:text-neutral-200 whitespace-nowrap text-[13px] md:text-sm font-bold">
+                  <td className="px-6 py-4 font-mono text-neutral-700 dark:text-neutral-200 whitespace-nowrap text-[13px] md:text-sm font-bold">
                     {row.complexity}
                   </td>
                   {/* Description */}

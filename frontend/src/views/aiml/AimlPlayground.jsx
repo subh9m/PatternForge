@@ -184,7 +184,7 @@ export default function AimlPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'nn' 
               ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-indigo-500/20'}`}
+              : 'bg-transparent text-gray-500 dark:text-gray-400 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-indigo-500/20'}`}
         >
           <Brain className="h-4 w-4" />
           <span>Neural Network Simulator</span>
@@ -194,7 +194,7 @@ export default function AimlPlayground() {
           className={`px-4 py-2 text-xs font-mono font-black uppercase rounded-lg border transition-all cursor-pointer flex items-center space-x-2
             ${activePlayground === 'rag' 
               ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
-              : 'bg-transparent text-gray-550 dark:text-gray-450 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-indigo-500/20'}`}
+              : 'bg-transparent text-gray-500 dark:text-gray-400 border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 hover:border-indigo-500/20'}`}
         >
           <Database className="h-4 w-4" />
           <span>RAG Pipeline Simulator</span>
@@ -237,7 +237,7 @@ export default function AimlPlayground() {
             
             {/* Interactive Settings Dashboard */}
             <div className="lg:col-span-1 bg-gray-55/10 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-4 space-y-4">
-              <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Hyperparameters</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Hyperparameters</span>
               
               {/* Node count */}
               <div>
@@ -467,7 +467,7 @@ export default function AimlPlayground() {
             
             {/* Input Data Source */}
             <div className="bg-gray-55/10 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-4 space-y-4">
-              <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Unstructured Document</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Unstructured Document</span>
               <textarea
                 value={ragDoc}
                 onChange={(e) => setRagDoc(e.target.value)}
@@ -477,7 +477,7 @@ export default function AimlPlayground() {
               />
               
               <div>
-                <label className="block text-[10px] font-bold text-slate-450 uppercase tracking-wide mb-1.5 font-mono">User Query Prompt:</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5 font-mono">User Query Prompt:</label>
                 <input
                   type="text"
                   value={ragQuery}
@@ -521,7 +521,7 @@ export default function AimlPlayground() {
             {/* Retrieve matched vector DB */}
             <div className="bg-gray-55/10 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 rounded-xl p-4 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Retrieved Database Chunk</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">Retrieved Database Chunk</span>
                 {retrievedChunk ? (
                   <div className="p-3 bg-indigo-500/[0.04] border border-indigo-500/20 rounded-xl mt-3 font-sans text-xs text-neutral-700 dark:text-neutral-300 italic">
                     "{retrievedChunk}"
@@ -534,7 +534,7 @@ export default function AimlPlayground() {
               </div>
 
               <div className="pt-4">
-                <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">LLM Stream Answer</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono block border-b border-neutral-800 pb-1.5">LLM Stream Answer</span>
                 <div className="p-3 bg-neutral-950 text-green-400 font-mono text-xs border border-neutral-900 rounded-xl mt-3 min-h-[80px] leading-relaxed">
                   {generatedText ? generatedText : 'Waiting for generation stream...'}
                 </div>

@@ -397,7 +397,7 @@ export default function GitCheatSheet() {
                   <span className="block text-[9.5px] font-black text-gray-400 uppercase tracking-widest font-mono mb-1.5">
                     💡 Layman analogy
                   </span>
-                  <p className="text-[13px] md:text-[14px] text-gray-600 dark:text-gray-405 font-sans italic leading-relaxed">
+                  <p className="text-[13px] md:text-[14px] text-gray-600 dark:text-gray-400 font-sans italic leading-relaxed">
                     {item.layman}
                   </p>
                 </div>

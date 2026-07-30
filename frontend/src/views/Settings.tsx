@@ -342,7 +342,7 @@ const SettingsView: React.FC = () => {
                 type="checkbox"
                 checked={settings.darkMode}
                 onChange={(e) => setSettings({ ...settings, darkMode: e.target.checked })}
-                className="h-4 w-4 accent-primary rounded bg-slate-900 border-slate-850 cursor-pointer"
+                className="h-4 w-4 accent-primary rounded bg-slate-900 border-slate-800 cursor-pointer"
               />
             </div>
 
@@ -356,7 +356,7 @@ const SettingsView: React.FC = () => {
                 type="checkbox"
                 checked={settings.keyboardShortcutsEnabled}
                 onChange={(e) => setSettings({ ...settings, keyboardShortcutsEnabled: e.target.checked })}
-                className="h-4 w-4 accent-primary rounded bg-slate-900 border-slate-850 cursor-pointer"
+                className="h-4 w-4 accent-primary rounded bg-slate-900 border-slate-800 cursor-pointer"
               />
             </div>
 
@@ -411,12 +411,12 @@ const SettingsView: React.FC = () => {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={handleExportData}
-              className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/40 text-xs font-semibold text-slate-300 hover:text-slate-100 transition-smooth flex items-center space-x-2"
+              className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/40 text-xs font-semibold text-slate-300 hover:text-slate-100 transition-smooth flex items-center space-x-2"
             >
               <span>Export Progress JSON</span>
             </button>
 
-            <label className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/40 text-xs font-semibold text-slate-300 hover:text-slate-100 transition-smooth flex items-center space-x-2 cursor-pointer">
+            <label className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-xs font-semibold text-slate-300 hover:text-slate-100 transition-smooth flex items-center space-x-2 cursor-pointer">
               <span>Import Progress JSON</span>
               <input
                 type="file"
@@ -469,13 +469,13 @@ const SettingsView: React.FC = () => {
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={() => handleLinkSyncFile('create')}
-                  className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/45 text-xs font-bold text-blue-400 transition-smooth"
+                  className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/45 text-xs font-bold text-blue-400 transition-smooth"
                 >
                   Create & Link Sync File
                 </button>
                 <button
                   onClick={() => handleLinkSyncFile('open')}
-                  className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/45 text-xs font-bold text-emerald-400 transition-smooth"
+                  className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/45 text-xs font-bold text-emerald-400 transition-smooth"
                 >
                   Link Existing Sync File
                 </button>
@@ -538,7 +538,7 @@ const SettingsView: React.FC = () => {
                   <span>✓ Sync Token Active (Created: {new Date(tokenStatus.createdAt).toLocaleDateString()})</span>
                 </div>
               ) : (
-                <div className="flex items-center space-x-2 text-[10px] text-slate-500 font-bold bg-slate-850 px-3 py-1.5 border border-slate-800 rounded-lg w-max">
+                <div className="flex items-center space-x-2 text-[10px] text-slate-500 font-bold bg-slate-800 px-3 py-1.5 border border-slate-800 rounded-lg w-max">
                   <span>No active Sync Token found. Generate one below to start syncing.</span>
                 </div>
               )}
@@ -546,7 +546,7 @@ const SettingsView: React.FC = () => {
               {generatedToken && (
                 <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 space-y-2">
                   <span className="text-[10px] font-bold text-amber-500 block">⚠️ Save this token now! It will not be shown again:</span>
-                  <div className="flex items-center space-x-2 bg-slate-950 p-2 rounded border border-slate-850">
+                  <div className="flex items-center space-x-2 bg-slate-950 p-2 rounded border border-slate-800">
                     <span className="text-[11px] font-mono font-bold text-slate-200 break-all select-all flex-1">{generatedToken}</span>
                     <button
                       onClick={handleCopyToken}
@@ -582,7 +582,7 @@ const SettingsView: React.FC = () => {
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Instructions: How to Setup Sync</span>
               <ol className="list-decimal pl-4 text-[10px] text-slate-500 space-y-1.5 leading-relaxed">
                 <li>Install the <a href="https://www.tampermonkey.net/" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">Tampermonkey</a> browser extension.</li>
-                <li>Create a new script in Tampermonkey and paste the code from <code className="text-slate-400 bg-slate-950 px-1 py-0.5 rounded border border-slate-850">tools/patternforge-leetcode-sync.user.js</code>.</li>
+                <li>Create a new script in Tampermonkey and paste the code from <code className="text-slate-400 bg-slate-950 px-1 py-0.5 rounded border border-slate-800">tools/patternforge-leetcode-sync.user.js</code>.</li>
                 <li>Click <strong>Generate Sync Token</strong> above and copy the generated token.</li>
                 <li>Go to LeetCode and click the <strong>⚙ (Gear)</strong> icon on the bottom-right PatternForge sync widget.</li>
                 <li>Paste the Sync Token and your PatternForge Backend URL (e.g. <code className="text-slate-400 bg-slate-950 px-1 py-0.5 rounded">http://localhost:8081</code>).</li>
@@ -618,7 +618,7 @@ const SettingsView: React.FC = () => {
               <button
                 onClick={handleRunHealthCheck}
                 disabled={checkingHealth}
-                className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/40 text-xs font-semibold text-slate-300 hover:text-slate-100 transition-smooth flex items-center space-x-2 disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/40 text-xs font-semibold text-slate-300 hover:text-slate-100 transition-smooth flex items-center space-x-2 disabled:opacity-50"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${checkingHealth ? 'animate-spin text-blue-400' : ''}`} />
                 <span>{checkingHealth ? 'Running Diagnostic...' : 'Run Gateway Diagnostics'}</span>
@@ -626,10 +626,10 @@ const SettingsView: React.FC = () => {
             </div>
 
             {healthStatus?.providers && (
-              <div className="overflow-x-auto rounded-lg border border-slate-850 bg-slate-950/60">
+              <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950/60">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-850 bg-slate-950/80 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    <tr className="border-b border-slate-800 bg-slate-950/80 text-[10px] font-black text-slate-400 uppercase tracking-wider">
                       <th className="px-3 py-2">Provider</th>
                       <th className="px-3 py-2">Status</th>
                       <th className="px-3 py-2">Model</th>
@@ -638,7 +638,7 @@ const SettingsView: React.FC = () => {
                       <th className="px-3 py-2">Output/Error Details</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-850/60">
+                  <tbody className="divide-y divide-slate-800/60">
                     {healthStatus.providers.map((p: any) => (
                       <tr key={p.providerName} className="hover:bg-slate-900/40 text-xs">
                         <td className="px-3 py-2.5 font-bold text-slate-200">{p.providerName}</td>
