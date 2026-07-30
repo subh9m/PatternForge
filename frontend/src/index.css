@@ -53,14 +53,24 @@ body {
   background-color: var(--bg-color);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
-  background-image: radial-gradient(var(--bg-grid) 1px, transparent 0);
-  background-size: 20px 20px;
-  background-attachment: fixed;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background-image: radial-gradient(var(--bg-grid) 1px, transparent 0);
+  background-size: 20px 20px;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0); /* Force hardware GPU layer acceleration */
 }
 
 /* Nothing OS monochrome slate overrides for clean Light Mode compatibility */
@@ -366,14 +376,7 @@ aside a.dark\:text-gray-300:hover {
   --font-scale: 1.0;
 }
 
-.reading-module-content p,
-.reading-module-content li,
-.reading-module-content blockquote,
-.reading-module-content pre,
-.reading-module-content code,
-.reading-module-content span {
-  transition: font-size 0.2s ease, line-height 0.2s ease;
-}
+/* Transition removed to prevent layout calculations on scroll */
 
 .reading-module-content p {
   font-size: calc(14px * var(--font-scale, 1.0)) !important;
@@ -412,4 +415,27 @@ aside a.dark\:text-gray-300:hover {
 
 .reading-module-content span.text-2xl {
   font-size: calc(24px * var(--font-scale, 1.0)) !important;
+}
+
+/* GPU-Optimized performance overrides: disable heavy scrolling backdrop filters */
+.backdrop-blur-md,
+.backdrop-blur-sm,
+.backdrop-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: var(--surface-color) !important;
+}
+
+/* Allow backdrop blurs only on stationary, non-scrolling UI headers */
+header.sticky.backdrop-blur-md,
+header.sticky.backdrop-blur-sm {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  background-color: rgba(var(--surface-color), 0.8) !important;
+}
+
+/* Smooth scrolling on interactive pages */
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeSpeed;
 }
