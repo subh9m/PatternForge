@@ -120,7 +120,7 @@ export default function SqlCard({ data }) {
       </div>
 
       {/* Description */}
-      <p className="text-sm text-gray-600 dark:text-gray-300 font-sans font-light leading-relaxed mb-6">
+      <p className="text-base text-gray-755 dark:text-neutral-250 font-sans font-normal leading-relaxed mb-6">
         {data.desc}
       </p>
 

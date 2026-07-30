@@ -48,7 +48,7 @@ export default function DataStructureCard({ data }) {
             <span className="font-heading tracking-wide">{data.title}</span>
           </h2>
         </div>
-        <p className="mt-2 text-gray-600 dark:text-gray-400 font-light text-sm max-w-4xl leading-relaxed">
+        <p className="mt-2.5 text-gray-750 dark:text-neutral-250 font-normal text-base max-w-4xl leading-relaxed">
           {data.desc}
         </p>
       </div>
@@ -464,7 +464,7 @@ export default function DataStructureCard({ data }) {
                     <code>{row.syntax}</code>
                   </td>
                   {/* Params */}
-                  <td className="px-6 py-4 text-gray-600 dark:text-gray-400 font-light whitespace-nowrap text-xs">
+                  <td className="px-6 py-4 text-gray-700 dark:text-neutral-300 font-normal whitespace-nowrap text-[13px] md:text-sm">
                     {row.params}
                   </td>
                   {/* Output */}
@@ -472,11 +472,11 @@ export default function DataStructureCard({ data }) {
                     <code>{row.output}</code>
                   </td>
                   {/* Complexity */}
-                  <td className="px-6 py-4 font-mono text-neutral-700 dark:text-neutral-300 whitespace-nowrap text-xs font-bold">
+                  <td className="px-6 py-4 font-mono text-neutral-750 dark:text-neutral-200 whitespace-nowrap text-[13px] md:text-sm font-bold">
                     {row.complexity}
                   </td>
                   {/* Description */}
-                  <td className="px-6 py-4 text-gray-600 dark:text-gray-400 font-light text-xs max-w-sm">
+                  <td className="px-6 py-4 text-gray-700 dark:text-neutral-300 font-normal text-[13px] md:text-sm max-w-sm">
                     {row.desc}
                   </td>
                 </tr>

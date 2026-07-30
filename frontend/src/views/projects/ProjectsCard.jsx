@@ -17,31 +17,31 @@ export default function ProjectsCard({ data, activeTab }) {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2">
-              <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">⚠️ Problem Statement</span>
-              <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-light">{data.overview.problem}</p>
+            <div className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2.5">
+              <span className="text-[11px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">⚠️ Problem Statement</span>
+              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{data.overview.problem}</p>
             </div>
             
-            <div className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2">
-              <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">🎯 Real-World Use Case</span>
-              <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-light">{data.overview.useCase}</p>
+            <div className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2.5">
+              <span className="text-[11px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">🎯 Real-World Use Case</span>
+              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{data.overview.useCase}</p>
             </div>
 
-            <div className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2">
-              <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">💡 Core Motivation</span>
-              <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-light">{data.overview.motivation}</p>
+            <div className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2.5">
+              <span className="text-[11px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">💡 Core Motivation</span>
+              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{data.overview.motivation}</p>
             </div>
 
-            <div className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2">
-              <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">🏗️ Architecture Blueprint</span>
-              <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-light">{data.overview.architecture}</p>
+            <div className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl bg-white/80 dark:bg-neutral-900/30 space-y-2.5">
+              <span className="text-[11px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block">🏗️ Architecture Blueprint</span>
+              <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{data.overview.architecture}</p>
             </div>
           </div>
 
           {/* End-to-End Walkthrough */}
-          <div className="p-5 border border-fuchsia-500/25 bg-fuchsia-500/5 rounded-xl space-y-4">
-            <span className="text-[10px] font-mono font-black text-fuchsia-500 uppercase tracking-widest block">⚡ request lifecycle: marking item as used</span>
-            <ol className="list-decimal pl-4 space-y-2 text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+          <div className="p-6 border border-fuchsia-500/25 bg-fuchsia-500/5 rounded-xl space-y-5">
+            <span className="text-[11px] font-mono font-black text-fuchsia-500 uppercase tracking-widest block">⚡ request lifecycle: marking item as used</span>
+            <ol className="list-decimal pl-5 space-y-3 text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 leading-relaxed">
               <li><strong>UI Interaction:</strong> User clicks "Used" in the browser (React 19). The <code>useMutation</code> hook triggers state queries.</li>
               <li><strong>Interceptor Authorization:</strong> Axios interceptors capture the request, reading the token from <code>localStorage</code> to inject the <code>Authorization: Bearer</code> header.</li>
               <li><strong>Spring filter gate:</strong> Tomcat routes request payload to backend. The <code>JwtAuthenticationFilter</code> extracts security claims and validates token signatures.</li>
@@ -206,15 +206,15 @@ export default function ProjectsCard({ data, activeTab }) {
               <h3 className="text-xs font-mono font-black text-fuchsia-500 uppercase tracking-widest border-b border-neutral-900 pb-2">📂 Creational, Structural & Behavioral Patterns</h3>
               <div className="grid grid-cols-1 gap-4">
                 {data.patternsAndOops.designPatterns.map((pat, idx) => (
-                  <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-2.5">
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-900 pb-1.5">
-                      <span className="text-xs font-bold text-neutral-950 dark:text-neutral-50 font-mono">{pat.name}</span>
-                      <span className="text-[9px] bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 px-1.5 py-0.5 rounded font-mono uppercase font-black">Pattern</span>
+                  <div key={idx} className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-900 pb-2">
+                      <span className="text-sm font-bold text-neutral-950 dark:text-neutral-50 font-mono">{pat.name}</span>
+                      <span className="text-[10px] bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 px-1.5 py-0.5 rounded font-mono uppercase font-black">Pattern</span>
                     </div>
-                    <div className="text-xs space-y-1.5">
-                      <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[10px] uppercase">Where:</span> <code className="bg-neutral-950 px-1.5 py-0.5 rounded text-fuchsia-300 font-mono text-[10.5px] border border-neutral-900">{pat.where}</code></div>
-                      <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[10px] uppercase">Why:</span> <span className="text-neutral-600 dark:text-neutral-300 font-light">{pat.why}</span></div>
-                      <div className="pt-1.5 border-t border-neutral-900 text-gray-500 dark:text-neutral-500 flex items-center space-x-1.5 italic text-[11px]">
+                    <div className="text-[14px] md:text-[15px] space-y-2 font-normal">
+                      <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[11px] uppercase">Where:</span> <code className="bg-neutral-950 px-1.5 py-0.5 rounded text-fuchsia-300 font-mono text-[12px] border border-neutral-900">{pat.where}</code></div>
+                      <div><span className="text-neutral-505 dark:text-neutral-400 font-mono font-bold text-[11px] uppercase">Why:</span> <span className="text-neutral-700 dark:text-neutral-250">{pat.why}</span></div>
+                      <div className="pt-2 border-t border-neutral-900 text-gray-500 dark:text-neutral-400 flex items-center space-x-1.5 italic text-[13px] md:text-[14px]">
                         <span>💡 Analogy:</span>
                         <span>{pat.analogy}</span>
                       </div>
@@ -227,20 +227,20 @@ export default function ProjectsCard({ data, activeTab }) {
             {/* OOP Concepts */}
             <div className="space-y-4">
               <h3 className="text-xs font-mono font-black text-fuchsia-500 uppercase tracking-widest border-b border-neutral-900 pb-2">☕ Core Object-Oriented Programming (OOP) Principles</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {data.patternsAndOops.oopConcepts.map((oop, idx) => (
-                  <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl flex flex-col justify-between space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center border-b border-neutral-900 pb-1.5">
-                        <span className="text-xs font-bold text-neutral-950 dark:text-neutral-50 font-mono">{oop.concept}</span>
-                        <span className="text-[9px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded font-mono uppercase font-black">OOP</span>
+                  <div key={idx} className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl flex flex-col justify-between space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center border-b border-neutral-900 pb-2">
+                        <span className="text-sm font-bold text-neutral-950 dark:text-neutral-50 font-mono">{oop.concept}</span>
+                        <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded font-mono uppercase font-black">OOP</span>
                       </div>
-                      <div className="text-xs space-y-1.5 font-light">
-                        <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[9px] uppercase block mb-0.5">Where:</span> <code className="bg-neutral-950 px-1 py-0.5 rounded text-fuchsia-300 font-mono text-[10px] border border-neutral-900 block overflow-x-auto whitespace-pre-wrap">{oop.where}</code></div>
-                        <p className="text-neutral-600 dark:text-neutral-300 pt-1">{oop.detail}</p>
+                      <div className="text-[14px] md:text-[15px] space-y-2 font-normal">
+                        <div><span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold text-[11px] uppercase block mb-1">Where:</span> <code className="bg-neutral-950 px-1.5 py-0.5 rounded text-fuchsia-300 font-mono text-[12px] border border-neutral-900 block overflow-x-auto whitespace-pre-wrap">{oop.where}</code></div>
+                        <p className="text-neutral-700 dark:text-neutral-250 pt-1">{oop.detail}</p>
                       </div>
                     </div>
-                    <div className="border-t border-neutral-900 pt-2 text-[10px] text-gray-500 italic">
+                    <div className="border-t border-neutral-900 pt-2.5 text-[13px] md:text-[14px] text-gray-500 italic">
                       <span>💡 Analogy: {oop.analogy}</span>
                     </div>
                   </div>
@@ -291,27 +291,27 @@ export default function ProjectsCard({ data, activeTab }) {
 
           <div className="space-y-6">
             {data.deepDives.frontend.map((item, idx) => (
-              <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-3">
+              <div key={idx} className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-4">
                 <div className="flex items-center justify-between border-b border-neutral-850 pb-2">
                   <strong className="text-sm font-mono text-gray-800 dark:text-gray-200">{item.file}</strong>
-                  <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[8px] font-mono font-black uppercase rounded">React Primitive</span>
+                  <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[9px] font-mono font-black uppercase rounded">React Primitive</span>
                 </div>
-                <p className="text-xs text-neutral-600 dark:text-neutral-300 font-light"><strong className="font-semibold">Purpose:</strong> {item.purpose}</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono pt-1 text-gray-500">
+                <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 font-normal"><strong className="font-semibold">Purpose:</strong> {item.purpose}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px] md:text-[14px] font-mono pt-1 text-gray-500">
                   <div><strong>Hooks:</strong> {item.hooks}</div>
                   <div><strong>Lifecycle:</strong> {item.lifecycle}</div>
                 </div>
-                <div className="p-3 bg-neutral-100/60 dark:bg-neutral-900/30 border-l-2 border-slate-400 dark:border-neutral-700 rounded-r-lg text-xs leading-normal">
-                  <span className="block text-[8px] font-mono text-slate-400 uppercase tracking-widest font-black mb-0.5">Performance optimizations</span>
-                  <p className="text-neutral-500 dark:text-neutral-400 dark:text-gray-400 italic">{item.perfNotes}</p>
+                <div className="p-4 bg-neutral-100/60 dark:bg-neutral-900/30 border-l-2 border-slate-400 dark:border-neutral-700 rounded-r-lg text-[13px] md:text-[14px] leading-relaxed">
+                  <span className="block text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-black mb-1">Performance optimizations</span>
+                  <p className="text-neutral-605 dark:text-neutral-400 italic">{item.perfNotes}</p>
                 </div>
                 
                 {/* Embedded QA Block */}
-                <div className="pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
-                  <span className="text-[9px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-1">Interview Prep QA</span>
-                  <div className="bg-fuchsia-500/[0.02] border border-fuchsia-500/10 rounded-lg p-3 text-xs space-y-1.5">
-                    <p className="font-bold text-neutral-800 dark:text-neutral-200 dark:text-gray-200">Q: {item.qa.q}</p>
-                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed font-light">{item.qa.a}</p>
+                <div className="pt-3 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
+                  <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-1.5">Interview Prep QA</span>
+                  <div className="bg-fuchsia-500/[0.02] border border-fuchsia-500/10 rounded-lg p-4 text-[14px] md:text-[15px] space-y-2">
+                    <p className="font-bold text-neutral-800 dark:text-neutral-200">Q: {item.qa.q}</p>
+                    <p className="text-neutral-605 dark:text-neutral-350 leading-relaxed font-normal">A: {item.qa.a}</p>
                   </div>
                 </div>
               </div>
@@ -329,32 +329,32 @@ export default function ProjectsCard({ data, activeTab }) {
 
           <div className="space-y-6">
             {data.deepDives.backend.map((item, idx) => (
-              <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-3">
+              <div key={idx} className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-4">
                 <div className="flex items-center justify-between border-b border-neutral-850 pb-2">
                   <strong className="text-sm font-mono text-gray-800 dark:text-gray-200">{item.file}</strong>
-                  <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[8px] font-mono font-black uppercase rounded">Spring Bean</span>
+                  <span className="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-500 text-[9px] font-mono font-black uppercase rounded">Spring Bean</span>
                 </div>
-                <p className="text-xs text-neutral-600 dark:text-neutral-300 font-light"><strong className="font-semibold">Purpose:</strong> {item.purpose}</p>
+                <p className="text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-250 font-normal"><strong className="font-semibold">Purpose:</strong> {item.purpose}</p>
                 
                 {item.endpoints && (
-                  <div className="text-xs font-mono">
-                    <span className="text-[9px] text-neutral-500 dark:text-neutral-400 block uppercase mb-1">Endpoints Exponent</span>
-                    <ul className="list-disc pl-4 text-fuchsia-400 space-y-0.5">
+                  <div className="text-[13px] md:text-[14px] font-mono">
+                    <span className="text-[9.5px] text-neutral-500 dark:text-neutral-400 block uppercase mb-1">Endpoints Exponent</span>
+                    <ul className="list-disc pl-5 text-fuchsia-400 space-y-1">
                       {item.endpoints.map((ep, i) => <li key={i}>{ep}</li>)}
                     </ul>
                   </div>
                 )}
 
-                {item.flow && <p className="text-xs font-mono text-gray-500"><strong>Call Flow:</strong> {item.flow}</p>}
-                {item.caching && <p className="text-xs font-mono text-gray-500"><strong>Caching Details:</strong> {item.caching}</p>}
-                {item.trigger && <p className="text-xs font-mono text-gray-500"><strong>Cron Trigger:</strong> {item.trigger}</p>}
+                {item.flow && <p className="text-[13px] md:text-[14px] font-mono text-gray-500"><strong>Call Flow:</strong> {item.flow}</p>}
+                {item.caching && <p className="text-[13px] md:text-[14px] font-mono text-gray-500"><strong>Caching Details:</strong> {item.caching}</p>}
+                {item.trigger && <p className="text-[13px] md:text-[14px] font-mono text-gray-500"><strong>Cron Trigger:</strong> {item.trigger}</p>}
 
                 {/* Embedded QA Block */}
-                <div className="pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
-                  <span className="text-[9px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-1">Interview Prep QA</span>
-                  <div className="bg-fuchsia-500/[0.02] border border-fuchsia-500/10 rounded-lg p-3 text-xs space-y-1.5">
-                    <p className="font-bold text-neutral-800 dark:text-neutral-200 dark:text-gray-200">Q: {item.qa.q}</p>
-                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed font-light">{item.qa.a}</p>
+                <div className="pt-3 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
+                  <span className="text-[10px] font-mono font-bold text-fuchsia-500 uppercase tracking-wider block mb-1.5">Interview Prep QA</span>
+                  <div className="bg-fuchsia-500/[0.02] border border-fuchsia-500/10 rounded-lg p-4 text-[14px] md:text-[15px] space-y-2">
+                    <p className="font-bold text-neutral-800 dark:text-neutral-200">Q: {item.qa.q}</p>
+                    <p className="text-neutral-605 dark:text-neutral-350 leading-relaxed font-normal">A: {item.qa.a}</p>
                   </div>
                 </div>
               </div>
@@ -372,9 +372,9 @@ export default function ProjectsCard({ data, activeTab }) {
 
           <div className="space-y-4">
             {data.designTradeoffs.map((item, idx) => (
-              <div key={idx} className="p-5 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-2">
-                <span className="text-sm font-mono font-bold text-gray-800 dark:text-gray-200 block border-b border-neutral-900 pb-1.5">{item.title}</span>
-                <p className="text-xs text-gray-600 dark:text-neutral-500 dark:text-neutral-450 leading-relaxed font-light pt-1">{item.tradeoff}</p>
+              <div key={idx} className="p-6 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 bg-white/80 dark:bg-neutral-900/30 rounded-xl space-y-3">
+                <span className="text-sm font-mono font-bold text-gray-850 dark:text-gray-100 block border-b border-neutral-900 pb-2">{item.title}</span>
+                <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 leading-relaxed font-normal pt-1.5">{item.tradeoff}</p>
               </div>
             ))}
           </div>
@@ -427,18 +427,18 @@ export default function ProjectsCard({ data, activeTab }) {
                             </button>
 
                             {isItemExpanded && (
-                              <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 text-xs space-y-3 bg-white/70 dark:bg-neutral-950/80 font-sans">
+                              <div className="p-5 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 text-[14px] md:text-[15px] space-y-4 bg-white/70 dark:bg-neutral-950/80 font-sans">
                                 {item.followups && item.followups.length > 0 && (
-                                  <div className="space-y-1">
-                                    <span className="block text-[8px] font-mono text-gray-400 uppercase tracking-widest">Follow-up Cross-questions</span>
-                                    <ul className="list-disc pl-4 text-gray-500 dark:text-neutral-400 space-y-1 font-light">
+                                  <div className="space-y-1.5">
+                                    <span className="block text-[9.5px] font-mono text-gray-400 uppercase tracking-widest">Follow-up Cross-questions</span>
+                                    <ul className="list-disc pl-5 text-gray-500 dark:text-neutral-400 space-y-1 font-normal">
                                       {item.followups.map((fo, fidx) => <li key={fidx}>{fo}</li>)}
                                     </ul>
                                   </div>
                                 )}
-                                <div className="space-y-1 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800 pt-2.5">
-                                  <span className="block text-[8px] font-mono text-fuchsia-500 uppercase tracking-widest font-black">Google L5 Answer</span>
-                                  <p className="text-neutral-600 dark:text-neutral-300 dark:text-gray-200 leading-relaxed font-light">{item.a}</p>
+                                <div className="space-y-1.5 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-805 pt-3">
+                                  <span className="block text-[9.5px] font-mono text-fuchsia-500 uppercase tracking-widest font-black">Google L5 Answer</span>
+                                  <p className="text-neutral-700 dark:text-neutral-250 leading-relaxed font-normal">{item.a}</p>
                                 </div>
                               </div>
                             )}

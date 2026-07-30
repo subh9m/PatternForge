@@ -196,7 +196,7 @@ export default function ReactCard({ data }) {
       </div>
 
       {/* Description */}
-      <p className="text-sm text-gray-600 dark:text-gray-300 font-sans font-light leading-relaxed mb-6">
+      <p className="text-base text-gray-755 dark:text-neutral-250 font-normal leading-relaxed mb-6">
         {data.desc}
       </p>
 
@@ -228,59 +228,59 @@ export default function ReactCard({ data }) {
               </button>
 
               {isExpanded && (
-                <div className="p-5 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 space-y-6 animate-fadeIn">
+                <div className="p-6 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 space-y-7 animate-fadeIn">
                   
                   {/* One-Liner Summary */}
-                  <div className="p-3.5 bg-sky-500/[0.03] border-l-3 border-sky-500 text-neutral-700 dark:text-neutral-300 rounded-r-lg font-sans text-xs flex items-center space-x-3 leading-relaxed">
-                    <Sparkles className="h-4 w-4 text-sky-500 flex-shrink-0" />
+                  <div className="p-5 bg-sky-500/[0.03] border-l-3 border-sky-500 text-neutral-805 dark:text-neutral-200 rounded-r-lg font-sans text-[14px] md:text-[15px] flex items-center space-x-3.5 leading-relaxed">
+                    <Sparkles className="h-5 w-5 text-sky-500 flex-shrink-0" />
                     <div>
-                      <span className="font-mono text-[9px] font-black text-sky-500 uppercase tracking-widest block mb-0.5">Interview One-Liner</span>
-                      <blockquote className="italic">"{sub.oneLiner}"</blockquote>
+                      <span className="font-mono text-[10px] font-black text-sky-500 uppercase tracking-widest block mb-1">Interview One-Liner</span>
+                      <blockquote className="italic text-neutral-700 dark:text-neutral-250">"{sub.oneLiner}"</blockquote>
                     </div>
                   </div>
 
                   {/* Core Conceptual Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
-                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">🎯 Interview Definition</span>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 font-light leading-relaxed">{sub.definition}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+                      <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">🎯 Interview Definition</span>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.definition}</p>
                     </div>
 
-                    <div className="p-4 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
-                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">❓ Why Do We Need It?</span>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 font-light leading-relaxed">{sub.whyNeed}</p>
+                    <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+                      <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">❓ Why Do We Need It?</span>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.whyNeed}</p>
                     </div>
 
-                    <div className="p-4 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
-                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">🌍 Real World Example</span>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 font-light leading-relaxed">{sub.example}</p>
+                    <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+                      <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">🌍 Real World Example</span>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.example}</p>
                     </div>
 
-                    <div className="p-4 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
-                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">💻 SDE Perspective</span>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 font-light leading-relaxed">{sub.devPerspective}</p>
+                    <div className="p-5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-900 rounded-xl">
+                      <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">💻 SDE Perspective</span>
+                      <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">{sub.devPerspective}</p>
                     </div>
                   </div>
 
                   {/* Questions & Troubleshooting */}
-                  <div className="space-y-4 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
+                  <div className="space-y-5 pt-3 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-3 flex items-center space-x-1.5">
-                          <HelpCircle className="h-3.5 w-3.5 text-blue-500" />
+                          <HelpCircle className="h-4 w-4 text-blue-500" />
                           <span>Interview Questions</span>
                         </span>
-                        <ul className="space-y-2 text-xs text-neutral-600 dark:text-neutral-400 list-decimal pl-4">
+                        <ul className="space-y-2.5 text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 list-decimal pl-5">
                           {sub.questions.map((q, i) => <li key={i}>{q}</li>)}
                         </ul>
                       </div>
 
                       <div>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-3 flex items-center space-x-1.5">
-                          <HelpCircle className="h-3.5 w-3.5 text-purple-500" />
+                          <HelpCircle className="h-4 w-4 text-purple-500" />
                           <span>Important Follow-ups</span>
                         </span>
-                        <ul className="space-y-2 text-xs text-neutral-600 dark:text-neutral-400 list-disc pl-4">
+                        <ul className="space-y-2.5 text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 list-disc pl-5">
                           {sub.followups.map((f, i) => <li key={i}>{f}</li>)}
                         </ul>
                       </div>
@@ -289,22 +289,22 @@ export default function ReactCard({ data }) {
 
                   {/* Confusions & Takeaways */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-neutral-200 dark:border-neutral-800 dark:border-neutral-900">
-                    <div className="p-4 bg-amber-500/[0.02] border border-amber-500/10 rounded-xl">
-                      <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest font-mono mb-2 flex items-center space-x-1.5">
-                        <AlertTriangle className="h-3.5 w-3.5" />
+                    <div className="p-5 bg-amber-500/[0.02] border border-amber-500/10 rounded-xl">
+                      <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest font-mono mb-2.5 flex items-center space-x-1.5">
+                        <AlertTriangle className="h-4 w-4" />
                         <span>⚠️ Common Confusions</span>
                       </span>
-                      <ul className="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400 list-disc pl-4">
+                      <ul className="space-y-2 text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 list-disc pl-5">
                         {sub.confusions.map((c, i) => <li key={i}>{c}</li>)}
                       </ul>
                     </div>
 
-                    <div className="p-4 bg-emerald-500/[0.02] border border-emerald-500/10 rounded-xl">
-                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest font-mono mb-2 flex items-center space-x-1.5">
-                        <CheckSquare className="h-3.5 w-3.5" />
+                    <div className="p-5 bg-emerald-500/[0.02] border border-emerald-500/10 rounded-xl">
+                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest font-mono mb-2.5 flex items-center space-x-1.5">
+                        <CheckSquare className="h-4 w-4" />
                         <span>✅ Key Takeaways</span>
                       </span>
-                      <ul className="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400 list-disc pl-4">
+                      <ul className="space-y-2 text-[14px] md:text-[15px] text-neutral-700 dark:text-neutral-300 list-disc pl-5">
                         {sub.takeaways.map((t, i) => <li key={i}>{t}</li>)}
                       </ul>
                     </div>

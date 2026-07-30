@@ -153,14 +153,14 @@ export default function GitCard({ data }) {
         .git-rich-content table {
           width: 100% !important;
           border-collapse: collapse !important;
-          margin: 16px 0 !important;
+          margin: 20px 0 !important;
           font-family: monospace !important;
-          font-size: 11px !important;
+          font-size: 13.5px !important;
           border: 1px solid #444 !important;
         }
         .git-rich-content th {
           border: 1px solid #444 !important;
-          padding: 8px 12px !important;
+          padding: 10px 14px !important;
           background-color: rgba(245, 158, 11, 0.08) !important;
           font-weight: bold !important;
           text-transform: uppercase !important;
@@ -170,8 +170,9 @@ export default function GitCard({ data }) {
         }
         .git-rich-content td {
           border: 1px solid #333 !important;
-          padding: 8px 12px !important;
-          color: #ccc !important;
+          padding: 10px 14px !important;
+          color: #e2e8f0 !important;
+          line-height: 1.6 !important;
         }
         .light .git-rich-content table {
           border: 1px solid #ccc !important;
@@ -183,15 +184,16 @@ export default function GitCard({ data }) {
         }
         .light .git-rich-content td {
           border: 1px solid #ddd !important;
-          color: #333 !important;
+          color: #1e293b !important;
         }
         .git-rich-content ul {
           list-style-type: disc !important;
-          padding-left: 20px !important;
-          margin: 10px 0 !important;
+          padding-left: 24px !important;
+          margin: 12px 0 !important;
         }
         .git-rich-content li {
-          margin-bottom: 4px !important;
+          margin-bottom: 8px !important;
+          line-height: 1.625 !important;
         }
       `}</style>
 
@@ -212,7 +214,7 @@ export default function GitCard({ data }) {
             </div>
           </div>
         </div>
-        <p className="mt-3.5 text-sm text-gray-600 dark:text-gray-400 font-light leading-relaxed max-w-4xl">
+        <p className="mt-4 text-[15px] md:text-base text-gray-700 dark:text-neutral-300 font-normal leading-relaxed max-w-4xl">
           {data.desc}
         </p>
       </div>
@@ -315,52 +317,52 @@ export default function GitCard({ data }) {
                   <div className="px-5 pb-5 pt-1 space-y-4 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 animate-fadeIn">
                     
                     {/* Fun Analogy Callout Box */}
-                    <div className="p-4 bg-amber-500/[0.05] dark:bg-amber-500/[0.03] border-l-2 border-amber-500/70 rounded-r-lg">
-                      <span className="block text-[9px] font-black text-amber-500 uppercase tracking-widest font-mono mb-1">
+                    <div className="p-5 bg-amber-500/[0.05] dark:bg-amber-500/[0.03] border-l-2 border-amber-500/70 rounded-r-lg">
+                      <span className="block text-[10px] font-black text-amber-500 uppercase tracking-widest font-mono mb-1.5">
                         💡 Real-World Analogy
                       </span>
-                      <p className="text-xs italic text-gray-650 dark:text-gray-300 font-sans leading-relaxed">
+                      <p className="text-[14px] md:text-[15px] italic text-gray-700 dark:text-neutral-250 font-sans leading-relaxed">
                         {getAnalogy(row.method)}
                       </p>
                     </div>
 
                     {/* Detailed Technical Explanation */}
-                    <div>
-                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono mb-1.5">
+                    <div className="space-y-2">
+                      <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">
                         🔬 In-Depth Explanation & Workings
                       </span>
                       <div 
-                        className="git-rich-content text-xs text-gray-600 dark:text-gray-300 font-sans font-light leading-relaxed space-y-2"
+                        className="git-rich-content text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-300 font-sans font-normal leading-relaxed space-y-3"
                         dangerouslySetInnerHTML={{ __html: row.desc }} 
                       />
                     </div>
 
                     {/* Micro-Stats Parameter Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-                      <div className="p-3 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
-                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Mechanic / Command</span>
-                        <span className="block text-[11px] font-mono font-semibold text-amber-600 dark:text-amber-400 mt-1 break-words">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3">
+                      <div className="p-3.5 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
+                        <span className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Mechanic / Command</span>
+                        <span className="block text-[13px] md:text-[14px] font-mono font-semibold text-amber-600 dark:text-amber-400 mt-1.5 break-words">
                           {row.syntax}
                         </span>
                       </div>
                       
-                      <div className="p-3 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
-                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Inputs / Context</span>
-                        <span className="block text-[11px] font-sans font-medium text-neutral-700 dark:text-neutral-300 mt-1 break-words">
+                      <div className="p-3.5 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
+                        <span className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Inputs / Context</span>
+                        <span className="block text-[13px] md:text-[14px] font-sans font-medium text-neutral-700 dark:text-neutral-300 mt-1.5 break-words">
                           {row.params}
                         </span>
                       </div>
                       
-                      <div className="p-3 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
-                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Result / Output</span>
-                        <span className="block text-[11px] font-mono text-neutral-700 dark:text-neutral-300 mt-1 break-words">
+                      <div className="p-3.5 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
+                        <span className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Result / Output</span>
+                        <span className="block text-[13px] md:text-[14px] font-mono text-neutral-700 dark:text-neutral-300 mt-1.5 break-words">
                           {row.output}
                         </span>
                       </div>
                       
-                      <div className="p-3 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
-                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-wider font-mono">Overhead / Complexity</span>
-                        <span className="block text-[11px] font-mono font-bold text-gray-800 dark:text-gray-200 mt-1 break-words">
+                      <div className="p-3.5 bg-white/80 dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 dark:border-neutral-850 rounded-lg">
+                        <span className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Overhead / Complexity</span>
+                        <span className="block text-[13px] md:text-[14px] font-mono font-bold text-gray-800 dark:text-gray-200 mt-1.5 break-words">
                           {row.complexity}
                         </span>
                       </div>

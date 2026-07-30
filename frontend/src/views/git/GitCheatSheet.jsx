@@ -370,7 +370,7 @@ export default function GitCheatSheet() {
                 <div>
                   {/* Command Row */}
                   <div className="flex items-start justify-between gap-3">
-                    <code className="text-xs font-mono font-black text-amber-600 dark:text-amber-400 bg-amber-500/[0.04] dark:bg-amber-500/[0.03] px-2.5 py-1.5 rounded-lg border border-amber-500/10 select-all break-all">
+                    <code className="text-sm font-mono font-black text-amber-600 dark:text-amber-400 bg-amber-500/[0.04] dark:bg-amber-500/[0.03] px-2.5 py-1.5 rounded-lg border border-amber-500/10 select-all break-all">
                       {item.cmd}
                     </code>
                     <button
@@ -387,17 +387,17 @@ export default function GitCheatSheet() {
                   </div>
 
                   {/* Description */}
-                  <p className="mt-3.5 text-xs text-gray-800 dark:text-gray-200 font-sans font-medium leading-relaxed">
+                  <p className="mt-4 text-[14px] md:text-[15px] text-gray-800 dark:text-gray-200 font-sans font-medium leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
 
                 {/* Layman Callout */}
                 <div className="mt-4 pt-3.5 border-t border-dashed border-neutral-200 dark:border-neutral-800 dark:border-neutral-800">
-                  <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest font-mono mb-1">
+                  <span className="block text-[9.5px] font-black text-gray-400 uppercase tracking-widest font-mono mb-1.5">
                     💡 Layman analogy
                   </span>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 font-sans italic leading-relaxed">
+                  <p className="text-[13px] md:text-[14px] text-gray-600 dark:text-gray-405 font-sans italic leading-relaxed">
                     {item.layman}
                   </p>
                 </div>

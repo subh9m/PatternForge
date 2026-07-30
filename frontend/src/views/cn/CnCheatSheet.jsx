@@ -153,22 +153,22 @@ export default function CnCheatSheet() {
               </div>
 
               {/* Definition */}
-              <p className="text-xs text-gray-650 dark:text-gray-400 font-light leading-relaxed">
+              <p className="text-[14px] md:text-[15px] text-gray-700 dark:text-neutral-250 font-normal leading-relaxed">
                 {item.definition}
               </p>
 
               {/* Analogy Box */}
-              <div className="p-3 bg-neutral-100/60 dark:bg-neutral-900/30 border-l-2 border-slate-400 dark:border-neutral-700 rounded-r-lg">
-                <span className="block text-[8px] font-mono text-slate-400 dark:text-neutral-500 uppercase tracking-widest font-black mb-0.5">💡 SDE Analogy</span>
-                <p className="text-[10.5px] italic text-gray-500 dark:text-gray-400 leading-normal font-sans">
+              <div className="p-4 bg-neutral-100/60 dark:bg-neutral-900/30 border-l-2 border-slate-400 dark:border-neutral-700 rounded-r-lg">
+                <span className="block text-[9.5px] font-mono text-slate-400 dark:text-neutral-500 uppercase tracking-widest font-black mb-1">💡 SDE Analogy</span>
+                <p className="text-[13px] md:text-[14px] italic text-gray-550 dark:text-gray-405 leading-relaxed font-sans">
                   {item.analogy}
                 </p>
               </div>
 
               {/* Speak-ready summary */}
-              <div>
-                <span className="block text-[8px] font-mono text-cyan-400/80 uppercase tracking-widest font-black mb-0.5">🗣️ Speak-ready Answer</span>
-                <p className="text-[10.5px] font-mono font-bold text-cyan-500/90 leading-normal">
+              <div className="space-y-0.5">
+                <span className="block text-[9.5px] font-mono text-cyan-400/80 uppercase tracking-widest font-black">🗣️ Speak-ready Answer</span>
+                <p className="text-[13px] md:text-[14px] font-mono font-bold text-cyan-500/90 leading-relaxed">
                   {item.oneLiner}
                 </p>
               </div>
