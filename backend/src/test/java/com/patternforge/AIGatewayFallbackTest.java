@@ -76,7 +76,7 @@ public class AIGatewayFallbackTest {
         AIResponse mockResponse = AIResponse.builder()
                 .content("Gemini content")
                 .providerName("Gemini")
-                .modelName("gemini-2.5-flash")
+                .modelName("gemini-3.6-flash")
                 .latencyMs(120)
                 .build();
 
@@ -103,7 +103,7 @@ public class AIGatewayFallbackTest {
         AIResponse mockGroqResponse = AIResponse.builder()
                 .content("Groq content")
                 .providerName("Groq")
-                .modelName("llama-3.3-70b-versatile")
+                .modelName("openai/gpt-oss-120b")
                 .latencyMs(150)
                 .build();
         when(groqProvider.generate(any(AIRequest.class))).thenReturn(mockGroqResponse);
@@ -157,7 +157,7 @@ public class AIGatewayFallbackTest {
         AIResponse mockOpenRouterResponse = AIResponse.builder()
                 .content("OpenRouter content")
                 .providerName("OpenRouter")
-                .modelName("google/gemini-2.5-flash")
+                .modelName("google/gemini-3.6-flash")
                 .latencyMs(300)
                 .build();
         when(openrouterProvider.generate(any(AIRequest.class))).thenReturn(mockOpenRouterResponse);
@@ -210,7 +210,7 @@ public class AIGatewayFallbackTest {
         AIResponse mockGroqResponse = AIResponse.builder()
                 .content("Groq content")
                 .providerName("Groq")
-                .modelName("llama-3.3-70b-versatile")
+                .modelName("openai/gpt-oss-120b")
                 .latencyMs(150)
                 .build();
         when(groqProvider.generate(any(AIRequest.class))).thenReturn(mockGroqResponse);

@@ -9,14 +9,14 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class AIGatewayConfig {
     private String geminiApiKey;
-    private String geminiModel = "gemini-2.5-flash";
+    private String geminiModel = "gemini-3.6-flash";
 
     private String groqApiKey;
-    private String groqModel = "llama-3.3-70b-versatile";
+    private String groqModel = "openai/gpt-oss-120b";
 
     private String githubModelsApiKey;
     private String githubModelsModel = "gpt-4o-mini";
 
     private String openrouterApiKey;
-    private String openrouterModel = "google/gemini-2.5-flash";
+    private String openrouterModel = "google/gemini-3.6-flash";
 }

@@ -63,7 +63,7 @@ public class GroqProvider implements AIProvider {
 
         String model = gatewayConfig.getGroqModel();
         if (model == null || model.trim().isEmpty()) {
-            model = "llama-3.3-70b-versatile";
+            model = "openai/gpt-oss-120b";
         }
         
         String url = "https://api.groq.com/openai/v1/chat/completions";

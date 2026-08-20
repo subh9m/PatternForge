@@ -204,16 +204,16 @@ public class AdminAIController {
             String model = "";
             if ("Gemini".equals(provider.providerName())) {
                 model = gatewayConfig.getGeminiModel();
-                if (model == null || model.isEmpty()) model = "gemini-2.5-flash";
+                if (model == null || model.isEmpty()) model = "gemini-3.6-flash";
             } else if ("Groq".equals(provider.providerName())) {
                 model = gatewayConfig.getGroqModel();
-                if (model == null || model.isEmpty()) model = "llama-3.3-70b-versatile";
+                if (model == null || model.isEmpty()) model = "openai/gpt-oss-120b";
             } else if ("GitHub".equals(provider.providerName())) {
                 model = gatewayConfig.getGithubModelsModel();
                 if (model == null || model.isEmpty()) model = "gpt-4o-mini";
             } else if ("OpenRouter".equals(provider.providerName())) {
                 model = gatewayConfig.getOpenrouterModel();
-                if (model == null || model.isEmpty()) model = "google/gemini-2.5-flash";
+                if (model == null || model.isEmpty()) model = "google/gemini-3.6-flash";
             }
             result.put("configuredModel", model);
 

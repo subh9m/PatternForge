@@ -63,7 +63,7 @@ public class GeminiProvider implements AIProvider {
 
         String model = gatewayConfig.getGeminiModel();
         if (model == null || model.trim().isEmpty()) {
-            model = "gemini-2.5-flash";
+            model = "gemini-3.6-flash";
         }
         
         String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
