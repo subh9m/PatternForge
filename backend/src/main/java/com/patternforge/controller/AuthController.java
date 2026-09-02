@@ -8,6 +8,7 @@ import com.patternforge.model.Settings;
 import com.patternforge.model.User;
 import com.patternforge.repository.SettingsRepository;
 import com.patternforge.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
+@Slf4j
 public class AuthController {
 
     private final UserRepository userRepository;
@@ -36,10 +38,13 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        log.info("Registration attempt received for username: '{}', email: '{}'", request.getUsername(), request.getEmail());
         if (userRepository.findByUsernameIgnoreCase(request.getUsername()).isPresent()) {
+            log.warn("Registration failed: Username '{}' already taken", request.getUsername());
             return ResponseEntity.badRequest().body("Username is already taken.");
         }
         if (userRepository.findByEmailIgnoreCase(request.getEmail()).isPresent()) {
+            log.warn("Registration failed: Email '{}' already registered", request.getEmail());
             return ResponseEntity.badRequest().body("Email is already registered.");
         }
 
@@ -65,6 +70,7 @@ public class AuthController {
         settingsRepository.save(settings);
 
         String token = jwtUtils.generateToken(savedUser.getUsername(), savedUser.getId());
+        log.info("User registered successfully: '{}' (ID: {})", savedUser.getUsername(), savedUser.getId());
 
         return ResponseEntity.ok(AuthResponse.builder()
                 .token(token)
@@ -76,17 +82,25 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+        log.info("Login attempt for identifier: '{}'", request.getUsername());
         Optional<User> userOpt = userRepository.findByEmailIgnoreCase(request.getUsername());
         if (userOpt.isEmpty()) {
             userOpt = userRepository.findByUsernameIgnoreCase(request.getUsername());
         }
 
-        if (userOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
+        if (userOpt.isEmpty()) {
+            log.warn("Login failed: User '{}' does not exist in database.", request.getUsername());
+            return ResponseEntity.badRequest().body("Invalid email, username, or password.");
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
+            log.warn("Login failed: Password mismatch for user '{}'.", request.getUsername());
             return ResponseEntity.badRequest().body("Invalid email, username, or password.");
         }
 
         User user = userOpt.get();
         String token = jwtUtils.generateToken(user.getUsername(), user.getId());
+        log.info("Login successful for user: '{}' (ID: {})", user.getUsername(), user.getId());
 
         return ResponseEntity.ok(AuthResponse.builder()
                 .token(token)
@@ -119,7 +133,12 @@ public class AuthController {
     }
 
     @GetMapping("/health")
-    public ResponseEntity<String> health() {
+    public ResponseEntity<?> health() {
+        try {
+            userRepository.count();
+        } catch (Exception ignored) {
+        }
         return ResponseEntity.ok("UP");
     }
 }
+
