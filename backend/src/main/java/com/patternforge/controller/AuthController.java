@@ -38,19 +38,21 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        log.info("Registration attempt received for username: '{}', email: '{}'", request.getUsername(), request.getEmail());
-        if (userRepository.findByUsernameIgnoreCase(request.getUsername()).isPresent()) {
-            log.warn("Registration failed: Username '{}' already taken", request.getUsername());
+        String username = request.getUsername() != null ? request.getUsername().trim() : "";
+        String email = request.getEmail() != null ? request.getEmail().trim() : "";
+        log.info("Registration attempt received for username: '{}', email: '{}'", username, email);
+        if (userRepository.findByUsernameIgnoreCase(username).isPresent()) {
+            log.warn("Registration failed: Username '{}' already taken", username);
             return ResponseEntity.badRequest().body("Username is already taken.");
         }
-        if (userRepository.findByEmailIgnoreCase(request.getEmail()).isPresent()) {
-            log.warn("Registration failed: Email '{}' already registered", request.getEmail());
+        if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
+            log.warn("Registration failed: Email '{}' already registered", email);
             return ResponseEntity.badRequest().body("Email is already registered.");
         }
 
         User user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
+                .username(username)
+                .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role("USER")
                 .build();
@@ -82,19 +84,20 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        log.info("Login attempt for identifier: '{}'", request.getUsername());
-        Optional<User> userOpt = userRepository.findByEmailIgnoreCase(request.getUsername());
+        String identifier = request.getUsername() != null ? request.getUsername().trim() : "";
+        log.info("Login attempt for identifier: '{}'", identifier);
+        Optional<User> userOpt = userRepository.findByEmailIgnoreCase(identifier);
         if (userOpt.isEmpty()) {
-            userOpt = userRepository.findByUsernameIgnoreCase(request.getUsername());
+            userOpt = userRepository.findByUsernameIgnoreCase(identifier);
         }
 
         if (userOpt.isEmpty()) {
-            log.warn("Login failed: User '{}' does not exist in database.", request.getUsername());
+            log.warn("Login failed: User '{}' does not exist in database.", identifier);
             return ResponseEntity.badRequest().body("Invalid email, username, or password.");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
-            log.warn("Login failed: Password mismatch for user '{}'.", request.getUsername());
+            log.warn("Login failed: Password mismatch for user '{}'.", identifier);
             return ResponseEntity.badRequest().body("Invalid email, username, or password.");
         }
 

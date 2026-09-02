@@ -45,15 +45,18 @@ const AuthScreen: React.FC = () => {
 
     try {
       if (isLogin) {
-        if (!email.includes('@')) {
-          throw new Error('Please enter a valid email address.');
+        if (!email.trim()) {
+          throw new Error('Please enter your email or username.');
         }
-        await login(email, password);
+        await login(email.trim(), password);
       } else {
+        if (!username.trim()) {
+          throw new Error('Please choose a username.');
+        }
         if (!email.includes('@')) {
           throw new Error('Please enter a valid email address.');
         }
-        await register(username, email, password);
+        await register(username.trim(), email.trim(), password);
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed. Please check your credentials.');
@@ -124,14 +127,14 @@ const AuthScreen: React.FC = () => {
             {isLogin ? (
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                  Email Address
+                  Email Address or Username
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  placeholder="name@example.com or username"
                   className="w-full glass-input rounded-lg px-4 py-2.5 text-sm"
                 />
               </div>
